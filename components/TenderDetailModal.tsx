@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { X, ExternalLink, Sparkles, Building2, Calendar, ShieldCheck, Tag, FileText } from 'lucide-react';
+import { X, ExternalLink, Sparkles, Building2, Calendar, ShieldCheck, Tag, FileText, Copy, Check } from 'lucide-react';
 
 interface TenderDetailModalProps {
   tender: TenderItem | null;
@@ -20,13 +20,25 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
 }) => {
   if (!tender) return null;
   const t = getTranslation(locale);
+  const [copied, setCopied] = useState(false);
 
   const formatCurrency = (amount: number) => {
     if (!amount) return '0 ₮';
     return `${amount.toLocaleString()} ₮`;
   };
 
-  const officialLink = `https://user.tender.gov.mn/mn/supplier/available/${tender.invitationId}/detail`;
+  const handleCopyCode = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const textToCopy = tender.tenderCode || tender.invitationNumber || '';
+    if (textToCopy && navigator.clipboard) {
+      navigator.clipboard.writeText(textToCopy);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const publicLink = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
+  const supplierLink = `https://user.tender.gov.mn/mn/supplier/available/${tender.invitationId}/detail`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
@@ -38,9 +50,16 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
         <div className="p-5 border-b border-slate-200 flex items-start justify-between gap-4 sticky top-0 bg-white z-10">
           <div>
             <div className="flex items-center gap-2 mb-2 flex-wrap text-xs">
-              <span className="font-mono px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
-                {tender.tenderCode}
-              </span>
+              <div className="flex items-center gap-1 font-mono px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-700">
+                <span>{tender.tenderCode || tender.invitationNumber}</span>
+                <button
+                  onClick={handleCopyCode}
+                  className="p-0.5 text-slate-400 hover:text-slate-700 transition-colors"
+                  title="Хуулах"
+                >
+                  {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                </button>
+              </div>
               <span className="font-medium px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
                 {tender.tenderTypeName || 'Тендер'}
               </span>
@@ -152,30 +171,83 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Bank Guarantee & Performance Bond Calculator */}
+          {tender.totalBudget > 0 && (
+            <div className="space-y-2 text-xs">
+              <h4 className="text-xs uppercase font-semibold text-slate-500 flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                <span>{locale === 'mn' ? 'Хуулийн дагуу тооцоолсон баталгааны хэмжээ' : 'Calculated Bid Securities'}</span>
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="p-3 rounded-lg bg-blue-50/70 border border-blue-200">
+                  <span className="text-[11px] text-blue-700 font-medium block mb-0.5">
+                    {locale === 'mn' ? 'Тендерийн баталгаа (1%)' : 'Bid Security (1%)'}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-slate-900 block">
+                    {formatCurrency(Math.round(tender.totalBudget * 0.01))}
+                  </span>
+                </div>
+                <div className="p-3 rounded-lg bg-blue-50/70 border border-blue-200">
+                  <span className="text-[11px] text-blue-700 font-medium block mb-0.5">
+                    {locale === 'mn' ? 'Тендерийн баталгаа (2%)' : 'Bid Security (2%)'}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-slate-900 block">
+                    {formatCurrency(Math.round(tender.totalBudget * 0.02))}
+                  </span>
+                </div>
+                <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-200">
+                  <span className="text-[11px] text-emerald-800 font-medium block mb-0.5">
+                    {locale === 'mn' ? 'Гүйцэтгэлийн баталгаа (5%)' : 'Performance Bond (5%)'}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-slate-900 block">
+                    {formatCurrency(Math.round(tender.totalBudget * 0.05))}
+                  </span>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 italic">
+                * Төрийн болон орон нутгийн өмчийн хөрөнгөөр бараа, ажил, үйлчилгээ худалдан авах тухай хуулийн дагуу тооцов.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Actions Footer */}
-        <div className="p-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white sticky bottom-0">
+        <div className="p-4 sm:p-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-white sticky bottom-0">
           <button
             onClick={() => {
               onClose();
               onAskAI(tender);
             }}
-            className="h-9 w-full sm:w-auto px-4 rounded-md text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-2 transition-colors"
+            className="h-9 w-full sm:w-auto px-3.5 rounded-md text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-1.5 transition-colors"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />
             <span>{locale === 'mn' ? 'AI шинжээчээр дүгнүүлэх' : 'Analyze with AI'}</span>
           </button>
 
-          <a
-            href={officialLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-9 w-full sm:w-auto px-4 rounded-md text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 flex items-center justify-center gap-2 transition-colors"
-          >
-            <span>{t.directApply}</span>
-            <ExternalLink className="h-3.5 w-3.5" />
-          </a>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <a
+              href={publicLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 flex-1 sm:flex-initial px-3.5 rounded-md text-xs font-medium bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+              title="tender.gov.mn албан ёсны зарлал үзэх"
+            >
+              <span>{locale === 'mn' ? 'Албан ёсны зарлал' : 'Official Notice'}</span>
+              <ExternalLink className="h-3 w-3 text-slate-400" />
+            </a>
+
+            <a
+              href={supplierLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 flex-1 sm:flex-initial px-3.5 rounded-md text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+              title="Ханган нийлүүлэгчийн системээр санал илгээх"
+            >
+              <span>{t.directApply}</span>
+              <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
         </div>
       </div>
     </div>

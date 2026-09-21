@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       }
       if (search && search.trim()) {
         const term = search.trim();
-        query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,invitation_number.ilike.%${term}%`);
+        query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,tender_code.ilike.%${term}%,invitation_number.ilike.%${term}%`);
       }
 
       if (status && status !== 'all') {
@@ -44,23 +44,25 @@ export async function GET(request: NextRequest) {
           query = query.ilike('doc_status_name', '%Үр дүн%');
         } else if (status === 'cancelled') {
           query = query.ilike('doc_status_name', '%Хүчингүй%');
+        } else if (status === 'requested') {
+          query = query.ilike('doc_status_name', '%өөрчлөх%');
         }
       }
 
       // Sorting
       switch (sortBy) {
         case 'budget_desc':
-          query = query.order('total_budget', { ascending: false });
+          query = query.order('total_budget', { ascending: false, nullsFirst: false });
           break;
         case 'budget_asc':
-          query = query.order('total_budget', { ascending: true });
+          query = query.order('total_budget', { ascending: true, nullsFirst: false });
           break;
         case 'deadline_asc':
-          query = query.order('open_date', { ascending: true });
+          query = query.order('receive_date', { ascending: true, nullsFirst: false });
           break;
         case 'date_desc':
         default:
-          query = query.order('publish_date', { ascending: false });
+          query = query.order('publish_date', { ascending: false, nullsFirst: false });
           break;
       }
 

@@ -99,6 +99,52 @@ export default function Home() {
     setIsAIDrawerOpen(true);
   };
 
+  const handleExportCSV = () => {
+    if (!tenders || tenders.length === 0) return;
+
+    const headers = [
+      'Тендерийн дугаар/код',
+      'Тендерийн нэр',
+      'Захиалагч байгууллага',
+      'Төрөл',
+      'Төсөвт өртөг (₮)',
+      'Төлөв',
+      'Зарласан огноо',
+      'Эцсийн хугацаа',
+      'Албан ёсны холбоос',
+    ];
+
+    const escapeCSV = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const rows = tenders.map((t) => [
+      escapeCSV(t.tenderCode || t.invitationNumber),
+      escapeCSV(t.tenderName),
+      escapeCSV(t.budgetEntityName),
+      escapeCSV(t.tenderTypeName),
+      escapeCSV(t.totalBudget),
+      escapeCSV(t.docStatusName),
+      escapeCSV(t.publishDate ? t.publishDate.substring(0, 10) : ''),
+      escapeCSV(t.receiveDate ? t.receiveDate.substring(0, 10) : ''),
+      escapeCSV(`https://www.tender.gov.mn/mn/invitation/detail/${t.invitationId}`),
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const dateStr = new Date().toISOString().substring(0, 10);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `tender_mn_export_${dateStr}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
       {/* Top Header */}
@@ -152,11 +198,23 @@ export default function Home() {
         />
 
         {/* Results Count Line */}
-        <div className="flex items-center justify-between text-xs text-slate-600 font-medium px-1">
-          <span>
-            {locale === 'mn' ? 'Нийт илэрц:' : 'Matching tenders:'}{' '}
-            <strong className="text-slate-900 tabular-nums">{totalCount}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
-          </span>
+        <div className="flex items-center justify-between text-xs text-slate-600 font-medium px-1 flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <span>
+              {locale === 'mn' ? 'Нийт илэрц:' : 'Matching tenders:'}{' '}
+              <strong className="text-slate-900 tabular-nums">{totalCount.toLocaleString()}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
+            </span>
+
+            <button
+              onClick={handleExportCSV}
+              disabled={tenders.length === 0}
+              className="h-6 px-2.5 rounded bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 font-medium text-[11px] flex items-center gap-1.5 transition-colors border border-slate-200 shadow-2xs cursor-pointer"
+              title={locale === 'mn' ? 'Одоогийн жагсаалтыг Excel / CSV файлаар татах' : 'Export current results as CSV / Excel'}
+            >
+              <FileSpreadsheet className="h-3 w-3 text-emerald-600" />
+              <span>{locale === 'mn' ? 'Excel / CSV татах' : 'Export CSV'}</span>
+            </button>
+          </div>
 
           {totalPages > 1 && (
             <span className="text-slate-500 tabular-nums text-[11px]">

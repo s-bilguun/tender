@@ -116,8 +116,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   <td className="py-2.5 px-3 whitespace-nowrap text-slate-600 font-mono text-[11px] tabular-nums hidden sm:table-cell">
                     <div>{tender.receiveDate ? tender.receiveDate.substring(0, 10) : 'Тодорхойгүй'}</div>
                     {days !== null && days > 0 ? (
-                      <div className="text-[10px] text-emerald-600 font-medium">
-                        {days} {t.daysRemaining}
+                      <div
+                        className={`text-[10px] font-semibold ${
+                          days <= 3
+                            ? 'text-rose-600 font-bold'
+                            : days <= 7
+                            ? 'text-amber-600'
+                            : 'text-emerald-600'
+                        }`}
+                      >
+                        {days <= 3 ? `⏰ Шуурхай: ${days} ${t.daysRemaining}` : `${days} ${t.daysRemaining}`}
                       </div>
                     ) : days !== null && days <= 0 ? (
                       <div className="text-[10px] text-slate-400 font-medium">
@@ -161,11 +169,11 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       </button>
 
                       <a
-                        href={`https://user.tender.gov.mn/mn/supplier/available/${tender.invitationId}/detail`}
+                        href={`https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 transition-colors"
-                        title={locale === 'mn' ? 'Tender.gov.mn дээр нээх' : 'Open in tender.gov.mn'}
+                        title={locale === 'mn' ? 'tender.gov.mn дээр үзэх' : 'Open in tender.gov.mn'}
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </a>

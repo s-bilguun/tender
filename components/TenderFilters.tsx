@@ -44,6 +44,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     { id: 'receiving', label: locale === 'mn' ? 'Хүлээн авч буй (730+)' : 'Receiving (730+)', dot: 'bg-emerald-500' },
     { id: 'opened', label: locale === 'mn' ? 'Нээгдсэн (710+)' : 'Opened (710+)', dot: 'bg-amber-500' },
     { id: 'result', label: locale === 'mn' ? 'Үр дүн гарсан (21k)' : 'Awarded (21k)', dot: 'bg-blue-500' },
+    { id: 'requested', label: locale === 'mn' ? 'Өөрчлөлт хүссэн (190+)' : 'Amended (190+)', dot: 'bg-purple-500' },
     { id: 'cancelled', label: locale === 'mn' ? 'Хүчингүй' : 'Cancelled', dot: 'bg-rose-500' },
   ];
 

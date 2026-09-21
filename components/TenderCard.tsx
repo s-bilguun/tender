@@ -64,8 +64,16 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           </div>
 
           {daysLeft !== null && daysLeft > 0 ? (
-            <span className="text-[11px] text-emerald-700 font-medium bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              {daysLeft} {t.daysRemaining}
+            <span
+              className={`text-[11px] font-medium px-2 py-0.5 rounded border ${
+                daysLeft <= 3
+                  ? 'text-rose-700 bg-rose-50 border-rose-200 font-bold'
+                  : daysLeft <= 7
+                  ? 'text-amber-700 bg-amber-50 border-amber-200 font-semibold'
+                  : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+              }`}
+            >
+              {daysLeft <= 3 ? `⏰ Шуурхай: ${daysLeft} ${t.daysRemaining}` : `${daysLeft} ${t.daysRemaining}`}
             </span>
           ) : daysLeft !== null && daysLeft <= 0 ? (
             <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
