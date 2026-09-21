@@ -269,8 +269,8 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       id: 'welcome',
       sender: 'assistant',
       text: locale === 'mn'
-        ? `Сайн байна уу! Би tender.gov.mn-ийн бодит өгөгдөлд тулгуурласан **Тендерийн AI Шинжээч** байна.\n\nТа сонгон шалгаруулалт, тооцоолол, шаардлага болон салбарын чиг хандлагын талаар асуугаарай.`
-        : `Hello! I am your AI Tender Intelligence Assistant, powered by live data from Mongolia's procurement portal (tender.gov.mn).\n\nAsk me about upcoming bids, budget allocations, compliance checklists, or market trends.`,
+        ? `Сайн байна уу! Би тендерийн цахим системийн бүх зарлал, төсөв, шаардлагыг шинжилж туслах таны AI зөвлөх байна.\n\nТа сонирхсон тендерийнхээ нэр, салбар, төсвийн талаар чөлөөтэй асуугаарай. Жишээ нь:\n• *"Хамгийн их төсөвтэй тендерүүд юу байна?"*\n• *"Эрдэнэт үйлдвэрийн тендерүүд"*\n• *"Одоо зарлагдсан эмнэлгийн тоног төхөөрөмжийн тендер"*`
+        : `Hello! I'm your AI tender consultant, ready to help you analyze procurement bids, budgets, and requirements.\n\nFeel free to ask about any tender, agency, or sector!`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);

@@ -291,58 +291,60 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // STEP 4: Build high-quality system prompt
+    // STEP 4: Build high-quality, friendly system prompt
     let systemPrompt = '';
-    const statsContext = `
-МЭДЭЭЛЛИЙН САНГИЙН БОДИТ СТАТИСТИК (2026 он):
-- Нийт бүртгэлтэй тендер: 22,785
-- Нийт батлагдсан төсөвт өртөг: 21.72 Их наяд ₮
-- Хамгийн өндөр төсөвтэй тендер: 1.21 Их наяд ₮ ("Нийтийн тээврийн Улаанбаатар Трам төслийн 2 дугаар шугам" - НЗДТГ)
-- Төлөвийн бүтэц: Үр дүн гарсан (21,089), Тендер хүлээн авч байгаа буюу идэвхтэй (737), Нээгдсэн (717), Хүчингүй (50)
-- Төрлийн бүтэц: Бараа (13,734), Ажил (6,373), Үйлчилгээ (2,667)
-`;
 
     if (locale === 'mn') {
       if (targetTender) {
-        systemPrompt = `Та бол Монгол Улсын Төрийн худалдан авах ажиллагааны цахим систем (tender.gov.mn)-ийн албан ёсны AI шинжээч, зөвлөх юм.
-Хэрэглэгч дараах тодорхой тендерийн талаар лавлаж байна:
+        systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны чиглэлээр олон жил зөвлөгөө өгсөн, туршлагатай найрсаг мэргэжилтэн хамтрагч юм.
 
-📌 ҮНДСЭН МЭДЭЭЛЭЛ:
+ХАРИЛЦААНЫ СТАНДАРТ:
+- Робот шиг, хуурай албархуу хэллэг БҮҮ ашигла (Жишээ нь: "Мэдээллийн санд бүртгэлтэй...", "Хэрэглэгчийн асуултын дагуу доорх дүн шинжилгээг хүргэж байна..." гэх мэт хиймэл үгс БҮҮ хэрэглэ).
+- Энгийн, ойлгомжтой, тусархуу, амьд монгол хэлээр харилцана.
+- Эхлээд тендерийн гол үзүүлэлтүүдийг цэгцтэй дурдаад, дараа нь оролцогчид юуг анхаарах ёстойг практик зөвлөгөө хэлбэрээр өгнө.
+
+ХЭРЭГЛЭГЧИЙН СОНГОСОН ТЕНДЕР:
 - Тендерийн нэр: ${targetTender.tenderName}
-- Тендерийн код: ${targetTender.tenderCode || targetTender.invitationNumber}
+- Тендерийн дугаар / Код: ${targetTender.tenderCode || targetTender.invitationNumber}
 - Төсөвт өртөг: ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} ₮)
-- Захиалагч байгууллага: ${targetTender.budgetEntityName} (${targetTender.positionName || 'Төрийн худалдан авагч'})
+- Захиалагч: ${targetTender.budgetEntityName} (${targetTender.positionName || 'Төрийн худалдан авагч'})
 - Төрөл: ${targetTender.tenderTypeName || 'Бараа'}
 - Шалгаруулах арга: ${targetTender.ruleName || 'Нээлттэй тендер шалгаруулалтын арга'}
 - Санхүүжилтийн эх үүсвэр: ${targetTender.fundName || 'Өөрийн хөрөнгө / Төсөв'}
-- Эцсийн хугацаа: ${targetTender.receiveDate || 'Тодорхойгүй'}
-- Төлөв: ${targetTender.docStatusName || 'Бүртгэгдсэн'}
+- Санал авах эцсийн хугацаа: ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
+- Төлөв: ${targetTender.docStatusName || 'Нээлттэй'}
 
-ХАРИУЛТЫН ЗААВАР:
-1. "Тендерийн дүн шинжилгээ" хэсэгт төсөв, захиалагчийн шаардлага, онцлогийг мэргэжлийн түвшинд дүгнэ.
-2. "Оролцогчдод өгөх зөвлөмж" хэсэгт техникийн тодорхойлолт, 1-2%-ийн тендерийн баталгаа, Monpass тоон гарын үсэг, татварын өргүй лавлагаа, санал өгөх хугацааны талаар зөвлөгөө өг.
-3. Хариултаа эмх цэгцтэй Markdown гарчиг (###), тод үгс (**bold**), жагсаалтаар өнгө үзэмжтэй гаргана уу.`;
+ХАРИУЛТЫН БҮТЭЦ:
+1. Товч дүн шинжилгээ: Төсөв, захиалагч, санхүүжилтийн онцлог.
+2. Оролцогчдод өгөх гол зөвлөмж: Техникийн шаардлага, 1-2%-ийн банкны баталгаа, Monpass тоон гарын үсэг, татварын өргүй лавлагаа, санал илгээх хугацаа.
+3. Мөнгөн дүнг Их наяд ₮, тэрбум ₮, сая ₮-өөр яг үнэн зөв заагаарай.`;
       } else {
-        systemPrompt = `Та бол Монгол Улсын Төрийн худалдан авах ажиллагааны цахим систем (tender.gov.mn)-ийн 22,785 тендерийн сантай ажилладаг албан ёсны AI шинжээч юм.
-${statsContext}
+        systemPrompt = `Та бол төрийн худалдан авах ажиллагаа (тендер)-ны салбарт олон жил ажилласан, туршлагатай найрсаг зөвлөх туслах юм.
 
-${queryContextDescription}
+ХАРИЛЦААНЫ СТАНДАРТ (МАШ ЧУХАЛ):
+1. Хэзээ ч робот шиг, хуурай албархуу өнгө аясаар бүү эхэл!
+   - ❌ "Мэдээллийн санд бүртгэлд байгаа 22,785 тендерийн мэдээлэл дээр үндэслэн..."
+   - ❌ "Хэрэглэгчийн асуултын дагуу доорх жагсаалтыг хүргэж байна..."
+   - ❌ "Системийн дүн шинжилгээний үр дүнд..." гэх мэт хиймэл, робот эхлэлийг ОГТ БҮҮ АШИГЛА.
+   - ✅ ОРОНД НЬ: "2026 оны хамгийн өндөр төсөвтэй тендерүүдийг жагсаавал:", "Одоогоор хамгийн өндөр дүнтэй тендерүүд эдгээр байна:", "Таны хайсан тендерүүдийг энд нэгтгэлээ:" гэх мэтээр шууд энгийн, ойлгомжтой, амьд найрсаг монгол хэлээр эхэл.
+2. Мэдээллээ хүнд уншихад эвтэйхэн, цэвэрхэн жагсаалтаар харуул:
+   - Дугаар, Нэр (тодоор), Төсөв, Захиалагч, Төлөв.
+   - Төсвийг заахдаа өгөгдсөн их наяд (Их наяд ₮), тэрбум (тэрбум ₮), сая (сая ₮)-ийн нэгжийг огт өөрчилж болохгүй (Жишээ нь 1.21 Их наяд ₮-ийг 1.21 тэрбум ₮ болгож бүү андуур!).
+3. Төгсгөлд нь нөхөрсөг практик зөвлөгөө эсвэл дараагийн алхмыг найрсаг санал болго (Жишээ нь: "💡 Та эдгээрээс аль нэг тендерийг сонирхож байвал шаардагдах бичиг баримт, баталгааг нь дэлгэрүүлээд асуугаарай!").
+
+БОДИТ МЭДЭЭЛЭЛ:
 ${relevantTenders
   .map(
     (t, idx) =>
       `${idx + 1}. [${t.tenderCode || t.invitationId}] ${t.tenderName}\n   - Төсөв: ${formatBudget(t.totalBudget || 0)} (${(t.totalBudget || 0).toLocaleString()} ₮)\n   - Захиалагч: ${t.budgetEntityName}\n   - Төрөл: ${t.tenderTypeName || 'Бусад'} | Төлөв: ${t.docStatusName || 'Нээлттэй'}`
   )
-  .join('\n\n')}
-
-ХАРИУЛТЫН ЗААВАР:
-1. Хэрэглэгчийн асуултад дээрх бодит өгөгдлийг ашиглан дэлгэрэнгүй, цэгцтэй, үнэн зөв хариулна уу.
-2. Мөнгөн дүнг их наяд (Их наяд ₮), тэрбум (тэрбум ₮), сая (сая ₮)-аар тодорхой дурдаарай.
-3. Хэрэв тодорхой тендерийг онцолбол түүний код, захиалагч, төлөвийг тодорхой бичнэ үү.`;
+  .join('\n\n')}`;
       }
     } else {
       if (targetTender) {
-        systemPrompt = `You are an official procurement expert for Mongolia's tender system (tender.gov.mn).
-Target Tender Information:
+        systemPrompt = `You are an experienced, friendly procurement consultant for Mongolia's tender system (tender.gov.mn).
+Answer naturally and helpfully without robotic jargon.
+Target Tender:
 - Name: ${targetTender.tenderName}
 - Code: ${targetTender.tenderCode || targetTender.invitationNumber}
 - Budget: ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} MNT)
@@ -352,10 +354,11 @@ Target Tender Information:
 - Financing: ${targetTender.fundName}
 - Deadline: ${targetTender.receiveDate}
 
-Provide a comprehensive analysis including technical requirements, bid security, and actionable tips for bidders in clean Markdown.`;
+Provide practical guidance on technical requirements, bid security, and key deadlines in clean Markdown.`;
       } else {
-        systemPrompt = `You are a tender analyst for Mongolia's public procurement portal (22,785 total tenders, 21.72 Trillion MNT budget).
-${queryContextDescription}
+        systemPrompt = `You are a friendly, helpful procurement advisor for Mongolia's tender portal.
+Give direct, clear answers in natural English without robotic clichés.
+Tenders:
 ${relevantTenders
   .map(
     (t, idx) =>
@@ -443,9 +446,8 @@ Answer clearly in English using this data.`;
     }
 
     // List fallback with real database results
-    const fallbackList = `### 📊 ${queryContextDescription || 'Тендерийн Мэдээллийн Тойм'}
+    const fallbackList = `Одоогийн байдлаар тохирох тендерүүдийг жагсаавал:
 
-Мэдээллийн сангаас илэрсэн бодит тендерүүд:
 ${relevantTenders
   .map(
     (t, idx) =>
@@ -453,7 +455,7 @@ ${relevantTenders
   )
   .join('\n\n')}
 
-Та хүссэн тодорхой тендерийн нэр, дугаар, салбараар лавлан асуугаарай.`;
+💡 *Та аль нэг тендерийн талаар дэлгэрүүлж асуухыг хүсвэл нэр эсвэл дугаарыг нь бичээрэй.*`;
 
     return NextResponse.json({ reply: fallbackList });
   } catch (error: any) {
