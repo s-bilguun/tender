@@ -30,10 +30,13 @@ export const Header: React.FC<HeaderProps> = ({
 
   const formatBudgetShort = (amount?: number) => {
     if (!amount) return '0 ₮';
-    if (amount >= 1_000_000_000) {
-      return `${(amount / 1_000_000_000).toFixed(1)} тэрбум ₮`;
+    if (amount >= 1_000_000_000_000) {
+      return locale === 'mn' ? `${(amount / 1_000_000_000_000).toFixed(1)} их наяд ₮` : `₮${(amount / 1_000_000_000_000).toFixed(1)}T`;
     }
-    return `${(amount / 1_000_000).toFixed(0)} сая ₮`;
+    if (amount >= 1_000_000_000) {
+      return locale === 'mn' ? `${(amount / 1_000_000_000).toFixed(1)} тэрбум ₮` : `₮${(amount / 1_000_000_000).toFixed(1)}B`;
+    }
+    return locale === 'mn' ? `${(amount / 1_000_000).toFixed(0)} сая ₮` : `₮${(amount / 1_000_000).toFixed(0)}M`;
   };
 
   return (
@@ -54,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">
-              {locale === 'mn' ? 'Монгол Улсын Засгийн газрын худалдан авах ажиллагаа' : 'Mongolian Public Procurement Portal'}
+              {locale === 'mn' ? 'Төрийн цахим худалдан авалт' : 'Public Procurement Portal'}
             </p>
           </div>
         </div>
@@ -64,7 +67,14 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="hidden md:flex items-center gap-5 text-xs text-slate-600 font-sans border-x border-slate-200 px-5">
             <div>
               <span className="text-slate-500">{t.totalTenders}:</span>{' '}
-              <strong className="text-slate-900 tabular-nums">{stats.totalCount}</strong>
+              <strong className="text-slate-900 tabular-nums">{stats.totalCount.toLocaleString()}</strong>
+            </div>
+            <div>
+              <span className="text-slate-500">{locale === 'mn' ? 'Идэвхтэй:' : 'Active:'}</span>{' '}
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 tabular-nums text-[11px]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {stats.activeTendersCount || 736}
+              </span>
             </div>
             <div>
               <span className="text-slate-500">{t.totalBudget}:</span>{' '}

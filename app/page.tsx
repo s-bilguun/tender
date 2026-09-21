@@ -125,8 +125,8 @@ export default function Home() {
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
               {locale === 'mn'
-                ? 'Монгол Улсын хэмжээнд зарлагдсан төрийн болон орон нутгийн тендерийн нээлттэй мэдээлэл'
-                : 'Official open procurement tenders and bid invitations published in Mongolia.'}
+                ? 'Улсын болон орон нутгийн төсвийн бүх тендерийг нэг дороос хялбар хайж, дүн шинжилгээ хийх нээлттэй сан'
+                : 'Search and analyze all national and municipal procurement tenders in one place.'}
             </p>
           </div>
 
