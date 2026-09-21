@@ -263,13 +263,13 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
   locale,
 }) => {
   const t = getTranslation(locale);
-  const [selectedModel, setSelectedModel] = useState<string>('openrouter/free');
+  const [selectedModel, setSelectedModel] = useState<string>('google/gemma-4-26b-a4b-it:free');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
       sender: 'assistant',
       text: locale === 'mn'
-        ? `Сайн байна уу! Би tender.gov.mn-ийн бодит өгөгдөлд тулгуурласан **Тендерийн AI Шинжээч** байна.\n\nТа сонгон шалгаруулалт, тооцоолол, шаардлага болон салбарын чиг хандлагын талаар асуугаарай. (Дээрээс NVIDIA Nemotron 3 Ultra эсвэл Автомат загвараа сонгож болно).`
+        ? `Сайн байна уу! Би tender.gov.mn-ийн бодит өгөгдөлд тулгуурласан **Тендерийн AI Шинжээч** байна.\n\nТа сонгон шалгаруулалт, тооцоолол, шаардлага болон салбарын чиг хандлагын талаар асуугаарай.`
         : `Hello! I am your AI Tender Intelligence Assistant, powered by live data from Mongolia's procurement portal (tender.gov.mn).\n\nAsk me about upcoming bids, budget allocations, compliance checklists, or market trends.`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
@@ -403,10 +403,9 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
           onChange={(e) => setSelectedModel(e.target.value)}
           className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-blue-600 w-full max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
         >
-          <option value="openrouter/free">⚡ Автомат сонголт (openrouter/free)</option>
-          <option value="nvidia/nemotron-3-ultra-550b-a55b:free">🧠 NVIDIA Nemotron 3 Ultra 550B (free)</option>
+          <option value="google/gemma-4-26b-a4b-it:free">🚀 Google Gemma 4 26B (free - Хурдан, Монгол хэл)</option>
           <option value="nvidia/nemotron-3.5-lightning:free">⚡ NVIDIA Nemotron 3.5 Lightning (free)</option>
-          <option value="qwen/qwen3.8-27b:free">🌐 Qwen 3.8 27B (free)</option>
+          <option value="openrouter/free">🌐 Автомат сонголт (openrouter/free)</option>
         </select>
       </div>
 
