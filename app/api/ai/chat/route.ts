@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
-import { tenderStore } from '@/lib/tender-client';
 import { TenderItem } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -43,10 +42,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
+    const lower = message.toLowerCase();
     let targetTender: TargetTenderInfo | null = null;
     let relevantTenders: Partial<TenderItem>[] = [];
+    let queryContextDescription = '';
 
-    // STEP 1: If tenderContext is passed from UI, use it and fetch full row from DB
+    // STEP 1: Specific Tender Context from UI
     if (tenderContext) {
       const code = tenderContext.tenderCode || tenderContext.invitationNumber;
       const id = tenderContext.invitationId;
@@ -99,10 +100,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // STEP 2: If no targetTender yet, intelligently extract tender from user's message
+    // STEP 2: Extract Tender Code or Quoted Title from message
     if (!targetTender) {
       try {
-        // A. Extract tender code or invitation number (e.g. ЭҮТӨҮГ/202601021361, 202601021361)
         const codeMatch = message.match(/([A-ZА-ЯӨҮa-zа-яөү0-9-]+\/\d{6,}(?:\/\d{2}\/\d{2})?|\b\d{10,}\b)/);
         if (codeMatch) {
           const rawCode = codeMatch[1].trim();
@@ -132,7 +132,6 @@ export async function POST(request: NextRequest) {
           }
         }
 
-        // B. Extract quoted title (e.g. "Өрөмдлөгийн технологийн материал" or “...”)
         if (!targetTender) {
           const titleMatch = message.match(/["“]([^"”]{4,})["”]/);
           if (titleMatch) {
@@ -168,91 +167,177 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // STEP 3: If still no targetTender, search database for relevant tenders by keywords
+    // STEP 3: Intent Classification & Specialized Database Queries (if no specific single tender)
     if (!targetTender) {
+      // INTENT A: TOP / HIGHEST BUDGET TENDERS
+      const isTopBudget = /(хамгийн\s*(их|өндөр|үнэтэй|том)|топ\s*\d*|их\s*төсөвтэй|өндөр\s*төсөвтэй|хамгийн\s*их\s*мөнгө|highest\s*budget|top\s*budget|largest)/i.test(message);
+
+      // INTENT B: LOWEST BUDGET TENDERS
+      const isLowBudget = /(хамгийн\s*(бага|хямд|жижиг)|бага\s*төсөвтэй|хямд\s*төсөвтэй|lowest\s*budget)/i.test(message);
+
+      // INTENT C: ACTIVE / RECEIVING TENDERS
+      const isActiveTenders = /(хүлээн\s*авч\s*байгаа|одоо\s*нээлттэй|дуусах\s*гэж\s*байгаа|дуусах\s*хугацаа|энэ\s*7\s*хоногт|идэвхтэй|active|closing\s*soon)/i.test(message);
+
+      // INTENT D: RECENT / NEWEST TENDERS
+      const isRecentTenders = /(шинээр|сүүлд\s*зарлагдсан|хамгийн\s*шинэ|шинэ\s*тендер|хамгийн\s*сүүлийн|newest|recent)/i.test(message);
+
       try {
-        const stopwords = new Set([
-          'тендерийн', 'тендер', 'тендерүүд', 'төсөв', 'шаардлага', 'онцлогийг', 'онцлог',
-          'шинжилж', 'шинжилгээ', 'оролцогчдод', 'зориулсан', 'зөвлөмж', 'өгнө', 'үү', 'асуудал',
-          'мэдээлэл', 'талаар', 'байна', 'хэдэн', 'ямар', 'юу', 'авах', 'байгаа', 'гэж', 'болон'
-        ]);
-
-        const cleaned = message.replace(/["'“”«»()[\]{}?!,.:;]/g, ' ');
-        const keywords = cleaned
-          .split(/\s+/)
-          .map((w) => w.trim())
-          .filter((w) => w.length > 2 && !stopwords.has(w.toLowerCase()));
-
-        if (keywords.length > 0) {
-          const conditions = keywords
-            .slice(0, 3)
-            .map((k) => `tender_name.ilike.%${k}%,budget_entity_name.ilike.%${k}%`)
-            .join(',');
-
-          const { data, error } = await supabase
+        if (isTopBudget) {
+          queryContextDescription = 'Мэдээллийн сангаас шүүсэн ХАМГИЙН ӨНДӨР ТӨСӨВТЭЙ ТОП ТЕНДЕРҮҮД (2026 он):';
+          const { data } = await supabase
             .from('tenders')
-            .select('invitation_id, tender_name, tender_code, total_budget, budget_entity_name, receive_date, open_date, tender_type_name, rule_name')
-            .or(conditions)
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .order('total_budget', { ascending: false })
             .limit(10);
+          if (data) relevantTenders = data.map(mapRowToTender);
+        } else if (isLowBudget) {
+          queryContextDescription = 'Мэдээллийн сангаас шүүсэн БАГА ТӨСӨВТЭЙ ТЕНДЕРҮҮД:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .gt('total_budget', 100000)
+            .order('total_budget', { ascending: true })
+            .limit(10);
+          if (data) relevantTenders = data.map(mapRowToTender);
+        } else if (isActiveTenders) {
+          queryContextDescription = 'Одоогоор САНАЛ ХҮЛЭЭН АВЧ БАЙГАА (Идэвхтэй) ТЕНДЕРҮҮД:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .ilike('doc_status_name', '%хүлээн авч%')
+            .order('receive_date', { ascending: true })
+            .limit(10);
+          if (data) relevantTenders = data.map(mapRowToTender);
+        } else if (isRecentTenders) {
+          queryContextDescription = 'ХАМГИЙН СҮҮЛД ЗАРЛАГДСАН ТЕНДЕРҮҮД:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .order('publish_date', { ascending: false })
+            .limit(10);
+          if (data) relevantTenders = data.map(mapRowToTender);
+        } else {
+          // Check if specific organization is named
+          const knownAgencies = [
+            'эрдэнэт', 'таван толгой', 'төмөр зам', 'убтз', 'нийслэл', 'нздтг', 'эрүүл мэнд', 'эмя',
+            'боловсрол', 'бшуя', 'зам тээвэр', 'зтя', 'онцгой байдал', 'цагдаа', 'хүнс', 'ххаахүй',
+            'эрчим хүч', 'эхя', 'дцс', 'багануур', 'хотын захиргаа'
+          ];
+          const matchedAgency = knownAgencies.find((a) => lower.includes(a));
 
-          if (!error && data && data.length > 0) {
-            relevantTenders = data.map((d) => ({
-              invitationId: d.invitation_id,
-              tenderCode: d.tender_code,
-              tenderName: d.tender_name,
-              totalBudget: Number(d.total_budget) || 0,
-              budgetEntityName: d.budget_entity_name,
-              receiveDate: d.receive_date || d.open_date,
-              tenderTypeName: d.tender_type_name,
-              ruleName: d.rule_name,
-            }));
+          if (matchedAgency) {
+            queryContextDescription = `"${matchedAgency}" байгууллагатай холбоотой тендерүүд:`;
+            const { data } = await supabase
+              .from('tenders')
+              .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+              .ilike('budget_entity_name', `%${matchedAgency}%`)
+              .order('total_budget', { ascending: false })
+              .limit(10);
+            if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+          }
+
+          // Keyword search if no agency match or 0 agency results
+          if (relevantTenders.length === 0) {
+            const stopwords = new Set([
+              'тендерийн', 'тендер', 'тендерүүд', 'төсөв', 'шаардлага', 'онцлогийг', 'онцлог',
+              'шинжилж', 'шинжилгээ', 'оролцогчдод', 'зориулсан', 'зөвлөмж', 'өгнө', 'үү', 'асуудал',
+              'мэдээлэл', 'талаар', 'байна', 'хэдэн', 'ямар', 'юу', 'авах', 'байгаа', 'гэж', 'болон',
+              'жагсаана', 'жагсаалт', 'харуул', 'өгөөч', 'гэсэн', 'аль'
+            ]);
+
+            const cleaned = message.replace(/["'“”«»()[\]{}?!,.:;]/g, ' ');
+            const keywords = cleaned
+              .split(/\s+/)
+              .map((w) => w.trim())
+              .filter((w) => w.length > 2 && !stopwords.has(w.toLowerCase()));
+
+            if (keywords.length > 0) {
+              queryContextDescription = `"${keywords.join(', ')}" түлхүүр үгээр илэрсэн тендерүүд:`;
+              const conditions = keywords
+                .slice(0, 3)
+                .map((k) => `tender_name.ilike.%${k}%,budget_entity_name.ilike.%${k}%`)
+                .join(',');
+
+              const { data } = await supabase
+                .from('tenders')
+                .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+                .or(conditions)
+                .order('total_budget', { ascending: false })
+                .limit(10);
+
+              if (data && data.length > 0) {
+                relevantTenders = data.map(mapRowToTender);
+              }
+            }
           }
         }
-      } catch (sbErr) {
-        console.warn('Supabase query in AI chat failed:', sbErr);
+      } catch (err) {
+        console.warn('Query processing failed:', err);
       }
 
+      // If still empty (e.g. greeting or general query), provide top active/budget tenders from Supabase
       if (relevantTenders.length === 0) {
-        const allTenders = tenderStore.getAllTenders();
-        const query = message.toLowerCase();
-        const matched = allTenders.filter(
-          (t) =>
-            (t.tenderName && query.split(' ').some((w) => w.length > 2 && t.tenderName.toLowerCase().includes(w))) ||
-            (t.budgetEntityName && query.split(' ').some((w) => w.length > 2 && t.budgetEntityName.toLowerCase().includes(w)))
-        );
-        relevantTenders = matched.length > 0 ? matched.slice(0, 10) : allTenders.slice(0, 10);
+        queryContextDescription = 'Мэдээллийн сангаас санал болгох тэргүүлэх тендерүүд:';
+        try {
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data) relevantTenders = data.map(mapRowToTender);
+        } catch (e) {
+          console.warn('Fallback query failed:', e);
+        }
       }
     }
 
     // STEP 4: Build high-quality system prompt
     let systemPrompt = '';
+    const statsContext = `
+МЭДЭЭЛЛИЙН САНГИЙН БОДИТ СТАТИСТИК (2026 он):
+- Нийт бүртгэлтэй тендер: 22,785
+- Нийт батлагдсан төсөвт өртөг: 21.72 Их наяд ₮
+- Хамгийн өндөр төсөвтэй тендер: 1.21 Их наяд ₮ ("Нийтийн тээврийн Улаанбаатар Трам төслийн 2 дугаар шугам" - НЗДТГ)
+- Төлөвийн бүтэц: Үр дүн гарсан (21,089), Тендер хүлээн авч байгаа буюу идэвхтэй (737), Нээгдсэн (717), Хүчингүй (50)
+- Төрлийн бүтэц: Бараа (13,734), Ажил (6,373), Үйлчилгээ (2,667)
+`;
+
     if (locale === 'mn') {
       if (targetTender) {
         systemPrompt = `Та бол Монгол Улсын Төрийн худалдан авах ажиллагааны цахим систем (tender.gov.mn)-ийн албан ёсны AI шинжээч, зөвлөх юм.
-Хэрэглэгч дараах тодорхой тендерийн талаар асууж байна:
+Хэрэглэгч дараах тодорхой тендерийн талаар лавлаж байна:
 
 📌 ҮНДСЭН МЭДЭЭЛЭЛ:
 - Тендерийн нэр: ${targetTender.tenderName}
 - Тендерийн код: ${targetTender.tenderCode || targetTender.invitationNumber}
-- Төсөвт өртөг: ${formatBudget(targetTender.totalBudget || 0)}
+- Төсөвт өртөг: ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} ₮)
 - Захиалагч байгууллага: ${targetTender.budgetEntityName} (${targetTender.positionName || 'Төрийн худалдан авагч'})
 - Төрөл: ${targetTender.tenderTypeName || 'Бараа'}
 - Шалгаруулах арга: ${targetTender.ruleName || 'Нээлттэй тендер шалгаруулалтын арга'}
-- Санхүүжилтийн эх үүсвэр: ${targetTender.fundName || 'Өөрийн хөрөнгө'}
+- Санхүүжилтийн эх үүсвэр: ${targetTender.fundName || 'Өөрийн хөрөнгө / Төсөв'}
 - Эцсийн хугацаа: ${targetTender.receiveDate || 'Тодорхойгүй'}
-- Нийтлэгдсэн огноо: ${targetTender.publishDate || '2026 он'}
+- Төлөв: ${targetTender.docStatusName || 'Бүртгэгдсэн'}
 
 ХАРИУЛТЫН ЗААВАР:
-1. "Тендерийн дүн шинжилгээ" хэсэгт уг тендерийн төсөв, захиалагчийн шаардлага, онцлогийг мэргэжлийн түвшинд дүгнэ.
-2. "Оролцогчдод өгөх зөвлөмж" хэсэгт техникийн тодорхойлолт, тендерийн баталгаа, Monpass тоон гарын үсэг, татварын өргүй лавлагаа, санал өгөх хугацааны талаар практик зөвлөгөө өг.
-3. Хариултаа Markdown гарчиг (###), тод үгс (**bold**), жагсаалтаар эмх цэгцтэй гаргана уу.`;
+1. "Тендерийн дүн шинжилгээ" хэсэгт төсөв, захиалагчийн шаардлага, онцлогийг мэргэжлийн түвшинд дүгнэ.
+2. "Оролцогчдод өгөх зөвлөмж" хэсэгт техникийн тодорхойлолт, 1-2%-ийн тендерийн баталгаа, Monpass тоон гарын үсэг, татварын өргүй лавлагаа, санал өгөх хугацааны талаар зөвлөгөө өг.
+3. Хариултаа эмх цэгцтэй Markdown гарчиг (###), тод үгс (**bold**), жагсаалтаар өнгө үзэмжтэй гаргана уу.`;
       } else {
-        systemPrompt = `Та бол Монгол Улсын Төрийн худалдан авах ажиллагааны цахим систем (tender.gov.mn)-ийн 22,000+ тендерийн сантай ажилладаг албан ёсны AI шинжээч юм.
-Хэрэглэгчийн асуулттай холбогдох тендерүүд:
-${relevantTenders.map((t) => `- [${t.tenderCode || t.invitationId}] ${t.tenderName} | Төсөв: ${formatBudget(t.totalBudget || 0)} | Захиалагч: ${t.budgetEntityName}`).join('\n')}
+        systemPrompt = `Та бол Монгол Улсын Төрийн худалдан авах ажиллагааны цахим систем (tender.gov.mn)-ийн 22,785 тендерийн сантай ажилладаг албан ёсны AI шинжээч юм.
+${statsContext}
 
-Хэрэглэгчийн асуултад бодит тоо баримтад тулгуурлан тодорхой, цэгцтэй монгол хэлээр хариулна уу.`;
+${queryContextDescription}
+${relevantTenders
+  .map(
+    (t, idx) =>
+      `${idx + 1}. [${t.tenderCode || t.invitationId}] ${t.tenderName}\n   - Төсөв: ${formatBudget(t.totalBudget || 0)} (${(t.totalBudget || 0).toLocaleString()} ₮)\n   - Захиалагч: ${t.budgetEntityName}\n   - Төрөл: ${t.tenderTypeName || 'Бусад'} | Төлөв: ${t.docStatusName || 'Нээлттэй'}`
+  )
+  .join('\n\n')}
+
+ХАРИУЛТЫН ЗААВАР:
+1. Хэрэглэгчийн асуултад дээрх бодит өгөгдлийг ашиглан дэлгэрэнгүй, цэгцтэй, үнэн зөв хариулна уу.
+2. Мөнгөн дүнг их наяд (Их наяд ₮), тэрбум (тэрбум ₮), сая (сая ₮)-аар тодорхой дурдаарай.
+3. Хэрэв тодорхой тендерийг онцолбол түүний код, захиалагч, төлөвийг тодорхой бичнэ үү.`;
       }
     } else {
       if (targetTender) {
@@ -260,18 +345,23 @@ ${relevantTenders.map((t) => `- [${t.tenderCode || t.invitationId}] ${t.tenderNa
 Target Tender Information:
 - Name: ${targetTender.tenderName}
 - Code: ${targetTender.tenderCode || targetTender.invitationNumber}
-- Budget: ${formatBudget(targetTender.totalBudget || 0)}
+- Budget: ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} MNT)
 - Agency: ${targetTender.budgetEntityName}
 - Category: ${targetTender.tenderTypeName}
 - Method: ${targetTender.ruleName}
 - Financing: ${targetTender.fundName}
 - Deadline: ${targetTender.receiveDate}
 
-Provide a comprehensive analysis including procurement risks, technical requirements, bid security, and actionable tips for bidders in clean Markdown.`;
+Provide a comprehensive analysis including technical requirements, bid security, and actionable tips for bidders in clean Markdown.`;
       } else {
-        systemPrompt = `You are a tender analyst for Mongolia's public procurement portal.
-Relevant tenders:
-${relevantTenders.map((t) => `- [${t.tenderCode}] ${t.tenderName} | ${formatBudget(t.totalBudget || 0)} | ${t.budgetEntityName}`).join('\n')}
+        systemPrompt = `You are a tender analyst for Mongolia's public procurement portal (22,785 total tenders, 21.72 Trillion MNT budget).
+${queryContextDescription}
+${relevantTenders
+  .map(
+    (t, idx) =>
+      `${idx + 1}. [${t.tenderCode}] ${t.tenderName} | Budget: ${formatBudget(t.totalBudget || 0)} | Agency: ${t.budgetEntityName}`
+  )
+  .join('\n')}
 Answer clearly in English using this data.`;
       }
     }
@@ -305,7 +395,7 @@ Answer clearly in English using this data.`;
                 { role: 'user', content: message },
               ],
               temperature: 0.6,
-              max_tokens: 1200,
+              max_tokens: 1400,
             }),
           });
 
@@ -333,36 +423,55 @@ Answer clearly in English using this data.`;
 * **Тендерийн нэр:** ${targetTender.tenderName}
 * **Тендерийн дугаар:** ${targetTender.tenderCode || targetTender.invitationNumber || 'Бүртгэлтэй'}
 * **Захиалагч байгууллага:** ${targetTender.budgetEntityName || 'Төрийн байгууллага'}
-* **Төсөвт өртөг:** ${formatBudget(targetTender.totalBudget || 0)}
+* **Төсөвт өртөг:** ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} ₮)
 * **Төрөл:** ${targetTender.tenderTypeName || 'Бараа'}
 * **Шалгаруулах арга:** ${targetTender.ruleName || 'Нээлттэй тендер шалгаруулалт'}
 * **Санхүүжилтийн эх үүсвэр:** ${targetTender.fundName || 'Өөрийн хөрөнгө'}
 * **Эцсийн хугацаа:** ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
 
 #### 2. Төсөв ба Захиалагчийн онцлог
-* **Төсвийн баталгаа:** "${targetTender.fundName || 'Өөрийн хөрөнгө'}" эх үүсвэрээр санхүүжигдэж байгаа нь гүйцэтгэлийн дараах төлбөрийн эрсдэл бага, санхүүжилт найдвартайг харуулж байна.
-* **Захиалагчийн шаардлага:** ${targetTender.budgetEntityName} нь өөрийн үйл ажиллагааны онцлогт тохирсон чанарын стандартыг нарийн шалгадаг тул техникийн тодорхойлолтыг 100% хангах шаардлагатай.
+* **Төсвийн баталгаа:** "${targetTender.fundName || 'Өөрийн хөрөнгө'}" эх үүсвэрээр санхүүжигдэж байгаа нь төлбөрийн эрсдэл бага, санхүүжилт найдвартайг харуулж байна.
+* **Захиалагчийн шаардлага:** ${targetTender.budgetEntityName} нь чанарын стандартыг нарийн шалгадаг тул техникийн тодорхойлолтыг 100% хангах шаардлагатай.
 
 #### 3. Оролцогчдод өгөх гол зөвлөмж
 1. **Техникийн тодорхойлолт:** Нийлүүлэх бараа, материалын техникийн паспорт, чанарын гэрчилгээг бүрэн хавсаргах.
 2. **Татвар ба НД:** Татварын ерөнхий газар болон Нийгмийн даатгалын лавлагаагаар хугацаа хэтэрсэн өргүй байх.
-3. **Тендерийн баталгаа:** Хуулийн дагуу төсөвт өртгийн 1-2%-ийн хэмжээтэй арилжааны банкны баталгааг урьдчилан гаргуулж хавсаргах.
-4. **Цахим системээр илгээх:** **tender.gov.mn** системд Monpass тоон гарын үсгээр баталгаажуулж, сүлжээний саатлаас сэргийлэн хугацаанаас 2-3 цагийн өмнө саналаа илгээх.`;
+3. **Тендерийн баталгаа:** Төсөвт өртгийн 1-2%-ийн хэмжээтэй арилжааны банкны баталгааг урьдчилан бэлдэх.
+4. **Цахим системээр илгээх:** **tender.gov.mn** системд Monpass тоон гарын үсгээр баталгаажуулж, хугацаанаас 2-3 цагийн өмнө илгээх.`;
 
       return NextResponse.json({ reply: fallbackAnalysis });
     }
 
-    // Generic list fallback if user just asked generally
-    const fallbackText = `### 📊 Тендерийн Мэдээллийн Тойм
+    // List fallback with real database results
+    const fallbackList = `### 📊 ${queryContextDescription || 'Тендерийн Мэдээллийн Тойм'}
 
-Мэдээллийн сангаас илэрсэн тендерүүд:
-${relevantTenders.map((t) => `- **${t.tenderName}** (${formatBudget(t.totalBudget || 0)}) — *${t.budgetEntityName}*`).join('\n')}
+Мэдээллийн сангаас илэрсэн бодит тендерүүд:
+${relevantTenders
+  .map(
+    (t, idx) =>
+      `${idx + 1}. **${t.tenderName}**\n   - Дугаар: \`${t.tenderCode}\`\n   - Төсөв: **${formatBudget(t.totalBudget || 0)}**\n   - Захиалагч: *${t.budgetEntityName}*\n   - Төлөв: ${t.docStatusName || 'Нээлттэй'}`
+  )
+  .join('\n\n')}
 
 Та хүссэн тодорхой тендерийн нэр, дугаар, салбараар лавлан асуугаарай.`;
 
-    return NextResponse.json({ reply: fallbackText });
+    return NextResponse.json({ reply: fallbackList });
   } catch (error: any) {
     console.error('Chat error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+}
+
+function mapRowToTender(d: any): Partial<TenderItem> {
+  return {
+    invitationId: d.invitation_id,
+    tenderCode: d.tender_code,
+    tenderName: d.tender_name,
+    totalBudget: Number(d.total_budget) || 0,
+    budgetEntityName: d.budget_entity_name,
+    receiveDate: d.receive_date || d.open_date,
+    tenderTypeName: d.tender_type_name,
+    ruleName: d.rule_name,
+    docStatusName: d.doc_status_name,
+  };
 }
