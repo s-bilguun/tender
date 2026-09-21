@@ -35,6 +35,18 @@ export async function GET(request: NextRequest) {
         query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,invitation_number.ilike.%${term}%`);
       }
 
+      if (status && status !== 'all') {
+        if (status === 'receiving') {
+          query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+        } else if (status === 'opened') {
+          query = query.ilike('doc_status_name', '%Нээгдсэн%');
+        } else if (status === 'result') {
+          query = query.ilike('doc_status_name', '%Үр дүн%');
+        } else if (status === 'cancelled') {
+          query = query.ilike('doc_status_name', '%Хүчингүй%');
+        }
+      }
+
       // Sorting
       switch (sortBy) {
         case 'budget_desc':

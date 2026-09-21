@@ -124,10 +124,25 @@ export const TenderTable: React.FC<TenderTableProps> = ({
 
                   {/* Status */}
                   <td className="py-3 px-4 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 text-[11px] text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      {tender.docStatusName || 'Хүлээн авч буй'}
-                    </span>
+                    {(() => {
+                      const s = (tender.docStatusName || '').toLowerCase();
+                      const style = s.includes('хүлээн авч')
+                        ? { dot: 'bg-emerald-500', cls: 'text-emerald-700 bg-emerald-50/80 border-emerald-200' }
+                        : s.includes('нээгдсэн')
+                        ? { dot: 'bg-amber-500', cls: 'text-amber-700 bg-amber-50/80 border-amber-200' }
+                        : s.includes('үр дүн')
+                        ? { dot: 'bg-blue-500', cls: 'text-blue-700 bg-blue-50/80 border-blue-200' }
+                        : s.includes('хүчингүй')
+                        ? { dot: 'bg-rose-500', cls: 'text-rose-700 bg-rose-50/80 border-rose-200' }
+                        : { dot: 'bg-slate-400', cls: 'text-slate-700 bg-slate-100 border-slate-200' };
+
+                      return (
+                        <span className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded font-medium border ${style.cls}`}>
+                          <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+                          {tender.docStatusName || 'Хүлээн авч буй'}
+                        </span>
+                      );
+                    })()}
                   </td>
 
                   {/* Actions */}

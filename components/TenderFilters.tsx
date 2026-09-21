@@ -39,6 +39,14 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     { id: 'above2b', label: t.budgetRanges.above2b, min: 2_000_000_000, max: undefined },
   ];
 
+  const statuses = [
+    { id: 'all', label: locale === 'mn' ? 'Бүх төлөв (22k+)' : 'All (22k+)', dot: 'bg-slate-400' },
+    { id: 'receiving', label: locale === 'mn' ? 'Хүлээн авч буй (730+)' : 'Receiving (730+)', dot: 'bg-emerald-500' },
+    { id: 'opened', label: locale === 'mn' ? 'Нээгдсэн (710+)' : 'Opened (710+)', dot: 'bg-amber-500' },
+    { id: 'result', label: locale === 'mn' ? 'Үр дүн гарсан (21k)' : 'Awarded (21k)', dot: 'bg-blue-500' },
+    { id: 'cancelled', label: locale === 'mn' ? 'Хүчингүй' : 'Cancelled', dot: 'bg-rose-500' },
+  ];
+
   const currentCategory = filters.category || 'all';
 
   const getActiveBudgetTier = () => {
@@ -152,6 +160,27 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Status Filter Bar */}
+      <div className="flex items-center gap-1.5 overflow-x-auto w-full border-t border-slate-100 pt-2.5 text-xs scrollbar-none">
+        <span className="text-[11px] font-medium text-slate-400 mr-1 whitespace-nowrap">
+          {locale === 'mn' ? 'Төлөв:' : 'Status:'}
+        </span>
+        {statuses.map((st) => (
+          <button
+            key={st.id}
+            onClick={() => onFilterChange({ status: st.id, page: 1 })}
+            className={`h-6 px-2.5 rounded-full text-[11px] flex items-center gap-1.5 whitespace-nowrap transition-colors ${
+              (filters.status || 'all') === st.id
+                ? 'bg-slate-900 text-white font-medium shadow-2xs'
+                : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/80'
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
+            <span>{st.label}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
