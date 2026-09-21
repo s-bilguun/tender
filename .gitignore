@@ -33,3 +33,6 @@ next-env.d.ts
 
 # cloned helper
 /ibelick-ui-skills
+
+# vercel
+.vercel
