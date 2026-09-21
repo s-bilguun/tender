@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { X, ExternalLink, Sparkles, Building2, Calendar, ShieldCheck, Tag, FileText, Copy, Check } from 'lucide-react';
+import { X, ExternalLink, Sparkles, Building2, Calendar, ShieldCheck, Tag, FileText, Copy, Check, Trophy, Users, CheckCircle2, FileSearch } from 'lucide-react';
 
 interface TenderDetailModalProps {
   tender: TenderItem | null;
@@ -208,6 +208,66 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
               <p className="text-[11px] text-slate-400 italic">
                 * Төрийн болон орон нутгийн өмчийн хөрөнгөөр бараа, ажил, үйлчилгээ худалдан авах тухай хуулийн дагуу тооцов.
               </p>
+            </div>
+          )}
+
+          {/* Concluded Tender Result & Participants Section */}
+          {tender.docStatusName?.includes('Үр дүн') ? (
+            <div className="space-y-2 text-xs border border-amber-200 bg-amber-50/50 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs uppercase font-bold text-amber-900 flex items-center gap-1.5">
+                  <Trophy className="h-4 w-4 text-amber-600" />
+                  <span>{locale === 'mn' ? 'Шалгаруулалтын үр дүн & Оролцогчид' : 'Evaluation Result & Bidders'}</span>
+                </h4>
+                <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">
+                  Шалгаруулалт дууссан
+                </span>
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed">
+                {locale === 'mn'
+                  ? 'Энэхүү тендер нь шалгаруулалтын шатаа дуусгаж, оролцогчдын үнийн санал болон үнэлгээний хорооны албан ёсны шийдвэр (шалгарсан / татгалзсан шалтгаан) баталгаажсан байна.'
+                  : 'This tender has concluded. Official committee decision, bid prices, and qualification status are recorded.'}
+              </p>
+              <div className="pt-2 flex flex-wrap items-center gap-2">
+                <a
+                  href={`https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-white text-slate-800 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs"
+                >
+                  <Users className="h-3.5 w-3.5 text-blue-600" />
+                  <span>{locale === 'mn' ? 'Оролцогчдын санал & Протокол үзэх' : 'View Bidders & Protocol'}</span>
+                  <ExternalLink className="h-3 w-3 text-slate-400" />
+                </a>
+              </div>
+            </div>
+          ) : (
+            /* Active Tender Bidding Documents & Feasibility Section */
+            <div className="space-y-2 text-xs border border-slate-200 bg-slate-50 rounded-lg p-3.5">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs uppercase font-semibold text-slate-700 flex items-center gap-1.5">
+                  <FileSearch className="h-4 w-4 text-indigo-600" />
+                  <span>{locale === 'mn' ? 'Баримт бичиг & ТЭЗҮ (PDF)' : 'Bidding Documents & Feasibility'}</span>
+                </h4>
+                <span className="text-[10px] text-slate-500 font-medium">Албан ёсны эх сурвалж</span>
+              </div>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                {locale === 'mn'
+                  ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ) болон техникийн тодорхойлолт, ТЭЗҮ-ийг tender.gov.mn системээс татан авах боломжтой.'
+                  : 'Bidding documents and technical specifications are available on tender.gov.mn.'}
+              </p>
+              <div className="pt-1 flex items-center gap-2">
+                <a
+                  href={`https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-100 transition-colors"
+                >
+                  <FileText className="h-3 w-3 text-slate-500" />
+                  <span>{locale === 'mn' ? 'PDF баримт бичиг үзэх' : 'View PDF Documents'}</span>
+                  <ExternalLink className="h-2.5 w-2.5 text-slate-400" />
+                </a>
+              </div>
             </div>
           )}
         </div>
