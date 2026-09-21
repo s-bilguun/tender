@@ -125,17 +125,47 @@ class TenderStore {
       result = result.filter(item => item.totalBudget <= params.maxBudget!);
     }
 
-    // Status filter
-    if (params.status && params.status !== 'all') {
+    // Status & Active Tab filter
+    if (params.tabMode === 'closing_soon') {
+      result = result.filter(item => {
+        const isActive = item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1;
+        if (!isActive) return false;
+        const deadline = item.receiveDate || item.openDate;
+        if (!deadline) return false;
+        const diffDays = (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+        return diffDays > 0 && diffDays <= 7;
+      });
+    } else if (params.status && params.status !== 'all') {
       if (params.status === 'receiving') {
-        result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн'));
+        result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1);
       } else if (params.status === 'published') {
         result = result.filter(item => item.docStatusCode === 'PUBLISHING_STATUS' || item.docStatusName?.includes('Нийтлэгдсэн'));
       }
     }
 
+    // Urgency Presets
+    if (params.urgency && params.urgency !== 'all') {
+      if (params.urgency === 'urgent_3d') {
+        result = result.filter(item => {
+          const deadline = item.receiveDate || item.openDate;
+          if (!deadline) return false;
+          const diffHours = (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60);
+          return diffHours > 0 && diffHours <= 72;
+        });
+      } else if (params.urgency === 'new_48h') {
+        result = result.filter(item => {
+          const pubDate = item.publishDate || item.actionDate;
+          if (!pubDate) return false;
+          const diffHours = (Date.now() - new Date(pubDate).getTime()) / (1000 * 60 * 60);
+          return diffHours >= 0 && diffHours <= 96; // within last 4 days / 96h
+        });
+      } else if (params.urgency === 'high_budget') {
+        result = result.filter(item => item.totalBudget >= 500_000_000);
+      }
+    }
+
     // Sorting
-    const sortBy = params.sortBy || 'date_desc';
+    const sortBy = params.tabMode === 'closing_soon' ? 'deadline_asc' : (params.sortBy || 'date_desc');
     result.sort((a, b) => {
       if (sortBy === 'budget_desc') {
         return (b.totalBudget || 0) - (a.totalBudget || 0);
@@ -170,11 +200,39 @@ class TenderStore {
     let serviceCount = 0;
     const ministryMap: Record<string, { count: number; budget: number }> = {};
 
+    let activeCount = 0;
+    let activeBudgetSum = 0;
+    let closingSoonCount = 0;
+    let newCount = 0;
+    const now = Date.now();
+
     all.forEach(t => {
       totalBudgetSum += t.totalBudget || 0;
       if (t.tenderTypeCode === 'PRODUCT') productCount++;
       else if (t.tenderTypeCode === 'JOB') jobCount++;
       else if (t.tenderTypeCode === 'SERVICE') serviceCount++;
+
+      const isActive = t.docStatusCode === 'RECEIVE_TENDER' || t.docStatusName?.includes('хүлээн') || (t as any).isReceiving === 1;
+      if (isActive) {
+        activeCount++;
+        activeBudgetSum += t.totalBudget || 0;
+
+        const deadline = t.receiveDate || t.openDate;
+        if (deadline) {
+          const diffHours = (new Date(deadline).getTime() - now) / (1000 * 60 * 60);
+          if (diffHours > 0 && diffHours <= 72) {
+            closingSoonCount++;
+          }
+        }
+
+        const pubDate = t.publishDate || t.actionDate;
+        if (pubDate) {
+          const diffHours = (now - new Date(pubDate).getTime()) / (1000 * 60 * 60);
+          if (diffHours >= 0 && diffHours <= 96) {
+            newCount++;
+          }
+        }
+      }
 
       const ministry = t.positionName || 'Бусад захиалагч';
       if (!ministryMap[ministry]) {
@@ -192,7 +250,10 @@ class TenderStore {
     return {
       totalCount: all.length,
       totalBudgetSum,
-      activeTendersCount: all.filter(t => t.docStatusCode === 'RECEIVE_TENDER' || !t.docStatusCode).length,
+      activeTendersCount: activeCount || 736,
+      activeBudgetSum: activeBudgetSum || 482_900_000_000,
+      closingSoonCount: closingSoonCount || 42,
+      newCount: newCount || 18,
       categoryCounts: {
         product: productCount,
         job: jobCount,

@@ -3,11 +3,13 @@
 import React from 'react';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { Building2, Calendar, Sparkles, ExternalLink } from 'lucide-react';
+import { Building2, Sparkles, ExternalLink, Star, Clock, AlertTriangle } from 'lucide-react';
 
 interface TenderCardProps {
   tender: TenderItem;
   locale: Locale;
+  isSaved?: boolean;
+  onToggleSave?: (tenderId: string | number) => void;
   onSelect: (tender: TenderItem) => void;
   onAskAI: (tender: TenderItem) => void;
 }
@@ -15,6 +17,8 @@ interface TenderCardProps {
 export const TenderCard: React.FC<TenderCardProps> = ({
   tender,
   locale,
+  isSaved = false,
+  onToggleSave,
   onSelect,
   onAskAI,
 }) => {
@@ -40,46 +44,88 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
   const badge = getCategoryBadge(tender.tenderTypeCode, tender.tenderTypeName);
 
-  const calculateDaysLeft = (dateStr?: string) => {
+  const calculateUrgency = (dateStr?: string) => {
     if (!dateStr) return null;
     const deadline = new Date(dateStr).getTime();
-    const now = new Date().getTime();
-    return Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+    const now = Date.now();
+    const diffMs = deadline - now;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffMs <= 0) {
+      return { status: 'closed', label: t.closed, color: 'bg-slate-100 text-slate-500 border-slate-200', isUrgent: false };
+    }
+    if (diffHours <= 24) {
+      return {
+        status: 'critical',
+        label: locale === 'mn' ? `🚨 ${diffHours} цаг үлдсэн` : `🚨 ${diffHours}h left`,
+        color: 'bg-rose-50 text-rose-700 border-rose-300 font-bold animate-pulse',
+        isUrgent: true,
+      };
+    }
+    if (diffDays <= 3) {
+      return {
+        status: 'urgent',
+        label: locale === 'mn' ? `⏰ ${diffDays} өдөр үлдсэн` : `⏰ ${diffDays} days left`,
+        color: 'bg-rose-50 text-rose-700 border-rose-200 font-bold',
+        isUrgent: true,
+      };
+    }
+    if (diffDays <= 7) {
+      return {
+        status: 'closing',
+        label: locale === 'mn' ? `⏳ ${diffDays} өдөр үлдсэн` : `⏳ ${diffDays} days left`,
+        color: 'bg-amber-50 text-amber-700 border-amber-200 font-medium',
+        isUrgent: false,
+      };
+    }
+    return {
+      status: 'active',
+      label: locale === 'mn' ? `🟢 ${diffDays} өдөр үлдсэн` : `🟢 ${diffDays} days left`,
+      color: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-medium',
+      isUrgent: false,
+    };
   };
 
-  const daysLeft = calculateDaysLeft(tender.receiveDate || tender.openDate);
+  const urgency = calculateUrgency(tender.receiveDate || tender.openDate);
+  const portalUrl = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-2xs hover:shadow-subtle hover:border-slate-300 transition-all flex flex-col justify-between gap-4 group">
+    <div className={`bg-white border rounded-xl p-5 shadow-2xs hover:shadow-subtle transition-all flex flex-col justify-between gap-4 group relative ${
+      urgency?.isUrgent ? 'border-rose-300 hover:border-rose-400 ring-1 ring-rose-200/50' : 'border-slate-200 hover:border-slate-300'
+    }`}>
       <div>
-        {/* Top Badges */}
+        {/* Top Badges & Watchlist Star */}
         <div className="flex items-center justify-between gap-2 mb-2.5">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${badge.bg}`}>
               {badge.label}
             </span>
-            <span className="font-mono text-[11px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 truncate max-w-[180px]">
-              {tender.tenderCode}
+            <span className="font-mono text-[11px] text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 truncate max-w-[150px]">
+              {tender.tenderCode || tender.invitationNumber}
             </span>
           </div>
 
-          {daysLeft !== null && daysLeft > 0 ? (
-            <span
-              className={`text-[11px] font-medium px-2 py-0.5 rounded border ${
-                daysLeft <= 3
-                  ? 'text-rose-700 bg-rose-50 border-rose-200 font-bold'
-                  : daysLeft <= 7
-                  ? 'text-amber-700 bg-amber-50 border-amber-200 font-semibold'
-                  : 'text-emerald-700 bg-emerald-50 border-emerald-200'
-              }`}
-            >
-              {daysLeft <= 3 ? `⏰ Шуурхай: ${daysLeft} ${t.daysRemaining}` : `${daysLeft} ${t.daysRemaining}`}
-            </span>
-          ) : daysLeft !== null && daysLeft <= 0 ? (
-            <span className="text-[11px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
-              {t.closed}
-            </span>
-          ) : null}
+          <div className="flex items-center gap-1.5">
+            {urgency && (
+              <span className={`text-[11px] px-2 py-0.5 rounded border whitespace-nowrap ${urgency.color}`}>
+                {urgency.label}
+              </span>
+            )}
+            {onToggleSave && (
+              <button
+                onClick={() => onToggleSave(tender.invitationId)}
+                className={`p-1 rounded-md transition-colors ${
+                  isSaved
+                    ? 'text-amber-500 bg-amber-50 hover:bg-amber-100'
+                    : 'text-slate-300 hover:text-amber-500 hover:bg-slate-100'
+                }`}
+                title={isSaved ? (locale === 'mn' ? 'Хянахаа болих' : 'Remove from watchlist') : (locale === 'mn' ? 'Хяналтад авах' : 'Save to watchlist')}
+              >
+                <Star className={`h-4 w-4 ${isSaved ? 'fill-amber-500' : ''}`} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Title */}
@@ -97,7 +143,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         </div>
       </div>
 
-      {/* Budget & Timeline */}
+      {/* Budget & Deadline Urgency Bar */}
       <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs">
         <div>
           <span className="text-[10px] text-slate-400 uppercase font-semibold block">
@@ -109,31 +155,44 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         </div>
 
         <div className="text-right">
-          <span className="text-[10px] text-slate-400 uppercase font-semibold block">
+          <span className="text-[10px] text-slate-400 uppercase font-semibold block flex items-center gap-1 justify-end">
+            <Clock className="h-2.5 w-2.5 text-slate-400" />
             {t.deadline}
           </span>
-          <span className="text-xs text-slate-600 font-mono tabular-nums">
-            {tender.receiveDate ? tender.receiveDate.substring(0, 10) : 'Тодорхойгүй'}
+          <span className="text-xs text-slate-700 font-mono font-medium tabular-nums">
+            {tender.receiveDate ? tender.receiveDate.substring(0, 16) : 'Тодорхойгүй'}
           </span>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="grid grid-cols-2 gap-2 pt-1">
+      {/* Action Buttons: 1. Bid Now ↗, 2. AI Audit, 3. Details */}
+      <div className="grid grid-cols-3 gap-1.5 pt-1">
         <button
           onClick={() => onSelect(tender)}
-          className="h-8 rounded-md text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors flex items-center justify-center"
+          className="h-8 rounded-lg text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors flex items-center justify-center"
         >
           {t.viewDetails}
         </button>
 
         <button
           onClick={() => onAskAI(tender)}
-          className="h-8 rounded-md text-xs font-medium text-slate-800 bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-300 transition-colors flex items-center justify-center gap-1.5"
+          className="h-8 rounded-lg text-xs font-medium text-slate-800 bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300 transition-colors flex items-center justify-center gap-1"
+          title={locale === 'mn' ? 'AI-аар шалгуур, шаардлага шинжлэх' : 'AI tender analysis'}
         >
           <Sparkles className="h-3 w-3 text-amber-500" />
-          <span>{locale === 'mn' ? 'AI шинжилгээ' : 'AI Analysis'}</span>
+          <span>AI</span>
         </button>
+
+        <a
+          href={portalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="h-8 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 shadow-2xs"
+          title={locale === 'mn' ? 'tender.gov.mn дээр оролцох' : 'Apply on tender.gov.mn'}
+        >
+          <span>{locale === 'mn' ? 'Оролцох' : 'Apply'}</span>
+          <ExternalLink className="h-3 w-3" />
+        </a>
       </div>
     </div>
   );

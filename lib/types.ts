@@ -27,12 +27,16 @@ export interface TenderItem {
   tenderDocumentId?: number | string;
 }
 
+export type ActiveTabMode = 'active' | 'closing_soon' | 'watchlist' | 'archive';
+
 export interface TenderFilterParams {
   search?: string;
   category?: string;       // all, PRODUCT, JOB, SERVICE
   minBudget?: number;
   maxBudget?: number;
-  status?: string;         // all, active, closed
+  status?: string;         // all, receiving, opened, result, cancelled, requested
+  tabMode?: ActiveTabMode;
+  urgency?: 'all' | 'urgent_3d' | 'new_48h' | 'high_budget';
   sortBy?: 'date_desc' | 'budget_desc' | 'budget_asc' | 'deadline_asc';
   page?: number;
   perPage?: number;
@@ -42,6 +46,9 @@ export interface TenderStats {
   totalCount: number;
   totalBudgetSum: number;
   activeTendersCount: number;
+  activeBudgetSum?: number;
+  closingSoonCount?: number;
+  newCount?: number;
   categoryCounts: {
     product: number;
     job: number;

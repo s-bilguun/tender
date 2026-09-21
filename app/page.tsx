@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
+import { ActiveRadarBar } from '@/components/ActiveRadarBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
 import { TenderDetailModal } from '@/components/TenderDetailModal';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight, FileSpreadsheet } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronLeft, ChevronRight, FileSpreadsheet, Star } from 'lucide-react';
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>('mn');
@@ -24,9 +25,44 @@ export default function Home() {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
+  // Watchlist LocalStorage State
+  const [savedIds, setSavedIds] = useState<Set<string | number>>(new Set());
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('tender_watchlist');
+      if (stored) {
+        setSavedIds(new Set(JSON.parse(stored)));
+      }
+    } catch (e) {
+      console.warn('Could not load watchlist from localStorage', e);
+    }
+  }, []);
+
+  const handleToggleSave = (id: string | number) => {
+    setSavedIds((prev) => {
+      const next = new Set(prev);
+      const strId = String(id);
+      if (next.has(id) || next.has(strId)) {
+        next.delete(id);
+        next.delete(strId);
+      } else {
+        next.add(id);
+      }
+      try {
+        localStorage.setItem('tender_watchlist', JSON.stringify(Array.from(next)));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  // Default: Active Live Tenders First!
   const [filters, setFilters] = useState<TenderFilterParams>({
     search: '',
     category: 'all',
+    status: 'receiving',
+    tabMode: 'active',
+    urgency: 'all',
     page: 1,
     perPage: 15,
     sortBy: 'date_desc',
@@ -47,6 +83,8 @@ export default function Home() {
       if (currentFilters.minBudget !== undefined) params.append('minBudget', String(currentFilters.minBudget));
       if (currentFilters.maxBudget !== undefined) params.append('maxBudget', String(currentFilters.maxBudget));
       if (currentFilters.status && currentFilters.status !== 'all') params.append('status', currentFilters.status);
+      if (currentFilters.tabMode) params.append('tabMode', currentFilters.tabMode);
+      if (currentFilters.urgency && currentFilters.urgency !== 'all') params.append('urgency', currentFilters.urgency);
       if (currentFilters.sortBy) params.append('sortBy', currentFilters.sortBy);
       if (currentFilters.page) params.append('page', String(currentFilters.page));
       if (currentFilters.perPage) params.append('perPage', String(currentFilters.perPage));
@@ -75,6 +113,14 @@ export default function Home() {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
+  // Watchlist View filtering
+  const displayedTenders = useMemo(() => {
+    if (filters.tabMode === 'watchlist') {
+      return tenders.filter((t) => savedIds.has(t.invitationId) || savedIds.has(String(t.invitationId)));
+    }
+    return tenders;
+  }, [tenders, filters.tabMode, savedIds]);
+
   const handleSync = async () => {
     setIsSyncing(true);
     try {
@@ -100,7 +146,7 @@ export default function Home() {
   };
 
   const handleExportCSV = () => {
-    if (!tenders || tenders.length === 0) return;
+    if (!displayedTenders || displayedTenders.length === 0) return;
 
     const headers = [
       'Тендерийн дугаар/код',
@@ -120,7 +166,7 @@ export default function Home() {
       return `"${str}"`;
     };
 
-    const rows = tenders.map((t) => [
+    const rows = displayedTenders.map((t) => [
       escapeCSV(t.tenderCode || t.invitationNumber),
       escapeCSV(t.tenderName),
       escapeCSV(t.budgetEntityName),
@@ -138,7 +184,7 @@ export default function Home() {
     const link = document.createElement('a');
     const dateStr = new Date().toISOString().substring(0, 10);
     link.setAttribute('href', url);
-    link.setAttribute('download', `tender_mn_export_${dateStr}.csv`);
+    link.setAttribute('download', `tender_mn_active_export_${dateStr}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -167,13 +213,19 @@ export default function Home() {
         {/* Page Title & Context Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-200">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-              {locale === 'mn' ? 'Төрийн худалдан авах ажиллагааны нээлттэй сан' : 'Public Procurement Tender Repository'}
-            </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                {locale === 'mn' ? 'Шуурхай Радар' : 'Live Radar'}
+              </span>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                {locale === 'mn' ? 'Идэвхтэй нээлттэй тендерийн систем' : 'Active Tender Command Center'}
+              </h1>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
               {locale === 'mn'
-                ? 'Улсын болон орон нутгийн төсвийн бүх тендерийг нэг дороос хялбар хайж, дүн шинжилгээ хийх нээлттэй сан'
-                : 'Search and analyze all national and municipal procurement tenders in one place.'}
+                ? 'Санал хүлээн авч буй нээлттэй бүх тендерийг хугацааны яаралтай байдлаар хянах, дүн шинжилгээ хийх, оролцох боломж'
+                : 'Monitor active government tenders in real-time, track closing deadlines, and analyze bidding requirements.'}
             </p>
           </div>
 
@@ -182,17 +234,26 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Active Radar Quick Metric Cards */}
+        <ActiveRadarBar
+          stats={stats}
+          locale={locale}
+          filters={filters}
+          onFilterChange={handleFilterChange}
+        />
+
         {/* Collapsible Analytics View */}
         {isAnalyticsOpen && stats && (
           <AnalyticsView stats={stats} locale={locale} />
         )}
 
-        {/* Search & Filters */}
+        {/* Workflow Tabs, Search & Filters */}
         <TenderFilters
           filters={filters}
           onFilterChange={handleFilterChange}
           locale={locale}
           totalFound={totalCount}
+          watchlistCount={savedIds.size}
           viewMode={viewMode}
           setViewMode={setViewMode}
         />
@@ -201,13 +262,22 @@ export default function Home() {
         <div className="flex items-center justify-between text-xs text-slate-600 font-medium px-1 flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <span>
-              {locale === 'mn' ? 'Нийт илэрц:' : 'Matching tenders:'}{' '}
-              <strong className="text-slate-900 tabular-nums">{totalCount.toLocaleString()}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
+              {filters.tabMode === 'watchlist' ? (
+                <span>
+                  {locale === 'mn' ? 'Хянаж буй:' : 'Watchlist:'}{' '}
+                  <strong className="text-slate-900 tabular-nums">{displayedTenders.length}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
+                </span>
+              ) : (
+                <span>
+                  {locale === 'mn' ? 'Нээлттэй илэрц:' : 'Matching live tenders:'}{' '}
+                  <strong className="text-slate-900 tabular-nums">{totalCount.toLocaleString()}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
+                </span>
+              )}
             </span>
 
             <button
               onClick={handleExportCSV}
-              disabled={tenders.length === 0}
+              disabled={displayedTenders.length === 0}
               className="h-6 px-2.5 rounded bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 font-medium text-[11px] flex items-center gap-1.5 transition-colors border border-slate-200 shadow-2xs cursor-pointer"
               title={locale === 'mn' ? 'Одоогийн жагсаалтыг Excel / CSV файлаар татах' : 'Export current results as CSV / Excel'}
             >
@@ -216,7 +286,7 @@ export default function Home() {
             </button>
           </div>
 
-          {totalPages > 1 && (
+          {totalPages > 1 && filters.tabMode !== 'watchlist' && (
             <span className="text-slate-500 tabular-nums text-[11px]">
               {locale === 'mn' ? 'Хуудас' : 'Page'} {filters.page} / {totalPages}
             </span>
@@ -225,38 +295,64 @@ export default function Home() {
 
         {/* Main Content: Table or Grid */}
         {isLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-2 bg-white rounded-lg border border-slate-200 shadow-2xs">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-            <span className="text-xs text-slate-500">{locale === 'mn' ? 'Тендерийн мэдээлэл татаж байна...' : 'Loading tenders...'}</span>
+          <div className="py-20 flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-slate-200 shadow-2xs">
+            <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
+            <span className="text-xs text-slate-500">{locale === 'mn' ? 'Идэвхтэй тендерүүдийг татаж байна...' : 'Loading active tenders...'}</span>
           </div>
-        ) : tenders.length === 0 ? (
-          <div className="bg-white rounded-lg border border-slate-200 p-12 text-center space-y-3 shadow-2xs">
-            <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
-            <h3 className="text-sm font-semibold text-slate-800">{t.noResults}</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">{t.noResultsTip}</p>
-            <button
-              onClick={() => handleFilterChange({ search: '', category: 'all', minBudget: undefined, maxBudget: undefined, page: 1 })}
-              className="h-8 px-4 rounded text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-            >
-              {locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}
-            </button>
+        ) : displayedTenders.length === 0 ? (
+          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center space-y-3 shadow-2xs">
+            {filters.tabMode === 'watchlist' ? (
+              <>
+                <Star className="h-8 w-8 text-amber-400 mx-auto" />
+                <h3 className="text-sm font-semibold text-slate-800">
+                  {locale === 'mn' ? 'Хянаж буй тендер байхгүй байна' : 'No tracked tenders in watchlist'}
+                </h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  {locale === 'mn'
+                    ? 'Тендерийн жагсаалтаас од (⭐) дээр дарж сонирхсон тендерүүдээ энд хадгалан хянах боломжтой.'
+                    : 'Click the star icon (⭐) on any tender card or table row to pin it here.'}
+                </p>
+                <button
+                  onClick={() => handleFilterChange({ tabMode: 'active', status: 'receiving', page: 1 })}
+                  className="h-8 px-4 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                >
+                  {locale === 'mn' ? 'Идэвхтэй тендерүүд рүү буцах' : 'Back to Active Tenders'}
+                </button>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
+                <h3 className="text-sm font-semibold text-slate-800">{t.noResults}</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">{t.noResultsTip}</p>
+                <button
+                  onClick={() => handleFilterChange({ search: '', category: 'all', minBudget: undefined, maxBudget: undefined, status: 'receiving', tabMode: 'active', urgency: 'all', page: 1 })}
+                  className="h-8 px-4 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                >
+                  {locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}
+                </button>
+              </>
+            )}
           </div>
         ) : viewMode === 'table' ? (
           /* Table View */
           <TenderTable
-            tenders={tenders}
+            tenders={displayedTenders}
             locale={locale}
+            savedIds={savedIds}
+            onToggleSave={handleToggleSave}
             onSelect={(tender) => setSelectedTender(tender)}
             onAskAI={handleAskAI}
           />
         ) : (
           /* Cards Grid View */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tenders.map((tender) => (
+            {displayedTenders.map((tender) => (
               <TenderCard
                 key={String(tender.invitationId)}
                 tender={tender}
                 locale={locale}
+                isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
+                onToggleSave={handleToggleSave}
                 onSelect={(item) => setSelectedTender(item)}
                 onAskAI={handleAskAI}
               />
@@ -265,7 +361,7 @@ export default function Home() {
         )}
 
         {/* Pagination Controls */}
-        {totalPages > 1 && (
+        {totalPages > 1 && filters.tabMode !== 'watchlist' && (
           <div className="flex items-center justify-between border-t border-slate-200 pt-4 px-1 text-xs">
             <div className="text-slate-500">
               {locale === 'mn' ? 'Хуудас бүрт 15 тендер харуулж байна' : 'Showing 15 tenders per page'}
@@ -275,7 +371,7 @@ export default function Home() {
               <button
                 onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
                 disabled={(filters.page || 1) <= 1}
-                className="h-8 px-3 rounded text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1"
+                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>{locale === 'mn' ? 'Өмнөх' : 'Previous'}</span>
@@ -288,7 +384,7 @@ export default function Home() {
               <button
                 onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
                 disabled={(filters.page || 1) >= totalPages}
-                className="h-8 px-3 rounded text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1"
+                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1"
               >
                 <span>{locale === 'mn' ? 'Дараах' : 'Next'}</span>
                 <ChevronRight className="h-4 w-4" />
@@ -301,8 +397,8 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200 py-6 bg-white text-xs text-slate-500 text-center mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>TENDER.MN — Төрийн цахим худалдан авах ажиллагааны нээлттэй хайлтын систем</span>
-          <span>Өгөгдлийг албан ёсны tender.gov.mn системээс боловсруулав</span>
+          <span>TENDER.MN — Төрийн цахим худалдан авах ажиллагааны идэвхтэй тендерийн систем</span>
+          <span>Өгөгдлийг албан ёсны tender.gov.mn системээс бодит цагт боловсруулав</span>
         </div>
       </footer>
 

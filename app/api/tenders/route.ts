@@ -13,6 +13,8 @@ export async function GET(request: NextRequest) {
     const minBudget = searchParams.get('minBudget') ? Number(searchParams.get('minBudget')) : undefined;
     const maxBudget = searchParams.get('maxBudget') ? Number(searchParams.get('maxBudget')) : undefined;
     const status = searchParams.get('status') || undefined;
+    const tabMode = (searchParams.get('tabMode') as any) || undefined;
+    const urgency = (searchParams.get('urgency') as any) || undefined;
     const sortBy = (searchParams.get('sortBy') as TenderFilterParams['sortBy']) || 'date_desc';
     const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1;
     const perPage = searchParams.get('perPage') ? Number(searchParams.get('perPage')) : 15;
@@ -136,6 +138,8 @@ export async function GET(request: NextRequest) {
       minBudget,
       maxBudget,
       status,
+      tabMode,
+      urgency,
       sortBy,
       page,
       perPage,

@@ -3,11 +3,13 @@
 import React from 'react';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { ExternalLink, Sparkles } from 'lucide-react';
+import { ExternalLink, Sparkles, Star } from 'lucide-react';
 
 interface TenderTableProps {
   tenders: TenderItem[];
   locale: Locale;
+  savedIds?: Set<string | number>;
+  onToggleSave?: (tenderId: string | number) => void;
   onSelect: (tender: TenderItem) => void;
   onAskAI: (tender: TenderItem) => void;
 }
@@ -15,6 +17,8 @@ interface TenderTableProps {
 export const TenderTable: React.FC<TenderTableProps> = ({
   tenders,
   locale,
+  savedIds,
+  onToggleSave,
   onSelect,
   onAskAI,
 }) => {
@@ -51,13 +55,14 @@ export const TenderTable: React.FC<TenderTableProps> = ({
         <table className="w-full text-left text-xs table-auto">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+              <th className="py-2.5 px-2 w-[36px] text-center"></th>
               <th className="py-2.5 px-3 min-w-[260px]">{locale === 'mn' ? 'Тендерийн нэр & дугаар' : 'Tender Title & Code'}</th>
               <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч' : 'Procuring Entity'}</th>
               <th className="py-2.5 px-3 w-[85px]">{locale === 'mn' ? 'Төрөл' : 'Category'}</th>
               <th className="py-2.5 px-3 text-right w-[130px]">{locale === 'mn' ? 'Төсөвт өртөг' : 'Budget'}</th>
-              <th className="py-2.5 px-3 w-[115px] hidden sm:table-cell">{locale === 'mn' ? 'Эцсийн огноо' : 'Deadline'}</th>
+              <th className="py-2.5 px-3 w-[125px] hidden sm:table-cell">{locale === 'mn' ? 'Эцсийн огноо' : 'Deadline'}</th>
               <th className="py-2.5 px-3 w-[135px]">{locale === 'mn' ? 'Төлөв' : 'Status'}</th>
-              <th className="py-2.5 px-3 text-center w-[70px]">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
+              <th className="py-2.5 px-3 text-center w-[85px]">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -71,6 +76,25 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                   onClick={() => onSelect(tender)}
                 >
+                  {/* Star Watchlist */}
+                  <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
+                    {onToggleSave && (
+                      <button
+                        onClick={() => onToggleSave(tender.invitationId)}
+                        className={`p-1 rounded transition-colors ${
+                          savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId))
+                            ? 'text-amber-500 hover:bg-amber-50'
+                            : 'text-slate-300 hover:text-amber-500 hover:bg-slate-100'
+                        }`}
+                        title={locale === 'mn' ? 'Хяналтад авах' : 'Save to watchlist'}
+                      >
+                        <Star className={`h-3.5 w-3.5 ${
+                          savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId)) ? 'fill-amber-500' : ''
+                        }`} />
+                      </button>
+                    )}
+                  </td>
+
                   {/* Title & Code Combined */}
                   <td className="py-2.5 px-3">
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
