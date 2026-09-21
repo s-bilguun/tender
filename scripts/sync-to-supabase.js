@@ -13,7 +13,7 @@ const SUPABASE_SERVICE_ROLE_KEY =
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-function fetchPage(page) {
+function fetchPage(page, retries = 2) {
   return new Promise((resolve) => {
     const url = `https://www.tender.gov.mn/mn/invitation?page=${page}`;
     const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
@@ -24,10 +24,18 @@ function fetchPage(page) {
       url
     ], { maxBuffer: 40 * 1024 * 1024, timeout: 25000 }, (err, stdout) => {
       if (err || !stdout) {
+        if (retries > 0) {
+          return setTimeout(() => resolve(fetchPage(page, retries - 1)), 1000);
+        }
         return resolve([]);
       }
       const idx = stdout.indexOf('uusgesenClientId');
-      if (idx === -1) return resolve([]);
+      if (idx === -1) {
+        if (retries > 0) {
+          return setTimeout(() => resolve(fetchPage(page, retries - 1)), 1000);
+        }
+        return resolve([]);
+      }
       const start = stdout.lastIndexOf('[', idx);
       const end = stdout.indexOf(']', idx);
       if (start === -1 || end === -1) return resolve([]);
@@ -110,8 +118,9 @@ async function syncPages(startPage = 1, maxPages = 50) {
       }
     } else {
       totalInserted += records.length;
-      console.log(`Successfully upserted ${records.length} records. (Total so far: ${totalInserted})`);
+      console.log(`[Batch ${p}-${p + pageBatch.length - 1} / ${startPage + maxPages}] Upserted ${records.length} records. (Total run: ${totalInserted})`);
     }
+    await new Promise(r => setTimeout(r, 250));
   }
   
   console.log(`Finished! Total upserted: ${totalInserted}`);
