@@ -46,6 +46,7 @@ export default function Home() {
       if (currentFilters.category && currentFilters.category !== 'all') params.append('category', currentFilters.category);
       if (currentFilters.minBudget !== undefined) params.append('minBudget', String(currentFilters.minBudget));
       if (currentFilters.maxBudget !== undefined) params.append('maxBudget', String(currentFilters.maxBudget));
+      if (currentFilters.status && currentFilters.status !== 'all') params.append('status', currentFilters.status);
       if (currentFilters.sortBy) params.append('sortBy', currentFilters.sortBy);
       if (currentFilters.page) params.append('page', String(currentFilters.page));
       if (currentFilters.perPage) params.append('perPage', String(currentFilters.perPage));

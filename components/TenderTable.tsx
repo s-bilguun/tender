@@ -3,7 +3,7 @@
 import React from 'react';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { ExternalLink, Sparkles, ChevronRight, Clock } from 'lucide-react';
+import { ExternalLink, Sparkles } from 'lucide-react';
 
 interface TenderTableProps {
   tenders: TenderItem[];
@@ -48,17 +48,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+        <table className="w-full text-left text-xs table-auto">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
-              <th className="py-3 px-4 w-36">{locale === 'mn' ? 'Дугаар' : 'Code'}</th>
-              <th className="py-3 px-4 min-w-[280px]">{locale === 'mn' ? 'Тендерийн нэр' : 'Tender Title'}</th>
-              <th className="py-3 px-4 min-w-[200px]">{locale === 'mn' ? 'Захиалагч' : 'Procuring Entity'}</th>
-              <th className="py-3 px-4 w-28">{locale === 'mn' ? 'Төрөл' : 'Category'}</th>
-              <th className="py-3 px-4 text-right w-36">{locale === 'mn' ? 'Төсөвт өртөг' : 'Budget'}</th>
-              <th className="py-3 px-4 w-36">{locale === 'mn' ? 'Эцсийн огноо' : 'Deadline'}</th>
-              <th className="py-3 px-4 w-28">{locale === 'mn' ? 'Төлөв' : 'Status'}</th>
-              <th className="py-3 px-4 text-center w-28">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
+              <th className="py-2.5 px-3 min-w-[260px]">{locale === 'mn' ? 'Тендерийн нэр & дугаар' : 'Tender Title & Code'}</th>
+              <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч' : 'Procuring Entity'}</th>
+              <th className="py-2.5 px-3 w-[85px]">{locale === 'mn' ? 'Төрөл' : 'Category'}</th>
+              <th className="py-2.5 px-3 text-right w-[130px]">{locale === 'mn' ? 'Төсөвт өртөг' : 'Budget'}</th>
+              <th className="py-2.5 px-3 w-[115px] hidden sm:table-cell">{locale === 'mn' ? 'Эцсийн огноо' : 'Deadline'}</th>
+              <th className="py-2.5 px-3 w-[135px]">{locale === 'mn' ? 'Төлөв' : 'Status'}</th>
+              <th className="py-2.5 px-3 text-center w-[70px]">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -72,44 +71,49 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                   onClick={() => onSelect(tender)}
                 >
-                  {/* Code */}
-                  <td className="py-3 px-4 font-mono text-[11px] text-slate-500 whitespace-nowrap">
-                    <span className="bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200" title={tender.tenderCode}>
-                      {tender.tenderCode}
-                    </span>
-                  </td>
-
-                  {/* Title */}
-                  <td className="py-3 px-4">
+                  {/* Title & Code Combined */}
+                  <td className="py-2.5 px-3">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <span
+                        className="font-mono text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0 font-medium"
+                        title={tender.tenderCode}
+                      >
+                        {tender.tenderCode || tender.invitationNumber}
+                      </span>
+                      {tender.positionName && (
+                        <span className="text-[10px] text-slate-400 truncate max-w-[220px]">
+                          {tender.positionName}
+                        </span>
+                      )}
+                    </div>
                     <div className="font-medium text-slate-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
                       {tender.tenderName}
                     </div>
-                    {tender.positionName && (
-                      <div className="text-[11px] text-slate-400 mt-0.5 truncate max-w-sm">
-                        {tender.positionName}
-                      </div>
-                    )}
+                    {/* On mobile, show entity under title */}
+                    <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1 md:hidden">
+                      {tender.budgetEntityName}
+                    </div>
                   </td>
 
                   {/* Procuring Entity */}
-                  <td className="py-3 px-4 text-slate-600 text-[11px]">
-                    <span className="line-clamp-2">{tender.budgetEntityName}</span>
+                  <td className="py-2.5 px-3 text-slate-600 text-[11px] hidden md:table-cell">
+                    <span className="line-clamp-2 leading-snug">{tender.budgetEntityName}</span>
                   </td>
 
                   {/* Category */}
-                  <td className="py-3 px-4 whitespace-nowrap">
+                  <td className="py-2.5 px-3 whitespace-nowrap">
                     <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-medium border ${badge.bg}`}>
                       {badge.label}
                     </span>
                   </td>
 
                   {/* Budget */}
-                  <td className="py-3 px-4 text-right whitespace-nowrap font-medium text-slate-900 tabular-nums">
+                  <td className="py-2.5 px-3 text-right whitespace-nowrap font-medium text-slate-900 tabular-nums">
                     {formatCurrency(tender.totalBudget)}
                   </td>
 
                   {/* Deadline */}
-                  <td className="py-3 px-4 whitespace-nowrap text-slate-600 font-mono text-[11px] tabular-nums">
+                  <td className="py-2.5 px-3 whitespace-nowrap text-slate-600 font-mono text-[11px] tabular-nums hidden sm:table-cell">
                     <div>{tender.receiveDate ? tender.receiveDate.substring(0, 10) : 'Тодорхойгүй'}</div>
                     {days !== null && days > 0 ? (
                       <div className="text-[10px] text-emerald-600 font-medium">
@@ -122,8 +126,8 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     ) : null}
                   </td>
 
-                  {/* Status */}
-                  <td className="py-3 px-4 whitespace-nowrap">
+                  {/* Status Badge */}
+                  <td className="py-2.5 px-3 whitespace-nowrap">
                     {(() => {
                       const s = (tender.docStatusName || '').toLowerCase();
                       const style = s.includes('хүлээн авч')
@@ -139,15 +143,15 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       return (
                         <span className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded font-medium border ${style.cls}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
-                          {tender.docStatusName || 'Хүлээн авч буй'}
+                          <span className="truncate max-w-[100px]">{tender.docStatusName || 'Хүлээн авч буй'}</span>
                         </span>
                       );
                     })()}
                   </td>
 
                   {/* Actions */}
-                  <td className="py-3 px-4 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-center gap-1.5">
+                  <td className="py-2.5 px-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => onAskAI(tender)}
                         className="p-1 rounded text-slate-500 hover:text-amber-600 hover:bg-amber-50 border border-slate-200 transition-colors"

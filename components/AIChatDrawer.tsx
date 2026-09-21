@@ -20,6 +20,241 @@ interface AIChatDrawerProps {
   locale: Locale;
 }
 
+const renderInline = (text: string, isUser: boolean): React.ReactNode => {
+  if (!text) return null;
+
+  const regex = /(\*\*\*[\s\S]+?\*\*\*|\*\*[\s\S]+?\*\*|\*[^*\n]+?\*|`[^`\n]+`|\[[^\]]+\]\([^)]+\))/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    const token = match[0];
+    const key = `${match.index}-${token.length}`;
+
+    if (token.startsWith('***') && token.endsWith('***') && token.length >= 6) {
+      parts.push(
+        <strong key={key} className={`font-bold italic ${isUser ? 'text-white' : 'text-slate-900'}`}>
+          {token.slice(3, -3)}
+        </strong>
+      );
+    } else if (token.startsWith('**') && token.endsWith('**') && token.length >= 4) {
+      parts.push(
+        <strong key={key} className={`font-semibold ${isUser ? 'text-white' : 'text-slate-900'}`}>
+          {token.slice(2, -2)}
+        </strong>
+      );
+    } else if (token.startsWith('*') && token.endsWith('*') && token.length >= 2) {
+      parts.push(
+        <em key={key} className="italic">
+          {token.slice(1, -1)}
+        </em>
+      );
+    } else if (token.startsWith('`') && token.endsWith('`') && token.length >= 2) {
+      parts.push(
+        <code
+          key={key}
+          className={`px-1 py-0.5 rounded text-[11px] font-mono ${
+            isUser ? 'bg-blue-700 text-blue-100' : 'bg-slate-200 text-slate-800'
+          }`}
+        >
+          {token.slice(1, -1)}
+        </code>
+      );
+    } else if (token.startsWith('[') && token.includes('](')) {
+      const linkMatch = token.match(/\[([^\]]+)\]\(([^)]+)\)/);
+      if (linkMatch) {
+        parts.push(
+          <a
+            key={key}
+            href={linkMatch[2]}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`underline hover:opacity-80 font-medium ${isUser ? 'text-white' : 'text-blue-600'}`}
+          >
+            {linkMatch[1]}
+          </a>
+        );
+      } else {
+        parts.push(token);
+      }
+    } else {
+      parts.push(token);
+    }
+
+    lastIndex = regex.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+
+  return parts.length > 0 ? <>{parts}</> : text;
+};
+
+export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> = ({ text, isUser }) => {
+  const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
+  let currentList: { type: 'ul' | 'ol'; items: string[] } | null = null;
+  let inCodeBlock = false;
+  let codeBlockLines: string[] = [];
+
+  const flushList = () => {
+    if (!currentList) return;
+    const ListTag = currentList.type;
+    const items = currentList.items;
+    elements.push(
+      <ListTag
+        key={`list-${elements.length}`}
+        className={`my-1.5 space-y-1 ${
+          currentList.type === 'ul' ? 'list-disc list-inside pl-1' : 'list-decimal list-inside pl-1'
+        }`}
+      >
+        {items.map((item, idx) => (
+          <li key={idx} className="leading-relaxed">
+            {renderInline(item, isUser)}
+          </li>
+        ))}
+      </ListTag>
+    );
+    currentList = null;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const rawLine = lines[i];
+    const trimmed = rawLine.trim();
+
+    // Code block toggle
+    if (trimmed.startsWith('```')) {
+      flushList();
+      if (inCodeBlock) {
+        elements.push(
+          <pre
+            key={`code-${i}`}
+            className="p-2.5 my-2 bg-slate-900 text-slate-100 rounded-md font-mono text-[11px] overflow-x-auto"
+          >
+            <code>{codeBlockLines.join('\n')}</code>
+          </pre>
+        );
+        codeBlockLines = [];
+        inCodeBlock = false;
+      } else {
+        inCodeBlock = true;
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeBlockLines.push(rawLine);
+      continue;
+    }
+
+    // Horizontal divider (e.g. ***, ---, ___)
+    if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed)) {
+      flushList();
+      elements.push(
+        <hr
+          key={`hr-${i}`}
+          className={`my-2 border-t ${isUser ? 'border-blue-400' : 'border-slate-200'}`}
+        />
+      );
+      continue;
+    }
+
+    // Markdown Headers: #, ##, ###, ####
+    const hMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
+    if (hMatch) {
+      flushList();
+      const level = hMatch[1].length;
+      const hText = hMatch[2];
+      const hClasses =
+        level === 1
+          ? 'text-sm font-bold mt-2.5 mb-1'
+          : level === 2
+          ? 'text-xs font-bold mt-2 mb-1'
+          : 'text-xs font-semibold mt-1.5 mb-0.5';
+
+      elements.push(
+        <div key={`h-${i}`} className={`${hClasses} ${isUser ? 'text-white' : 'text-slate-900'}`}>
+          {renderInline(hText, isUser)}
+        </div>
+      );
+      continue;
+    }
+
+    // Blockquote
+    if (trimmed.startsWith('> ')) {
+      flushList();
+      elements.push(
+        <blockquote
+          key={`quote-${i}`}
+          className={`border-l-2 pl-2.5 my-1 italic ${
+            isUser ? 'border-blue-300 text-blue-100' : 'border-blue-500 text-slate-600'
+          }`}
+        >
+          {renderInline(trimmed.slice(2), isUser)}
+        </blockquote>
+      );
+      continue;
+    }
+
+    // Bullet lists: - or * or • followed by space
+    const bulletMatch = trimmed.match(/^[-*•]\s+(.+)$/);
+    if (bulletMatch) {
+      if (!currentList || currentList.type !== 'ul') {
+        flushList();
+        currentList = { type: 'ul', items: [] };
+      }
+      currentList.items.push(bulletMatch[1]);
+      continue;
+    }
+
+    // Numbered lists: 1. 2.
+    const numMatch = trimmed.match(/^\d+[\.\)]\s+(.+)$/);
+    if (numMatch) {
+      if (!currentList || currentList.type !== 'ol') {
+        flushList();
+        currentList = { type: 'ol', items: [] };
+      }
+      currentList.items.push(numMatch[1]);
+      continue;
+    }
+
+    // Empty line
+    if (trimmed === '') {
+      flushList();
+      elements.push(<div key={`empty-${i}`} className="h-1.5" />);
+      continue;
+    }
+
+    // Normal paragraph line
+    flushList();
+    elements.push(
+      <p key={`p-${i}`} className="leading-relaxed">
+        {renderInline(trimmed, isUser)}
+      </p>
+    );
+  }
+
+  flushList();
+
+  if (inCodeBlock && codeBlockLines.length > 0) {
+    elements.push(
+      <pre
+        key="code-unclosed"
+        className="p-2.5 my-2 bg-slate-900 text-slate-100 rounded-md font-mono text-[11px] overflow-x-auto"
+      >
+        <code>{codeBlockLines.join('\n')}</code>
+      </pre>
+    );
+  }
+
+  return <div className="space-y-0.5 text-xs">{elements}</div>;
+};
+
 export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
   isOpen,
   onClose,
@@ -218,7 +453,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
                   : 'bg-slate-50 text-slate-800 border border-slate-200'
               }`}
             >
-              <div className="whitespace-pre-wrap">{msg.text}</div>
+              <FormattedChatMessage text={msg.text} isUser={msg.sender === 'user'} />
               <div
                 className={`mt-1 text-[10px] text-right font-mono ${
                   msg.sender === 'user' ? 'text-blue-200' : 'text-slate-400'
