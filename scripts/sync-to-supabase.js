@@ -1,8 +1,15 @@
 const { createClient } = require('@supabase/supabase-js');
 const { execFile } = require('child_process');
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rufnrfwghtgicecnzljj.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_EhqjXHXl6q60WG0V8rYWyg_0XTO-AHa';
+const SUPABASE_URL =
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  'https://rufnrfwghtgicecnzljj.supabase.co';
+
+const SUPABASE_SERVICE_ROLE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SECRET_KEY ||
+  'sb_secret_EhqjXHXl6q60WG0V8rYWyg_0XTO-AHa';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -83,7 +90,13 @@ async function syncPages(startPage = 1, maxPages = 50) {
       break;
     }
     
-    const records = allItems.map(mapToRecord).filter(r => r.invitation_id);
+    const uniqueMap = new Map();
+    allItems.forEach(item => {
+      if (item.invitationId) {
+        uniqueMap.set(String(item.invitationId), item);
+      }
+    });
+    const records = Array.from(uniqueMap.values()).map(mapToRecord).filter(r => r.invitation_id);
     
     const { data, error } = await supabase
       .from('tenders')
