@@ -1,0 +1,206 @@
+import { TenderItem, TenderFilterParams, TenderStats } from './types';
+import { SEED_TENDERS } from './seed-data';
+import { execFile } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+
+class TenderStore {
+  private tenders: Map<string, TenderItem> = new Map();
+  private lastSyncedAt: Date | null = null;
+  private isSyncing = false;
+
+  constructor() {
+    this.loadFromDisk();
+  }
+
+  public loadFromDisk() {
+    try {
+      const livePath = path.join(process.cwd(), 'lib', 'live-tenders.json');
+      if (fs.existsSync(livePath)) {
+        const liveData: TenderItem[] = JSON.parse(fs.readFileSync(livePath, 'utf8'));
+        if (Array.isArray(liveData) && liveData.length > 0) {
+          liveData.forEach(item => {
+            this.tenders.set(String(item.invitationId), item);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Could not read live-tenders.json, using seed tenders');
+    }
+
+    SEED_TENDERS.forEach(item => {
+      this.tenders.set(String(item.invitationId), item);
+    });
+    this.lastSyncedAt = new Date();
+  }
+
+  public getLastSyncTime(): Date | null {
+    return this.lastSyncedAt;
+  }
+
+  public getAllTenders(): TenderItem[] {
+    this.loadFromDisk();
+    return Array.from(this.tenders.values());
+  }
+
+  public getTenderById(id: string | number): TenderItem | undefined {
+    return this.tenders.get(String(id));
+  }
+
+  public async fetchLiveTenders(searchQuery?: string, page = 1): Promise<{ items: TenderItem[]; totalCount: number }> {
+    return new Promise((resolve) => {
+      const url = `https://www.tender.gov.mn/mn/invitation?${searchQuery ? `search=${encodeURIComponent(searchQuery)}&` : ''}page=${page}`;
+      
+      execFile('curl.exe', [
+        '-s', '-L',
+        '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        '-H', 'Accept-Language: mn,en-US;q=0.7,en;q=0.3',
+        url
+      ], { maxBuffer: 30 * 1024 * 1024, timeout: 10000 }, (err, stdout) => {
+        if (err || !stdout) {
+          console.warn('Direct live fetch timed out or failed, using cached tenders', err?.message);
+          return resolve({ items: this.getAllTenders().slice(0, 20), totalCount: this.tenders.size });
+        }
+
+        try {
+          // Extract Next.js Server Components JSON payload
+          const idx = stdout.indexOf('uusgesenClientId');
+          if (idx !== -1) {
+            const start = stdout.lastIndexOf('[', idx);
+            const end = stdout.indexOf(']', idx);
+            if (start !== -1 && end !== -1) {
+              let raw = stdout.substring(start, end + 1);
+              if (raw.includes('\\"')) {
+                raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+              }
+              const parsed: TenderItem[] = JSON.parse(raw);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                // Upsert into memory store
+                parsed.forEach(item => {
+                  this.tenders.set(String(item.invitationId), item);
+                });
+                this.lastSyncedAt = new Date();
+                return resolve({ items: parsed, totalCount: parsed.length });
+              }
+            }
+          }
+        } catch (parseErr) {
+          console.error('Failed to parse Next.js payload from live tender.gov.mn', parseErr);
+        }
+
+        resolve({ items: this.getAllTenders().slice(0, 20), totalCount: this.tenders.size });
+      });
+    });
+  }
+
+  public filterTenders(params: TenderFilterParams): { items: TenderItem[]; totalCount: number } {
+    this.loadFromDisk();
+    let result = Array.from(this.tenders.values());
+
+    // Search keyword
+    if (params.search && params.search.trim() !== '') {
+      const q = params.search.toLowerCase().trim();
+      result = result.filter(item => {
+        return (
+          (item.tenderName && item.tenderName.toLowerCase().includes(q)) ||
+          (item.tenderCode && item.tenderCode.toLowerCase().includes(q)) ||
+          (item.budgetEntityName && item.budgetEntityName.toLowerCase().includes(q)) ||
+          (item.positionName && item.positionName.toLowerCase().includes(q)) ||
+          (item.invitationNumber && item.invitationNumber.toLowerCase().includes(q))
+        );
+      });
+    }
+
+    // Category filter (PRODUCT, JOB, SERVICE)
+    if (params.category && params.category !== 'all' && params.category !== 'ALL') {
+      result = result.filter(item => item.tenderTypeCode === params.category);
+    }
+
+    // Budget range filter
+    if (params.minBudget !== undefined && params.minBudget > 0) {
+      result = result.filter(item => item.totalBudget >= params.minBudget!);
+    }
+    if (params.maxBudget !== undefined && params.maxBudget > 0) {
+      result = result.filter(item => item.totalBudget <= params.maxBudget!);
+    }
+
+    // Status filter
+    if (params.status && params.status !== 'all') {
+      if (params.status === 'receiving') {
+        result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн'));
+      } else if (params.status === 'published') {
+        result = result.filter(item => item.docStatusCode === 'PUBLISHING_STATUS' || item.docStatusName?.includes('Нийтлэгдсэн'));
+      }
+    }
+
+    // Sorting
+    const sortBy = params.sortBy || 'date_desc';
+    result.sort((a, b) => {
+      if (sortBy === 'budget_desc') {
+        return (b.totalBudget || 0) - (a.totalBudget || 0);
+      } else if (sortBy === 'budget_asc') {
+        return (a.totalBudget || 0) - (b.totalBudget || 0);
+      } else if (sortBy === 'deadline_asc') {
+        const dateA = a.receiveDate ? new Date(a.receiveDate).getTime() : Infinity;
+        const dateB = b.receiveDate ? new Date(b.receiveDate).getTime() : Infinity;
+        return dateA - dateB;
+      } else {
+        // date_desc default
+        const dateA = a.publishDate || a.actionDate ? new Date(a.publishDate || a.actionDate!).getTime() : 0;
+        const dateB = b.publishDate || b.actionDate ? new Date(b.publishDate || b.actionDate!).getTime() : 0;
+        return dateB - dateA;
+      }
+    });
+
+    const totalCount = result.length;
+    const page = params.page || 1;
+    const perPage = params.perPage || 15;
+    const startIndex = (page - 1) * perPage;
+    const pagedItems = result.slice(startIndex, startIndex + perPage);
+
+    return { items: pagedItems, totalCount };
+  }
+
+  public getStats(): TenderStats {
+    const all = Array.from(this.tenders.values());
+    let totalBudgetSum = 0;
+    let productCount = 0;
+    let jobCount = 0;
+    let serviceCount = 0;
+    const ministryMap: Record<string, { count: number; budget: number }> = {};
+
+    all.forEach(t => {
+      totalBudgetSum += t.totalBudget || 0;
+      if (t.tenderTypeCode === 'PRODUCT') productCount++;
+      else if (t.tenderTypeCode === 'JOB') jobCount++;
+      else if (t.tenderTypeCode === 'SERVICE') serviceCount++;
+
+      const ministry = t.positionName || 'Бусад захиалагч';
+      if (!ministryMap[ministry]) {
+        ministryMap[ministry] = { count: 0, budget: 0 };
+      }
+      ministryMap[ministry].count++;
+      ministryMap[ministry].budget += t.totalBudget || 0;
+    });
+
+    const topMinistries = Object.entries(ministryMap)
+      .map(([name, val]) => ({ name, count: val.count, budget: val.budget }))
+      .sort((a, b) => b.budget - a.budget)
+      .slice(0, 5);
+
+    return {
+      totalCount: all.length,
+      totalBudgetSum,
+      activeTendersCount: all.filter(t => t.docStatusCode === 'RECEIVE_TENDER' || !t.docStatusCode).length,
+      categoryCounts: {
+        product: productCount,
+        job: jobCount,
+        service: serviceCount,
+      },
+      topMinistries,
+    };
+  }
+}
+
+export const tenderStore = new TenderStore();
