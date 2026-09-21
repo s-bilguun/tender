@@ -216,6 +216,87 @@ export async function POST(request: NextRequest) {
             .order('publish_date', { ascending: false })
             .limit(10);
           if (data) relevantTenders = data.map(mapRowToTender);
+        } else if (/(программ|програм|software|мэдээллийн\s*технологи|кибер|өгөгдлийн\s*сан|дата\s*төв|систем\s*хөгжүүлэлт|лиценз)/i.test(message)) {
+          // DOMAIN: IT / Software / Systems
+          queryContextDescription = 'Мэдээллийн технологи, програм хангамж, системийн чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .or('tender_name.ilike.%программ%,tender_name.ilike.%програм%,tender_name.ilike.%мэдээллийн технологи%,tender_name.ilike.%өгөгдлийн сан%,tender_name.ilike.%лиценз%,tender_name.ilike.%кибер%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+        } else if (/(эмнэлэг|эрүүл\s*мэнд|эм\s*бэлдмэл|эмнэлгийн|оношилгоо|урвалж|тоног\s*төхөөрөмж|рентген|мэс\s*засал)/i.test(message)) {
+          // DOMAIN: Medical / Healthcare
+          queryContextDescription = 'Эрүүл мэнд, эмнэлгийн тоног төхөөрөмжийн чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .or('tender_name.ilike.%эмнэлэг%,tender_name.ilike.%эрүүл мэнд%,tender_name.ilike.%тоног төхөөрөмж%,tender_name.ilike.%оношилгоо%,tender_name.ilike.%эм бэлдмэл%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+        } else if (/(барилга|их\s*засвар|барилга\s*угсралт|өргөтгөл|дулаалга|дээвэр)/i.test(message)) {
+          // DOMAIN: Construction & Renovation
+          queryContextDescription = 'Барилга угсралт, их засварын чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .eq('tender_type_code', 'JOB')
+            .or('tender_name.ilike.%барилга%,tender_name.ilike.%их засвар%,tender_name.ilike.%өргөтгөл%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+        } else if (/(авто\s*зам|замын\s*засвар|гүүр|нийтийн\s*тээвэр|автобус)/i.test(message)) {
+          // DOMAIN: Roads & Transportation
+          queryContextDescription = 'Авто зам, дэд бүтэц, тээврийн чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .or('tender_name.ilike.%авто зам%,tender_name.ilike.%гүүр%,tender_name.ilike.%тээвэр%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+        } else if (/(сургууль|цэцэрлэг|дотуур\s*байр|боловсрол|сургалт)/i.test(message)) {
+          // DOMAIN: Education & Schools
+          queryContextDescription = 'Боловсрол, сургууль, цэцэрлэгийн чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .or('tender_name.ilike.%сургууль%,tender_name.ilike.%цэцэрлэг%,tender_name.ilike.%дотуур байр%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+        } else if (/(шатахуун|түлш|дизель|нүүрс|уурхай|өрөмдлөг|тэсэлгээ)/i.test(message)) {
+          // DOMAIN: Fuel, Mining, Drilling
+          queryContextDescription = 'Түлш шатахуун, уул уурхай, өрөмдлөгийн чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .or('tender_name.ilike.%шатахуун%,tender_name.ilike.%түлш%,tender_name.ilike.%дизель%,tender_name.ilike.%нүүрс%,tender_name.ilike.%өрөмдлөг%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+        } else if (/(камер|хяналтын\s*камер|дохиолол|хамгаалалт)/i.test(message)) {
+          // DOMAIN: Security & Cameras
+          queryContextDescription = 'Камер, хяналтын систем, аюулгүй байдлын чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .or('tender_name.ilike.%камер%,tender_name.ilike.%хяналтын камер%,tender_name.ilike.%дохиолол%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
+        } else if (/(хүнс|хоол|мах|гурил|сүү)/i.test(message)) {
+          // DOMAIN: Food & Catering
+          queryContextDescription = 'Хүнс, хоол хангамжийн чиглэлийн тендерүүд:';
+          const { data } = await supabase
+            .from('tenders')
+            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+            .or('tender_name.ilike.%хүнс%,tender_name.ilike.%хоол%,tender_name.ilike.%мах%')
+            .order('total_budget', { ascending: false })
+            .limit(10);
+          if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else {
           // Check if specific organization is named
           const knownAgencies = [
@@ -239,10 +320,12 @@ export async function POST(request: NextRequest) {
           // Keyword search if no agency match or 0 agency results
           if (relevantTenders.length === 0) {
             const stopwords = new Set([
-              'тендерийн', 'тендер', 'тендерүүд', 'төсөв', 'шаардлага', 'онцлогийг', 'онцлог',
+              'тендерийн', 'тендер', 'тендерүүд', 'тэндэр', 'төсөв', 'шаардлага', 'онцлогийг', 'онцлог',
               'шинжилж', 'шинжилгээ', 'оролцогчдод', 'зориулсан', 'зөвлөмж', 'өгнө', 'үү', 'асуудал',
               'мэдээлэл', 'талаар', 'байна', 'хэдэн', 'ямар', 'юу', 'авах', 'байгаа', 'гэж', 'болон',
-              'жагсаана', 'жагсаалт', 'харуул', 'өгөөч', 'гэсэн', 'аль'
+              'жагсаана', 'жагсаалт', 'харуул', 'өгөөч', 'гэсэн', 'аль', 'хэрэгтэй', 'хэрэгцээтэй',
+              'байнауу', 'байнаа', 'чиглэлээр', 'хайж', 'тухай', 'бүх', 'нийт', 'хангамж',
+              'нийлүүлэх', 'хийх', 'гүйцэтгэх', 'үйлчилгээ', 'ажил', 'бараа'
             ]);
 
             const cleaned = message.replace(/["'“”«»()[\]{}?!,.:;]/g, ' ');
