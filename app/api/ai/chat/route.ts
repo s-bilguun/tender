@@ -34,6 +34,69 @@ interface TargetTenderInfo {
   docStatusName?: string;
 }
 
+interface QueryPlan {
+  searchKeywords?: string[];
+  agency?: string | null;
+  isReceivingOnly?: boolean;
+  minBudget?: number | null;
+  maxBudget?: number | null;
+  category?: 'PRODUCT' | 'JOB' | 'SERVICE' | null;
+  sortBy?: 'budget_desc' | 'budget_asc' | 'date_desc' | 'deadline_asc' | null;
+}
+
+async function parseNaturalQueryWithLLM(message: string, apiKey: string): Promise<QueryPlan | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://tender.mn',
+        'X-Title': 'Tender.mn',
+      },
+      body: JSON.stringify({
+        model: 'google/gemma-4-26b-a4b-it:free',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an AI query parser for Mongolia's tender portal (22,000 tenders).
+Convert the user's natural language question into a search filter JSON.
+Schema:
+{
+  "searchKeywords": string[], // Core specific nouns only (e.g. "програм", "компьютер", "камер", "шатахуун", "эмнэлэг"). DO NOT put category words ("бараа", "ажил", "үйлчилгээ") or stopwords ("хэрэгтэй", "байгаа", "тэндэр") in searchKeywords.
+  "agency": string | null,    // Specific agency if mentioned (e.g. "Эрдэнэт", "УБТЗ", "Нийслэл")
+  "isReceivingOnly": boolean, // TRUE if the user asks for tenders currently needed, open, or accepting proposals ("хэрэгтэй байгаа", "санал авч байгаа", "хүлээн авч байгаа", "одоо", "идэвхтэй")
+  "minBudget": number | null, // Numeric budget in MNT (e.g. 500 сая -> 500000000)
+  "maxBudget": number | null,
+  "category": "PRODUCT" | "JOB" | "SERVICE" | null, // "бараа" -> PRODUCT, "ажил" -> JOB, "үйлчилгээ" -> SERVICE
+  "sortBy": "budget_desc" | "budget_asc" | "date_desc" | "deadline_asc" | null
+}
+Return ONLY valid JSON without markdown fences.`,
+          },
+          { role: 'user', content: message },
+        ],
+        max_tokens: 150,
+        temperature: 0.1,
+      }),
+    });
+
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content;
+    if (!raw) return null;
+    const cleaned = raw.replace(/```(?:json)?/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleaned) as QueryPlan;
+  } catch (err) {
+    console.warn('AI Query Planner skipped or timed out:', err);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { message, tenderContext, locale = 'mn', model: requestedModel } = await request.json();
@@ -169,54 +232,111 @@ export async function POST(request: NextRequest) {
 
     // STEP 3: Intent Classification & Specialized Database Queries (if no specific single tender)
     if (!targetTender) {
-      // INTENT A: TOP / HIGHEST BUDGET TENDERS
-      const isTopBudget = /(хамгийн\s*(их|өндөр|үнэтэй|том)|топ\s*\d*|их\s*төсөвтэй|өндөр\s*төсөвтэй|хамгийн\s*их\s*мөнгө|highest\s*budget|top\s*budget|largest)/i.test(message);
+      const openRouterKey = process.env.OPENROUTER_API_KEY;
 
-      // INTENT B: LOWEST BUDGET TENDERS
-      const isLowBudget = /(хамгийн\s*(бага|хямд|жижиг)|бага\s*төсөвтэй|хямд\s*төсөвтэй|lowest\s*budget)/i.test(message);
+      // ATTEMPT 1: Dynamic AI Query Planner (understands true human natural language)
+      if (openRouterKey) {
+        try {
+          const plan = await parseNaturalQueryWithLLM(message, openRouterKey);
+          if (plan) {
+            let query = supabase
+              .from('tenders')
+              .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date, publish_date');
 
-      // INTENT C: ACTIVE / RECEIVING TENDERS
-      const isActiveTenders = /(хүлээн\s*авч\s*байгаа|одоо\s*нээлттэй|дуусах\s*гэж\s*байгаа|дуусах\s*хугацаа|энэ\s*7\s*хоногт|идэвхтэй|active|closing\s*soon)/i.test(message);
+            if (plan.isReceivingOnly) {
+              query = query.ilike('doc_status_name', '%хүлээн авч%');
+            }
+            if (plan.agency) {
+              query = query.ilike('budget_entity_name', `%${plan.agency}%`);
+            }
+            if (plan.minBudget && plan.minBudget > 0) {
+              query = query.gte('total_budget', plan.minBudget);
+            }
+            if (plan.maxBudget && plan.maxBudget > 0) {
+              query = query.lte('total_budget', plan.maxBudget);
+            }
+            if (plan.category) {
+              query = query.eq('tender_type_code', plan.category);
+            }
+            if (plan.searchKeywords && plan.searchKeywords.length > 0) {
+              let kws = [...plan.searchKeywords];
+              if (kws.some((k) => k.toLowerCase().includes('програм'))) {
+                kws = Array.from(new Set([...kws, 'програм', 'программ']));
+              }
+              const conditions = kws.map((k) => `tender_name.ilike.%${k}%`).join(',');
+              query = query.or(conditions);
+            }
+            if (plan.sortBy === 'budget_asc') {
+              query = query.order('total_budget', { ascending: true });
+            } else if (plan.sortBy === 'deadline_asc') {
+              query = query.order('receive_date', { ascending: true });
+            } else if (plan.sortBy === 'date_desc') {
+              query = query.order('publish_date', { ascending: false });
+            } else {
+              query = query.order('total_budget', { ascending: false });
+            }
 
-      // INTENT D: RECENT / NEWEST TENDERS
-      const isRecentTenders = /(шинээр|сүүлд\s*зарлагдсан|хамгийн\s*шинэ|шинэ\s*тендер|хамгийн\s*сүүлийн|newest|recent)/i.test(message);
+            const { data } = await query.limit(10);
+            if (data && data.length > 0) {
+              relevantTenders = data.map(mapRowToTender);
+              queryContextDescription = 'Хэрэглэгчийн асуултын дагуу өгөгдлийн сангаас шүүсэн бодит тендерүүд:';
+            }
+          }
+        } catch (planErr) {
+          console.warn('Dynamic query planner execution failed, falling back:', planErr);
+        }
+      }
 
-      try {
-        if (isTopBudget) {
-          queryContextDescription = 'Мэдээллийн сангаас шүүсэн ХАМГИЙН ӨНДӨР ТӨСӨВТЭЙ ТОП ТЕНДЕРҮҮД (2026 он):';
-          const { data } = await supabase
-            .from('tenders')
-            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
-            .order('total_budget', { ascending: false })
-            .limit(10);
-          if (data) relevantTenders = data.map(mapRowToTender);
-        } else if (isLowBudget) {
-          queryContextDescription = 'Мэдээллийн сангаас шүүсэн БАГА ТӨСӨВТЭЙ ТЕНДЕРҮҮД:';
-          const { data } = await supabase
-            .from('tenders')
-            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
-            .gt('total_budget', 100000)
-            .order('total_budget', { ascending: true })
-            .limit(10);
-          if (data) relevantTenders = data.map(mapRowToTender);
-        } else if (isActiveTenders) {
-          queryContextDescription = 'Одоогоор САНАЛ ХҮЛЭЭН АВЧ БАЙГАА (Идэвхтэй) ТЕНДЕРҮҮД:';
-          const { data } = await supabase
-            .from('tenders')
-            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
-            .ilike('doc_status_name', '%хүлээн авч%')
-            .order('receive_date', { ascending: true })
-            .limit(10);
-          if (data) relevantTenders = data.map(mapRowToTender);
-        } else if (isRecentTenders) {
-          queryContextDescription = 'ХАМГИЙН СҮҮЛД ЗАРЛАГДСАН ТЕНДЕРҮҮД:';
-          const { data } = await supabase
-            .from('tenders')
-            .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
-            .order('publish_date', { ascending: false })
-            .limit(10);
-          if (data) relevantTenders = data.map(mapRowToTender);
-        } else if (/(программ|програм|software|мэдээллийн\s*технологи|кибер|өгөгдлийн\s*сан|дата\s*төв|систем\s*хөгжүүлэлт|лиценз)/i.test(message)) {
+      // ATTEMPT 2: Fallback Domain & Keyword Rules (if AI planner was skipped or yielded 0)
+      if (relevantTenders.length === 0) {
+        // INTENT A: TOP / HIGHEST BUDGET TENDERS
+        const isTopBudget = /(хамгийн\s*(их|өндөр|үнэтэй|том)|топ\s*\d*|их\s*төсөвтэй|өндөр\s*төсөвтэй|хамгийн\s*их\s*мөнгө|highest\s*budget|top\s*budget|largest)/i.test(message);
+
+        // INTENT B: LOWEST BUDGET TENDERS
+        const isLowBudget = /(хамгийн\s*(бага|хямд|жижиг)|бага\s*төсөвтэй|хямд\s*төсөвтэй|lowest\s*budget)/i.test(message);
+
+        // INTENT C: ACTIVE / RECEIVING TENDERS
+        const isActiveTenders = /(хүлээн\s*авч\s*байгаа|одоо\s*нээлттэй|дуусах\s*гэж\s*байгаа|дуусах\s*хугацаа|энэ\s*7\s*хоногт|идэвхтэй|active|closing\s*soon)/i.test(message);
+
+        // INTENT D: RECENT / NEWEST TENDERS
+        const isRecentTenders = /(шинээр|сүүлд\s*зарлагдсан|хамгийн\s*шинэ|шинэ\s*тендер|хамгийн\s*сүүлийн|newest|recent)/i.test(message);
+
+        try {
+          if (isTopBudget) {
+            queryContextDescription = 'Мэдээллийн сангаас шүүсэн ХАМГИЙН ӨНДӨР ТӨСӨВТЭЙ ТОП ТЕНДЕРҮҮД (2026 он):';
+            const { data } = await supabase
+              .from('tenders')
+              .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+              .order('total_budget', { ascending: false })
+              .limit(10);
+            if (data) relevantTenders = data.map(mapRowToTender);
+          } else if (isLowBudget) {
+            queryContextDescription = 'Мэдээллийн сангаас шүүсэн БАГА ТӨСӨВТЭЙ ТЕНДЕРҮҮД:';
+            const { data } = await supabase
+              .from('tenders')
+              .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+              .gt('total_budget', 100000)
+              .order('total_budget', { ascending: true })
+              .limit(10);
+            if (data) relevantTenders = data.map(mapRowToTender);
+          } else if (isActiveTenders) {
+            queryContextDescription = 'Одоогоор САНАЛ ХҮЛЭЭН АВЧ БАЙГАА (Идэвхтэй) ТЕНДЕРҮҮД:';
+            const { data } = await supabase
+              .from('tenders')
+              .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+              .ilike('doc_status_name', '%хүлээн авч%')
+              .order('receive_date', { ascending: true })
+              .limit(10);
+            if (data) relevantTenders = data.map(mapRowToTender);
+          } else if (isRecentTenders) {
+            queryContextDescription = 'ХАМГИЙН СҮҮЛД ЗАРЛАГДСАН ТЕНДЕРҮҮД:';
+            const { data } = await supabase
+              .from('tenders')
+              .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
+              .order('publish_date', { ascending: false })
+              .limit(10);
+            if (data) relevantTenders = data.map(mapRowToTender);
+          } else if (/(программ|програм|software|мэдээллийн\s*технологи|кибер|өгөгдлийн\s*сан|дата\s*төв|систем\s*хөгжүүлэлт|лиценз)/i.test(message)) {
           // DOMAIN: IT / Software / Systems
           queryContextDescription = 'Мэдээллийн технологи, програм хангамж, системийн чиглэлийн тендерүүд:';
           const { data } = await supabase
@@ -357,6 +477,7 @@ export async function POST(request: NextRequest) {
       } catch (err) {
         console.warn('Query processing failed:', err);
       }
+    }
 
       // If still empty (e.g. greeting or general query), provide top active/budget tenders from Supabase
       if (relevantTenders.length === 0) {
