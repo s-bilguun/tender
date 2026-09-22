@@ -296,17 +296,18 @@ export async function getTenderDetailData(id: string | number) {
         id: String(d.fileId),
         fileId: d.fileId,
         name: d.fileName,
-        category: d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг',
+        category: d.category || (d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг'),
         type: `${(d.fileExtention || 'pdf').toUpperCase()} Баримт`,
         date: d.createdDate ? d.createdDate.substring(0, 10) : (tenderItem.publishDate || '').substring(0, 10),
         url: d.downloadUrl,
         downloadUrl: d.downloadUrl,
         officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-        extractedSummary: liveBundle.structuredSpecs?.rawSpecText
+        extractedSummary: d.isPrimary && liveBundle.structuredSpecs?.rawSpecText
           ? `ХУУЛЬ ЗҮЙН БА ТЕХНИКИЙН ШААРДЛАГА:\n${liveBundle.structuredSpecs.rawSpecText.substring(0, 1500)}`
           : undefined
       }));
     }
+
 
     // Extracted PDF text & structured criteria
     if (liveBundle.structuredSpecs) {

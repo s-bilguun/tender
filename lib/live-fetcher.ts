@@ -9,6 +9,7 @@ export interface LiveTenderDocument {
   fileExtention?: string;
   downloadUrl: string;
   isPrimary?: boolean;
+  category?: string;
 }
 
 export interface LiveBidder {
@@ -119,6 +120,7 @@ function curlPostJson(url: string, body: any): Promise<string> {
   });
 }
 
+
 // Extract structured specifications and requirements from raw Mongolian PDF text
 export function parsePdfContent(fullText: string): ParsedPdfResult {
   const result: ParsedPdfResult = {
@@ -133,24 +135,36 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
 
   if (!fullText) return result;
 
-  // 1. Licenses (ТШЗ 17.4)
-  const licIdx = fullText.indexOf('ТШЗ 17.4');
+  // 1. Licenses (ТШЗ 17.4 for standard tenders, ТШЗ 16.2 for framework agreements)
+  let licIdx = fullText.indexOf('ТШЗ 17.4');
+  let isFrameworkLic = false;
+  if (licIdx === -1) {
+    licIdx = fullText.indexOf('ТШЗ 16.2');
+    if (licIdx !== -1) isFrameworkLic = true;
+  }
+
   if (licIdx !== -1) {
-    const licSection = fullText.substring(licIdx, licIdx + 1000);
+    const licSection = fullText.substring(licIdx, licIdx + 2500);
     const afterFirst = licSection.substring(15);
-    const nextTsz = afterFirst.search(/ТШЗ\s*1[78]\./);
+    const nextTsz = afterFirst.search(/ТШЗ\s*1[789]\./);
     const relevant = nextTsz !== -1 ? afterFirst.substring(0, nextTsz) : afterFirst;
     const lines = relevant.split('\n').map(l => l.trim()).filter(Boolean);
     for (const l of lines) {
       if (/^\d+[\.\)]\s+/.test(l)) {
-        result.licenses.push(l.replace(/^\d+[\.\)]\s+/, '').trim());
-      } else if (l.length > 5 && !l.includes('Шаардана') && !l.includes('Зөвшөөрөл') && !l.includes('ТШЗ')) {
+        const item = l.replace(/^\d+[\.\)]\s+/, '').trim();
+        if (item.length > 5 && !item.toLowerCase().includes('шаардана') && !item.toLowerCase().includes('зөвшөөрөл')) {
+          result.licenses.push(item);
+        }
+      } else if (l.startsWith('•') || l.startsWith('-')) {
+        const item = l.replace(/^[•\-]\s*/, '').trim();
+        if (item.length > 5) result.licenses.push(item);
+      } else if (!isFrameworkLic && l.length > 5 && !l.includes('Шаардана') && !l.includes('Зөвшөөрөл') && !l.includes('ТШЗ')) {
         result.licenses.push(l);
       }
     }
   }
 
-  // 2. Personnel (Хүний нөөц)
+  // 2. Personnel — standard format (Хүний нөөц / "Албан тушаал   Хүний тоо")
   const hrIdx = fullText.search(/(?:хүний нөөцийн шаардлага|Албан тушаал\s+Хүний тоо)/i);
   if (hrIdx !== -1) {
     const hrSection = fullText.substring(hrIdx, hrIdx + 1200);
@@ -209,6 +223,56 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     }
   }
 
+  // 2b. Personnel — framework agreement format ("Албан тушаал ... Орон тоо ... Боловсрол")
+  if (result.personnel.length === 0) {
+    const altHrIdx = fullText.search(/Албан\s*тушаал[\s\S]{1,100}Орон\s*тоо/i);
+    if (altHrIdx !== -1) {
+      const hrSection = fullText.substring(altHrIdx, altHrIdx + 1200);
+      const endHr = hrSection.search(/ТШЗ\s*1[6789]\./);
+      const relevant = endHr !== -1 ? hrSection.substring(0, endHr) : hrSection;
+      const lines = relevant.split('\n').map(l => l.trim()).filter(Boolean);
+
+      let dataStartIdx = -1;
+      for (let i = 0; i < lines.length; i++) {
+        if (/(?:ур чадвар|хүний тоо|орон тоо)/i.test(lines[i])) {
+          dataStartIdx = i + 1;
+        }
+      }
+
+      if (dataStartIdx !== -1 && dataStartIdx < lines.length) {
+        const dataLines = lines.slice(dataStartIdx);
+        const roleParts: string[] = [];
+        let count = 0;
+        const qualParts: string[] = [];
+        let state: 'role' | 'qual' = 'role';
+
+        for (const l of dataLines) {
+          // Skip row-number + "Бүх багц" header-like lines
+          if (/^\d+\s+(?:Бүх багц|\d+)/i.test(l) || /^(?:Бүх багц)\s*$/i.test(l)) continue;
+          if (/^\d+$/.test(l)) {
+            count = parseInt(l, 10);
+            state = 'qual';
+            continue;
+          }
+          if (state === 'role') {
+            roleParts.push(l);
+          } else if (state === 'qual') {
+            qualParts.push(l);
+          }
+        }
+
+        if (roleParts.length > 0 && count > 0) {
+          result.personnel.push({
+            role: roleParts.join(' ').replace(/\s+/g, ' ').trim(),
+            count,
+            qualification: qualParts.join(' ').replace(/ТШЗ[\s\S]*$/, '').replace(/\s+/g, ' ').trim(),
+            experience: 'Шаардлагын дагуу'
+          });
+        }
+      }
+    }
+  }
+
   // 3. Machinery & Equipment (ТШЗ 19.1)
   const machIdx = fullText.indexOf('ТШЗ 19.1');
   if (machIdx !== -1) {
@@ -240,7 +304,17 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     }
   }
 
-  // 4. Bid Security (ТШЗ 23.1)
+  // 3b. Food/logistics storage requirements (for framework agreement food tenders)
+  if (result.machinery.length === 0) {
+    if (fullText.includes('зориулалтын тээврийн хэрэгсэл') || fullText.includes('тээврийн хэрэгсэл')) {
+      result.machinery.push('Ариун цэвэр, эрүүл ахуйн шаардлага хангасан зориулалтын тээврийн хэрэгсэл');
+    }
+    if (fullText.includes('хадгалах агуулах') || fullText.includes('агуулахтай байх')) {
+      result.machinery.push('Зориулалтын хүнс хадгалах агуулах (Эзэмшил эсхүл түрээсийн гэрээтэй)');
+    }
+  }
+
+  // 4. Bid Security (ТШЗ 23.1 amount or ТШЗ 22.1 digital declaration)
   const secIdx = fullText.indexOf('ТШЗ 23.1');
   if (secIdx !== -1) {
     const secSection = fullText.substring(secIdx, secIdx + 500);
@@ -250,6 +324,14 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
       const parts = rawNumberStr.split(/\s{2,}|\n/);
       const cleanAmt = parts.pop()?.trim() || rawNumberStr;
       result.bidSecurityReq = `${cleanAmt} төгрөг`;
+    }
+  } else {
+    const sec22Idx = fullText.indexOf('ТШЗ 22.1');
+    if (sec22Idx !== -1) {
+      const sec22Section = fullText.substring(sec22Idx, sec22Idx + 500);
+      if (sec22Section.includes('баталгааны мэдэгдэл') || sec22Section.includes('тоон гарын үсгээр')) {
+        result.bidSecurityReq = 'Тендерийн баталгааны мэдэгдэл (Тоон гарын үсгээр баталгаажуулсан цахим мэдэгдэл)';
+      }
     }
   }
 
@@ -272,7 +354,7 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     result.liquidAssetsReq = liquidMatch[0].replace(/\s+/g, ' ').trim();
   }
 
-  // 6. Look for Chapter III / Technical Specifications
+  // 6. Look for Chapter III / Technical Specifications section
   const specKeywords = [
     'БАРАА МАТЕРИАЛ НИЙЛҮҮЛЭХ ХУГАЦАА',
     'БАРАА МАТЕРИАЛЫН ҮЗҮҮЛЭЛТ',
@@ -306,11 +388,11 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     result.rawSpecText = (endPos !== -1 ? candidateSlice.substring(0, endPos) : candidateSlice).trim();
   }
 
-  // Delivery schedule items
+  // 7. Delivery schedule items
   const schedIdx = fullText.indexOf('Бараа нийлүүлэлтийн хуваарь');
   if (schedIdx !== -1) {
     const schedSection = fullText.substring(schedIdx, schedIdx + 2000);
-    const rowRegex = /(?:^|\n)\s*(\d+)?\s*([А-ЯЁа-яё0-9\s\-№No]+(?:багц[^\n]*)?)\s+([\d\s\,\.]+)\s+(Тонн|тн|ш|ширхэг|ком|багц|метр|м|комплект|удаа|хүн)\s+([^\n]+)/gi;
+    const rowRegex = /(?:^|\n)\s*(\d+)?\s*([А-ЯЁа-яё0-9\s\-№No]+(?:багц[^\n]*)?)  \s+([\d\s\,\.]+)\s+(Тонн|тн|ш|ширхэг|ком|багц|метр|м|комплект|удаа|хүн)\s+([^\n]+)/gi;
     let rm;
     while ((rm = rowRegex.exec(schedSection)) !== null) {
       const name = rm[2].replace(/\s+/g, ' ').trim();
@@ -325,7 +407,7 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     }
   }
 
-  // If no items extracted from schedule, try standard row pattern
+  // 8. Standard row pattern (numbered item tables in spec sections)
   if (result.items.length === 0) {
     const textToSearch = bestSection || fullText;
     const unitPattern = '(?:ширхэг|метр|тоо|ш|м|ком|хос|багц|тонн|тн|т|кг|г|литр|л|боодол|уут|хайрцаг|м2|м3|комплект|цаг|удаа|хүн|өдөр)';
@@ -334,15 +416,14 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     const rawItems: any[] = [];
 
     while ((match = rowStartRegex.exec(textToSearch)) !== null) {
-      const num = parseInt(match[1], 10);
       const rawContent = match[2].trim();
       const unit = match[3].trim();
       const qty = parseFloat(match[4].replace(',', '.'));
 
       const contentLines = rawContent
         .split('\n')
-        .map(l => l.trim())
-        .filter(l => l.length > 0 && !/^[0-9\s\.\,\-]+$/.test(l));
+        .map((l: string) => l.trim())
+        .filter((l: string) => l.length > 0 && !/^[0-9\s\.\,\-]+$/.test(l));
 
       if (contentLines.length === 0) continue;
 
@@ -392,6 +473,51 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     }
 
     result.items = rawItems.slice(0, 100);
+  }
+
+  // 9. Framework agreement package list (ТШЗ 1.3) — fallback when no items found yet
+  if (result.items.length === 0) {
+    const pkgIdx = fullText.indexOf('ТШЗ 1.3');
+    if (pkgIdx !== -1) {
+      const pkgSection = fullText.substring(pkgIdx, pkgIdx + 15000);
+      const endPkg = pkgSection.search(/ТШЗ\s*1\.[4-9]|ТШЗ\s*2\./);
+      const relevant = endPkg !== -1 ? pkgSection.substring(0, endPkg) : pkgSection;
+
+      const rawLines = relevant.split('\n').map((l: string) => l.trim()).filter(Boolean);
+      let pendingNum: string | null = null;
+
+      for (const line of rawLines) {
+        if (line.includes('ТШЗ') || line.includes('Багцын дугаар') || line.includes('Багцын нэр')) continue;
+
+        const singleNumMatch = line.match(/^(\d{1,3})$/);
+        if (singleNumMatch) {
+          pendingNum = singleNumMatch[1];
+          continue;
+        }
+
+        const numAndTextMatch = line.match(/^(\d{1,3})\s+([\u0400-\u04FF0-9\s\-\,\/\.\(\)±]+)$/);
+        if (numAndTextMatch) {
+          result.items.push({
+            name: `Багц ${numAndTextMatch[1]}: ${numAndTextMatch[2].trim()}`,
+            specs: `Ерөнхий гэрээний багц №${numAndTextMatch[1]} (${numAndTextMatch[2].trim()})`,
+            unit: 'багц',
+            qty: 1
+          });
+          pendingNum = null;
+          continue;
+        }
+
+        if (pendingNum && /^[\u0400-\u04FF]/.test(line)) {
+          result.items.push({
+            name: `Багц ${pendingNum}: ${line.trim()}`,
+            specs: `Ерөнхий гэрээний багц №${pendingNum} (${line.trim()})`,
+            unit: 'багц',
+            qty: 1
+          });
+          pendingNum = null;
+        }
+      }
+    }
   }
 
   return result;
@@ -467,34 +593,107 @@ export async function fetchTenderLiveBundle(
   };
 
   // 4. Concurrently fetch:
-  // A. Official Documents List (/api/gw/153/list)
+  // A. Official Documents (gw/153 + gw/88 + gw/106 aggregated)
   // B. Real Bidders Evaluation List (/api/invitation-bidders)
   // C. Official Announcement HTML (/api/get-invitation-by-document-id)
   const promises: Promise<void>[] = [];
 
-  // A. Documents
-  if (tenderDocumentId) {
-    promises.push((async () => {
+  // A. Documents — aggregate all 3 endpoints
+  promises.push((async () => {
+    const seenFileIds = new Set<number>();
+    const allDocs: LiveTenderDocument[] = [];
+
+    // A1. gw/153 — Primary ТШББ
+    if (tenderDocumentId) {
       try {
         const docJsonStr = (await curlGet(`https://www.tender.gov.mn/api/gw/153/list?tenderDocumentId=${tenderDocumentId}&offset=1&limit=9999`)) as string;
         if (docJsonStr && docJsonStr.trim().startsWith('[')) {
           const rawDocs = JSON.parse(docJsonStr);
           if (Array.isArray(rawDocs)) {
-            result.documents = rawDocs.map((d: any, idx: number) => ({
-              fileId: d.fileId,
-              fileName: d.fileName,
-              createdDate: d.createdDate,
-              fileExtention: d.fileExtention || 'pdf',
-              downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'tender.pdf')}`,
-              isPrimary: idx === 0 || d.fileName.toLowerCase().includes('тшбб') || d.fileName.toLowerCase().includes('хоолой')
-            }));
+            for (let idx = 0; idx < rawDocs.length; idx++) {
+              const d = rawDocs[idx];
+              if (!seenFileIds.has(d.fileId)) {
+                seenFileIds.add(d.fileId);
+                allDocs.push({
+                  fileId: d.fileId,
+                  fileName: d.fileName,
+                  createdDate: d.createdDate,
+                  fileExtention: d.fileExtention || 'pdf',
+                  downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'tender.pdf')}`,
+                  category: 'Тендер шалгаруулалтын үндсэн баримт бичиг (ТШББ)',
+                  isPrimary: idx === 0 || (d.fileName && (d.fileName.toLowerCase().includes('тшбб') || d.fileName.toLowerCase().includes('хоолой')))
+                });
+              }
+            }
           }
         }
       } catch (e) {
-        console.warn('Failed to fetch documents for tenderDocumentId:', tenderDocumentId, e);
+        console.warn('Failed to fetch gw/153 documents:', tenderDocumentId, e);
       }
-    })());
-  }
+    }
+
+    // A2. gw/88 — Technical addenda / feasibility
+    if (tenderDocumentId) {
+      try {
+        const docJsonStr88 = (await curlGet(`https://www.tender.gov.mn/api/gw/88/list?tenderDocumentId=${tenderDocumentId}`)) as string;
+        if (docJsonStr88 && docJsonStr88.trim().startsWith('[')) {
+          const rawDocs88 = JSON.parse(docJsonStr88);
+          if (Array.isArray(rawDocs88)) {
+            for (const d of rawDocs88) {
+              if (!seenFileIds.has(d.fileId)) {
+                seenFileIds.add(d.fileId);
+                allDocs.push({
+                  fileId: d.fileId,
+                  fileName: d.fileName,
+                  createdDate: d.createdDate,
+                  fileExtention: d.fileExtention || 'pdf',
+                  downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'addendum.pdf')}`,
+                  category: 'Техникийн тодруулга / Ажлын даалгавар',
+                  isPrimary: false
+                });
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch gw/88 documents:', tenderDocumentId, e);
+      }
+    }
+
+    // A3. gw/106 — Clarification Q&A answer files
+    try {
+      const docJsonStr106 = (await curlGet(`https://www.tender.gov.mn/api/gw/106/list?invitationId=${invitationId}`)) as string;
+      if (docJsonStr106 && docJsonStr106.trim().startsWith('[')) {
+        const rawItems106 = JSON.parse(docJsonStr106);
+        if (Array.isArray(rawItems106)) {
+          for (const item of rawItems106) {
+            if (Array.isArray(item.files)) {
+              for (const f of item.files) {
+                if (!seenFileIds.has(f.fileId)) {
+                  seenFileIds.add(f.fileId);
+                  allDocs.push({
+                    fileId: f.fileId,
+                    fileName: f.fileName,
+                    createdDate: f.createdDate,
+                    fileExtention: f.fileExtention || 'pdf',
+                    downloadUrl: `/api/download?fileId=${f.fileId}&name=${encodeURIComponent(f.fileName || 'clarification.pdf')}`,
+                    category: 'Тодруулгын хариу / Нэмэлт баримт',
+                    isPrimary: false
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch gw/106 clarification files:', invitationId, e);
+    }
+
+    if (allDocs.length > 0) {
+      result.documents = allDocs;
+    }
+  })());
 
   // B. Bidders
   if (tenderId && invitationId) {
