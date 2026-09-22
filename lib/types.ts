@@ -127,6 +127,7 @@ export interface TenderStats {
     count: number;
     budget: number;
   }[];
+  lastUpdatedAt?: string;
 }
 
 export type Locale = 'mn' | 'en';

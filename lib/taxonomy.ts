@@ -75,7 +75,7 @@ export const INDUSTRIES: IndustryInfo[] = [
   },
 ];
 
-const KEYWORDS_MAP: Record<IndustryVertical, string[]> = {
+export const KEYWORDS_MAP: Record<IndustryVertical, string[]> = {
   all: [],
   it: [
     'програм', 'систем', 'сервер', 'сүлжээ', 'компьютер', 'мт ', 'принтер', 'веб',

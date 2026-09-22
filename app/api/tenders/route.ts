@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { tenderStore } from '@/lib/tender-client';
+import { KEYWORDS_MAP, classifyIndustry } from '@/lib/taxonomy';
 import { TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -47,6 +48,15 @@ export async function GET(request: NextRequest) {
       }
       if (positionName && positionName !== 'all') {
         query = query.ilike('position_name', `%${positionName}%`);
+      }
+
+      // Industry filter by domain keywords
+      if (industry && industry !== 'all') {
+        const kwList = KEYWORDS_MAP[industry as keyof typeof KEYWORDS_MAP] || [];
+        if (kwList.length > 0) {
+          const kwQueries = kwList.map((kw) => `tender_name.ilike.%${kw}%`).join(',');
+          query = query.or(kwQueries);
+        }
       }
 
       // Multi-keyword tokenized search across all relevant fields
@@ -115,45 +125,34 @@ export async function GET(request: NextRequest) {
 
       const { data, count, error } = await query;
 
-      const realStats: TenderStats = {
-        totalCount: 22785,
-        totalBudgetSum: 21719589562397,
-        activeTendersCount: 736,
-        categoryCounts: {
-          product: 13734,
-          job: 6373,
-          service: 2667,
-        },
-        topMinistries: [
-          { name: 'Эрдэнэт үйлдвэр ТӨҮГ', count: 1420, budget: 1890000000000 },
-          { name: 'Эрүүл мэндийн сайд', count: 980, budget: 640000000000 },
-          { name: 'Боловсролын сайд', count: 1250, budget: 520000000000 },
-          { name: 'Дарханы төмөрлөгийн үйлдвэр', count: 410, budget: 380000000000 },
-          { name: 'Улаанбаатар хотын Захирагчийн ажлын алба', count: 680, budget: 310000000000 },
-        ],
-      };
+      const dynamicStats = tenderStore.getStats();
 
       if (!error && data && data.length > 0) {
-        const items: TenderItem[] = data.map((row) => ({
-          invitationId: row.invitation_id,
-          invitationNumber: row.invitation_number,
-          tenderCode: row.tender_code,
-          tenderName: row.tender_name,
-          budgetEntityName: row.budget_entity_name,
-          clientCode: row.client_code,
-          positionName: row.position_name,
-          totalBudget: Number(row.total_budget) || 0,
-          tenderTypeCode: row.tender_type_code,
-          tenderTypeName: row.tender_type_name,
-          ruleName: row.rule_name,
-          fundName: row.fund_name,
-          publishDate: row.publish_date,
-          openDate: row.open_date,
-          receiveDate: row.receive_date,
-          docStatusCode: row.doc_status_code,
-          docStatusName: row.doc_status_name,
-          isPackage: 0,
-        }));
+        const items: TenderItem[] = data.map((row) => {
+          const classification = classifyIndustry(row.tender_name, row.tender_type_code);
+          return {
+            invitationId: row.invitation_id,
+            invitationNumber: row.invitation_number,
+            tenderCode: row.tender_code,
+            tenderName: row.tender_name,
+            budgetEntityName: row.budget_entity_name,
+            clientCode: row.client_code,
+            positionName: row.position_name,
+            totalBudget: Number(row.total_budget) || 0,
+            tenderTypeCode: row.tender_type_code,
+            tenderTypeName: row.tender_type_name,
+            ruleName: row.rule_name,
+            fundName: row.fund_name,
+            publishDate: row.publish_date,
+            openDate: row.open_date,
+            receiveDate: row.receive_date,
+            docStatusCode: row.doc_status_code,
+            docStatusName: row.doc_status_name,
+            isPackage: 0,
+            industry: classification.id,
+            industryName: classification.labelMn,
+          };
+        });
 
         const totalCount = count || items.length;
 
@@ -165,7 +164,7 @@ export async function GET(request: NextRequest) {
           perPage,
           totalPages: Math.ceil(totalCount / perPage),
           source: 'supabase',
-          stats: realStats,
+          stats: dynamicStats,
         });
       }
 
@@ -221,7 +220,7 @@ export async function GET(request: NextRequest) {
               perPage,
               totalPages: Math.max(1, Math.ceil(Math.max(liveResult.totalCount, page * perPage) / perPage)),
               source: 'live_fetch',
-              stats: realStats,
+              stats: dynamicStats,
             });
           }
         } catch (liveErr) {

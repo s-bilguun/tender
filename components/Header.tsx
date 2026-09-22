@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Locale, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { RefreshCw, Sparkles, BarChart2, Globe, Building } from 'lucide-react';
+import { RefreshCw, Sparkles, BarChart2, Globe, Building, Clock } from 'lucide-react';
 
 interface HeaderProps {
   locale: Locale;
@@ -27,6 +27,30 @@ export const Header: React.FC<HeaderProps> = ({
   isAnalyticsOpen,
 }) => {
   const t = getTranslation(locale);
+
+  const [formattedTime, setFormattedTime] = useState<string>('');
+
+  useEffect(() => {
+    try {
+      const d = stats?.lastUpdatedAt ? new Date(stats.lastUpdatedAt) : new Date();
+      const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Ulaanbaatar',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).formatToParts(d);
+      const getVal = (type: string) => parts.find((p) => p.type === type)?.value || '';
+      setFormattedTime(`${getVal('year')}.${getVal('month')}.${getVal('day')} ${getVal('hour')}:${getVal('minute')}`);
+    } catch {
+      const now = new Date();
+      setFormattedTime(
+        `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
+      );
+    }
+  }, [stats?.lastUpdatedAt]);
 
   const formatBudgetShort = (amount?: number) => {
     if (!amount) return '0 ₮';
@@ -76,9 +100,12 @@ export const Header: React.FC<HeaderProps> = ({
                 {stats.activeTendersCount || 736}
               </span>
             </div>
-            <div>
-              <span className="text-slate-500">{t.totalBudget}:</span>{' '}
-              <strong className="text-slate-900 tabular-nums">{formatBudgetShort(stats.totalBudgetSum)}</strong>
+            <div className="flex items-center gap-1.5">
+              <span className="text-slate-500">{locale === 'mn' ? 'Сүүлийн шинэчлэл:' : 'Last updated:'}</span>{' '}
+              <span className="inline-flex items-center gap-1 font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-mono text-[11px] tabular-nums">
+                <Clock className="h-3 w-3 text-slate-500 shrink-0" />
+                {formattedTime || 'Уншиж байна...'}
+              </span>
             </div>
           </div>
         )}
