@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Locale, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { RefreshCw, Sparkles, BarChart2, Globe, Building, Clock } from 'lucide-react';
+import { RefreshCw, Sparkles, Globe, Building, Clock } from 'lucide-react';
 
 interface HeaderProps {
   locale: Locale;
@@ -12,8 +12,8 @@ interface HeaderProps {
   isSyncing: boolean;
   onSync: () => void;
   onOpenAI: () => void;
-  onToggleAnalytics: () => void;
-  isAnalyticsOpen: boolean;
+  onToggleAnalytics?: () => void;
+  isAnalyticsOpen?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,8 +23,6 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncing,
   onSync,
   onOpenAI,
-  onToggleAnalytics,
-  isAnalyticsOpen,
 }) => {
   const t = getTranslation(locale);
 
@@ -112,20 +110,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Analytics button */}
-          <button
-            onClick={onToggleAnalytics}
-            className={`h-8 px-2 sm:px-3 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-colors ${
-              isAnalyticsOpen
-                ? 'bg-slate-100 text-slate-900 border-slate-300'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-            }`}
-            title={locale === 'mn' ? 'Статистик' : 'Analytics'}
-          >
-            <BarChart2 className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-            <span className="hidden sm:inline">{locale === 'mn' ? 'Статистик' : 'Analytics'}</span>
-          </button>
-
           {/* Language Switcher */}
           <button
             onClick={() => setLocale(locale === 'mn' ? 'en' : 'mn')}

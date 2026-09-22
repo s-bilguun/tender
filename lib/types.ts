@@ -21,6 +21,8 @@ export interface IndustryInfo {
   descriptionMn: string;
   descriptionEn: string;
   count?: number;
+  totalCount?: number;
+  activeCount?: number;
 }
 
 export interface BidRequirementSummary {

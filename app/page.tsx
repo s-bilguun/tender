@@ -211,8 +211,6 @@ export default function Home() {
           setAiTenderContext(null);
           setIsAIDrawerOpen(true);
         }}
-        onToggleAnalytics={() => setIsAnalyticsOpen(!isAnalyticsOpen)}
-        isAnalyticsOpen={isAnalyticsOpen}
       />
 
       {/* Main Content Area */}
