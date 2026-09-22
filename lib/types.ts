@@ -2,6 +2,7 @@ export type TenderType = 'PRODUCT' | 'JOB' | 'SERVICE' | 'ALL';
 
 export type IndustryVertical =
   | 'all'
+  | 'mining'       // Уул уурхай, хүнд үйлдвэр, эрдэс баялаг
   | 'it'           // МТ & Програм хангамж, Цахим систем
   | 'construction' // Барилга, дэд бүтэц, засвар
   | 'medical'      // Эм, эмнэлгийн тоног төхөөрөмж

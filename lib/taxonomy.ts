@@ -2,13 +2,13 @@ import { IndustryVertical, IndustryInfo } from './types';
 
 export const INDUSTRIES: IndustryInfo[] = [
   {
-    id: 'it',
-    slug: 'it',
-    labelMn: 'Мэдээллийн технологи & Цахимжилт',
-    labelEn: 'IT & Software Systems',
-    icon: '💻',
-    descriptionMn: 'Програм хангамж, сервер, сүлжээ, компьютерийн тоног төхөөрөмж, цахим систем',
-    descriptionEn: 'Software, servers, network equipment, computers, digital platforms',
+    id: 'mining',
+    slug: 'mining',
+    labelMn: 'Уул уурхай & Хүнд үйлдвэр',
+    labelEn: 'Mining & Heavy Industry',
+    icon: '⛏️',
+    descriptionMn: 'Уул уурхайн тоног төхөөрөмж, баяжуулах, өрөмдлөг, хүнд машин механизм, геологи, эрдэс баялаг',
+    descriptionEn: 'Mining equipment, heavy machinery, mineral processing, drilling, geological services',
   },
   {
     id: 'construction',
@@ -36,6 +36,15 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: '🥪',
     descriptionMn: 'Сургууль цэцэрлэгийн үдийн хоол, мах, сүү, хүнсний түүхий эд, бэлтгэл',
     descriptionEn: 'School meal catering, raw food supplies, dairy, meat products',
+  },
+  {
+    id: 'it',
+    slug: 'it',
+    labelMn: 'Мэдээллийн технологи & Цахимжилт',
+    labelEn: 'IT & Software Systems',
+    icon: '💻',
+    descriptionMn: 'Програм хангамж, сервер, сүлжээ, компьютерийн тоног төхөөрөмж, цахим систем',
+    descriptionEn: 'Software, servers, network equipment, computers, digital platforms',
   },
   {
     id: 'transport',
@@ -77,6 +86,12 @@ export const INDUSTRIES: IndustryInfo[] = [
 
 export const KEYWORDS_MAP: Record<IndustryVertical, string[]> = {
   all: [],
+  mining: [
+    'уул уурхай', 'уурхай', 'баяжуулах', 'өрөмдлөг', 'нүүрс', 'хүнд үйлдвэр', 'эрдэс',
+    'геологи', 'металл', 'экскаватор', 'хөрс хуулалт', 'тэсэлгээ', 'багана', 'конвейер',
+    'тээрэм', 'автосамосвал', 'дамжлага', 'эрдэнэт үйлдвэр', 'эрдэнэс тавантолгой', 'тавантолгой',
+    'баяжмал', 'хүдэр', 'хөвүүлэн баяжуулах', 'шаар', 'бульдозер', 'грейдер', 'хүнд машин'
+  ],
   it: [
     'програм', 'систем', 'сервер', 'сүлжээ', 'компьютер', 'мт ', 'принтер', 'веб',
     'цахим', 'лиценз', 'cloud', 'software', 'hardware', 'программ', 'техник хангамж',

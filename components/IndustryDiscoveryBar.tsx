@@ -20,6 +20,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
 }) => {
   const currentIndustry = filters.industry || 'all';
   const industryCounts = stats?.industryCounts || {};
+  const selectedIndustryObj = INDUSTRIES.find(i => i.id === currentIndustry);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-3">
@@ -39,7 +40,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
         {currentIndustry !== 'all' && (
           <button
             onClick={() => onFilterChange({ industry: 'all', sortBy: 'date_desc', page: 1 })}
-            className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors self-start sm:self-auto flex items-center gap-1"
+            className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors self-start sm:self-auto flex items-center gap-1 cursor-pointer"
           >
             <span>{locale === 'mn' ? 'Бүх салбарыг харах' : 'View All Industries'}</span>
             <span className="text-slate-400 font-normal">✕</span>
@@ -47,8 +48,28 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
         )}
       </div>
 
+      {/* Active Filter Helper Banner */}
+      {currentIndustry !== 'all' && selectedIndustryObj && (
+        <div className="flex items-center justify-between bg-blue-50/80 border border-blue-200/80 rounded-lg px-3 py-1.5 text-xs text-blue-900">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-slate-700">{locale === 'mn' ? 'Идэвхтэй шүүлт:' : 'Active Industry:'}</span>
+            <span className="inline-flex items-center gap-1.5 bg-blue-600 text-white font-semibold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs">
+              <span>{selectedIndustryObj.icon}</span>
+              <span>{locale === 'mn' ? selectedIndustryObj.labelMn : selectedIndustryObj.labelEn}</span>
+            </span>
+          </div>
+          <button
+            onClick={() => onFilterChange({ industry: 'all', sortBy: 'date_desc', page: 1 })}
+            className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 flex items-center gap-1 hover:underline cursor-pointer shrink-0"
+          >
+            <span>{locale === 'mn' ? 'Шүүлтүүр арилгах' : 'Clear'}</span>
+            <span>✕</span>
+          </button>
+        </div>
+      )}
+
       {/* Industry Pills Carousel / Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
         {INDUSTRIES.map((ind) => {
           const isSelected = currentIndustry === ind.id;
           const count = industryCounts[ind.id] || 0;
@@ -57,9 +78,9 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
             <button
               key={ind.id}
               onClick={() => onFilterChange({ industry: isSelected ? 'all' : ind.id, sortBy: 'date_desc', page: 1 })}
-              className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1.5 transition-all relative overflow-hidden group ${
+              className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1.5 transition-all relative overflow-hidden group cursor-pointer ${
                 isSelected
-                  ? 'bg-blue-600 text-white border-blue-600 shadow-xs ring-2 ring-blue-500/20'
+                  ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/30'
                   : 'bg-slate-50/70 hover:bg-white text-slate-800 border-slate-200/80 hover:border-slate-300 hover:shadow-2xs'
               }`}
             >

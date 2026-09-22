@@ -77,14 +77,14 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                 <tr
                   key={String(tender.invitationId)}
                   className="hover:bg-blue-50/50 transition-colors group cursor-pointer"
-                  onClick={() => (onSelect ? onSelect(tender) : router.push(`/tender/${tender.invitationId}`))}
+                  onClick={() => router.push(`/tender/${tender.invitationId}`)}
                 >
                   {/* Star Watchlist */}
                   <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
                     {onToggleSave && (
                       <button
                         onClick={() => onToggleSave(tender.invitationId)}
-                        className={`p-1 rounded transition-colors ${
+                        className={`p-1 rounded transition-colors cursor-pointer ${
                           savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId))
                             ? 'text-amber-500 hover:bg-amber-50'
                             : 'text-slate-300 hover:text-amber-500 hover:bg-slate-100'
@@ -113,16 +113,12 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         </span>
                       )}
                     </div>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onSelect) onSelect(tender);
-                        else router.push(`/tender/${tender.invitationId}`);
-                      }}
+                    <Link 
+                      href={`/tender/${tender.invitationId}`}
                       className="font-medium text-slate-900 text-left line-clamp-2 leading-snug hover:text-blue-600 transition-colors block cursor-pointer"
                     >
                       {tender.tenderName}
-                    </button>
+                    </Link>
                     {/* On mobile, show entity under title */}
                     <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1 md:hidden">
                       {tender.budgetEntityName}
@@ -195,17 +191,17 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     })()}
                   </td>
 
-                  {/* 1-Click Fast Actions */}
+                  {/* Direct Actions */}
                   <td className="py-2.5 px-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-1">
-                      {/* 1-Click Quick View Modal Button */}
-                      <button
-                        onClick={() => (onSelect ? onSelect(tender) : router.push(`/tender/${tender.invitationId}`))}
-                        className="h-6 px-2 rounded bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 text-[11px] font-semibold transition-all shadow-2xs cursor-pointer"
-                        title={locale === 'mn' ? 'Тендерийн дэлгэрэнгүйг шууд харах' : 'Quick view details'}
+                      {/* Direct Details Page Link */}
+                      <Link
+                        href={`/tender/${tender.invitationId}`}
+                        className="h-6 px-2 rounded bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 text-[11px] font-semibold transition-all shadow-2xs flex items-center justify-center cursor-pointer"
+                        title={locale === 'mn' ? 'Тендерийн дэлгэрэнгүйг үзэх' : 'View tender details'}
                       >
                         {locale === 'mn' ? 'Үзэх' : 'View'}
-                      </button>
+                      </Link>
 
                       {/* Direct Official Link */}
                       <a

@@ -6,10 +6,10 @@ import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
 import { ActiveRadarBar } from '@/components/ActiveRadarBar';
 import { IndustryDiscoveryBar } from '@/components/IndustryDiscoveryBar';
+import { CompanyDiscoveryBar } from '@/components/CompanyDiscoveryBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
-import { TenderDetailModal } from '@/components/TenderDetailModal';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
 import { Loader2, AlertCircle, ChevronLeft, ChevronRight, FileSpreadsheet, Star, Sparkles } from 'lucide-react';
@@ -25,7 +25,6 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
-  const [selectedTenderModal, setSelectedTenderModal] = useState<TenderItem | null>(null);
 
   // Watchlist LocalStorage State
   const [savedIds, setSavedIds] = useState<Set<string | number>>(new Set());
@@ -250,6 +249,13 @@ export default function Home() {
           locale={locale}
         />
 
+        {/* B2B Top Procuring Companies Discovery Bar */}
+        <CompanyDiscoveryBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          locale={locale}
+        />
+
         {/* Active Radar Quick Metric Cards */}
         <ActiveRadarBar
           stats={stats}
@@ -260,7 +266,16 @@ export default function Home() {
 
         {/* Collapsible Analytics View */}
         {isAnalyticsOpen && stats && (
-          <AnalyticsView stats={stats} locale={locale} />
+          <AnalyticsView
+            stats={stats}
+            locale={locale}
+            onFilterByCompany={(companyQuery) => {
+              handleFilterChange({ search: companyQuery, page: 1, sortBy: 'date_desc' });
+            }}
+            onFilterByIndustry={(industryId) => {
+              handleFilterChange({ industry: industryId as any, page: 1, sortBy: 'date_desc' });
+            }}
+          />
         )}
 
         {/* Workflow Tabs, Search & Filters */}
@@ -360,7 +375,6 @@ export default function Home() {
             locale={locale}
             savedIds={savedIds}
             onToggleSave={handleToggleSave}
-            onSelect={setSelectedTenderModal}
             onAskAI={handleAskAI}
           />
         ) : (
@@ -373,7 +387,6 @@ export default function Home() {
                 locale={locale}
                 isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
                 onToggleSave={handleToggleSave}
-                onSelect={setSelectedTenderModal}
                 onAskAI={handleAskAI}
               />
             ))}
@@ -442,17 +455,6 @@ export default function Home() {
         selectedTender={aiTenderContext}
         onClearSelectedTender={() => setAiTenderContext(null)}
         locale={locale}
-      />
-
-      {/* 1-Click Fast Tender Detail Modal */}
-      <TenderDetailModal
-        tender={selectedTenderModal}
-        locale={locale}
-        onClose={() => setSelectedTenderModal(null)}
-        onAskAI={(tender) => {
-          setSelectedTenderModal(null);
-          handleAskAI(tender);
-        }}
       />
     </div>
   );

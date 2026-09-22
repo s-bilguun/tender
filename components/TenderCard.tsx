@@ -120,7 +120,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
   return (
     <div
-      onClick={() => (onSelect ? onSelect(tender) : router.push(`/tender/${tender.invitationId}`))}
+      onClick={() => router.push(`/tender/${tender.invitationId}`)}
       className={`bg-white border rounded-xl p-5 shadow-2xs hover:shadow-subtle transition-all flex flex-col justify-between gap-4 group relative cursor-pointer hover:border-blue-300 ${
         urgency?.isUrgent ? 'border-rose-300 hover:border-rose-400 ring-1 ring-rose-200/50' : 'border-slate-200'
       }`}
@@ -168,16 +168,12 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         </div>
 
         {/* Title */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onSelect) onSelect(tender);
-            else router.push(`/tender/${tender.invitationId}`);
-          }}
+        <Link
+          href={`/tender/${tender.invitationId}`}
           className="text-sm font-semibold text-slate-900 text-left group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug block cursor-pointer"
         >
           {tender.tenderName}
-        </button>
+        </Link>
 
         {/* Procuring Entity */}
         <div className="mt-2.5 flex items-start gap-1.5 text-xs text-slate-500">
@@ -210,16 +206,13 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
       {/* Action Buttons: 1. View 2. AI Audit, 3. Bid Now ↗ */}
       <div className="grid grid-cols-3 gap-1.5 pt-1">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onSelect) onSelect(tender);
-            else router.push(`/tender/${tender.invitationId}`);
-          }}
+        <Link
+          href={`/tender/${tender.invitationId}`}
+          onClick={(e) => e.stopPropagation()}
           className="h-8 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-600 hover:text-white transition-all flex items-center justify-center cursor-pointer shadow-2xs"
         >
           {locale === 'mn' ? 'Үзэх' : 'View'}
-        </button>
+        </Link>
 
         <button
           onClick={(e) => {

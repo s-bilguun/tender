@@ -295,6 +295,7 @@ class TenderStore {
     const now = Date.now();
 
     const statsByIndustry: Record<string, { totalCount: number; totalBudgetSum: number; activeCount: number; activeBudgetSum: number; resultCount: number; closingSoonCount: number }> = {
+      mining: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
       it: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
       construction: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
       medical: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
@@ -372,6 +373,7 @@ class TenderStore {
 
     // Baseline stats by industry with live dataset enrichment
     const fallbackStats: Record<string, { totalCount: number; totalBudgetSum: number; activeCount: number; activeBudgetSum: number; resultCount: number; closingSoonCount: number }> = {
+      mining: { totalCount: 4350, totalBudgetSum: 6_850_000_000_000, activeCount: 146, activeBudgetSum: 125_000_000_000, resultCount: 4120, closingSoonCount: 11 },
       it: { totalCount: 1840, totalBudgetSum: 1_240_000_000_000, activeCount: 68, activeBudgetSum: 45_000_000_000, resultCount: 1720, closingSoonCount: 6 },
       construction: { totalCount: 6420, totalBudgetSum: 8_920_000_000_000, activeCount: 184, activeBudgetSum: 168_000_000_000, resultCount: 6110, closingSoonCount: 14 },
       medical: { totalCount: 3120, totalBudgetSum: 2_450_000_000_000, activeCount: 112, activeBudgetSum: 62_000_000_000, resultCount: 2950, closingSoonCount: 8 },
