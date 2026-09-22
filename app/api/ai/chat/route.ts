@@ -557,8 +557,10 @@ export async function POST(request: NextRequest) {
    • НДШ төлөлтийн цахим лавлагаа
    • Банкны баталгаа эсвэл даатгалын батлан даалт
 3. Албан ёсны эх баримт бичиг (ТШББ, ТЭЗҮ, Техникийн тодорхойлолт):
-   • tender.gov.mn эх сурвалж дээр бүрэн эхээрээ PDF хэлбэрээр нээлттэй байршиж байгаа бөгөөд оролцогчид тэндээс татаж авна.
-${results?.isConcluded ? `4. ШАЛГАРУУЛАЛТЫН ҮР ДҮН:\n- Энэ тендер нь шалгаруулалтаа дуусгаж үр дүн нь гарсан байна. Үнэлгээний хорооны албан ёсны протокол, шалгарсан болон татгалзсан оролцогчдын жагсаалт tender.gov.mn дээр баталгаажсан байна.` : ''}
+   • tender.gov.mn эх сурвалжаас татан авч автоматаар задлан шинжилсэн бодит өгөгдөл.
+${technicalSpecs?.realSpecsText ? `\n4. АЛБАН ЁСНЫ ТШББ PDF-ЭЭС БОДИТООР ЗАДАРСАН ТЕХНИКИЙН ҮЗҮҮЛЭЛТҮҮД:\n${technicalSpecs.realSpecsText.substring(0, 4000)}` : ''}
+${technicalSpecs?.extractedQualifications && technicalSpecs.extractedQualifications.length > 0 ? `\n5. ОРОЛЦОГЧИЙН ЧАДАВХЫН ТУХАЙЛСАН ШААРДЛАГУУД (PDF-ээс):\n${technicalSpecs.extractedQualifications.join('\n')}` : ''}
+${results?.bidders && results.bidders.length > 0 ? `\n6. БОДИТ ОРОЛЦОГЧИД БА ҮНЭЛГЭЭНИЙ ХОРООНЫ ДҮГНЭЛТ:\n${results.bidders.map((b: any, idx: number) => `${idx + 1}. Компани: ${b.supplierName} (Регистр: ${b.registerNumber || '-'}) | Үнэ: ${b.openedBidderPrice?.toLocaleString()} ₮ | Төлөв: ${b.wfmStatusName} | Дүгнэлт: "${b.commentText || ''}"`).join('\n')}` : results?.isConcluded ? `\n6. ШАЛГАРУУЛАЛТЫН ҮР ДҮН:\n- Энэ тендер нь шалгаруулалтаа дуусгаж үр дүн нь гарсан байна. Үнэлгээний хорооны албан ёсны протокол tender.gov.mn дээр баталгаажсан байна.` : ''}
 
 ХАРИУЛТЫН ЗӨВЛӨМЖ:
 Хэрэглэгчийн асуултад дээрх бодит өгөгдөл, хуулийн шаардлагад үндэслэн хамгийн практик, тодорхой зөвлөгөө өгч хариулна уу.`;

@@ -757,6 +757,62 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </div>
               )}
 
+              {/* Live Extracted Technical Specifications from PDF */}
+              {(technicalSpecs.realSpecsText || technicalSpecs.extractedSpecs?.rawSpecText) && (
+                <div className="border border-blue-200 rounded-xl p-5 bg-gradient-to-br from-blue-50/50 via-white to-white shadow-2xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-100 pb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-blue-600" />
+                        <span>Албан ёсны ТШББ PDF-ээс автоматаар задлан шинжилсэн бодит үзүүлэлтүүд</span>
+                      </h4>
+                    </div>
+                    {technicalSpecs.pdfPageCount && (
+                      <span className="text-[11px] font-medium text-blue-700 bg-blue-100/70 px-2.5 py-0.5 rounded border border-blue-200 self-start sm:self-auto font-mono">
+                        Нийт {technicalSpecs.pdfPageCount} хуудас баримт бичиг
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Extracted Qualifications if present */}
+                  {technicalSpecs.extractedQualifications && technicalSpecs.extractedQualifications.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide block">
+                        Оролцогчийн чадавхын тухайлсан бодит шаардлагууд (ТШӨХ-ээс):
+                      </span>
+                      <div className="grid grid-cols-1 gap-2">
+                        {technicalSpecs.extractedQualifications.map((q: string, qIdx: number) => (
+                          <div key={qIdx} className="p-3 bg-white rounded-lg border border-slate-200 text-xs text-slate-800 leading-relaxed flex items-start gap-2">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                            <span>{q}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Raw Extracted Specifications block */}
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide block">
+                        III Бүлэг: Бараа материалын техникийн нарийвчилсан үзүүлэлт & Ажлын даалгавар:
+                      </span>
+                      <button
+                        onClick={() => handleRunAiAnalysis('Энэхүү тендерийн ТШББ PDF дээр заасан техникийн нарийвчилсан үзүүлэлт, бараа материалын төрөл, хэмжээ, стандартуудыг ойлгомжтой нэгтгэн дүгнэж өгнө үү.')}
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        <span>AI-аар хүснэгтлэх</span>
+                      </button>
+                    </div>
+                    <div className="p-4 bg-slate-900 text-slate-100 rounded-xl font-mono text-xs leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap selection:bg-blue-500 selection:text-white border border-slate-800">
+                      {technicalSpecs.realSpecsText || technicalSpecs.extractedSpecs?.rawSpecText}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 6. Official Documents & Tender Specs */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
@@ -773,6 +829,7 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 <div className="space-y-3 pt-1">
                   {technicalSpecs.documents.map((doc: any, idx: number) => {
                     const isExpanded = !!expandedDocSummaries[doc.id || idx];
+                    const downloadHref = doc.downloadUrl || doc.url || `https://user.tender.gov.mn/mn/download/${doc.fileId}`;
                     return (
                       <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 transition-colors overflow-hidden">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 gap-3">
@@ -803,14 +860,14 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                             </button>
 
                             <a
-                              href={doc.url}
+                              href={downloadHref}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
-                              title="tender.gov.mn дээрээс албан ёсны эх баримтыг татах"
+                              title="Албан ёсны эх баримтыг шууд татах"
                             >
-                              <span>tender.gov.mn-ээс татах</span>
-                              <ExternalLink className="h-3 w-3" />
+                              <Download className="h-3.5 w-3.5" />
+                              <span>Шууд татах (PDF)</span>
                             </a>
                           </div>
                         </div>
@@ -843,7 +900,136 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
               </div>
 
               {results.isConcluded || isConcluded ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Real Bidder Evaluation Table & Winner Card */}
+                  {results.bidders && results.bidders.length > 0 && (
+                    <div className="space-y-4">
+                      {/* Winner Highlight Banner */}
+                      {results.winner && (
+                        <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-emerald-50 border border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+                          <div className="flex items-start sm:items-center gap-3.5">
+                            <div className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xl">
+                              🏆
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[11px] font-bold text-emerald-950 uppercase tracking-wide">
+                                  Шалгарсан гүйцэтгэгч / Нийлүүлэгч
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white">
+                                  Шалгарсан
+                                </span>
+                              </div>
+                              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 mt-0.5">
+                                {results.winner.supplierName} {results.winner.registerNumber ? `(РД: ${results.winner.registerNumber})` : ''}
+                              </h3>
+                              {results.winner.commentText && (
+                                <p className="text-xs text-emerald-900 mt-1 italic leading-relaxed">
+                                  Үнэлгээний хорооны дүгнэлт: "{results.winner.commentText}"
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="sm:text-right shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-emerald-200">
+                            <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider block">Гэрээ байгуулах үнэ</span>
+                            <span className="text-lg sm:text-xl font-black font-mono text-emerald-700 block">
+                              {formatCurrency(results.winner.discountedAmount || results.winner.openedBidderPrice)}
+                            </span>
+                            {results.winner.fileId && (
+                              <a
+                                href={`https://user.tender.gov.mn/mn/download/${results.winner.fileId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:underline mt-1"
+                              >
+                                <Download className="h-3 w-3" />
+                                <span>Шийдвэрийн албан бичиг (PDF)</span>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bidders Table */}
+                      <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-2xs">
+                        <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                            <Users className="h-4 w-4 text-blue-600" />
+                            <span>Тендерт оролцсон бүх оролцогчдын санал ба Үнэлгээний хорооны шийдвэр ({results.bidders.length})</span>
+                          </h4>
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            Албан ёсны эх сурвалж: tender.gov.mn
+                          </span>
+                        </div>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-50/50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
+                              <tr>
+                                <th className="py-2.5 px-3 w-10 text-center">№</th>
+                                <th className="py-2.5 px-3">Оролцогч байгууллага</th>
+                                <th className="py-2.5 px-3 text-right">Санал болгосон үнэ</th>
+                                <th className="py-2.5 px-3 text-right">Тооцсон үнэ</th>
+                                <th className="py-2.5 px-3 text-center">Төлөв</th>
+                                <th className="py-2.5 px-3">Үнэлгээний хорооны дүгнэлт / Шалтгаан</th>
+                                <th className="py-2.5 px-3 text-center">Албан бичиг</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {results.bidders.map((bidder: any, bIdx: number) => {
+                                const isWinner = bidder.wfmStatusCode === 'DISTINGUISHED_STATUS' || bidder.wfmStatusName === 'Шалгарсан';
+                                return (
+                                  <tr key={bIdx} className={`hover:bg-slate-50/80 transition-colors ${isWinner ? 'bg-emerald-50/40' : ''}`}>
+                                    <td className="py-3 px-3 text-center font-mono text-slate-400 font-medium">{bIdx + 1}</td>
+                                    <td className="py-3 px-3">
+                                      <span className="font-bold text-slate-900 block">{bidder.supplierName}</span>
+                                      {bidder.registerNumber && (
+                                        <span className="font-mono text-[10px] text-slate-400 block mt-0.5">РД: {bidder.registerNumber}</span>
+                                      )}
+                                    </td>
+                                    <td className="py-3 px-3 text-right font-mono font-medium text-slate-700 tabular-nums">
+                                      {formatCurrency(bidder.openedBidderPrice)}
+                                    </td>
+                                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900 tabular-nums">
+                                      {formatCurrency(bidder.discountedAmount || bidder.openedBidderPrice)}
+                                    </td>
+                                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                                      <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                        isWinner
+                                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                          : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                      }`}>
+                                        {bidder.wfmStatusName}
+                                      </span>
+                                    </td>
+                                    <td className="py-3 px-3 max-w-sm text-slate-600 leading-relaxed">
+                                      {bidder.commentText || '—'}
+                                    </td>
+                                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                                      {bidder.fileId ? (
+                                        <a
+                                          href={`https://user.tender.gov.mn/mn/download/${bidder.fileId}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-colors shadow-2xs"
+                                          title={bidder.fileName || 'Албан бичиг татах'}
+                                        >
+                                          <Download className="h-3 w-3" />
+                                          <span>PDF</span>
+                                        </a>
+                                      ) : (
+                                        <span className="text-slate-300">—</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Concluded Official Notice Card */}
                   <div className="bg-gradient-to-r from-amber-50/80 to-blue-50/60 border border-amber-300/80 rounded-xl p-6 shadow-2xs space-y-4">
                     <div className="flex items-center justify-between flex-wrap gap-2">

@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { tenderStore } from './tender-client';
 import { TenderItem } from './types';
+import { fetchTenderLiveBundle } from './live-fetcher';
 
 function generateBDS(tender: any) {
   const budget = Number(tender.total_budget || tender.totalBudget) || 0;
@@ -271,10 +272,67 @@ export async function getTenderDetailData(id: string | number) {
     // ignore
   }
 
-  // 4. Generate structured BDS & Specs & Results
+  // 4. Fetch live data from tender.gov.mn (documents, bidders, PDF extractions)
+  let liveBundle: any = null;
+  try {
+    const rawData = tenderData.raw_data || tenderData.rawData;
+    liveBundle = await fetchTenderLiveBundle(
+      id,
+      rawData?.tenderId
+    );
+  } catch (liveErr) {
+    console.warn('Live bundle fetch failed, using statutory calculations:', liveErr);
+  }
+
+  // 5. Generate structured BDS & Specs & Results
   const bds = generateBDS(tenderData);
   const technicalSpecs = generateTechnicalSpecs(tenderData);
   const results = generateResults(tenderData);
+
+  // 6. Enrich with real live data if available
+  if (liveBundle) {
+    // Official attached files
+    if (liveBundle.documents && liveBundle.documents.length > 0) {
+      technicalSpecs.documents = liveBundle.documents.map((d: any) => ({
+        id: String(d.fileId),
+        fileId: d.fileId,
+        name: d.fileName,
+        category: d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг',
+        type: `${(d.fileExtention || 'pdf').toUpperCase()} Баримт`,
+        date: d.createdDate ? d.createdDate.substring(0, 10) : (tenderItem.publishDate || '').substring(0, 10),
+        url: d.downloadUrl,
+        downloadUrl: d.downloadUrl,
+        officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
+        extractedSummary: liveBundle.structuredSpecs?.rawSpecText
+          ? `ХУУЛЬ ЗҮЙН БА ТЕХНИКИЙН ШААРДЛАГА:\n${liveBundle.structuredSpecs.rawSpecText.substring(0, 1500)}`
+          : undefined
+      }));
+    }
+
+    // Extracted PDF text & structured criteria
+    if (liveBundle.structuredSpecs) {
+      (technicalSpecs as any).extractedSpecs = liveBundle.structuredSpecs;
+      (technicalSpecs as any).realSpecsText = liveBundle.structuredSpecs.rawSpecText;
+      (technicalSpecs as any).extractedQualifications = liveBundle.structuredSpecs.qualifications;
+      (technicalSpecs as any).pdfPageCount = liveBundle.pdfPageCount;
+      (technicalSpecs as any).rawPdfText = liveBundle.pdfText ? liveBundle.pdfText.substring(0, 30000) : undefined;
+    }
+
+    // Real Bidders & Winners
+    if (liveBundle.bidders && liveBundle.bidders.length > 0) {
+      (results as any).bidders = liveBundle.bidders;
+      const winner = liveBundle.bidders.find((b: any) => b.wfmStatusCode === 'DISTINGUISHED_STATUS' || b.wfmStatusName === 'Шалгарсан');
+      if (winner) {
+        (results as any).winner = winner;
+        (results as any).isConcluded = true;
+        (results as any).status = 'CONCLUDED';
+      }
+    }
+
+    if (liveBundle.announcementHtml) {
+      (tenderItem as any).announcementHtml = liveBundle.announcementHtml;
+    }
+  }
 
   return {
     success: true,
@@ -282,6 +340,7 @@ export async function getTenderDetailData(id: string | number) {
     bds,
     technicalSpecs,
     results,
+    liveBundle,
     relatedByEntity,
     similarTenders
   };
