@@ -38,7 +38,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
 
         {currentIndustry !== 'all' && (
           <button
-            onClick={() => onFilterChange({ industry: 'all', page: 1 })}
+            onClick={() => onFilterChange({ industry: 'all', sortBy: 'date_desc', page: 1 })}
             className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition-colors self-start sm:self-auto flex items-center gap-1"
           >
             <span>{locale === 'mn' ? 'Бүх салбарыг харах' : 'View All Industries'}</span>
@@ -56,7 +56,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
           return (
             <button
               key={ind.id}
-              onClick={() => onFilterChange({ industry: isSelected ? 'all' : ind.id, page: 1 })}
+              onClick={() => onFilterChange({ industry: isSelected ? 'all' : ind.id, sortBy: 'date_desc', page: 1 })}
               className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1.5 transition-all relative overflow-hidden group ${
                 isSelected
                   ? 'bg-blue-600 text-white border-blue-600 shadow-xs ring-2 ring-blue-500/20'

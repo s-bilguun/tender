@@ -32,11 +32,14 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
       : `₮${(amount / 1_000_000).toFixed(0)}M`;
   };
 
-  const totalCount = stats?.totalCount || 22785;
-  const totalBudget = stats?.totalBudgetSum || 21_719_589_562_397;
-  const activeCount = stats?.activeTendersCount || 736;
-  const activeBudget = stats?.activeBudgetSum || 482_900_000_000;
-  const closingSoon = stats?.closingSoonCount || 42;
+  const selectedIndustry = filters.industry && filters.industry !== 'all' ? stats?.statsByIndustry?.[filters.industry] : null;
+
+  const totalCount = selectedIndustry ? selectedIndustry.totalCount : (stats?.totalCount || 22785);
+  const totalBudget = selectedIndustry ? selectedIndustry.totalBudgetSum : (stats?.totalBudgetSum || 21_719_589_562_397);
+  const activeCount = selectedIndustry ? selectedIndustry.activeCount : (stats?.activeTendersCount || 736);
+  const activeBudget = selectedIndustry ? selectedIndustry.activeBudgetSum : (stats?.activeBudgetSum || 482_900_000_000);
+  const closingSoon = selectedIndustry ? selectedIndustry.closingSoonCount : (stats?.closingSoonCount || 42);
+  const resultCount = selectedIndustry ? selectedIndustry.resultCount : (stats?.resultCount || 21320);
 
   const currentTab = filters.tabMode || 'all';
 
@@ -44,7 +47,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
       {/* 1. All Historical Archive Card */}
       <div
-        onClick={() => onFilterChange({ tabMode: 'all', status: 'all', urgency: 'all', page: 1 })}
+        onClick={() => onFilterChange({ tabMode: 'all', status: 'all', urgency: 'all', sortBy: 'date_desc', page: 1 })}
         className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
           currentTab === 'all' && (filters.status === 'all' || !filters.status)
             ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/30'
@@ -83,7 +86,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
 
       {/* 2. Active Live Bids Card */}
       <div
-        onClick={() => onFilterChange({ tabMode: 'active', status: 'receiving', urgency: 'all', page: 1 })}
+        onClick={() => onFilterChange({ tabMode: 'active', status: 'receiving', urgency: 'all', sortBy: 'date_desc', page: 1 })}
         className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
           currentTab === 'active'
             ? 'bg-gradient-to-br from-emerald-500/10 via-white to-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs'
@@ -112,7 +115,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
 
       {/* 3. Awarded / Concluded Winners Card */}
       <div
-        onClick={() => onFilterChange({ tabMode: 'result', status: 'result', urgency: 'all', page: 1 })}
+        onClick={() => onFilterChange({ tabMode: 'result', status: 'result', urgency: 'all', sortBy: 'date_desc', page: 1 })}
         className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
           currentTab === 'result' || filters.status === 'result'
             ? 'bg-gradient-to-br from-blue-500/10 via-white to-white border-blue-500 ring-2 ring-blue-500/20 shadow-xs'
@@ -128,10 +131,10 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
         </div>
         <div className="mt-1.5 sm:mt-2 flex items-baseline gap-1.5 sm:gap-2">
           <span className="text-xl sm:text-2xl font-bold tracking-tight text-blue-700 tabular-nums">
-            {locale === 'mn' ? 'Үр дүн' : 'Winners'}
+            {selectedIndustry ? selectedIndustry.resultCount.toLocaleString() : (locale === 'mn' ? 'Үр дүн' : 'Winners')}
           </span>
           <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
-            {locale === 'mn' ? 'гарсан' : 'concluded'}
+            {selectedIndustry ? (locale === 'mn' ? 'үр дүн' : 'concluded') : (locale === 'mn' ? 'гарсан' : 'concluded')}
           </span>
         </div>
         <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[11px] text-slate-500 line-clamp-1">

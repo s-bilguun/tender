@@ -291,13 +291,30 @@ class TenderStore {
     let activeBudgetSum = 0;
     let closingSoonCount = 0;
     let newCount = 0;
+    let totalResultCount = 0;
     const now = Date.now();
+
+    const statsByIndustry: Record<string, { totalCount: number; totalBudgetSum: number; activeCount: number; activeBudgetSum: number; resultCount: number; closingSoonCount: number }> = {
+      it: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+      construction: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+      medical: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+      food: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+      transport: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+      facility: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+      stationery: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+      consulting: { totalCount: 0, totalBudgetSum: 0, activeCount: 0, activeBudgetSum: 0, resultCount: 0, closingSoonCount: 0 },
+    };
 
     all.forEach(t => {
       totalBudgetSum += t.totalBudget || 0;
       if (t.tenderTypeCode === 'PRODUCT') productCount++;
       else if (t.tenderTypeCode === 'JOB') jobCount++;
       else if (t.tenderTypeCode === 'SERVICE') serviceCount++;
+
+      const isResult = t.docStatusName?.includes('Үр дүн') || (t.docStatusName?.toLowerCase().includes('үр дүн') ?? false);
+      if (isResult) {
+        totalResultCount++;
+      }
 
       const isActive = t.docStatusCode === 'RECEIVE_TENDER' || t.docStatusName?.includes('хүлээн') || (t as any).isReceiving === 1;
       if (isActive) {
@@ -325,6 +342,26 @@ class TenderStore {
         }
       }
 
+      if (t.industry && statsByIndustry[t.industry]) {
+        const indStat = statsByIndustry[t.industry];
+        indStat.totalCount++;
+        indStat.totalBudgetSum += t.totalBudget || 0;
+        if (isActive) {
+          indStat.activeCount++;
+          indStat.activeBudgetSum += t.totalBudget || 0;
+          const deadline = t.receiveDate || t.openDate;
+          if (deadline) {
+            const diffHours = (new Date(deadline).getTime() - now) / (1000 * 60 * 60);
+            if (diffHours > 0 && diffHours <= 72) {
+              indStat.closingSoonCount++;
+            }
+          }
+        }
+        if (isResult) {
+          indStat.resultCount++;
+        }
+      }
+
       const ministry = t.positionName || 'Бусад захиалагч';
       if (!ministryMap[ministry]) {
         ministryMap[ministry] = { count: 0, budget: 0 };
@@ -344,6 +381,7 @@ class TenderStore {
       activeTendersCount: activeCount || 736,
       activeBudgetSum: activeBudgetSum || 482_900_000_000,
       closingSoonCount: closingSoonCount || 42,
+      resultCount: totalResultCount || 21320,
       newCount: newCount || 18,
       categoryCounts: {
         product: productCount,
@@ -351,6 +389,7 @@ class TenderStore {
         service: serviceCount,
       },
       industryCounts,
+      statsByIndustry,
       topMinistries,
     };
   }

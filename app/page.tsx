@@ -240,20 +240,20 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Active Radar Quick Metric Cards */}
-        <ActiveRadarBar
-          stats={stats}
-          locale={locale}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-        />
-
         {/* B2B Industry 1-Click Discovery Bar */}
         <IndustryDiscoveryBar
           filters={filters}
           onFilterChange={handleFilterChange}
           stats={stats}
           locale={locale}
+        />
+
+        {/* Active Radar Quick Metric Cards */}
+        <ActiveRadarBar
+          stats={stats}
+          locale={locale}
+          filters={filters}
+          onFilterChange={handleFilterChange}
         />
 
         {/* Collapsible Analytics View */}

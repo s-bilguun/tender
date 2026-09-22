@@ -98,12 +98,22 @@ export interface TenderFilterParams {
   perPage?: number;
 }
 
+export interface IndustryStatSummary {
+  totalCount: number;
+  totalBudgetSum: number;
+  activeCount: number;
+  activeBudgetSum: number;
+  resultCount: number;
+  closingSoonCount: number;
+}
+
 export interface TenderStats {
   totalCount: number;
   totalBudgetSum: number;
   activeTendersCount: number;
   activeBudgetSum?: number;
   closingSoonCount?: number;
+  resultCount?: number;
   newCount?: number;
   categoryCounts: {
     product: number;
@@ -111,6 +121,7 @@ export interface TenderStats {
     service: number;
   };
   industryCounts?: Record<string, number>;
+  statsByIndustry?: Record<string, IndustryStatSummary>;
   topMinistries: {
     name: string;
     count: number;
