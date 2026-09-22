@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { Building2, Sparkles, ExternalLink, Star, Clock, AlertTriangle } from 'lucide-react';
@@ -129,12 +130,12 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         </div>
 
         {/* Title */}
-        <h3
-          onClick={() => onSelect(tender)}
-          className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-2 cursor-pointer leading-snug"
+        <Link
+          href={`/tender/${tender.invitationId}`}
+          className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-2 leading-snug block"
         >
           {tender.tenderName}
-        </h3>
+        </Link>
 
         {/* Procuring Entity */}
         <div className="mt-2.5 flex items-start gap-1.5 text-xs text-slate-500">

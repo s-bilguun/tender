@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { X, ExternalLink, Sparkles, Building2, Calendar, ShieldCheck, Tag, FileText, Copy, Check, Trophy, Users, CheckCircle2, FileSearch } from 'lucide-react';
+import { X, ExternalLink, Sparkles, Building2, Calendar, ShieldCheck, Tag, FileText, Copy, Check, Trophy, Users, CheckCircle2, FileSearch, FileSpreadsheet } from 'lucide-react';
 
 interface TenderDetailModalProps {
   tender: TenderItem | null;
@@ -274,16 +275,27 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
 
         {/* Actions Footer */}
         <div className="p-4 sm:p-5 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-white sticky bottom-0">
-          <button
-            onClick={() => {
-              onClose();
-              onAskAI(tender);
-            }}
-            className="h-9 w-full sm:w-auto px-3.5 rounded-md text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-1.5 transition-colors"
-          >
-            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            <span>{locale === 'mn' ? 'AI шинжээчээр дүгнүүлэх' : 'Analyze with AI'}</span>
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => {
+                onClose();
+                onAskAI(tender);
+              }}
+              className="h-9 px-3 rounded-md text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>{locale === 'mn' ? 'AI шинжээч' : 'AI'}</span>
+            </button>
+
+            <Link
+              href={`/tender/${tender.invitationId}`}
+              className="h-9 px-3 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-1.5 transition-colors"
+              title="Бүтэн хуудсаар дэлгэрэнгүй үзэх"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <span>{locale === 'mn' ? 'Өгөгдлийн хүснэгт ↗' : 'Full BDS ↗'}</span>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <a

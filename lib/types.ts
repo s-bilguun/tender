@@ -8,6 +8,7 @@ export interface TenderItem {
   tenderName: string;
   budgetEntityName: string;
   uusgesenEntityName?: string;
+  clientCode?: string;
   registrationNumber?: string;
   positionName?: string; // e.g. "БОЛОВСРОЛЫН САЙД"
   totalBudget: number;

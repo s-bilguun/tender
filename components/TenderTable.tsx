@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { ExternalLink, Sparkles, Star } from 'lucide-react';
@@ -110,9 +111,13 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         </span>
                       )}
                     </div>
-                    <div className="font-medium text-slate-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                    <Link 
+                      href={`/tender/${tender.invitationId}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="font-medium text-slate-900 line-clamp-2 leading-snug hover:text-blue-600 transition-colors block"
+                    >
                       {tender.tenderName}
-                    </div>
+                    </Link>
                     {/* On mobile, show entity under title */}
                     <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1 md:hidden">
                       {tender.budgetEntityName}
