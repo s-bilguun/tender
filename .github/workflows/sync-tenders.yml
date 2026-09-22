@@ -1,0 +1,83 @@
+Here is a complete, copy-pasteable summary you can drop directly into another conversation to implement this:
+
+---
+
+# 📋 Implementation Plan: Live Tenders Sync to Supabase (100% Free)
+
+### 📌 Current State
+* Our project already has a working scraping & upsert script: [`scripts/sync-to-supabase.js`](file:///c:/Users/bilguun.s/tender/scripts/sync-to-supabase.js).
+* It scrapes `tender.gov.mn` and upserts directly into Supabase's `tenders` table using `onConflict: 'invitation_id'`.
+* **Problem:** It currently only runs manually in the terminal. No automated schedule or webhook is attached.
+
+---
+
+### 🚀 Recommended Solution: GitHub Actions Scheduled Cron (100% Free)
+
+Even if once every 24 hours is enough, **GitHub Actions** is the most reliable free approach because:
+1. **Zero Vercel Timeout issues:** Scraping multiple pages takes ~20–40 seconds. Vercel Free kills serverless functions after 10 seconds, but GitHub Actions allows up to 6 hours.
+2. **100% Free:** Uses GitHub's 2,000 free runner minutes per month (running once daily uses only ~30 minutes/month).
+3. **No server setup:** Runs headless on GitHub's Ubuntu runner and pushes directly to Supabase.
+
+---
+
+### 🛠️ Step-by-Step Implementation
+
+#### Step 1: Add the GitHub Actions Workflow File
+Create [`.github/workflows/sync-tenders.yml`](file:///c:/Users/bilguun.s/tender/.github/workflows/sync-tenders.yml):
+
+```yaml
+name: Scheduled Tenders Sync to Supabase
+
+on:
+  schedule:
+    # Runs daily at midnight UTC (00:00). Change to '0 */4 * * *' for every 4 hours.
+    - cron: '0 0 * * *'
+  # Allows manual 1-click trigger from GitHub Actions UI anytime
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Scrape tender.gov.mn and upsert to Supabase
+        run: node scripts/sync-to-supabase.js 1 20
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+```
+
+---
+
+#### Step 2: Set Repository Secrets in GitHub
+Go to **GitHub Repo $\rightarrow$ Settings $\rightarrow$ Secrets and variables $\rightarrow$ Actions** and add:
+1. `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase Project URL (`https://rufnrfwghtgicecnzljj.supabase.co`).
+2. `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase Service Role / Secret Key (from Supabase Dashboard $\rightarrow$ Project Settings $\rightarrow$ API).
+
+---
+
+#### Step 3 (Optional UI Improvement): Connect the Frontend "Синхрончлох" Button
+Currently, [`app/api/sync/route.ts`](file:///c:/Users/bilguun.s/tender/app/api/sync/route.ts) only saves to local in-memory RAM instead of Supabase.
+
+To make the UI "Sync" button also trigger Supabase upsert:
+* Import `supabase` in `app/api/sync/route.ts` and run a quick 1-page upsert of live tenders when a user clicks the button.
+
+---
+
+### 🧪 Verification
+1. Push `.github/workflows/sync-tenders.yml` to `main`.
+2. Go to the **Actions** tab in GitHub.
+3. Click **"Scheduled Tenders Sync to Supabase"** $\rightarrow$ **"Run workflow"**.
+4. Check Supabase table editor (`tenders`) to verify fresh rows with new `publish_date` and `updated_at` timestamps.
