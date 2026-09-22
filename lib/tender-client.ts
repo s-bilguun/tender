@@ -60,9 +60,10 @@ class TenderStore {
     return this.tenders.get(String(id));
   }
 
-  public async fetchLiveTenders(searchQuery?: string, page = 1): Promise<{ items: TenderItem[]; totalCount: number }> {
+  public async fetchLiveTenders(searchQuery?: string, page = 1, year?: string | number): Promise<{ items: TenderItem[]; totalCount: number }> {
     return new Promise((resolve) => {
-      const url = `https://www.tender.gov.mn/mn/invitation?${searchQuery ? `search=${encodeURIComponent(searchQuery)}&` : ''}page=${page}`;
+      const yearParam = year && year !== 'all' ? `&year=${year}` : '';
+      const url = `https://www.tender.gov.mn/mn/invitation?${searchQuery ? `search=${encodeURIComponent(searchQuery)}&` : ''}page=${page}${yearParam}`;
       
       execFile('curl.exe', [
         '-s', '-L',
