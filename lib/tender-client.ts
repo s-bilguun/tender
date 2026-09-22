@@ -164,6 +164,33 @@ class TenderStore {
       }
     }
 
+    // Year filter
+    if (params.year && params.year !== 'all') {
+      const yStr = String(params.year);
+      result = result.filter(item => {
+        const pub = item.publishDate || item.actionDate;
+        const pubYear = pub ? new Date(pub).getFullYear().toString() : '';
+        const code = item.tenderCode || '';
+        return pubYear === yStr || code.includes(`/${yStr}`);
+      });
+    }
+
+    // Date range filter
+    if (params.dateFrom) {
+      const fromTime = new Date(params.dateFrom).getTime();
+      result = result.filter(item => {
+        const pub = item.publishDate || item.actionDate;
+        return pub ? new Date(pub).getTime() >= fromTime : false;
+      });
+    }
+    if (params.dateTo) {
+      const toTime = new Date(`${params.dateTo}T23:59:59`).getTime();
+      result = result.filter(item => {
+        const pub = item.publishDate || item.actionDate;
+        return pub ? new Date(pub).getTime() <= toTime : false;
+      });
+    }
+
     // Sorting
     const sortBy = params.tabMode === 'closing_soon' ? 'deadline_asc' : (params.sortBy || 'date_desc');
     result.sort((a, b) => {

@@ -2,31 +2,17 @@ import React from 'react';
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { getTenderDetailData } from '@/lib/tender-detail';
 import { TenderDetailView } from '@/components/TenderDetailView';
 
-// Revalidate page data or dynamic
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: { id: string };
 }
 
-async function getTenderData(id: string) {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3001';
-    const res = await fetch(`${baseUrl}/api/tenders/${id}`, {
-      cache: 'no-store'
-    });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (e) {
-    console.error('Error fetching tender data:', e);
-    return null;
-  }
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const data = await getTenderData(params.id);
+  const data = await getTenderDetailData(params.id);
   if (!data?.tender) {
     return {
       title: 'Тендер олдсонгүй | Tender.mn'
@@ -39,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function TenderPage({ params }: PageProps) {
-  const data = await getTenderData(params.id);
+  const data = await getTenderDetailData(params.id);
 
   if (!data || !data.tender) {
     return (

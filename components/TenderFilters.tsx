@@ -3,7 +3,7 @@
 import React from 'react';
 import { Locale, TenderFilterParams, ActiveTabMode } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, Flame, Star, Zap, Archive, Sparkles, Coins } from 'lucide-react';
+import { Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, Flame, Star, Zap, Archive, Sparkles, Coins, Calendar } from 'lucide-react';
 
 interface TenderFiltersProps {
   filters: TenderFilterParams;
@@ -237,6 +237,62 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               </select>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* 4. Year & Date Filter Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mr-1">
+            <Calendar className="h-3.5 w-3.5 text-blue-600" />
+            <span>{locale === 'mn' ? 'Зарласан он:' : 'Year:'}</span>
+          </span>
+
+          {['all', '2026', '2025', '2024', '2023', '2022'].map((yr) => {
+            const isSelected = (filters.year || 'all') === yr;
+            return (
+              <button
+                key={yr}
+                onClick={() => onFilterChange({ year: yr === 'all' ? undefined : yr, page: 1 })}
+                className={`h-6 px-2.5 rounded-full text-[11px] font-medium transition-all ${
+                  isSelected
+                    ? 'bg-blue-600 text-white font-bold shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                }`}
+              >
+                {yr === 'all' ? (locale === 'mn' ? 'Бүх он' : 'All') : `${yr} он`}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Custom Date Range Picker Inputs */}
+        <div className="flex items-center gap-1.5 ml-auto text-[11px]">
+          <span className="text-slate-400 hidden sm:inline">{locale === 'mn' ? 'Огнооны интервал:' : 'Date Range:'}</span>
+          <input
+            type="date"
+            value={filters.dateFrom || ''}
+            onChange={(e) => onFilterChange({ dateFrom: e.target.value || undefined, page: 1 })}
+            className="h-6 px-2 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
+            title={locale === 'mn' ? 'Эхлэх огноо' : 'Start date'}
+          />
+          <span className="text-slate-400">-</span>
+          <input
+            type="date"
+            value={filters.dateTo || ''}
+            onChange={(e) => onFilterChange({ dateTo: e.target.value || undefined, page: 1 })}
+            className="h-6 px-2 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
+            title={locale === 'mn' ? 'Дуусах огноо' : 'End date'}
+          />
+          {(filters.dateFrom || filters.dateTo || (filters.year && filters.year !== 'all')) && (
+            <button
+              onClick={() => onFilterChange({ year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
+              className="h-6 px-1.5 text-slate-400 hover:text-slate-700 transition-colors"
+              title="Огнооны шүүлтүүр цэвэрлэх"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

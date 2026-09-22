@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined;
     const minBudget = searchParams.get('minBudget') ? Number(searchParams.get('minBudget')) : undefined;
     const maxBudget = searchParams.get('maxBudget') ? Number(searchParams.get('maxBudget')) : undefined;
+    const year = searchParams.get('year') || undefined;
+    const dateFrom = searchParams.get('dateFrom') || undefined;
+    const dateTo = searchParams.get('dateTo') || undefined;
     const status = searchParams.get('status') || undefined;
     const tabMode = (searchParams.get('tabMode') as any) || undefined;
     const urgency = (searchParams.get('urgency') as any) || undefined;
@@ -35,6 +38,24 @@ export async function GET(request: NextRequest) {
       if (search && search.trim()) {
         const term = search.trim();
         query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,tender_code.ilike.%${term}%,invitation_number.ilike.%${term}%`);
+      }
+
+      // Year filter
+      if (year && year !== 'all') {
+        const yNum = Number(year);
+        if (!isNaN(yNum)) {
+          const startYear = `${yNum}-01-01T00:00:00+00:00`;
+          const endYear = `${yNum}-12-31T23:59:59+00:00`;
+          query = query.gte('publish_date', startYear).lte('publish_date', endYear);
+        }
+      }
+
+      // Date range filter
+      if (dateFrom) {
+        query = query.gte('publish_date', `${dateFrom}T00:00:00+00:00`);
+      }
+      if (dateTo) {
+        query = query.lte('publish_date', `${dateTo}T23:59:59+00:00`);
       }
 
       if (status && status !== 'all') {

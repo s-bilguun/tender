@@ -86,6 +86,9 @@ export default function Home() {
       if (currentFilters.tabMode) params.append('tabMode', currentFilters.tabMode);
       if (currentFilters.urgency && currentFilters.urgency !== 'all') params.append('urgency', currentFilters.urgency);
       if (currentFilters.sortBy) params.append('sortBy', currentFilters.sortBy);
+      if (currentFilters.year && currentFilters.year !== 'all') params.append('year', currentFilters.year);
+      if (currentFilters.dateFrom) params.append('dateFrom', currentFilters.dateFrom);
+      if (currentFilters.dateTo) params.append('dateTo', currentFilters.dateTo);
       if (currentFilters.page) params.append('page', String(currentFilters.page));
       if (currentFilters.perPage) params.append('perPage', String(currentFilters.perPage));
 
