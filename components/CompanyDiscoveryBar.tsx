@@ -705,62 +705,64 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-3">
+    <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-3.5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs">
-            <Building2 className="h-3.5 w-3.5 text-indigo-600" />
+        <div className="flex items-center gap-2.5">
+          <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-2xs">
+            <Building2 className="h-4 w-4 text-indigo-600" />
           </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
-              {currentIndustry !== 'all' && selectedIndustryObj
-                ? locale === 'mn'
-                  ? `${selectedIndustryObj.icon} ${selectedIndustryObj.labelMn.split('&')[0].trim()} салбарын томоохон захиалагчид`
-                  : `Top ${selectedIndustryObj.labelEn.split('&')[0].trim()} Procuring Entities`
-                : locale === 'mn'
-                ? 'Томоохон захиалагч компаниудаар харах'
-                : 'Browse by Top Procuring Companies'}
-            </h2>
-            {currentIndustry !== 'all' && (
-              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">
-                {locale === 'mn' ? 'Салбарын шүүлттэй' : 'Sector Filtered'}
-              </span>
-            )}
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                {currentIndustry !== 'all' && selectedIndustryObj
+                  ? locale === 'mn'
+                    ? `${selectedIndustryObj.icon} ${selectedIndustryObj.labelMn.split('&')[0].trim()} салбарын томоохон захиалагчид`
+                    : `Top ${selectedIndustryObj.labelEn.split('&')[0].trim()} Procuring Entities`
+                  : locale === 'mn'
+                  ? 'Томоохон захиалагч байгууллага, компаниуд'
+                  : 'Top Procuring Companies & State Enterprises'}
+              </h2>
+              {currentIndustry !== 'all' && (
+                <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">
+                  {locale === 'mn' ? 'Салбарын шүүлт' : 'Filtered'}
+                </span>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500 hidden md:block">
+              {locale === 'mn'
+                ? 'Захиалагч байгууллагыг сонгон тухайн байгууллагын зарласан тендерүүдийг 1 товшилтоор шүүх'
+                : 'Filter active tenders by major government agencies and state-owned enterprises'}
+            </p>
           </div>
-          <span className="text-[11px] text-slate-500 hidden lg:inline">
-            {locale === 'mn'
-              ? '— Захиалагчийг сонгон тухайн байгууллагын нээлттэй тендерийг 1 товшилтоор шүүх'
-              : '— 1-click filter by procuring entity'}
-          </span>
         </div>
 
         {activeCompany && (
           <button
             onClick={() => onFilterChange({ search: undefined, sortBy: 'date_desc', page: 1 })}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors self-start sm:self-auto flex items-center gap-1 cursor-pointer"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors self-start sm:self-auto flex items-center gap-1.5 cursor-pointer bg-indigo-50 hover:bg-indigo-100/80 px-2.5 py-1 rounded-lg"
           >
             <span>{locale === 'mn' ? 'Бүх захиалагчийг харах' : 'View All Companies'}</span>
-            <span className="text-slate-400 font-normal">✕</span>
+            <span className="text-indigo-400 font-bold">✕</span>
           </button>
         )}
       </div>
 
       {/* Active Company Banner */}
       {activeCompany && (
-        <div className="flex items-center justify-between bg-indigo-50/80 border border-indigo-200/80 rounded-lg px-3 py-1.5 text-xs text-indigo-950">
+        <div className="flex items-center justify-between bg-gradient-to-r from-indigo-50 via-blue-50/50 to-indigo-50 border border-indigo-200/80 rounded-xl px-3.5 py-2 text-xs text-indigo-950 shadow-2xs">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-slate-700">
+            <span className="font-bold text-slate-700">
               {locale === 'mn' ? 'Сонгосон захиалагч:' : 'Selected Procuring Entity:'}
             </span>
-            <span className="inline-flex items-center gap-1.5 bg-indigo-600 text-white font-semibold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 bg-indigo-600 text-white font-bold px-3 py-0.5 rounded-full text-[11px] shadow-2xs">
               <span>{activeCompany.icon}</span>
               <span>{activeCompany.name}</span>
-              <span className="opacity-75">({activeCompany.approxTenders} тендер)</span>
+              <span className="opacity-85 font-mono">({activeCompany.approxTenders} тендер)</span>
             </span>
           </div>
           <button
             onClick={() => onFilterChange({ search: undefined, sortBy: 'date_desc', page: 1 })}
-            className="text-[11px] font-semibold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 hover:underline cursor-pointer shrink-0"
+            className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 hover:underline cursor-pointer shrink-0"
           >
             <span>{locale === 'mn' ? 'Шүүлтүүр арилгах' : 'Clear'}</span>
             <span>✕</span>
@@ -769,7 +771,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
       )}
 
       {/* Company Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
         {companyList.map((comp) => {
           const isSelected = activeCompany?.id === comp.id;
 
@@ -777,34 +779,40 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             <button
               key={comp.id}
               onClick={() => handleSelectCompany(comp)}
-              className={`p-2.5 rounded-xl border text-left flex flex-col justify-between gap-1.5 transition-all relative overflow-hidden group cursor-pointer ${
+              className={`p-3 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
                 isSelected
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md ring-2 ring-indigo-500/30'
-                  : 'bg-slate-50/70 hover:bg-white text-slate-800 border-slate-200/80 hover:border-slate-300 hover:shadow-2xs'
+                  ? 'bg-gradient-to-br from-indigo-600 to-blue-700 text-white border-indigo-600 shadow-md ring-2 ring-indigo-400/40 -translate-y-0.5'
+                  : 'bg-white hover:bg-slate-50/90 text-slate-800 border-slate-200/90 hover:border-indigo-300 hover:shadow-xs hover:-translate-y-0.5'
               }`}
             >
               <div className="flex items-center justify-between w-full">
-                <span className="text-base">{comp.icon}</span>
+                <div
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center text-base transition-transform group-hover:scale-105 ${
+                    isSelected ? 'bg-white/20' : 'bg-slate-100 shadow-2xs'
+                  }`}
+                >
+                  {comp.icon}
+                </div>
                 {isSelected ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                  <CheckCircle2 className="h-4 w-4 text-white" />
                 ) : (
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-200/80 text-slate-700 tabular-nums">
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 tabular-nums">
                     {comp.approxTenders}
                   </span>
                 )}
               </div>
 
-              <div>
+              <div className="space-y-0.5 min-w-0">
                 <span
-                  className={`text-[11px] font-semibold line-clamp-1 block ${
-                    isSelected ? 'text-white' : 'text-slate-900'
+                  className={`text-xs font-bold leading-snug line-clamp-1 block transition-colors ${
+                    isSelected ? 'text-white' : 'text-slate-900 group-hover:text-indigo-600'
                   }`}
                   title={comp.name}
                 >
                   {comp.shortName}
                 </span>
                 <span
-                  className={`text-[10px] font-mono tabular-nums line-clamp-1 ${
+                  className={`text-[10px] font-mono tabular-nums line-clamp-1 block ${
                     isSelected ? 'text-indigo-100' : 'text-slate-400'
                   }`}
                 >
