@@ -638,7 +638,16 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                       <Layers className="h-4 w-4 text-indigo-600" />
                       <span>Нийлүүлэх бараа, гүйцэтгэх ажлын нарийвчилсан үзүүлэлт ({technicalSpecs.sampleItems.length})</span>
                     </span>
-                    <span className="text-[11px] text-slate-500">PDF-ээс ялгасан бодит үзүүлэлт</span>
+                    {(technicalSpecs.isRealExtracted || technicalSpecs.sampleItems?.some((i: any) => i.isRealExtracted)) ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <Sparkles className="h-3 w-3 text-emerald-600" />
+                        <span>PDF-ээс ялгасан бодит өгөгдөл ({technicalSpecs.sampleItems.length})</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                        <span>Үндсэн худалдан авах чиглэл</span>
+                      </span>
+                    )}
                   </div>
                   <div className="p-3 sm:p-4 space-y-3 bg-white">
                     {technicalSpecs.sampleItems.map((item: any, idx: number) => (
@@ -851,7 +860,11 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 <div className="space-y-3 pt-1">
                   {technicalSpecs.documents.map((doc: any, idx: number) => {
                     const isExpanded = !!expandedDocSummaries[doc.id || idx];
-                    const downloadHref = doc.downloadUrl || doc.url || `https://user.tender.gov.mn/mn/download/${doc.fileId}`;
+                    const isDirectPdf = !!doc.fileId;
+                    const downloadHref = doc.fileId
+                      ? `/api/download?fileId=${doc.fileId}&name=${encodeURIComponent(doc.name || 'tender.pdf')}`
+                      : (doc.downloadUrl || doc.url || '#');
+
                     return (
                       <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 transition-colors overflow-hidden">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 gap-3">
@@ -881,16 +894,28 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                               <span>AI-аар задлах</span>
                             </button>
 
-                            <a
-                              href={downloadHref}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
-                              title="Албан ёсны эх баримтыг шууд татах"
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                              <span>Шууд татах (PDF)</span>
-                            </a>
+                            {isDirectPdf ? (
+                              <a
+                                href={downloadHref}
+                                download={doc.name || 'tender.pdf'}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
+                                title="Албан ёсны эх PDF файлыг шууд татах"
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                <span>Шууд татах (PDF)</span>
+                              </a>
+                            ) : (
+                              <a
+                                href={downloadHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors shadow-2xs"
+                                title="Албан ёсны портал дээр нээх"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                <span>Эх хуудас</span>
+                              </a>
+                            )}
                           </div>
                         </div>
 
@@ -959,9 +984,8 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                             </span>
                             {results.winner.fileId && (
                               <a
-                                href={`https://user.tender.gov.mn/mn/download/${results.winner.fileId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                                href={`/api/download?fileId=${results.winner.fileId}&name=${encodeURIComponent(results.winner.fileName || 'winner_decision.pdf')}`}
+                                download={results.winner.fileName || 'winner_decision.pdf'}
                                 className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 hover:underline mt-1"
                               >
                                 <Download className="h-3 w-3" />
@@ -1029,11 +1053,10 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                                     <td className="py-3 px-3 text-center whitespace-nowrap">
                                       {bidder.fileId ? (
                                         <a
-                                          href={`https://user.tender.gov.mn/mn/download/${bidder.fileId}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
+                                          href={`/api/download?fileId=${bidder.fileId}&name=${encodeURIComponent(bidder.fileName || 'evaluation_decision.pdf')}`}
+                                          download={bidder.fileName || 'evaluation_decision.pdf'}
                                           className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-md border border-blue-200 transition-colors shadow-2xs"
-                                          title={bidder.fileName || 'Албан бичиг татах'}
+                                          title={bidder.fileName || 'Албан бичиг шууд татах'}
                                         >
                                           <Download className="h-3 w-3" />
                                           <span>PDF</span>
@@ -1316,6 +1339,16 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 >
                   Хаах
                 </button>
+                {selectedDoc.fileId && (
+                  <a
+                    href={`/api/download?fileId=${selectedDoc.fileId}&name=${encodeURIComponent(selectedDoc.name || 'tender.pdf')}`}
+                    download={selectedDoc.name || 'tender.pdf'}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-2xs transition-colors"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span>Эх PDF татах</span>
+                  </a>
+                )}
                 <button
                   onClick={() => handleDownloadDocument(selectedDoc)}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-2xs transition-colors"

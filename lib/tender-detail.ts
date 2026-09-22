@@ -118,28 +118,17 @@ function generateTechnicalSpecs(tender: any) {
   const invitationId = tender.invitation_id || tender.invitationId;
   const detailUrl = `https://www.tender.gov.mn/mn/invitation/detail/${invitationId}`;
 
-  // Specific item breakdown based on category and title
-  let sampleItems: any[] = [];
-  if (fullName.toLowerCase().includes('өвс') || fullName.toLowerCase().includes('тэжээл')) {
-    sampleItems = [
-      { name: 'Байгалийн хадлангийн ногоон өвс (1-р зэрэг, 20-25кг боодолтой)', quantity: 3500, unit: 'боодол', spec: 'Чийглэг 14%-иас ихгүй, хөгц мөөгөнцөргүй, тэжээллэг чанар өндөр, шинэ ургац' },
-      { name: 'Хүчит тэжээл (хивэг, холимог тэжээл)', quantity: 50, unit: 'тонн', spec: 'Уургийн агууламж 16%-иас дээш, 50кг уутлалттай, стандартын чанарын гэрчилгээтэй' }
-    ];
-  } else if (typeCode === 'JOB') {
-    sampleItems = [
-      { name: 'Барилга угсралт, засвар шинэчлэлийн үндсэн ажил', quantity: 1, unit: 'иж бүрдэл', spec: 'Батлагдсан зураг төсөв, ажлын даалгавар, БНбД норм дүрмийн дагуу' },
-      { name: 'Инженерийн шугам сүлжээ, сантехник, салхивчийн угсралт', quantity: 1, unit: 'иж бүрдэл', spec: 'Монгол Улсын MNS стандартын чанартай материал, тоног төхөөрөмж суурилуулах' }
-    ];
-  } else if (typeCode === 'PRODUCT') {
-    sampleItems = [
-      { name: `${shortName} (үндсэн бүтээгдэхүүн)`, quantity: 1, unit: 'багц / иж бүрдэл', spec: 'Үйлдвэрлэгчийн шинэ, лацтай, албан ёсны чанарын гэрчилгээтэй' },
-      { name: 'Дагалдах хэрэгсэл, сэлбэг эд анги, тоноглол', quantity: 1, unit: 'ком', spec: 'Үйлдвэрийн иж бүрдлийн дагуу' }
-    ];
-  } else {
-    sampleItems = [
-      { name: fullName.length > 50 ? fullName.substring(0, 50) + '...' : fullName, quantity: 1, unit: 'багц', spec: 'Техникийн даалгавар, захиалагчийн шаардлагын дагуу' }
-    ];
-  }
+  // Specific item breakdown: default to honest procurement title (real items are loaded from PDF if available)
+  const defaultUnit = typeCode === 'JOB' ? 'ажил' : (typeCode === 'SERVICE' ? 'үйлчилгээ' : 'багц');
+  const sampleItems: any[] = [
+    {
+      name: fullName,
+      quantity: 1,
+      unit: defaultUnit,
+      spec: 'Захиалагчийн зарласан үндсэн худалдан авалтын чиглэл болон тендер шалгаруулалтын баримт бичгийн дагуу',
+      isRealExtracted: false
+    }
+  ];
 
   const documents = [
     {
@@ -407,6 +396,18 @@ export async function getTenderDetailData(id: string | number) {
       (technicalSpecs as any).extractedQualifications = liveBundle.structuredSpecs.qualifications;
       (technicalSpecs as any).pdfPageCount = liveBundle.pdfPageCount;
       (technicalSpecs as any).rawPdfText = liveBundle.pdfText ? liveBundle.pdfText.substring(0, 30000) : undefined;
+
+      // Real items extracted from official PDF
+      if (liveBundle.structuredSpecs.items && liveBundle.structuredSpecs.items.length > 0) {
+        technicalSpecs.sampleItems = liveBundle.structuredSpecs.items.map((it: any) => ({
+          name: it.name,
+          quantity: it.quantity || it.qty || 1,
+          unit: it.unit || 'ширхэг',
+          spec: it.spec || it.specs || 'Техникийн тодорхойлолтын дагуу',
+          isRealExtracted: true
+        }));
+        (technicalSpecs as any).isRealExtracted = true;
+      }
     }
 
     // Real Bidders & Winners

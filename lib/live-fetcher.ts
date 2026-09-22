@@ -114,17 +114,28 @@ export function parsePdfContent(fullText: string) {
 
   // 1. Look for Chapter III / Technical Specifications
   const specKeywords = [
+    'БАРАА МАТЕРИАЛ НИЙЛҮҮЛЭХ ХУГАЦАА',
+    'БАРАА МАТЕРИАЛЫН ҮЗҮҮЛЭЛТ',
+    'Барааны техникийн үзүүлэлт',
+    'ТЕХНИКИЙН ҮЗҮҮЛЭЛТ',
+    'НИЙЛҮҮЛЭЛТИЙН ХУВААРЬ',
     'ТЕХНИКИЙН ТОДОРХОЙЛОЛТ',
     'III БҮЛЭГ',
-    'БАРАА МАТЕРИАЛЫН ҮЗҮҮЛЭЛТ',
     'АЖЛЫН ДААЛГАВАР'
   ];
 
   let specStart = -1;
+  let bestSection = '';
   for (const kw of specKeywords) {
     const pos = fullText.lastIndexOf(kw);
-    if (pos !== -1 && (specStart === -1 || pos > specStart)) {
-      specStart = pos;
+    if (pos !== -1) {
+      if (specStart === -1 || pos > specStart) {
+        specStart = pos;
+      }
+      const slice = fullText.substring(pos, pos + 25000);
+      if (slice.length > bestSection.length) {
+        bestSection = slice;
+      }
     }
   }
 
@@ -134,6 +145,90 @@ export function parsePdfContent(fullText: string) {
     const endPos = candidateSlice.search(/(IV БҮЛЭГ|V БҮЛЭГ|VI БҮЛЭГ|ГЭРЭЭНИЙ НӨХЦӨЛ)/);
     result.rawSpecText = (endPos !== -1 ? candidateSlice.substring(0, endPos) : candidateSlice).trim();
   }
+
+  // Extract structured specification item rows
+  const textToSearch = bestSection || fullText;
+  const unitPattern = '(?:ширхэг|метр|тоо|ш|м|ком|хос|багц|тонн|тн|т|кг|г|литр|л|боодол|уут|хайрцаг|м2|м3|комплект|цаг|удаа|хүн|өдөр)';
+  const rowStartRegex = new RegExp(`(?:^|\\n)\\s*(\\d{1,3})[\\.\\s]+([^\\n]+(?:\\n[^\\n]+){0,4}?)\\s+(${unitPattern})\\s+(\\d+(?:[\\.,]\\d+)?)\\b`, 'gi');
+  let match;
+  const rawItems: any[] = [];
+
+  while ((match = rowStartRegex.exec(textToSearch)) !== null) {
+    const num = parseInt(match[1], 10);
+    const rawContent = match[2].trim();
+    const unit = match[3].trim();
+    const qty = parseFloat(match[4].replace(',', '.'));
+
+    const contentLines = rawContent
+      .split('\n')
+      .map(l => l.trim())
+      .filter(l => l.length > 0 && !/^[0-9\s\.\,\-]+$/.test(l));
+
+    if (contentLines.length === 0) continue;
+
+    let nameParts: string[] = [];
+    let specParts: string[] = [];
+    let isSpec = false;
+
+    for (const line of contentLines) {
+      if (line.match(/(ISO|MNS|стандарт|диаметр|зузаан|даралт|материал|чанарын|загвар|хэмжээ|хүчин|баталгаат|зориулалт|савалгаа)/i)) {
+        isSpec = true;
+      }
+      if (!isSpec && nameParts.length < 3) {
+        nameParts.push(line);
+      } else {
+        specParts.push(line);
+      }
+    }
+
+    let name = nameParts.join(' ').replace(/\s+/g, ' ').trim();
+    name = name.replace(/^[\d\.\-\s]+/, '').trim();
+
+    const lowerName = name.toLowerCase();
+    if (
+      name.length < 2 ||
+      name.length > 180 ||
+      lowerName.includes('хуулийн') ||
+      lowerName.includes('тшз') ||
+      lowerName.includes('журам') ||
+      lowerName.includes('заасан') ||
+      lowerName.includes('давуу эрх') ||
+      lowerName.includes('оролцогч') ||
+      lowerName.includes('захиалагч бараа хүлээн') ||
+      lowerName.includes('баталгаа') ||
+      lowerName.includes('гэрээ байгуулснаас') ||
+      String(match[4]).includes('.')
+    ) {
+      continue;
+    }
+
+    const spec = specParts.join(' ').replace(/\s+/g, ' ').trim() || `Үзүүлэлт: ${name}`;
+
+    rawItems.push({
+      num,
+      name,
+      unit,
+      quantity: qty,
+      qty,
+      spec,
+      specs: spec
+    });
+  }
+
+  // Deduplicate and sort by item number
+  const uniqueItems: any[] = [];
+  const seenKeys = new Set<string>();
+  for (const item of rawItems) {
+    const normName = item.name.toLowerCase().replace(/[^а-яa-z0-9]/g, '');
+    const key = `${item.num}_${normName.substring(0, 15)}`;
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      uniqueItems.push(item);
+    }
+  }
+
+  uniqueItems.sort((a, b) => (a.num || 0) - (b.num || 0));
+  result.items = uniqueItems.slice(0, 100);
 
   // 2. Extract Qualification Requirements (Chapter I ТШӨХ)
   const qualKeywords = [
@@ -267,7 +362,7 @@ export async function fetchTenderLiveBundle(
               fileName: d.fileName,
               createdDate: d.createdDate,
               fileExtention: d.fileExtention || 'pdf',
-              downloadUrl: `https://user.tender.gov.mn/mn/download/${d.fileId}`,
+              downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'tender.pdf')}`,
               isPrimary: idx === 0 || d.fileName.toLowerCase().includes('тшбб') || d.fileName.toLowerCase().includes('хоолой')
             }));
           }
@@ -305,7 +400,7 @@ export async function fetchTenderLiveBundle(
               guaranteeText: b.guaranteeText || '',
               fileId: b.fileId,
               fileName: b.fileName,
-              decisionDownloadUrl: b.fileId ? `https://user.tender.gov.mn/mn/download/${b.fileId}` : undefined
+              decisionDownloadUrl: b.fileId ? `/api/download?fileId=${b.fileId}&name=${encodeURIComponent(b.fileName || 'decision.pdf')}` : undefined
             }));
           }
         }
