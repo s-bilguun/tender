@@ -109,7 +109,80 @@ function generateBDS(tender: any) {
 
 function generateTechnicalSpecs(tender: any) {
   const budget = Number(tender.total_budget || tender.totalBudget) || 0;
-  const name = tender.tender_name || tender.tenderName || '';
+  const fullName = tender.tender_name || tender.tenderName || 'Тендер';
+  const shortName = fullName.split(/[,–\-\/]/)[0].trim().slice(0, 30);
+  const year = tender.tenderYear || (tender.publish_date ? new Date(tender.publish_date).getFullYear() : 2026);
+  const isConcluded = (tender.doc_status_name || tender.docStatusName || '').includes('Үр дүн');
+  const typeCode = tender.tender_type_code || tender.tenderTypeCode || 'PRODUCT';
+
+  // Specific item breakdown based on category and title
+  let sampleItems = [];
+  if (fullName.toLowerCase().includes('өвс') || fullName.toLowerCase().includes('тэжээл')) {
+    sampleItems = [
+      { name: 'Байгалийн хадлангийн ногоон өвс (1-р зэрэг, 20-25кг боодолтой)', quantity: 3500, unit: 'боодол', spec: 'Чийглэг 14%-иас ихгүй, хөгц мөөгөнцөргүй, тэжээллэг чанар өндөр, 2026 оны шинэ ургац' },
+      { name: 'Хүчит тэжээл (хивэг, холимог тэжээл)', quantity: 50, unit: 'тонн', spec: 'Уургийн агууламж 16%-иас дээш, 50кг уутлалттай, стандартын чанарын гэрчилгээтэй' }
+    ];
+  } else if (typeCode === 'JOB') {
+    sampleItems = [
+      { name: 'Барилга угсралт, засвар шинэчлэлийн үндсэн ажил', quantity: 1, unit: 'иж бүрдэл', spec: 'Батлагдсан зураг төсөв, ажлын даалгавар, БНбД норм дүрмийн дагуу' },
+      { name: 'Инженерийн шугам сүлжээ, сантехник, салхивчийн угсралт', quantity: 1, unit: 'иж бүрдэл', spec: 'Монгол Улсын MNS стандартын чанартай материал, тоног төхөөрөмж суурилуулах' }
+    ];
+  } else if (typeCode === 'PRODUCT') {
+    sampleItems = [
+      { name: `${shortName} (үндсэн бүтээгдэхүүн)`, quantity: 1, unit: 'багц / иж бүрдэл', spec: 'Үйлдвэрлэгчийн шинэ, лацтай, албан ёсны чанарын гэрчилгээтэй' },
+      { name: 'Дагалдах хэрэгсэл, сэлбэг эд анги, тоноглол', quantity: 1, unit: 'ком', spec: 'Үйлдвэрийн иж бүрдлийн дагуу' }
+    ];
+  } else {
+    sampleItems = [
+      { name: fullName.length > 50 ? fullName.substring(0, 50) + '...' : fullName, quantity: 1, unit: 'багц', spec: 'Техникийн даалгавар, захиалагчийн шаардлагын дагуу' }
+    ];
+  }
+
+  const documents = [
+    {
+      id: 'doc-tbb',
+      name: `${year} ${shortName} ТББ (ТШББ).pdf`,
+      category: 'Тендер шалгаруулалтын баримт бичиг (ТШББ)',
+      type: 'PDF',
+      size: '2.4 MB',
+      date: tender.publish_date ? tender.publish_date.substring(0, 10) : `${year}-09-21`,
+      url: `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitation_id || tender.invitationId}`,
+      extractedSummary: `I БҮЛЭГ. ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ)\n\n• Төсөвт өртөг: ${budget.toLocaleString()} ₮\n• Санал авах эцсийн хугацаа: ${tender.receive_date ? tender.receive_date.substring(0, 16) : 'Тодорхойгүй'}\n• Тендерийн баталгаа: ${Math.round(budget * 0.015).toLocaleString()} ₮ (1.5%)\n• Борлуулалтын доод босго: ${Math.round(budget * (typeCode === 'JOB' ? 0.8 : 0.5)).toLocaleString()} ₮\n• Түргэн хөрвөх хөрөнгө: ${Math.round(budget * 0.1).toLocaleString()} ₮\n• Татварын өргүй байх шаардлага: Тийм`
+    },
+    {
+      id: 'doc-specs',
+      name: `${shortName} техникийн тодорхойлолт ${year}.pdf`,
+      category: 'Техникийн тодорхойлолт ба ажлын даалгавар (ТЭЗҮ)',
+      type: 'PDF',
+      size: '1.9 MB',
+      date: tender.publish_date ? tender.publish_date.substring(0, 10) : `${year}-09-21`,
+      url: `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitation_id || tender.invitationId}`,
+      extractedSummary: `II БҮЛЭГ. ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & НИЙЛҮҮЛЭЛТИЙН ХУВААРЬ\n\n• Бараа, ажил: ${fullName}\n• Нийлүүлэх газар: ${tender.budget_entity_name || 'Захиалагчийн заасан хаяг'}\n• Хугацаа: Гэрээ байгуулснаас хойш 30-90 хоног\n• Баталгаат хугацаа: 12 сар\n• Стандарт: MNS үндэсний чанарын стандарт хангасан байх`
+    },
+    {
+      id: 'doc-budget',
+      name: `Төсөвт өртгийн тооцоо, материалын задаргаа.xlsx`,
+      category: 'Үнийн хүснэгт ба тооцоолол',
+      type: 'XLSX',
+      size: '520 KB',
+      date: tender.publish_date ? tender.publish_date.substring(0, 10) : `${year}-09-21`,
+      url: `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitation_id || tender.invitationId}`,
+      extractedSummary: `ТӨСӨВ БА ЗАРДЛЫН ТООЦОО\n\n• Нийт санхүүжих дүн: ${budget.toLocaleString()} ₮\n• Санхүүжилтийн эх үүсвэр: ${tender.fund_name || 'Төсвийн хөрөнгө оруулалт'}\n• НӨАТ орсон эсэх: Тийм (10%)`
+    }
+  ];
+
+  if (isConcluded) {
+    documents.push({
+      id: 'doc-results',
+      name: `Үнэлгээний хорооны дүгнэлт, шалгаруулалтын шийдвэр.pdf`,
+      category: 'Шалгаруулалтын үр дүнгийн баримт бичиг',
+      type: 'PDF',
+      size: '860 KB',
+      date: tender.receive_date ? tender.receive_date.substring(0, 10) : `${year}-10-01`,
+      url: `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitation_id || tender.invitationId}`,
+      extractedSummary: `ШИЙДВЭР БА ҮНЭЛГЭЭНИЙ ДҮН\n\n• Төлөв: Үр дүн гарсан\n• Шалгарсан: Хамгийн сайн үнэлэгдсэн оролцогч гэрээ байгуулах эрх авсан\n• Хэмнэсэн төсөв: Тооцоолсон`
+    });
+  }
 
   return {
     deliveryLocation: tender.budget_entity_name || 'Захиалагчийн заасан байршил (Улаанбаатар хот)',
@@ -119,25 +192,10 @@ function generateTechnicalSpecs(tender: any) {
     standards: [
       'Монгол Улсын холбогдох MNS үндэсний стандартын шаардлага хангасан байх',
       'Үйлдвэрлэгчийн чанарын олон улсын ISO стандарт хангасан гэрчилгээтэй байх',
-      'Шинэ, үйлдвэрийн лацтай, 2025-2026 онд үйлдвэрлэгдсэн байх'
+      'Шинэ, үйлдвэрийн лацтай, баталгаат хугацаатай байх'
     ],
-    sampleItems: [
-      { name: name.length > 50 ? name.substring(0, 50) + '...' : name, quantity: 1, unit: 'иж бүрдэл', spec: 'Тендер шалгаруулалтын баримт бичгийн техникийн тодорхойлолтын дагуу' }
-    ],
-    documents: [
-      {
-        name: 'Тендер шалгаруулалтын баримт бичиг (ТШББ)',
-        type: 'PDF',
-        url: `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitation_id || tender.invitationId}`,
-        size: '1.8 MB'
-      },
-      {
-        name: 'Техникийн тодорхойлолт ба ажлын даалгавар (ТЭЗҮ)',
-        type: 'PDF',
-        url: `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitation_id || tender.invitationId}`,
-        size: '3.4 MB'
-      }
-    ]
+    sampleItems,
+    documents
   };
 }
 

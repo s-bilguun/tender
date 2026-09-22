@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase';
 import { tenderStore } from '@/lib/tender-client';
 import { TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
 
@@ -59,21 +59,17 @@ export async function GET(request: NextRequest) {
       }
 
       // Status & TabMode handling
-      if (tabMode === 'result') {
-        query = query.ilike('doc_status_name', '%Үр дүн%');
-      } else if (tabMode === 'active') {
+      if (tabMode === 'result' || status === 'result') {
+        query = query.or('doc_status_name.ilike.%үр дүн%,doc_status_name.ilike.%Үр дүн%,doc_status_name.ilike.%дууссан%,doc_status_code.ilike.%CLOSED%');
+      } else if (tabMode === 'active' || status === 'receiving') {
         query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
       } else if (tabMode === 'closing_soon') {
         query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
       } else if (status && status !== 'all') {
-        if (status === 'receiving') {
-          query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
-        } else if (status === 'opened') {
-          query = query.ilike('doc_status_name', '%Нээгдсэн%');
-        } else if (status === 'result') {
-          query = query.ilike('doc_status_name', '%Үр дүн%');
+        if (status === 'opened') {
+          query = query.ilike('doc_status_name', '%нээгдсэн%');
         } else if (status === 'cancelled') {
-          query = query.ilike('doc_status_name', '%Хүчингүй%');
+          query = query.ilike('doc_status_name', '%хүчингүй%');
         } else if (status === 'requested') {
           query = query.ilike('doc_status_name', '%өөрчлөх%');
         }
@@ -102,7 +98,7 @@ export async function GET(request: NextRequest) {
 
       const { data, count, error } = await query;
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const items: TenderItem[] = data.map((row) => ({
           invitationId: row.invitation_id,
           invitationNumber: row.invitation_number,

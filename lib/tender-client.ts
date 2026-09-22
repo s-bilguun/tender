@@ -138,6 +138,8 @@ class TenderStore {
     } else if (params.status && params.status !== 'all') {
       if (params.status === 'receiving') {
         result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1);
+      } else if (params.status === 'result' || params.tabMode === 'result') {
+        result = result.filter(item => item.docStatusName?.toLowerCase().includes('үр дүн') || item.docStatusCode?.includes('CLOSED'));
       } else if (params.status === 'published') {
         result = result.filter(item => item.docStatusCode === 'PUBLISHING_STATUS' || item.docStatusName?.includes('Нийтлэгдсэн'));
       }

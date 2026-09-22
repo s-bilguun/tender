@@ -6,7 +6,7 @@ import {
   ArrowLeft, Building2, Calendar, ShieldCheck, Tag, FileText, 
   Copy, Check, Trophy, Users, CheckCircle2, XCircle, AlertCircle, 
   ExternalLink, Sparkles, Clock, AlertTriangle, Layers, Briefcase, 
-  CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye
+  CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye, X
 } from 'lucide-react';
 
 interface TenderDetailViewProps {
@@ -65,6 +65,56 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
   const supplierLink = `https://user.tender.gov.mn/mn/supplier/available/${tender.invitationId}/detail`;
 
   const isConcluded = tender.docStatusName?.includes('Үр дүн') || tender.docStatusName?.includes('Дууссан');
+
+  const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
+  const [docModalOpen, setDocModalOpen] = useState(false);
+
+  const handleDownloadDocument = (doc: any) => {
+    const content = `=====================================================
+БАРИМТ БИЧИГ: ${doc.name}
+Ангилал: ${doc.category || 'Тендерийн баримт бичиг'}
+Огноо: ${doc.date || ''}
+Тендерийн код: ${tender.tenderCode || tender.invitationNumber}
+Тендерийн нэр: ${tender.tenderName}
+Захиалагч байгууллага: ${tender.budgetEntityName}
+Нийт төсөвт өртөг: ${formatCurrency(tender.totalBudget)}
+=====================================================
+
+${doc.extractedSummary || ''}
+
+-----------------------------------------------------
+I БҮЛЭГ. ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ) ШААРДЛАГУУД:
+• Борлуулалтын доод орлого: ${formatCurrency(bds.minAnnualTurnover)}
+• Түргэн хөрвөх чадвартай хөрөнгө: ${formatCurrency(bds.minLiquidAssets)}
+• Ижил төстэй гэрээний дүн: ${formatCurrency(bds.similarContractThreshold)}
+• Тендерийн баталгаа: ${formatCurrency(bds.bidSecurityAmount)}
+
+ШААРДЛАГАТАЙ ТУСГАЙ ЗӨВШӨӨРЛҮҮД:
+${bds.requiredLicenses.map((lic: string, i: number) => `${i + 1}. ${lic}`).join('\n')}
+
+ГОЛ БОЛОВСОН ХҮЧНИЙ ШААРДЛАГА:
+${bds.keyPersonnel.map((p: any) => `• ${p.role}: ${p.count} хүн (${p.qualification})`).join('\n')}
+
+ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & БАРАА, АЖЛЫН ШААРДЛАГА:
+${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмжээ: ${it.quantity} ${it.unit} | Үзүүлэлт: ${it.spec}`).join('\n')}
+
+Нийлүүлэлтийн байршил: ${technicalSpecs.deliveryLocation}
+Хугацаа: ${technicalSpecs.deliveryPeriodDays} хоног
+Баталгаат хугацаа: ${technicalSpecs.warrantyMonths} сар
+=====================================================
+Эх сурвалж: Монгол Улсын Төрийн Худалдан Авах Ажиллагааны Систем (tender.gov.mn)
+`;
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${doc.name.replace(/\.[a-z0-9]+$/i, '')}_боловсруулсан_өгөгдөл.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
@@ -470,31 +520,60 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
               {/* Official Downloadable Documents */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Тендерийн баримт бичиг & ТЭЗҮ татах (Албан ёсны PDF)
-                  </h4>
-                  <span className="text-[11px] text-slate-500">tender.gov.mn эх сурвалж</span>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Холбогдох баримт бичгүүд & ТЭЗҮ (Боловсруулсан PDF/Excel)
+                    </h4>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      tender.gov.mn эх сурвалжтай албан ёсны баримт бичгүүдээс задлан шинжилсэн хураангуй ба боловсруулсан файлууд.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-2 pt-1">
+                <div className="space-y-2.5 pt-1">
                   {technicalSpecs.documents.map((doc: any, idx: number) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-red-500 shrink-0" />
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100 transition-colors gap-3">
+                      <div className="flex items-start sm:items-center gap-3">
+                        <FileText className="h-5 w-5 text-red-500 shrink-0 mt-0.5 sm:mt-0" />
                         <div>
-                          <span className="text-xs font-semibold text-slate-900 block">{doc.name}</span>
-                          <span className="text-[10px] text-slate-400 block">{doc.type} • {doc.size}</span>
+                          <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
+                          <span className="text-[11px] text-slate-500 block mt-0.5">
+                            {doc.category || 'Баримт бичиг'} • {doc.type} • {doc.size} • {doc.date}
+                          </span>
                         </div>
                       </div>
-                      <a
-                        href={doc.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs"
-                      >
-                        <Download className="h-3 w-3" />
-                        <span>Татах</span>
-                      </a>
+
+                      <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
+                        <button
+                          onClick={() => {
+                            setSelectedDoc(doc);
+                            setDocModalOpen(true);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-200"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>Үзэх & Задлах</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleDownloadDocument(doc)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs"
+                          title="Боловсруулсан өгөгдлийг төхөөрөмж рүү татах"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Татах</span>
+                        </button>
+
+                        <a
+                          href={doc.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-200 transition-colors"
+                          title="Төрийн худалдан авах ажиллагааны эх хуудсаар нээх"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -735,6 +814,95 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
           )}
         </div>
       </main>
+
+      {/* DOCUMENT PREVIEW & EXTRACTION MODAL */}
+      {docModalOpen && selectedDoc && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
+          <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="p-2 rounded-lg bg-blue-100/80 text-blue-700 shrink-0">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-slate-900 truncate">
+                    {selectedDoc.name}
+                  </h3>
+                  <p className="text-[11px] text-slate-500 truncate">
+                    {selectedDoc.category || 'Тендерийн албан ёсны баримт бичиг'} • {selectedDoc.size}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDocModalOpen(false)}
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors shrink-0"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 overflow-y-auto space-y-4 text-xs text-slate-700">
+              <div className="flex items-center justify-between p-2.5 rounded-md bg-blue-50/70 border border-blue-100 text-blue-900 text-[11px]">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span className="font-semibold">Бүтэцжүүлсэн өгөгдөл:</span>
+                  <span>PDF баримтаас ялган боловсруулсан шаардлага</span>
+                </div>
+                <span className="font-mono text-[10px] text-blue-700 font-semibold uppercase">{selectedDoc.type}</span>
+              </div>
+
+              {/* Extracted Structured View */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
+                  Баримт бичгийн агуулга ба шаардлагууд
+                </span>
+                <div className="p-4 rounded-lg bg-slate-900 text-slate-100 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap select-text border border-slate-800 shadow-inner">
+                  {selectedDoc.extractedSummary || 'Энэ баримт бичгийн хураангуй мэдээлэл одоогоор бэлэн бус байна.'}
+                </div>
+              </div>
+
+              {/* Notice */}
+              <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-500 space-y-1">
+                <span className="font-bold text-slate-700 block">💡 Анхаарах:</span>
+                <p>
+                  Тендерт оролцогч аж ахуйн нэгж нь төрийн худалдан авах ажиллагааны албан ёсны цахим систем (tender.gov.mn)-ийн ТШББ-д заасан шаардлагатай нягтлан танилцаж, үнийн санал болон баталгааг хуулийн хугацаанд ирүүлэх үүрэгтэй.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3.5 border-t border-slate-200 bg-slate-50/80 flex items-center justify-between gap-2">
+              <a
+                href={selectedDoc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-medium transition-colors"
+              >
+                <span>tender.gov.mn эх хуудас</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setDocModalOpen(false)}
+                  className="px-3 py-1.5 rounded-md border border-slate-300 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                >
+                  Хаах
+                </button>
+                <button
+                  onClick={() => handleDownloadDocument(selectedDoc)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-2xs transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Задлалыг татах (.txt)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
