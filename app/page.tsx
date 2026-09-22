@@ -327,13 +327,29 @@ export default function Home() {
               <>
                 <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
                 <h3 className="text-sm font-semibold text-slate-800">{t.noResults}</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">{t.noResultsTip}</p>
-                <button
-                  onClick={() => handleFilterChange({ search: '', category: 'all', minBudget: undefined, maxBudget: undefined, status: 'receiving', tabMode: 'active', urgency: 'all', page: 1 })}
-                  className="h-8 px-4 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
-                >
-                  {locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}
-                </button>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  {filters.year && Number(filters.year) < 2025
+                    ? (locale === 'mn'
+                        ? 'Системийн өгөгдлийн санд одоогоор tender.gov.mn-ээс татагдсан 2025-2026 оны 22,785 тендер бүрэн бүртгэлтэй байна.'
+                        : 'The database currently contains 22,785 tenders from 2025-2026 synced from tender.gov.mn.')
+                    : t.noResultsTip}
+                </p>
+                <div className="flex items-center justify-center gap-2 mt-1">
+                  <button
+                    onClick={() => handleFilterChange({ search: '', category: 'all', minBudget: undefined, maxBudget: undefined, status: 'all', tabMode: 'all', urgency: 'all', year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
+                    className="h-8 px-4 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                  >
+                    {locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}
+                  </button>
+                  {filters.year && Number(filters.year) < 2025 && (
+                    <button
+                      onClick={() => handleFilterChange({ year: '2026', page: 1 })}
+                      className="h-8 px-4 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                    >
+                      {locale === 'mn' ? '2026 оны тендерүүдийг харах' : 'View 2026 Tenders'}
+                    </button>
+                  )}
+                </div>
               </>
             )}
           </div>
