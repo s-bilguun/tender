@@ -341,12 +341,17 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
-              Тухайн онд санхүүжих
+              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Тухайн онд санхүүжих' : 'Урьдчилгаа төлбөр'}
             </span>
             <span className="text-lg sm:text-xl font-bold font-mono text-slate-800 block">
-              {formatCurrency(tender.yearBudget || tender.totalBudget)}
+              {tender.yearBudget && tender.yearBudget !== tender.totalBudget 
+                ? formatCurrency(tender.yearBudget)
+                : `${technicalSpecs.paymentTerms?.advancePaymentPct || 20}% (${formatCurrency(Math.round((tender.totalBudget * (technicalSpecs.paymentTerms?.advancePaymentPct || 20)) / 100))})`
+              }
             </span>
-            <span className="text-[10px] text-slate-400 mt-1 block">Энэ оны хуваарьт санхүүжилт</span>
+            <span className="text-[10px] text-slate-400 mt-1 block">
+              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Энэ оны хуваарьт санхүүжилт' : 'Гэрээ байгуулсны дараа олгогдох'}
+            </span>
           </div>
 
           <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-200 shadow-2xs">
@@ -370,69 +375,67 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
           </div>
         </div>
 
-        {/* Tab Navigation Header */}
-        <div className="border-b border-slate-200 bg-white rounded-t-xl px-4 pt-2 shadow-2xs">
-          <nav className="flex space-x-2 sm:space-x-4 overflow-x-auto" aria-label="Tabs">
-            <button
-              onClick={() => setActiveTab('bds')}
-              className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-                activeTab === 'bds'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-              }`}
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              <span>I БҮЛЭГ: ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ)</span>
-            </button>
+        {/* Responsive Segmented Tab Controls (Zero horizontal scroll) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/80">
+          <button
+            onClick={() => setActiveTab('bds')}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'bds'
+                ? 'bg-white text-blue-700 shadow-xs border border-slate-200/70 font-bold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            }`}
+          >
+            <FileSpreadsheet className="h-4 w-4 shrink-0" />
+            <span className="truncate">Шалгуур (ТШӨХ)</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab('tech')}
-              className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-                activeTab === 'tech'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-              }`}
-            >
-              <Layers className="h-4 w-4" />
-              <span>ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & ТЭЗҮ</span>
-            </button>
+          <button
+            onClick={() => setActiveTab('tech')}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'tech'
+                ? 'bg-white text-blue-700 shadow-xs border border-slate-200/70 font-bold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            }`}
+          >
+            <Layers className="h-4 w-4 shrink-0" />
+            <span className="truncate">Техникийн тодорхойлолт</span>
+          </button>
 
-            <button
-              onClick={() => setActiveTab('results')}
-              className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-                activeTab === 'results'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-              }`}
-            >
-              <Trophy className="h-4 w-4" />
-              <span>ШАЛГАРУУЛАЛТЫН ҮР ДҮН & ОРОЛЦОГЧИД</span>
-              {isConcluded && (
-                <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 font-semibold">
-                  Үр дүн гарсан
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('history')}
-              className={`py-3 px-3 sm:px-4 text-xs sm:text-sm font-bold border-b-2 flex items-center gap-2 whitespace-nowrap transition-colors ${
-                activeTab === 'history'
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
-              }`}
-            >
-              <Briefcase className="h-4 w-4" />
-              <span>ТҮҮХЭН ХОЛБООТОЙ ТЕНДЕРҮҮД</span>
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-600 font-mono">
-                {relatedByEntity.length + similarTenders.length}
+          <button
+            onClick={() => setActiveTab('results')}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'results'
+                ? 'bg-white text-blue-700 shadow-xs border border-slate-200/70 font-bold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            }`}
+          >
+            <Trophy className="h-4 w-4 shrink-0" />
+            <span className="truncate">Үр дүн & Оролцогчид</span>
+            {isConcluded && (
+              <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-full text-[10px] bg-amber-100 text-amber-800 font-semibold shrink-0">
+                Гарсан
               </span>
-            </button>
-          </nav>
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              activeTab === 'history'
+                ? 'bg-white text-blue-700 shadow-xs border border-slate-200/70 font-bold'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+            }`}
+          >
+            <Briefcase className="h-4 w-4 shrink-0" />
+            <span className="truncate">Холбоотой тендерүүд</span>
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200/70 text-slate-700 font-mono shrink-0">
+              {relatedByEntity.length + similarTenders.length}
+            </span>
+          </button>
         </div>
 
         {/* Tab Content Container */}
-        <div className="bg-white rounded-b-xl border border-t-0 border-slate-200 p-6 shadow-xs">
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs">
           
           {/* TAB 1: I БҮЛЭГ: ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ) */}
           {activeTab === 'bds' && (
@@ -519,31 +522,29 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
               </div>
 
               {/* 3. Түлхүүр боловсон хүчин */}
-              <div className="border border-slate-200 rounded-lg p-4 space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                  <Users className="h-4 w-4 text-blue-600" />
-                  <span>3. Түлхүүр боловсон хүчний шаардлага</span>
-                </h4>
+              <div className="border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <span>3. Түлхүүр боловсон хүчний шаардлага</span>
+                  </h4>
+                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                    Нийт {bds.keyPersonnel.reduce((acc: number, p: any) => acc + (p.count || 1), 0)} мэргэжилтэн
+                  </span>
+                </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                      <tr>
-                        <th className="py-2.5 px-3">Албан тушаал</th>
-                        <th className="py-2.5 px-3 text-center">Тоо</th>
-                        <th className="py-2.5 px-3">Мэргэжил ба шаардлага</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {bds.keyPersonnel.map((p: any, idx: number) => (
-                        <tr key={idx} className="hover:bg-slate-50/50">
-                          <td className="py-2.5 px-3 font-medium text-slate-900">{p.role}</td>
-                          <td className="py-2.5 px-3 text-center font-mono font-bold text-blue-700">{p.count}</td>
-                          <td className="py-2.5 px-3 text-slate-600">{p.qualification}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {bds.keyPersonnel.map((p: any, idx: number) => (
+                    <div key={idx} className="p-3 bg-slate-50/70 rounded-lg border border-slate-200 flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 text-xs">{p.role}</div>
+                        <div className="text-[11px] text-slate-600 mt-1 leading-relaxed">{p.qualification}</div>
+                      </div>
+                      <span className="shrink-0 px-2 py-0.5 rounded bg-blue-50 border border-blue-200 font-mono font-bold text-xs text-blue-700">
+                        {p.count} хүн
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -607,37 +608,38 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </p>
               </div>
 
-              {/* 1. БҮТЦЭД ОРУУЛСАН БАРАА / АЖЛЫН ҮЗҮҮЛЭЛТИЙН ХҮСНЭГТ */}
+              {/* 1. БҮТЦЭД ОРУУЛСАН БАРАА / АЖЛЫН ҮЗҮҮЛЭЛТИЙН КАРТУУД */}
               {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
-                <div className="border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
-                  <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                  <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
                       <Layers className="h-4 w-4 text-indigo-600" />
                       <span>Нийлүүлэх бараа, гүйцэтгэх ажлын нарийвчилсан үзүүлэлт ({technicalSpecs.sampleItems.length})</span>
                     </span>
                     <span className="text-[11px] text-slate-500">PDF-ээс ялгасан бодит үзүүлэлт</span>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left">
-                      <thead className="bg-slate-50/50 text-slate-500 font-semibold border-b border-slate-200">
-                        <tr>
-                          <th className="py-2.5 px-3">Бараа / Ажлын нэр</th>
-                          <th className="py-2.5 px-3 text-center">Тоо хэмжээ</th>
-                          <th className="py-2.5 px-3 text-center">Хэмжих нэгж</th>
-                          <th className="py-2.5 px-3">Техникийн тодорхойлолт & Чанарын шаардлага</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {technicalSpecs.sampleItems.map((item: any, idx: number) => (
-                          <tr key={idx} className="hover:bg-slate-50/50">
-                            <td className="py-3 px-3 font-semibold text-slate-900">{item.name}</td>
-                            <td className="py-3 px-3 text-center font-mono font-bold text-blue-700">{item.quantity}</td>
-                            <td className="py-3 px-3 text-center text-slate-600">{item.unit}</td>
-                            <td className="py-3 px-3 text-slate-700 leading-relaxed max-w-md">{item.spec}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="p-3 sm:p-4 space-y-3 bg-white">
+                    {technicalSpecs.sampleItems.map((item: any, idx: number) => (
+                      <div key={idx} className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/90 hover:border-slate-300 transition-colors">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/60">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                              {idx + 1}
+                            </span>
+                            <span className="font-bold text-slate-900 text-xs sm:text-sm">{item.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                            <span className="px-2.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono font-bold text-xs text-blue-700 shadow-2xs">
+                              {item.quantity} {item.unit}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="pt-2 text-xs text-slate-600 leading-relaxed text-pretty">
+                          <span className="text-[11px] font-semibold text-slate-500 block mb-0.5">Техникийн тодорхойлолт & Чанарын шаардлага:</span>
+                          {item.spec}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -888,53 +890,67 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                     </div>
                   </div>
 
-                  {/* Participants Table */}
-                  <div className="border border-slate-200 rounded-lg overflow-hidden">
-                    <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                  {/* Participants Cards */}
+                  <div className="border border-slate-200 rounded-xl overflow-hidden">
+                    <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
                       <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                         Бүх оролцогчдын үнийн санал ба үнэлгээ ({results.participants.length})
                       </span>
                       <span className="text-[11px] text-slate-500">Үнэлгээний дүгнэлт баталгаажсан</span>
                     </div>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs text-left">
-                        <thead className="bg-slate-50/50 text-slate-500 font-semibold border-b border-slate-200">
-                          <tr>
-                            <th className="py-2.5 px-3">Компанийн нэр</th>
-                            <th className="py-2.5 px-3 font-mono">Регистр</th>
-                            <th className="py-2.5 px-3 font-mono text-right">Санал болгосон үнэ</th>
-                            <th className="py-2.5 px-3 text-center">Төлөв</th>
-                            <th className="py-2.5 px-3">Татгалзсан / Үнэлгээний шалтгаан</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {results.participants.map((p: any, idx: number) => (
-                            <tr key={idx} className={p.isWinner ? 'bg-emerald-50/40 font-medium' : 'hover:bg-slate-50/40'}>
-                              <td className="py-3 px-3">
-                                <div className="flex items-center gap-1.5">
-                                  {p.isWinner && <Trophy className="h-3.5 w-3.5 text-amber-600" />}
-                                  <span className="text-slate-900">{p.name}</span>
-                                </div>
-                              </td>
-                              <td className="py-3 px-3 font-mono text-slate-500">{p.register}</td>
-                              <td className="py-3 px-3 font-mono text-right font-bold text-slate-900">
-                                {formatCurrency(p.price)}
-                              </td>
-                              <td className="py-3 px-3 text-center">
-                                <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                                  p.isWinner
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : 'bg-rose-100 text-rose-800'
-                                }`}>
-                                  {p.status}
+                    <div className="p-3 sm:p-4 space-y-2.5 bg-white">
+                      {results.participants.map((p: any, idx: number) => (
+                        <div
+                          key={idx}
+                          className={`p-3.5 rounded-xl border transition-all ${
+                            p.isWinner
+                              ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-300/60 shadow-2xs'
+                              : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              {p.isWinner ? (
+                                <span className="p-1.5 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
+                                  <Trophy className="h-4 w-4" />
                                 </span>
-                              </td>
-                              <td className="py-3 px-3 text-slate-600 max-w-xs">{p.reason}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                              ) : (
+                                <span className="w-6 h-6 rounded-full bg-white border border-slate-200 text-slate-500 font-mono text-[11px] font-semibold flex items-center justify-center shrink-0">
+                                  {idx + 1}
+                                </span>
+                              )}
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-bold text-slate-900 text-xs sm:text-sm">{p.name}</span>
+                                  <span className="text-[11px] font-mono text-slate-400">({p.register})</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
+                              <span className="font-mono font-bold text-xs sm:text-sm text-slate-900">
+                                {formatCurrency(p.price)}
+                              </span>
+                              <span
+                                className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
+                                  p.isWinner
+                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                    : 'bg-rose-100 text-rose-800 border border-rose-200'
+                                }`}
+                              >
+                                {p.status}
+                              </span>
+                            </div>
+                          </div>
+                          {p.reason && (
+                            <div className="mt-2.5 pt-2 border-t border-slate-200/60 text-[11px] text-slate-600 leading-relaxed">
+                              <span className="font-medium text-slate-500">Үнэлгээний тэмдэглэл: </span>
+                              {p.reason}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </>
@@ -980,45 +996,37 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </h4>
 
                 {relatedByEntity.length > 0 ? (
-                  <div className="border border-slate-200 rounded-lg overflow-hidden">
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs text-left">
-                        <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
-                          <tr>
-                            <th className="py-2.5 px-3">Тендерийн код</th>
-                            <th className="py-2.5 px-3">Тендерийн нэр</th>
-                            <th className="py-2.5 px-3 font-mono text-right">Төсөв</th>
-                            <th className="py-2.5 px-3 text-center">Төлөв</th>
-                            <th className="py-2.5 px-3 text-right">Үйлдэл</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {relatedByEntity.map((r: any) => (
-                            <tr key={r.invitationId} className="hover:bg-slate-50/60">
-                              <td className="py-2.5 px-3 font-mono text-slate-600">{r.tenderCode}</td>
-                              <td className="py-2.5 px-3 font-medium text-slate-900 max-w-sm truncate">{r.tenderName}</td>
-                              <td className="py-2.5 px-3 font-mono text-right font-bold text-slate-900">
-                                {formatCurrency(r.totalBudget)}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">
-                                <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
-                                  {r.docStatusName}
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-3 text-right">
-                                <Link
-                                  href={`/tender/${r.invitationId}`}
-                                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold text-xs"
-                                >
-                                  <Eye className="h-3.5 w-3.5" />
-                                  <span>Үзэх</span>
-                                </Link>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {relatedByEntity.map((r: any) => (
+                      <div
+                        key={r.invitationId}
+                        className="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-blue-300 transition-colors flex flex-col justify-between space-y-2 shadow-2xs"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1 font-mono">
+                            <span>{r.tenderCode}</span>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-700">
+                              {r.docStatusName}
+                            </span>
+                          </div>
+                          <h5 className="text-xs font-bold text-slate-900 leading-snug line-clamp-2">
+                            {r.tenderName}
+                          </h5>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                          <span className="font-mono font-bold text-xs text-slate-900">
+                            {formatCurrency(r.totalBudget)}
+                          </span>
+                          <Link
+                            href={`/tender/${r.invitationId}`}
+                            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-semibold text-xs"
+                          >
+                            <span>Үзэх</span>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <p className="text-xs text-slate-400 italic">Энэ байгууллагын өөр тендер олдсонгүй.</p>
