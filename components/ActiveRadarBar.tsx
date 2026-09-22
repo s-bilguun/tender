@@ -77,7 +77,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
         <p className={`mt-0.5 sm:mt-1 text-[10px] sm:text-[11px] line-clamp-1 ${
           currentTab === 'all' ? 'text-slate-300' : 'text-slate-500'
         }`}>
-          {locale === 'mn' ? `2022-2026 • ${formatMoney(totalBudget)}` : `2022-2026 • ${formatMoney(totalBudget)}`}
+          {locale === 'mn' ? `2019-2026 • ${formatMoney(totalBudget)}` : `2019-2026 • ${formatMoney(totalBudget)}`}
         </p>
       </div>
 
