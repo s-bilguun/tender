@@ -757,15 +757,15 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </div>
               )}
 
-              {/* 6. Official Downloadable Documents with Inline Quick Preview */}
+              {/* 6. Official Documents & Tender Specs */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      Холбогдох баримт бичгүүд & ТЭЗҮ (Боловсруулсан PDF/Excel)
+                      Албан ёсны баримт бичгүүд & ТШББ (PDF / Excel)
                     </h4>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      tender.gov.mn эх сурвалжтай албан ёсны баримт бичгүүдээс задлан шинжилсэн хураангуй ба боловсруулсан файлууд.
+                      tender.gov.mn төрийн худалдан авах ажиллагааны албан ёсны эх баримт бичгүүдийг шууд татах боломжтой.
                     </p>
                   </div>
                 </div>
@@ -781,47 +781,36 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                             <div>
                               <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
                               <span className="text-[11px] text-slate-500 block mt-0.5">
-                                {doc.category || 'Баримт бичиг'} • {doc.type} • {doc.size} • {doc.date}
+                                {doc.category || 'Баримт бичиг'} • {doc.type} {doc.date ? `• ${doc.date}` : ''}
                               </span>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
+                          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
                             <button
                               onClick={() => toggleDocSummary(doc.id || idx)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs"
                             >
-                              <span>{isExpanded ? 'Хураах' : 'Хураангуй'}</span>
+                              <span>{isExpanded ? 'Хураах' : 'Хуулийн шаардлага'}</span>
                             </button>
 
                             <button
-                              onClick={() => {
-                                setSelectedDoc(doc);
-                                setDocModalOpen(true);
-                              }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-200"
+                              onClick={() => handleRunAiAnalysis(`Энэ тендерийн "${doc.name}" баримт бичиг болон ТШББ-ийн шаардлагыг шинжилж, оролцогчдод анхаарах зүйлсийг зөвлөнө үү.`)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition-colors"
                             >
-                              <Eye className="h-3.5 w-3.5" />
-                              <span>Үзэх & Задлах</span>
-                            </button>
-
-                            <button
-                              onClick={() => handleDownloadDocument(doc)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs"
-                              title="Боловсруулсан өгөгдлийг төхөөрөмж рүү татах"
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                              <span>Татах</span>
+                              <Sparkles className="h-3 w-3 text-amber-600" />
+                              <span>AI-аар задлах</span>
                             </button>
 
                             <a
                               href={doc.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-200 transition-colors"
-                              title="Төрийн худалдан авах ажиллагааны эх хуудсаар нээх"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
+                              title="tender.gov.mn дээрээс албан ёсны эх баримтыг татах"
                             >
-                              <ExternalLink className="h-3.5 w-3.5" />
+                              <span>tender.gov.mn-ээс татах</span>
+                              <ExternalLink className="h-3 w-3" />
                             </a>
                           </div>
                         </div>
@@ -853,123 +842,86 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </p>
               </div>
 
-              {results.status === 'CONCLUDED' && results.winner ? (
-                <>
-                  {/* Winner Banner */}
-                  <div className="bg-gradient-to-r from-amber-50 to-emerald-50 border border-amber-300 rounded-xl p-5 shadow-2xs space-y-3">
-                    <div className="flex items-center justify-between">
+              {results.isConcluded || isConcluded ? (
+                <div className="space-y-4">
+                  {/* Concluded Official Notice Card */}
+                  <div className="bg-gradient-to-r from-amber-50/80 to-blue-50/60 border border-amber-300/80 rounded-xl p-6 shadow-2xs space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <div className="flex items-center gap-2 font-bold text-amber-950 text-sm">
                         <Trophy className="h-5 w-5 text-amber-600" />
-                        <span>🏆 ШАЛГАРСАН ОРОЛЦОГЧ (ЯЛАГЧ)</span>
+                        <span>🏆 ШАЛГАРУУЛАЛТЫН ҮР ДҮН НИЙТЛЭГДСЭН</span>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-600 text-white shadow-2xs">
-                        Гэрээ байгуулсан
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                        {tender.docStatusName || 'Үр дүн гарсан'}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                      <div>
-                        <span className="text-[11px] text-slate-500 block">Шалгарсан аж ахуйн нэгж:</span>
-                        <span className="text-sm font-bold text-slate-900 mt-0.5 block">{results.winner.name}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">Регистр: {results.winner.register}</span>
+                    <p className="text-xs text-slate-700 leading-relaxed">
+                      Энэхүү тендер нь шалгаруулалтын бүх үе шатыг дуусгаж, Үнэлгээний хорооны албан ёсны шийдвэр (шалгарсан оролцогч, татгалзсан шалтгаан, үнийн саналын харьцуулалт) tender.gov.mn төрийн худалдан авах ажиллагааны цахим систем дээр нийтлэгдсэн байна.
+                    </p>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 text-xs">
+                      <div className="bg-white p-3 rounded-lg border border-slate-200">
+                        <span className="text-slate-400 block text-[10px]">Батлагдсан төсөв</span>
+                        <span className="font-bold text-slate-900 mt-0.5 block">{formatCurrency(tender.totalBudget)}</span>
                       </div>
-                      <div>
-                        <span className="text-[11px] text-slate-500 block">Гэрээ байгуулсан дүн:</span>
-                        <span className="text-sm font-bold font-mono text-emerald-800 mt-0.5 block">
-                          {formatCurrency(results.winner.bidPrice)}
+                      <div className="bg-white p-3 rounded-lg border border-slate-200">
+                        <span className="text-slate-400 block text-[10px]">Сонгон шалгаруулах арга</span>
+                        <span className="font-bold text-slate-900 mt-0.5 block">{tender.ruleName || 'Нээлттэй'}</span>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-slate-200">
+                        <span className="text-slate-400 block text-[10px]">Санхүүжилтийн эх үүсвэр</span>
+                        <span className="font-bold text-slate-900 mt-0.5 block">{tender.fundName || 'Төсөв'}</span>
+                      </div>
+                      <div className="bg-white p-3 rounded-lg border border-slate-200">
+                        <span className="text-slate-400 block text-[10px]">Дууссан / Нээсэн огноо</span>
+                        <span className="font-bold text-slate-900 mt-0.5 block font-mono">
+                          {tender.receiveDate ? tender.receiveDate.substring(0, 10) : 'Бүртгэлтэй'}
                         </span>
-                        <span className="text-[10px] text-slate-400">Төсөвт өртгөөс хямдарсан</span>
                       </div>
-                      <div>
-                        <span className="text-[11px] text-slate-500 block">Төсвөөс хэмнэсэн дүн:</span>
-                        <span className="text-sm font-bold font-mono text-blue-700 mt-0.5 block">
-                          {formatCurrency(results.winner.savingsAmount)} ({results.winner.savingsPct}%)
-                        </span>
-                        <span className="text-[10px] text-slate-400">Төрийн төсвийн хэмнэлт</span>
-                      </div>
+                    </div>
+
+                    <div className="pt-2 flex flex-wrap items-center gap-2.5">
+                      <a
+                        href={publicLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-2xs"
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>tender.gov.mn дээрх албан ёсны үр дүн & протокол үзэх</span>
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+
+                      <button
+                        onClick={() => handleRunAiAnalysis('Энэ тендерийн үр дүнгийн хууль эрх зүйн зохицуулалт, шалгаруулалтын дараах гэрээ байгуулах шаардлага болон гомдол гаргах хугацааны талаар мэдээлэл өгнө үү.')}
+                        disabled={aiAnalyzing}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-lg bg-white text-amber-900 border border-amber-300 hover:bg-amber-50 transition-colors"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                        <span>AI Шинжээчээс үр дүнгийн талаар асуух</span>
+                      </button>
                     </div>
                   </div>
-
-                  {/* Participants Cards */}
-                  <div className="border border-slate-200 rounded-xl overflow-hidden">
-                    <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Бүх оролцогчдын үнийн санал ба үнэлгээ ({results.participants.length})
-                      </span>
-                      <span className="text-[11px] text-slate-500">Үнэлгээний дүгнэлт баталгаажсан</span>
-                    </div>
-
-                    <div className="p-3 sm:p-4 space-y-2.5 bg-white">
-                      {results.participants.map((p: any, idx: number) => (
-                        <div
-                          key={idx}
-                          className={`p-3.5 rounded-xl border transition-all ${
-                            p.isWinner
-                              ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-300/60 shadow-2xs'
-                              : 'bg-slate-50/50 border-slate-200 hover:border-slate-300'
-                          }`}
-                        >
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                            <div className="flex items-center gap-2.5 min-w-0">
-                              {p.isWinner ? (
-                                <span className="p-1.5 rounded-full bg-emerald-100 text-emerald-700 shrink-0">
-                                  <Trophy className="h-4 w-4" />
-                                </span>
-                              ) : (
-                                <span className="w-6 h-6 rounded-full bg-white border border-slate-200 text-slate-500 font-mono text-[11px] font-semibold flex items-center justify-center shrink-0">
-                                  {idx + 1}
-                                </span>
-                              )}
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="font-bold text-slate-900 text-xs sm:text-sm">{p.name}</span>
-                                  <span className="text-[11px] font-mono text-slate-400">({p.register})</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
-                              <span className="font-mono font-bold text-xs sm:text-sm text-slate-900">
-                                {formatCurrency(p.price)}
-                              </span>
-                              <span
-                                className={`px-2.5 py-0.5 rounded text-[11px] font-bold ${
-                                  p.isWinner
-                                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                                    : 'bg-rose-100 text-rose-800 border border-rose-200'
-                                }`}
-                              >
-                                {p.status}
-                              </span>
-                            </div>
-                          </div>
-                          {p.reason && (
-                            <div className="mt-2.5 pt-2 border-t border-slate-200/60 text-[11px] text-slate-600 leading-relaxed">
-                              <span className="font-medium text-slate-500">Үнэлгээний тэмдэглэл: </span>
-                              {p.reason}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
+                </div>
               ) : (
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-8 text-center space-y-3">
                   <Clock className="h-8 w-8 text-blue-600 mx-auto" />
                   <h4 className="text-sm font-bold text-slate-900">Шалгаруулалт одоогоор идэвхтэй явагдаж байна</h4>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Тендерийн материалыг хүлээн авч дууссаны дараа Үнэлгээний хорооны нээлт хийгдэж, оролцогчдын үнийн санал болон шалгарсан эсэх үр дүн энд нийтлэгдэнэ.
+                    Тендерийн материалыг хүлээн авч дууссаны дараа Үнэлгээний хорооны нээлт хийгдэж, оролцогчдын үнийн санал болон шалгарсан эсэх үр дүн албан ёсоор нийтлэгдэнэ.
                   </p>
-                  <a
-                    href={supplierLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors shadow-2xs"
-                  >
-                    <span>Тендерт санал илгээх (user.tender.gov.mn)</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                  <div className="pt-2 flex items-center justify-center gap-2">
+                    <a
+                      href={supplierLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-md transition-colors shadow-2xs"
+                    >
+                      <span>Тендерт санал илгээх (user.tender.gov.mn)</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
                 </div>
               )}
             </div>

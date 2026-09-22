@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { Building2, Sparkles, ExternalLink, Star, Clock, AlertTriangle } from 'lucide-react';
@@ -11,7 +12,7 @@ interface TenderCardProps {
   locale: Locale;
   isSaved?: boolean;
   onToggleSave?: (tenderId: string | number) => void;
-  onSelect: (tender: TenderItem) => void;
+  onSelect?: (tender: TenderItem) => void;
   onAskAI: (tender: TenderItem) => void;
 }
 
@@ -23,6 +24,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   onSelect,
   onAskAI,
 }) => {
+  const router = useRouter();
   const t = getTranslation(locale);
 
   const formatCurrency = (amount: number) => {
@@ -117,9 +119,12 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   const portalUrl = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
 
   return (
-    <div className={`bg-white border rounded-xl p-5 shadow-2xs hover:shadow-subtle transition-all flex flex-col justify-between gap-4 group relative ${
-      urgency?.isUrgent ? 'border-rose-300 hover:border-rose-400 ring-1 ring-rose-200/50' : 'border-slate-200 hover:border-slate-300'
-    }`}>
+    <div
+      onClick={() => router.push(`/tender/${tender.invitationId}`)}
+      className={`bg-white border rounded-xl p-5 shadow-2xs hover:shadow-subtle transition-all flex flex-col justify-between gap-4 group relative cursor-pointer hover:border-blue-300 ${
+        urgency?.isUrgent ? 'border-rose-300 hover:border-rose-400 ring-1 ring-rose-200/50' : 'border-slate-200'
+      }`}
+    >
       <div>
         {/* Top Badges & Watchlist Star */}
         <div className="flex items-center justify-between gap-2 mb-2.5">
@@ -140,7 +145,10 @@ export const TenderCard: React.FC<TenderCardProps> = ({
             )}
             {onToggleSave && (
               <button
-                onClick={() => onToggleSave(tender.invitationId)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleSave(tender.invitationId);
+                }}
                 className={`p-1 rounded-md transition-colors ${
                   isSaved
                     ? 'text-amber-500 bg-amber-50 hover:bg-amber-100'
@@ -157,7 +165,8 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         {/* Title */}
         <Link
           href={`/tender/${tender.invitationId}`}
-          className="text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors line-clamp-2 leading-snug block"
+          onClick={(e) => e.stopPropagation()}
+          className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug block"
         >
           {tender.tenderName}
         </Link>
@@ -194,14 +203,20 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       {/* Action Buttons: 1. Bid Now ↗, 2. AI Audit, 3. Details */}
       <div className="grid grid-cols-3 gap-1.5 pt-1">
         <button
-          onClick={() => onSelect(tender)}
-          className="h-8 rounded-lg text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-colors flex items-center justify-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            router.push(`/tender/${tender.invitationId}`);
+          }}
+          className="h-8 rounded-lg text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors flex items-center justify-center"
         >
           {t.viewDetails}
         </button>
 
         <button
-          onClick={() => onAskAI(tender)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onAskAI(tender);
+          }}
           className="h-8 rounded-lg text-xs font-medium text-slate-800 bg-white border border-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300 transition-colors flex items-center justify-center gap-1"
           title={locale === 'mn' ? 'AI-аар шалгуур, шаардлага шинжлэх' : 'AI tender analysis'}
         >
@@ -213,6 +228,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           href={portalUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
           className="h-8 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors flex items-center justify-center gap-1 shadow-2xs"
           title={locale === 'mn' ? 'tender.gov.mn дээр оролцох' : 'Apply on tender.gov.mn'}
         >

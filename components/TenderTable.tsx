@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { ExternalLink, Sparkles, Star } from 'lucide-react';
@@ -11,7 +12,7 @@ interface TenderTableProps {
   locale: Locale;
   savedIds?: Set<string | number>;
   onToggleSave?: (tenderId: string | number) => void;
-  onSelect: (tender: TenderItem) => void;
+  onSelect?: (tender: TenderItem) => void;
   onAskAI: (tender: TenderItem) => void;
 }
 
@@ -23,6 +24,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   onSelect,
   onAskAI,
 }) => {
+  const router = useRouter();
   const t = getTranslation(locale);
 
   const formatCurrency = (amount: number) => {
@@ -74,8 +76,8 @@ export const TenderTable: React.FC<TenderTableProps> = ({
               return (
                 <tr
                   key={String(tender.invitationId)}
-                  className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
-                  onClick={() => onSelect(tender)}
+                  className="hover:bg-blue-50/40 transition-colors group cursor-pointer"
+                  onClick={() => router.push(`/tender/${tender.invitationId}`)}
                 >
                   {/* Star Watchlist */}
                   <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>

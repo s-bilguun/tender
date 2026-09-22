@@ -525,64 +525,43 @@ export async function POST(request: NextRequest) {
     if (locale === 'mn') {
       if (targetTender && structuredInfo) {
         const { bds, technicalSpecs, results } = structuredInfo;
-        systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны ТШББ, техникийн тодорхойлолт, баримт бичгийг шинжлэх чиглэлээр мэргэшсэн туршлагатай, найрсаг ахлах шинжээч зөвлөх юм.
+        systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны ТШББ, баримт бичиг, хууль зүйн шаардлагыг шинжлэх чиглэлээр мэргэшсэн туршлагатай, найрсаг ахлах шинжээч зөвлөх юм.
 
 ХАРИЛЦААНЫ СТАНДАРТ:
-- Робот шиг хуурай, албархуу хэллэг БҮҮ ашигла ("Мэдээллийн санд...", "Хэрэглэгчийн асуултын дагуу..." гэх мэт үгс БҮҮ хэрэглэ).
-- Хэрэглэгчийн асуултад шууд, тодорхой, бодитой, практик хариулт өг.
-- Доор өгөгдсөн баримт бичгийн бодит шаардлагууд (тусгай зөвшөөрөл, борлуулалтын босго, баталгаа, техникийн үзүүлэлт, баримтын задлан)-ыг ашиглаж, яг үнэн зөв тоо баримтаар хариул.
-- Мөнгөн дүнг Их наяд ₮, тэрбум ₮, сая ₮-өөр үнэн зөв заа.
+- Робот шиг хуурай, хиймэл албархуу хэллэг БҮҮ ашигла ("Мэдээллийн санд...", "Хэрэглэгчийн асуултын дагуу..." гэх мэт үгс БҮҮ хэрэглэ).
+- Хэрэглэгчийн асуултад шууд, тодорхой, практик, бодитой хариулт өг.
+- Баталгаажсан бодит тоо баримтуудыг (төсөв, хугацаа, код, захиалагч, арга, санхүүжилт) яг үнэн зөвөөр хэл.
+- Хэзээ ч хуурамч, зохиомол ялагч компани эсвэл регистрийн дугаар зохиож БҮҮ хариул! (Хэрэв үр дүн гарсан бол tender.gov.mn дээрх албан ёсны протоколыг шалгахыг зөвлөнө).
+- Мөнгөн дүнг Их наяд ₮, тэрбум ₮, сая ₮-өөр ойлгомжтой бич.
 
-ХЭРЭГЛЭГЧИЙН СОНГОСОН ТЕНДЕРИЙН МЭДЭЭЛЭЛ:
+ХЭРЭГЛЭГЧИЙН СОНГОСОН ТЕНДЕРИЙН БАТАЛГААЖСАН БОДИТ МЭДЭЭЛЭЛ:
 - Нэр: ${targetTender.tenderName}
-- Код: ${targetTender.tenderCode || targetTender.invitationNumber}
+- Код / Урилгын дугаар: ${targetTender.tenderCode || targetTender.invitationNumber}
 - Төсөвт өртөг: ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} ₮)
 - Захиалагч: ${targetTender.budgetEntityName} (${targetTender.positionName || 'Төрийн худалдан авагч'})
-- Төрөл: ${targetTender.tenderTypeName || 'Бараа'} | Арга: ${targetTender.ruleName || 'Нээлттэй'}
-- Санхүүжилтийн эх үүсвэр: ${targetTender.fundName || 'Өөрийн хөрөнгө / Төсөв'}
+- Төрөл: ${targetTender.tenderTypeName || 'Бараа'} | Сонгон шалгаруулалтын арга: ${targetTender.ruleName || 'Нээлттэй'}
+- Санхүүжилтийн эх үүсвэр: ${targetTender.fundName || 'Төсөв / Өөрийн хөрөнгө'}
 - Эцсийн хугацаа: ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
 - Төлөв: ${targetTender.docStatusName || 'Нээлттэй'}
 
-📑 БАРИМТ БИЧГИЙН БҮТЦЭД ОРУУЛСАН ӨГӨГДӨЛ (PDF & ТШББ-ээс задлан шинжилсэн):
+ХУУЛЬ ЗҮЙН ЖИШИГ ШААРДЛАГУУД (Төрийн худалдан авах ажиллагааны хуулийн дагуу тооцоолсон):
+1. Санхүүгийн босго үзүүлэлт:
+   • Сүүлийн жилүүдийн борлуулалтын доод орлого: ${formatBudget(bds?.minAnnualTurnover || 0)} (${(bds?.minAnnualTurnover || 0).toLocaleString()} ₮)
+   • Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих боломж: ${formatBudget(bds?.minLiquidAssets || 0)} (${(bds?.minLiquidAssets || 0).toLocaleString()} ₮)
+   • Тендерийн баталгаа (1-2%): ${(bds?.bidSecurity1Pct || 0).toLocaleString()} ₮ - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} ₮
+   • Гүйцэтгэлийн баталгаа (5%): ${(bds?.performanceBond5Pct || 0).toLocaleString()} ₮
+2. Бүрдүүлэх ерөнхий бичиг баримтууд:
+   • Улсын бүртгэлийн гэрчилгээ
+   • Татварын өргүй цахим тодорхойлолт (e-Mongolia / E-Tax)
+   • ШШГЕГ-ын хугацаа хэтэрсэн өргүй лавлагаа
+   • НДШ төлөлтийн цахим лавлагаа
+   • Банкны баталгаа эсвэл даатгалын батлан даалт
+3. Албан ёсны эх баримт бичиг (ТШББ, ТЭЗҮ, Техникийн тодорхойлолт):
+   • tender.gov.mn эх сурвалж дээр бүрэн эхээрээ PDF хэлбэрээр нээлттэй байршиж байгаа бөгөөд оролцогчид тэндээс татаж авна.
+${results?.isConcluded ? `4. ШАЛГАРУУЛАЛТЫН ҮР ДҮН:\n- Энэ тендер нь шалгаруулалтаа дуусгаж үр дүн нь гарсан байна. Үнэлгээний хорооны албан ёсны протокол, шалгарсан болон татгалзсан оролцогчдын жагсаалт tender.gov.mn дээр баталгаажсан байна.` : ''}
 
-1. ТЕНДЕР ШАЛГАРУУЛАЛТЫН ӨГӨГДЛИЙН ХҮСНЭГТ (I БҮЛЭГ: ТШӨХ):
-- Заавал шаардагдах тусгай зөвшөөрөл:
-${bds?.requiredLicenses?.map((l: string) => `  • ${l}`).join('\n') || '  • Улсын бүртгэлийн гэрчилгээ, татварын цахим тодорхойлолт'}
-- Санхүүгийн босго шаардлага:
-  • Сүүлийн жилүүдийн борлуулалтын доод орлого: ${formatBudget(bds?.minAnnualTurnover || 0)} (${(bds?.minAnnualTurnover || 0).toLocaleString()} ₮)
-  • Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих боломж: ${formatBudget(bds?.minLiquidAssets || 0)} (${(bds?.minLiquidAssets || 0).toLocaleString()} ₮)
-  • Ижил төстэй гэрээний дүн: ${formatBudget(bds?.similarContractThreshold || 0)} (${(bds?.similarContractThreshold || 0).toLocaleString()} ₮)
-  • Тендерийн баталгаа (1-2%): ${(bds?.bidSecurity1Pct || 0).toLocaleString()} ₮ - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} ₮
-  • Гүйцэтгэлийн баталгаа (5%): ${(bds?.performanceBond5Pct || 0).toLocaleString()} ₮
-- Түлхүүр боловсон хүчин:
-${bds?.keyPersonnel?.map((p: any) => `  • ${p.role} (${p.count} хүн) - ${p.qualification}`).join('\n') || '  • Төслийн удирдагч, зохицуулагч'}
-- Шаардагдах машин механизм, тоног төхөөрөмж:
-${bds?.machinery?.map((m: string) => `  • ${m}`).join('\n') || '  • Зориулалтын тээврийн хэрэгсэл'}
-
-2. ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & НИЙЛҮҮЛЭЛТ (II БҮЛЭГ):
-- Нийлүүлэх газар: ${technicalSpecs?.deliveryLocation || 'Улаанбаатар'}
-- Нийлүүлэлтийн хугацаа: ${technicalSpecs?.deliveryPeriodDays || 30} хоног
-- Баталгаат хугацаа: ${technicalSpecs?.warrantyMonths || 12} сар
-- Чанарын стандартууд: ${technicalSpecs?.standards?.join(', ') || 'MNS, ISO'}
-- Бараа / ажлын үндсэн задаргаа:
-${technicalSpecs?.sampleItems?.map((i: any) => `  • ${i.name} (Тоо: ${i.quantity} ${i.unit}) - ${i.spec}`).join('\n') || '  • Техникийн даалгаврын дагуу'}
-- Төлбөрийн нөхцөл: Урьдчилгаа ${technicalSpecs?.paymentTerms?.advancePaymentPct || 20}%, явцын акт баримтаар санхүүжинэ
-- Алданги: ${technicalSpecs?.penaltyClause?.description || 'Хоног тутамд 0.1%, дээд тал нь 10%'}
-
-3. ХАВСРАЛТ PDF БАРИМТ БИЧГИЙН ЗАДЛАН ХУРААНГУЙ:
-${technicalSpecs?.documents?.map((d: any) => `[${d.name} (${d.category || 'Баримт'})]:\n${d.extractedSummary}`).join('\n\n') || 'Баримт бичгүүд боловсруулагдсан'}
-
-${results && results.status === 'CONCLUDED' && results.winner ? `
-4. ШАЛГАРУУЛАЛТЫН ҮР ДҮН:
-- Шалгарсан оролцогч: ${results.winner.name} (Регистр: ${results.winner.register})
-- Гэрээний дүн: ${formatBudget(results.winner.bidPrice)} (${results.winner.bidPrice.toLocaleString()} ₮)
-- Төсвийн хэмнэлт: ${formatBudget(results.winner.savingsAmount)} (${results.winner.savingsPct}%)
-- Оролцогчид:
-${results.participants.map((p: any) => `  • ${p.name} - ${p.price.toLocaleString()} ₮ (${p.status}: ${p.reason})`).join('\n')}
-` : ''}
-
-ХАРИУЛТЫН ЧИГЛЭЛ:
-Хэрэглэгчийн асуусан асуултад (жишээ нь: тусгай зөвшөөрөл, санхүүгийн босго, техникийн шаардлага, эрсдэл, өрсөлдөх зөвлөмж г.м) дээрх бодит өгөгдлийг тусган, маш тодорхой хариулна уу.`;
+ХАРИУЛТЫН ЗӨВЛӨМЖ:
+Хэрэглэгчийн асуултад дээрх бодит өгөгдөл, хуулийн шаардлагад үндэслэн хамгийн практик, тодорхой зөвлөгөө өгч хариулна уу.`;
       } else {
         systemPrompt = `Та бол төрийн худалдан авах ажиллагаа (тендер)-ны салбарт олон жил ажилласан, туршлагатай найрсаг зөвлөх туслах юм.
 
@@ -706,31 +685,29 @@ Answer clearly in English using this data.`;
 * **Хугацаа:** Санал авах эцсийн хугацаа: ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
 * **Төлөв:** ${targetTender.docStatusName || 'Нээлттэй'}
 
-#### 2. ТШӨХ (I Бүлэг) - Тавигдах үндсэн шаардлагууд
-* **Шаардагдах тусгай зөвшөөрөл:**
-${bds?.requiredLicenses?.map((l: string) => `  - ${l}`).join('\n') || '  - Улсын бүртгэлийн гэрчилгээний дагуух чиглэл'}
-* **Санхүүгийн босго үзүүлэлт:**
+#### 2. ТШӨХ (I Бүлэг) - Хууль зүйн жишиг шаардлагууд
+* **Бүрдүүлэх ерөнхий баримт бичиг:**
+${bds?.generalRequirements?.map((r: string) => `  - ${r}`).join('\n') || '  - Улсын бүртгэлийн гэрчилгээ, татварын цахим тодорхойлолт'}
+* **Санхүүгийн босго үзүүлэлт (Хуулийн жишиг тооцоолол):**
   - Борлуулалтын доод орлого: **${formatBudget(bds?.minAnnualTurnover || 0)}** (${(bds?.minAnnualTurnover || 0).toLocaleString()} ₮)
   - Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих эрх: **${formatBudget(bds?.minLiquidAssets || 0)}** (${(bds?.minLiquidAssets || 0).toLocaleString()} ₮)
   - Ижил төстэй гэрээний дүн: **${formatBudget(bds?.similarContractThreshold || 0)}** (${(bds?.similarContractThreshold || 0).toLocaleString()} ₮)
   - Тендерийн баталгаа (1-2%): **${(bds?.bidSecurity1Pct || 0).toLocaleString()} ₮** - **${(bds?.bidSecurity2Pct || 0).toLocaleString()} ₮**
   - Гүйцэтгэлийн баталгаа: **5%** (${(bds?.performanceBond5Pct || 0).toLocaleString()} ₮)
-* **Түлхүүр боловсон хүчин:**
-${bds?.keyPersonnel?.map((p: any) => `  - ${p.role} (${p.count} хүн): ${p.qualification}`).join('\n') || '  - Төслийн менежер, инженер'}
 
-#### 3. Техникийн тодорхойлолт (II Бүлэг) & Гүйцэтгэл
+#### 3. Техникийн тодорхойлолт & Нийлүүлэлтийн мэдээлэл
 * **Нийлүүлэх газар:** ${technicalSpecs?.deliveryLocation || 'Захиалагчийн заасан хаяг'}
-* **Гүйцэтгэх хугацаа:** ${technicalSpecs?.deliveryPeriodDays || 30} хоног
+* **Нийлүүлэлтийн хугацаа:** ${technicalSpecs?.deliveryPeriodDays || 30} хоног
 * **Баталгаат хугацаа:** ${technicalSpecs?.warrantyMonths || 12} сар
 * **Урьдчилгаа төлбөр:** ${technicalSpecs?.paymentTerms?.advancePaymentPct || 20}%
 * **Чанарын стандарт:** ${technicalSpecs?.standards?.join(', ') || 'MNS, ISO'}
-${technicalSpecs?.sampleItems && technicalSpecs.sampleItems.length > 0 ? `* **Нийлүүлэх үндсэн бараа / ажил:**\n${technicalSpecs.sampleItems.map((i: any) => `  - ${i.name} (${i.quantity} ${i.unit})`).join('\n')}` : ''}
+* **Албан ёсны эх баримт (PDF):** tender.gov.mn дээр нээлттэй байршиж байна.
 
 #### 4. Оролцогчдод өгөх шинжээчийн зөвлөмж
-1. **Тусгай зөвшөөрөл:** Заасан тусгай зөвшөөрлийн хүчинтэй хугацааг e-Mongolia-аар шалгаж баталгаажуулах.
-2. **Татвар & НДШ:** Татварын өргүй тухай цахим лавлагаа болон ажилтнуудын НДШ лавлагааг бэлтгэх.
+1. **Албан ёсны ТШББ татах:** tender.gov.mn дээрх энэ тендерийн албан ёсны хуудсаас ТШББ болон ажлын даалгаврыг татан нарийвчилсан шаардлагатай танилцах.
+2. **Татвар & НДШ:** Татварын өргүй тухай e-Mongolia лавлагаа болон ажилтнуудын НДШ лавлагааг бэлтгэх.
 3. **Банкны баталгаа:** Тендерийн баталгааг зөвшөөрөгдсөн маягтын дагуу арилжааны банкаар гаргуулах.
-4. **tender.gov.mn илгээх:** Эцсийн хугацаанаас хамгийн багадаа 2 цагийн өмнө Monpass тоон гарын үсгээр баталгаажуулж илгээх.`;
+4. **tender.gov.mn илгээх:** Санал хүлээн авах эцсийн хугацаанаас хамгийн багадаа 2 цагийн өмнө Monpass тоон гарын үсгээр баталгаажуулж илгээх.`;
 
       return NextResponse.json({ reply: fallbackAnalysis, text: fallbackAnalysis, structured: structuredInfo });
     }

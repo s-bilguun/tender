@@ -8,7 +8,6 @@ import { ActiveRadarBar } from '@/components/ActiveRadarBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
-import { TenderDetailModal } from '@/components/TenderDetailModal';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
 import { Loader2, AlertCircle, ChevronLeft, ChevronRight, FileSpreadsheet, Star, Sparkles } from 'lucide-react';
@@ -68,7 +67,6 @@ export default function Home() {
     sortBy: 'date_desc',
   });
 
-  const [selectedTender, setSelectedTender] = useState<TenderItem | null>(null);
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState<boolean>(false);
   const [aiTenderContext, setAiTenderContext] = useState<TenderItem | null>(null);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(false);
@@ -346,7 +344,6 @@ export default function Home() {
             locale={locale}
             savedIds={savedIds}
             onToggleSave={handleToggleSave}
-            onSelect={(tender) => setSelectedTender(tender)}
             onAskAI={handleAskAI}
           />
         ) : (
@@ -359,7 +356,6 @@ export default function Home() {
                 locale={locale}
                 isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
                 onToggleSave={handleToggleSave}
-                onSelect={(item) => setSelectedTender(item)}
                 onAskAI={handleAskAI}
               />
             ))}
@@ -420,14 +416,6 @@ export default function Home() {
         <Sparkles className="h-4 w-4 text-amber-400 animate-pulse shrink-0" />
         <span>AI Шинжээч</span>
       </button>
-
-      {/* Tender Details Modal */}
-      <TenderDetailModal
-        tender={selectedTender}
-        locale={locale}
-        onClose={() => setSelectedTender(null)}
-        onAskAI={handleAskAI}
-      />
 
       {/* AI Assistant Chat Drawer */}
       <AIChatDrawer
