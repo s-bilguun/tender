@@ -177,10 +177,14 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         ? { dot: 'bg-rose-500', cls: 'text-rose-700 bg-rose-50/80 border-rose-200' }
                         : { dot: 'bg-slate-400', cls: 'text-slate-700 bg-slate-100 border-slate-200' };
 
+                      const isConcluded = s.includes('үр дүн');
+                      const fallbackStatus = tender.receiveDate && new Date(tender.receiveDate) < new Date() ? 'Хугацаа дууссан' : 'Хүлээн авч буй';
+                      const label = isConcluded ? `🏆 ${tender.docStatusName}` : (tender.docStatusName || fallbackStatus);
+
                       return (
                         <span className={`inline-flex items-center gap-1.5 text-[11px] px-2 py-0.5 rounded font-medium border ${style.cls}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
-                          <span className="truncate max-w-[100px]">{tender.docStatusName || 'Хүлээн авч буй'}</span>
+                          <span className="truncate max-w-[120px]">{label}</span>
                         </span>
                       );
                     })()}

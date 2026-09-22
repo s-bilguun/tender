@@ -56,12 +56,12 @@ export default function Home() {
     });
   };
 
-  // Default: Active Live Tenders First!
+  // Default: Show All Tenders (22,700+ records) by default, with easy tabs for Active & Awarded
   const [filters, setFilters] = useState<TenderFilterParams>({
     search: '',
     category: 'all',
-    status: 'receiving',
-    tabMode: 'active',
+    status: 'all',
+    tabMode: 'all',
     urgency: 'all',
     page: 1,
     perPage: 15,

@@ -28,7 +28,7 @@ export interface TenderItem {
   tenderDocumentId?: number | string;
 }
 
-export type ActiveTabMode = 'active' | 'closing_soon' | 'watchlist' | 'archive';
+export type ActiveTabMode = 'all' | 'active' | 'result' | 'closing_soon' | 'watchlist' | 'archive';
 
 export interface TenderFilterParams {
   search?: string;

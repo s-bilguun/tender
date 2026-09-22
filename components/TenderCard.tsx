@@ -89,6 +89,31 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   };
 
   const urgency = calculateUrgency(tender.receiveDate || tender.openDate);
+
+  const getStatusBadge = () => {
+    const s = (tender.docStatusName || '').toLowerCase();
+    if (s.includes('үр дүн')) {
+      return {
+        label: '🏆 Үр дүн гарсан',
+        color: 'bg-blue-50 text-blue-700 border-blue-300 font-semibold',
+      };
+    }
+    if (s.includes('нээгдсэн')) {
+      return {
+        label: '🟡 Нээгдсэн',
+        color: 'bg-amber-50 text-amber-700 border-amber-300 font-medium',
+      };
+    }
+    if (s.includes('хүчингүй')) {
+      return {
+        label: '🔴 Хүчингүй',
+        color: 'bg-rose-50 text-rose-700 border-rose-300 font-medium',
+      };
+    }
+    return urgency;
+  };
+
+  const statusBadge = getStatusBadge();
   const portalUrl = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
 
   return (
@@ -108,9 +133,9 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {urgency && (
-              <span className={`text-[11px] px-2 py-0.5 rounded border whitespace-nowrap ${urgency.color}`}>
-                {urgency.label}
+            {statusBadge && (
+              <span className={`text-[11px] px-2 py-0.5 rounded border whitespace-nowrap ${statusBadge.color}`}>
+                {statusBadge.label}
               </span>
             )}
             {onToggleSave && (

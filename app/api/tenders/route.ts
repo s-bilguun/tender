@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       }
       if (search && search.trim()) {
         const term = search.trim();
-        query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,tender_code.ilike.%${term}%,invitation_number.ilike.%${term}%`);
+        query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,tender_code.ilike.%${term}%,invitation_number.ilike.%${term}%,client_code.ilike.%${term}%,position_name.ilike.%${term}%`);
       }
 
       // Year filter
@@ -58,7 +58,14 @@ export async function GET(request: NextRequest) {
         query = query.lte('publish_date', `${dateTo}T23:59:59+00:00`);
       }
 
-      if (status && status !== 'all') {
+      // Status & TabMode handling
+      if (tabMode === 'result') {
+        query = query.ilike('doc_status_name', '%Үр дүн%');
+      } else if (tabMode === 'active') {
+        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+      } else if (tabMode === 'closing_soon') {
+        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+      } else if (status && status !== 'all') {
         if (status === 'receiving') {
           query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
         } else if (status === 'opened') {
