@@ -501,7 +501,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span>{locale === 'mn' ? 'Зарласан он:' : 'Year:'}</span>
           </span>
 
-          {['all', '2026', '2025'].map((yr) => {
+          {['all', '2026', '2025', '2024', '2023', '2022'].map((yr) => {
             const isSelected = (filters.year || 'all') === yr;
             return (
               <button

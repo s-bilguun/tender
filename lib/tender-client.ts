@@ -47,9 +47,17 @@ class TenderStore {
     return this.tenders.get(String(id));
   }
 
-  public async fetchLiveTenders(searchQuery?: string, page = 1): Promise<{ items: TenderItem[]; totalCount: number }> {
+  public async fetchLiveTenders(searchQuery?: string, page = 1, year?: string): Promise<{ items: TenderItem[]; totalCount: number }> {
     return new Promise((resolve) => {
-      const url = `https://www.tender.gov.mn/mn/invitation?${searchQuery ? `search=${encodeURIComponent(searchQuery)}&` : ''}page=${page}`;
+      const queryParts: string[] = [];
+      if (searchQuery && searchQuery.trim()) {
+        queryParts.push(`search=${encodeURIComponent(searchQuery.trim())}`);
+      }
+      if (year && year !== 'all') {
+        queryParts.push(`years=${encodeURIComponent(year)}`);
+      }
+      queryParts.push(`page=${page}`);
+      const url = `https://www.tender.gov.mn/mn/invitation?${queryParts.join('&')}`;
       
       execFile('curl.exe', [
         '-s', '-L',
@@ -57,7 +65,7 @@ class TenderStore {
         '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         '-H', 'Accept-Language: mn,en-US;q=0.7,en;q=0.3',
         url
-      ], { maxBuffer: 30 * 1024 * 1024, timeout: 10000 }, (err, stdout) => {
+      ], { maxBuffer: 50 * 1024 * 1024, timeout: 25000 }, (err, stdout) => {
         if (err || !stdout) {
           console.warn('Direct live fetch timed out or failed, using cached tenders', err?.message);
           return resolve({ items: this.getAllTenders().slice(0, 20), totalCount: this.tenders.size });
@@ -65,23 +73,63 @@ class TenderStore {
 
         try {
           // Extract Next.js Server Components JSON payload
-          const idx = stdout.indexOf('uusgesenClientId');
+          let idx = stdout.indexOf('invitationId');
+          if (idx === -1) idx = stdout.indexOf('uusgesenClientId');
+
           if (idx !== -1) {
-            const start = stdout.lastIndexOf('[', idx);
-            const end = stdout.indexOf(']', idx);
-            if (start !== -1 && end !== -1) {
-              let raw = stdout.substring(start, end + 1);
-              if (raw.includes('\\"')) {
-                raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+            let start = -1;
+            for (let i = idx; i >= 0; i--) {
+              if (stdout[i] === '[') {
+                start = i;
+                break;
               }
-              const parsed: TenderItem[] = JSON.parse(raw);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                // Upsert into memory store
-                parsed.forEach(item => {
-                  this.tenders.set(String(item.invitationId), item);
-                });
-                this.lastSyncedAt = new Date();
-                return resolve({ items: parsed, totalCount: parsed.length });
+            }
+
+            if (start !== -1) {
+              let depth = 0;
+              let end = -1;
+              let inString = false;
+              let escape = false;
+              for (let i = start; i < stdout.length; i++) {
+                const char = stdout[i];
+                if (escape) {
+                  escape = false;
+                  continue;
+                }
+                if (char === '\\') {
+                  escape = true;
+                  continue;
+                }
+                if (char === '"') {
+                  inString = !inString;
+                  continue;
+                }
+                if (!inString) {
+                  if (char === '[') depth++;
+                  else if (char === ']') {
+                    depth--;
+                    if (depth === 0) {
+                      end = i;
+                      break;
+                    }
+                  }
+                }
+              }
+
+              if (end !== -1) {
+                let raw = stdout.substring(start, end + 1);
+                if (raw.includes('\\"')) {
+                  raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+                }
+                const parsed: TenderItem[] = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  // Upsert into memory store
+                  parsed.forEach(item => {
+                    this.tenders.set(String(item.invitationId), item);
+                  });
+                  this.lastSyncedAt = new Date();
+                  return resolve({ items: parsed, totalCount: parsed.length });
+                }
               }
             }
           }

@@ -39,7 +39,7 @@ export interface TenderFilterParams {
   tabMode?: ActiveTabMode;
   urgency?: 'all' | 'urgent_3d' | 'new_48h' | 'high_budget';
   sortBy?: 'date_desc' | 'budget_desc' | 'budget_asc' | 'deadline_asc';
-  year?: string;           // 'all', '2026', '2025'
+  year?: string;           // 'all', '2026', '2025', '2024', '2023', '2022'
   dateFrom?: string;       // YYYY-MM-DD
   dateTo?: string;         // YYYY-MM-DD
   fundName?: string;       // e.g. 'Улсын төсөв', 'Орон нутгийн төсөв', 'Өөрийн хөрөнгө'

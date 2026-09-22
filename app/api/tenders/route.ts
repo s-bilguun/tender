@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         if (!isNaN(yNum)) {
           const startYear = `${yNum}-01-01T00:00:00+00:00`;
           const endYear = `${yNum}-12-31T23:59:59+00:00`;
-          query = query.gte('publish_date', startYear).lte('publish_date', endYear);
+          query = query.or(`tender_code.ilike.%/${yNum}%,invitation_number.ilike.%/${yNum}%,and(publish_date.gte.${startYear},publish_date.lte.${endYear})`);
         }
       }
 
@@ -114,7 +114,25 @@ export async function GET(request: NextRequest) {
 
       const { data, count, error } = await query;
 
-      if (!error && data) {
+      const realStats: TenderStats = {
+        totalCount: 22785,
+        totalBudgetSum: 21719589562397,
+        activeTendersCount: 736,
+        categoryCounts: {
+          product: 13734,
+          job: 6373,
+          service: 2667,
+        },
+        topMinistries: [
+          { name: 'Эрдэнэт үйлдвэр ТӨҮГ', count: 1420, budget: 1890000000000 },
+          { name: 'Эрүүл мэндийн сайд', count: 980, budget: 640000000000 },
+          { name: 'Боловсролын сайд', count: 1250, budget: 520000000000 },
+          { name: 'Дарханы төмөрлөгийн үйлдвэр', count: 410, budget: 380000000000 },
+          { name: 'Улаанбаатар хотын Захирагчийн ажлын алба', count: 680, budget: 310000000000 },
+        ],
+      };
+
+      if (!error && data && data.length > 0) {
         const items: TenderItem[] = data.map((row) => ({
           invitationId: row.invitation_id,
           invitationNumber: row.invitation_number,
@@ -137,23 +155,6 @@ export async function GET(request: NextRequest) {
         }));
 
         const totalCount = count || items.length;
-        const realStats: TenderStats = {
-          totalCount: 22785,
-          totalBudgetSum: 21719589562397,
-          activeTendersCount: 736,
-          categoryCounts: {
-            product: 13734,
-            job: 6373,
-            service: 2667,
-          },
-          topMinistries: [
-            { name: 'Эрдэнэт үйлдвэр ТӨҮГ', count: 1420, budget: 1890000000000 },
-            { name: 'Эрүүл мэндийн сайд', count: 980, budget: 640000000000 },
-            { name: 'Боловсролын сайд', count: 1250, budget: 520000000000 },
-            { name: 'Дарханы төмөрлөгийн үйлдвэр', count: 410, budget: 380000000000 },
-            { name: 'Улаанбаатар хотын Захирагчийн ажлын алба', count: 680, budget: 310000000000 },
-          ],
-        };
 
         return NextResponse.json({
           success: true,
@@ -165,6 +166,66 @@ export async function GET(request: NextRequest) {
           source: 'supabase',
           stats: realStats,
         });
+      }
+
+      // If Supabase has 0 results for a past year or query, live fetch from tender.gov.mn on demand
+      if (!error && (!data || data.length === 0) && (year || search)) {
+        try {
+          const liveResult = await tenderStore.fetchLiveTenders(search, page, year);
+          if (liveResult.items && liveResult.items.length > 0) {
+            // Asynchronously upsert to Supabase
+            const records = liveResult.items.map((item) => ({
+              invitation_id: item.invitationId,
+              invitation_number: item.invitationNumber || '',
+              tender_name: item.tenderName || 'Гарчиггүй тендер',
+              tender_code: item.tenderCode || '',
+              tender_type_code: item.tenderTypeCode || 'OTHER',
+              tender_type_name: item.tenderTypeName || 'Бусад',
+              total_budget: Number(item.totalBudget) || 0,
+              budget_entity_name: item.budgetEntityName || (item as any).uusgesenEntityName || '',
+              client_code: item.clientCode || '',
+              position_name: item.positionName || '',
+              fund_name: item.fundName || '',
+              rule_name: item.ruleName || '',
+              publish_date: item.publishDate ? new Date(item.publishDate).toISOString() : null,
+              open_date: item.openDate ? new Date(item.openDate).toISOString() : null,
+              receive_date: item.receiveDate ? new Date(item.receiveDate).toISOString() : null,
+              doc_status_code: item.docStatusCode || '',
+              doc_status_name: item.docStatusName || '',
+              is_receiving: (item.docStatusName || '').includes('хүлээн') ? 1 : 0,
+              raw_data: item,
+              updated_at: new Date().toISOString(),
+            }));
+
+            const uniqueRecords: any[] = [];
+            const seen = new Set<string>();
+            for (const r of records) {
+              const idStr = String(r.invitation_id);
+              if (r.invitation_id && !seen.has(idStr)) {
+                seen.add(idStr);
+                uniqueRecords.push(r);
+              }
+            }
+
+            // Fire and forget upsert
+            supabase.from('tenders').upsert(uniqueRecords, { onConflict: 'invitation_id' }).then(({ error: upErr }) => {
+              if (upErr) console.warn('Background live upsert error:', upErr.message);
+            });
+
+            return NextResponse.json({
+              success: true,
+              items: liveResult.items,
+              totalCount: Math.max(liveResult.totalCount, page * perPage),
+              page,
+              perPage,
+              totalPages: Math.max(1, Math.ceil(Math.max(liveResult.totalCount, page * perPage) / perPage)),
+              source: 'live_fetch',
+              stats: realStats,
+            });
+          }
+        } catch (liveErr) {
+          console.warn('Live fetch fallback failed:', liveErr);
+        }
       }
     } catch (sbError) {
       // Fallback silently if table does not exist yet
