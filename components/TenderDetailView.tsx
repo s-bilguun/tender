@@ -35,29 +35,62 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
     }
   };
 
-  const handleRunAiAnalysis = async () => {
+  const [copiedAnalysis, setCopiedAnalysis] = useState(false);
+  const [copiedStructuredJson, setCopiedStructuredJson] = useState(false);
+  const [checklistState, setChecklistState] = useState<Record<string, boolean>>({});
+  const [expandedDocSummaries, setExpandedDocSummaries] = useState<Record<string, boolean>>({});
+
+  const handleRunAiAnalysis = async (customPrompt?: string) => {
     if (!data?.tender) return;
     setAiAnalyzing(true);
+    const promptText = customPrompt || `Энэ тендерийн ТШББ (I Бүлэг: Өгөгдлийн хүснэгт) болон Техникийн тодорхойлолт (II Бүлэг)-ийн PDF болон баримтуудаас задлан шинжилсэн гол шаардлага, тусгай зөвшөөрөл, санхүүгийн босго, техникийн эрсдэл, өрсөлдөхөд анхаарах зүйлсийг цэгцтэй шинжилж зөвлөнө үү.`;
     try {
       const res = await fetch('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [
-            {
-              role: 'user',
-              content: `Энэ тендерийн давуу тал, эрсдэл, өрсөлдөхөд анхаарах шаардлагыг шинжилж өгнө үү: Код: ${data.tender.tenderCode}, Нэр: ${data.tender.tenderName}, Төсөв: ${data.tender.totalBudget}₮, Захиалагч: ${data.tender.budgetEntityName}`
-            }
-          ]
+          message: promptText,
+          tenderContext: {
+            ...data.tender,
+            bds: data.bds,
+            technicalSpecs: data.technicalSpecs,
+            results: data.results,
+          }
         })
       });
       const resJson = await res.json();
-      setAiAnalysis(resJson.text || resJson.response || 'Шинжилгээ амжилттай хийгдлээ.');
+      setAiAnalysis(resJson.reply || resJson.text || 'Шинжилгээ амжилттай хийгдлээ.');
     } catch (e) {
       setAiAnalysis('AI шинжилгээ хийх явцад алдаа гарлаа.');
     } finally {
       setAiAnalyzing(false);
     }
+  };
+
+  const handleCopyStructuredJson = () => {
+    const payload = {
+      tender: {
+        code: data.tender.tenderCode,
+        name: data.tender.tenderName,
+        budget: data.tender.totalBudget,
+        agency: data.tender.budgetEntityName,
+        deadline: data.tender.receiveDate,
+      },
+      bdsRequirements: data.bds,
+      technicalSpecifications: data.technicalSpecs,
+      results: data.results,
+    };
+    navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+    setCopiedStructuredJson(true);
+    setTimeout(() => setCopiedStructuredJson(false), 2000);
+  };
+
+  const toggleChecklistItem = (id: string) => {
+    setChecklistState(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleDocSummary = (id: string) => {
+    setExpandedDocSummaries(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
   const { tender, bds, technicalSpecs, results, relatedByEntity, similarTenders } = data;
@@ -136,7 +169,7 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
 
         <div className="flex items-center gap-2">
           <button
-            onClick={handleRunAiAnalysis}
+            onClick={() => handleRunAiAnalysis()}
             disabled={aiAnalyzing}
             className="h-8 px-3 rounded-md text-xs font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 flex items-center gap-1.5 transition-colors"
           >
@@ -221,16 +254,74 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
               </div>
             )}
           </div>
+
+          {/* Interactive AI Quick Prompts based on Structured PDF Data */}
+          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+            <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>AI Шинжээчээс асуух:</span>
+            </span>
+            <button
+              onClick={() => handleRunAiAnalysis('Энэ тендерт шаардагдах тусгай зөвшөөрөл, түлхүүр боловсон хүчин, өмнөх туршлагын шалгуурыг нарийвчлан шинжилж, оролцогчдод анхаарах зүйлсийг нэгтгэнэ үү.')}
+              disabled={aiAnalyzing}
+              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+            >
+              <span>🛡️ Тусгай зөвшөөрөл & Шалгуур</span>
+            </button>
+            <button
+              onClick={() => handleRunAiAnalysis('Энэ тендерийн борлуулалтын доод орлогын босго, түргэн хөрвөх чадвартай хөрөнгө, тендерийн баталгааны тооцоолол болон санхүүгийн эрсдэлийг тооцож өгнө үү.')}
+              disabled={aiAnalyzing}
+              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+            >
+              <span>💰 Санхүүгийн босго & Баталгаа</span>
+            </button>
+            <button
+              onClick={() => handleRunAiAnalysis('Техникийн тодорхойлолт, нийлүүлэлтийн хуваарь, чанарын стандартууд (MNS/ISO), алданги торгуулийн заалт дээр оролцогчдын зүгээс анхаарах гол эрсдэлүүд юу байна вэ?')}
+              disabled={aiAnalyzing}
+              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+            >
+              <span>⚙️ Техникийн үзүүлэлтийн эрсдэл</span>
+            </button>
+            <button
+              onClick={() => handleRunAiAnalysis('Тендерт оролцоход бүрдүүлэх баримт бичгийн хяналтын хуудас (Checklist) болон цахим системээр үнийн санал илгээх стратегийг зөвлөнө үү.')}
+              disabled={aiAnalyzing}
+              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+            >
+              <span>📋 Баримт бичгийн хяналт</span>
+            </button>
+          </div>
         </div>
 
         {/* AI Analysis Result Callout (if executed) */}
         {aiAnalysis && (
-          <div className="bg-gradient-to-r from-amber-50/80 to-blue-50/60 border border-amber-200 rounded-xl p-5 shadow-xs">
-            <div className="flex items-center gap-2 mb-2 font-bold text-slate-900 text-sm">
-              <Sparkles className="h-4 w-4 text-amber-600" />
-              <span>AI Шинжээчийн Дүгнэлт & Зөвлөмж</span>
+          <div className="bg-gradient-to-r from-amber-50/90 via-blue-50/70 to-slate-50 border border-amber-300/80 rounded-xl p-5 shadow-xs animate-in fade-in duration-200 space-y-3">
+            <div className="flex items-center justify-between border-b border-amber-200/60 pb-2.5">
+              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
+                <Sparkles className="h-4 w-4 text-amber-600" />
+                <span>AI Шинжээчийн Дүгнэлт & Зөвлөмж</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(aiAnalysis);
+                    setCopiedAnalysis(true);
+                    setTimeout(() => setCopiedAnalysis(false), 2000);
+                  }}
+                  className="px-2.5 py-1 text-xs font-semibold rounded bg-white border border-amber-200 text-slate-700 hover:bg-amber-50 transition-colors flex items-center gap-1"
+                >
+                  {copiedAnalysis ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                  <span>{copiedAnalysis ? 'Хуулагдлаа' : 'Шинжилгээг хуулах'}</span>
+                </button>
+                <button
+                  onClick={() => setAiAnalysis(null)}
+                  className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
+                  title="Хаах"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">
+            <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed font-sans select-text">
               {aiAnalysis}
             </div>
           </div>
@@ -346,14 +437,24 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
           {/* TAB 1: I БҮЛЭГ: ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ) */}
           {activeTab === 'bds' && (
             <div className="space-y-8">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <FileSpreadsheet className="h-5 w-5 text-blue-600" />
-                  <span>Тендер Шалгаруулалтын Өгөгдлийн Хүснэгт (ТШӨХ - Bid Data Sheet)</span>
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Төрийн болон орон нутгийн өмчийн хөрөнгөөр худалдан авах тухай хуулийн 14-16 дугаар зүйл, жишиг баримт бичгийн дагуу тооцоолсон шалгуурууд.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                    <span>Тендер Шалгаруулалтын Өгөгдлийн Хүснэгт (ТШӨХ - Bid Data Sheet)</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Төрийн худалдан авах ажиллагааны жишиг баримт бичиг болон PDF-ээс задлан бүтцэд оруулсан шалгуурууд.
+                  </p>
+                </div>
+                <button
+                  onClick={handleCopyStructuredJson}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold shrink-0 shadow-2xs transition-colors"
+                  title="Бүх бүтцийн өгөгдлийг JSON хэлбэрээр санах ойд хуулах"
+                >
+                  {copiedStructuredJson ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+                  <span>{copiedStructuredJson ? 'JSON хуулагдлаа' : 'Бүтцийн өгөгдлийг хуулах (JSON)'}</span>
+                </button>
               </div>
 
               {/* 1. Тусгай зөвшөөрөл */}
@@ -446,11 +547,29 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </div>
               </div>
 
-              {/* 4. Хуулийн ерөнхий нөхцөлүүд */}
+              {/* 4. Машин механизм, техник тоног төхөөрөмж */}
+              {bds.machinery && bds.machinery.length > 0 && (
+                <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                    <Tag className="h-4 w-4 text-blue-600" />
+                    <span>4. Шаардагдах машин механизм, тоног төхөөрөмж</span>
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    {bds.machinery.map((m: string, idx: number) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-100">
+                        <CheckCircle2 className="h-4 w-4 text-blue-600 shrink-0" />
+                        <span>{m}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. Хуулийн ерөнхий нөхцөлүүд */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                   <Clock className="h-4 w-4 text-blue-600" />
-                  <span>4. Хугацаа ба Үнэлгээний жин</span>
+                  <span>5. Хугацаа ба Үнэлгээний жин</span>
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -477,25 +596,60 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
 
           {/* TAB 2: ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & ТЭЗҮ */}
           {activeTab === 'tech' && (
-            <div className="space-y-6">
+            <div className="space-y-7">
               <div>
                 <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Layers className="h-5 w-5 text-indigo-600" />
-                  <span>Техникийн тодорхойлолт, ТЭЗҮ ба Хүргэлтийн нөхцөл</span>
+                  <span>Техникийн тодорхойлолт, ТЭЗҮ ба Нийлүүлэлтийн нөхцөл</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Захиалагч байгууллагаас тавьсан бүтээгдэхүүн, ажлын чанар стандартын шаардлага ба баримт бичгүүд.
+                  Захиалагч байгууллагаас тавьсан бүтээгдэхүүн, ажлын чанар стандартын шаардлага ба PDF баримтаас задлан бүтцэд оруулсан хүснэгтүүд.
                 </p>
               </div>
 
-              {/* Delivery Conditions */}
+              {/* 1. БҮТЦЭД ОРУУЛСАН БАРАА / АЖЛЫН ҮЗҮҮЛЭЛТИЙН ХҮСНЭГТ */}
+              {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
+                <div className="border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
+                  <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                      <Layers className="h-4 w-4 text-indigo-600" />
+                      <span>Нийлүүлэх бараа, гүйцэтгэх ажлын нарийвчилсан үзүүлэлт ({technicalSpecs.sampleItems.length})</span>
+                    </span>
+                    <span className="text-[11px] text-slate-500">PDF-ээс ялгасан бодит үзүүлэлт</span>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-50/50 text-slate-500 font-semibold border-b border-slate-200">
+                        <tr>
+                          <th className="py-2.5 px-3">Бараа / Ажлын нэр</th>
+                          <th className="py-2.5 px-3 text-center">Тоо хэмжээ</th>
+                          <th className="py-2.5 px-3 text-center">Хэмжих нэгж</th>
+                          <th className="py-2.5 px-3">Техникийн тодорхойлолт & Чанарын шаардлага</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {technicalSpecs.sampleItems.map((item: any, idx: number) => (
+                          <tr key={idx} className="hover:bg-slate-50/50">
+                            <td className="py-3 px-3 font-semibold text-slate-900">{item.name}</td>
+                            <td className="py-3 px-3 text-center font-mono font-bold text-blue-700">{item.quantity}</td>
+                            <td className="py-3 px-3 text-center text-slate-600">{item.unit}</td>
+                            <td className="py-3 px-3 text-slate-700 leading-relaxed max-w-md">{item.spec}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* 2. Delivery Conditions & Payment Terms */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="text-slate-500 text-xs block mb-1">Нийлүүлэх / Гүйцэтгэх газар:</span>
                   <span className="text-xs font-bold text-slate-900 block">{technicalSpecs.deliveryLocation}</span>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-                  <span className="text-slate-500 text-xs block mb-1">Хугацаа:</span>
+                  <span className="text-slate-500 text-xs block mb-1">Нийлүүлэлтийн хугацаа:</span>
                   <span className="text-xs font-bold text-slate-900 block">Гэрээ байгуулснаас хойш {technicalSpecs.deliveryPeriodDays} хоног</span>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
@@ -504,7 +658,38 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </div>
               </div>
 
-              {/* Standards */}
+              {/* 3. Төлбөрийн нөхцөл & Алдангийн заалт */}
+              <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <CheckSquare className="h-4 w-4 text-blue-600" />
+                  <span>Төлбөрийн нөхцөл ба Алдангийн заалт</span>
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <span className="text-slate-500 block text-[11px]">Урьдчилгаа төлбөр:</span>
+                    <span className="font-bold text-slate-900 mt-1 block">
+                      {technicalSpecs.paymentTerms?.advancePaymentPct || 20}%
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Гэрээ байгуулж баталгаа гаргаснаар</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <span className="text-slate-500 block text-[11px]">Чанарын барьцаа:</span>
+                    <span className="font-bold text-slate-900 mt-1 block">
+                      {technicalSpecs.paymentTerms?.retentionBondPct || 5}% ({technicalSpecs.paymentTerms?.retentionPeriodMonths || 12} сар)
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Баталгаат хугацаа дуусмагц буцаан олгоно</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
+                    <span className="text-slate-500 block text-[11px]">Алданги, хариуцлага:</span>
+                    <span className="font-bold text-rose-700 mt-1 block">
+                      {technicalSpecs.penaltyClause?.dailyRate || '0.1%'} / өдөр бүр (Дээд тал {technicalSpecs.penaltyClause?.maxLimit || '10%'})
+                    </span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Хугацаа хэтрүүлбэл тооцох хуулийн хэмжээ</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 4. Standards */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-2.5">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700">Чанарын шаардлага ба стандартууд</h4>
                 <div className="space-y-2 pt-1">
@@ -517,7 +702,60 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                 </div>
               </div>
 
-              {/* Official Downloadable Documents */}
+              {/* 5. ШААРДАГДАХ БАРИМТ БИЧГИЙН ХЯНАЛТЫН ХУУДАС (CHECKLIST) */}
+              {technicalSpecs.submissionChecklist && technicalSpecs.submissionChecklist.length > 0 && (
+                <div className="border border-blue-200 rounded-xl p-4 bg-blue-50/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
+                        <CheckSquare className="h-4 w-4 text-blue-600" />
+                        <span>Тендерт оролцоход бүрдүүлэх баримт бичгийн хяналтын хуудас (Checklist)</span>
+                      </h4>
+                      <p className="text-[11px] text-blue-700 mt-0.5">
+                        Бэлтгэсэн баримтуудаа энд тэмдэглэж, шаардлага дутуу эсэхээ хянана уу.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    {technicalSpecs.submissionChecklist.map((item: any) => {
+                      const isChecked = !!checklistState[item.id];
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => toggleChecklistItem(item.id)}
+                          className={`p-3 rounded-lg border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                            isChecked
+                              ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950'
+                              : 'bg-white border-slate-200 hover:border-blue-300 text-slate-800'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            <div className={`mt-0.5 h-4 w-4 rounded flex items-center justify-center border transition-colors ${
+                              isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
+                            }`}>
+                              {isChecked && <Check className="h-3 w-3" />}
+                            </div>
+                            <div>
+                              <span className={`text-xs font-bold block ${isChecked ? 'line-through text-emerald-800' : 'text-slate-900'}`}>
+                                {item.title}
+                              </span>
+                              <span className="text-[11px] text-slate-500 block mt-0.5">
+                                {item.desc}
+                              </span>
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">
+                            {item.required ? 'Заавал' : 'Нэмэлт'}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 6. Official Downloadable Documents with Inline Quick Preview */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
@@ -530,52 +768,71 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
                   </div>
                 </div>
 
-                <div className="space-y-2.5 pt-1">
-                  {technicalSpecs.documents.map((doc: any, idx: number) => (
-                    <div key={idx} className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100 transition-colors gap-3">
-                      <div className="flex items-start sm:items-center gap-3">
-                        <FileText className="h-5 w-5 text-red-500 shrink-0 mt-0.5 sm:mt-0" />
-                        <div>
-                          <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
-                          <span className="text-[11px] text-slate-500 block mt-0.5">
-                            {doc.category || 'Баримт бичиг'} • {doc.type} • {doc.size} • {doc.date}
-                          </span>
+                <div className="space-y-3 pt-1">
+                  {technicalSpecs.documents.map((doc: any, idx: number) => {
+                    const isExpanded = !!expandedDocSummaries[doc.id || idx];
+                    return (
+                      <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 transition-colors overflow-hidden">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 gap-3">
+                          <div className="flex items-start sm:items-center gap-3">
+                            <FileText className="h-5 w-5 text-red-500 shrink-0 mt-0.5 sm:mt-0" />
+                            <div>
+                              <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
+                              <span className="text-[11px] text-slate-500 block mt-0.5">
+                                {doc.category || 'Баримт бичиг'} • {doc.type} • {doc.size} • {doc.date}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
+                            <button
+                              onClick={() => toggleDocSummary(doc.id || idx)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs"
+                            >
+                              <span>{isExpanded ? 'Хураах' : 'Хураангуй'}</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setSelectedDoc(doc);
+                                setDocModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-200"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>Үзэх & Задлах</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleDownloadDocument(doc)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs"
+                              title="Боловсруулсан өгөгдлийг төхөөрөмж рүү татах"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              <span>Татах</span>
+                            </button>
+
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-200 transition-colors"
+                              title="Төрийн худалдан авах ажиллагааны эх хуудсаар нээх"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          </div>
                         </div>
+
+                        {/* Inline Extracted Summary Preview */}
+                        {isExpanded && (
+                          <div className="p-3.5 bg-slate-900 text-slate-100 font-mono text-[11px] leading-relaxed border-t border-slate-800 whitespace-pre-wrap select-text">
+                            {doc.extractedSummary || 'Хураангуй мэдээлэл олдсонгүй.'}
+                          </div>
+                        )}
                       </div>
-
-                      <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
-                        <button
-                          onClick={() => {
-                            setSelectedDoc(doc);
-                            setDocModalOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors border border-blue-200"
-                        >
-                          <Eye className="h-3.5 w-3.5" />
-                          <span>Үзэх & Задлах</span>
-                        </button>
-
-                        <button
-                          onClick={() => handleDownloadDocument(doc)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 transition-colors shadow-2xs"
-                          title="Боловсруулсан өгөгдлийг төхөөрөмж рүү татах"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          <span>Татах</span>
-                        </button>
-
-                        <a
-                          href={doc.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 text-slate-400 hover:text-slate-700 rounded hover:bg-slate-200 transition-colors"
-                          title="Төрийн худалдан авах ажиллагааны эх хуудсаар нээх"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" />
-                        </a>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

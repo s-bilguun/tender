@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { TenderItem } from '@/lib/types';
+import { getStructuredTenderSummary } from '@/lib/tender-detail';
 
 export const dynamic = 'force-dynamic';
 
@@ -99,9 +100,19 @@ Return ONLY valid JSON without markdown fences.`,
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, tenderContext, locale = 'mn', model: requestedModel } = await request.json();
+    const body = await request.json();
+    const { tenderContext, locale = 'mn', model: requestedModel } = body;
+    const rawMessage = body.message;
+    const messages = body.messages;
+    const message = (
+      typeof rawMessage === 'string' && rawMessage.trim()
+        ? rawMessage.trim()
+        : Array.isArray(messages) && messages.length > 0
+          ? messages[messages.length - 1]?.content || ''
+          : ''
+    );
 
-    if (!message || typeof message !== 'string') {
+    if (!message) {
       return NextResponse.json({ error: 'Message is required' }, { status: 400 });
     }
 
@@ -260,10 +271,10 @@ export async function POST(request: NextRequest) {
             }
             if (plan.searchKeywords && plan.searchKeywords.length > 0) {
               let kws = [...plan.searchKeywords];
-              if (kws.some((k) => k.toLowerCase().includes('програм'))) {
+              if (kws.some((k: string) => k.toLowerCase().includes('програм'))) {
                 kws = Array.from(new Set([...kws, 'програм', 'программ']));
               }
-              const conditions = kws.map((k) => `tender_name.ilike.%${k}%`).join(',');
+              const conditions = kws.map((k: string) => `tender_name.ilike.%${k}%`).join(',');
               query = query.or(conditions);
             }
             if (plan.sortBy === 'budget_asc') {
@@ -451,14 +462,14 @@ export async function POST(request: NextRequest) {
             const cleaned = message.replace(/["'“”«»()[\]{}?!,.:;]/g, ' ');
             const keywords = cleaned
               .split(/\s+/)
-              .map((w) => w.trim())
-              .filter((w) => w.length > 2 && !stopwords.has(w.toLowerCase()));
+              .map((w: string) => w.trim())
+              .filter((w: string) => w.length > 2 && !stopwords.has(w.toLowerCase()));
 
             if (keywords.length > 0) {
               queryContextDescription = `"${keywords.join(', ')}" түлхүүр үгээр илэрсэн тендерүүд:`;
               const conditions = keywords
                 .slice(0, 3)
-                .map((k) => `tender_name.ilike.%${k}%,budget_entity_name.ilike.%${k}%`)
+                .map((k: string) => `tender_name.ilike.%${k}%,budget_entity_name.ilike.%${k}%`)
                 .join(',');
 
               const { data } = await supabase
@@ -495,33 +506,83 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // STEP 4: Build high-quality, friendly system prompt
+    // STEP 4: Build high-quality, friendly system prompt with structured PDF/BDS data
     let systemPrompt = '';
+    let structuredInfo: any = null;
+
+    if (targetTender) {
+      if (tenderContext?.bds && tenderContext?.technicalSpecs) {
+        structuredInfo = {
+          bds: tenderContext.bds,
+          technicalSpecs: tenderContext.technicalSpecs,
+          results: tenderContext.results,
+        };
+      } else {
+        structuredInfo = getStructuredTenderSummary(targetTender);
+      }
+    }
 
     if (locale === 'mn') {
-      if (targetTender) {
-        systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны чиглэлээр олон жил зөвлөгөө өгсөн, туршлагатай найрсаг мэргэжилтэн хамтрагч юм.
+      if (targetTender && structuredInfo) {
+        const { bds, technicalSpecs, results } = structuredInfo;
+        systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны ТШББ, техникийн тодорхойлолт, баримт бичгийг шинжлэх чиглэлээр мэргэшсэн туршлагатай, найрсаг ахлах шинжээч зөвлөх юм.
 
 ХАРИЛЦААНЫ СТАНДАРТ:
-- Робот шиг, хуурай албархуу хэллэг БҮҮ ашигла (Жишээ нь: "Мэдээллийн санд бүртгэлтэй...", "Хэрэглэгчийн асуултын дагуу доорх дүн шинжилгээг хүргэж байна..." гэх мэт хиймэл үгс БҮҮ хэрэглэ).
-- Энгийн, ойлгомжтой, тусархуу, амьд монгол хэлээр харилцана.
-- Эхлээд тендерийн гол үзүүлэлтүүдийг цэгцтэй дурдаад, дараа нь оролцогчид юуг анхаарах ёстойг практик зөвлөгөө хэлбэрээр өгнө.
+- Робот шиг хуурай, албархуу хэллэг БҮҮ ашигла ("Мэдээллийн санд...", "Хэрэглэгчийн асуултын дагуу..." гэх мэт үгс БҮҮ хэрэглэ).
+- Хэрэглэгчийн асуултад шууд, тодорхой, бодитой, практик хариулт өг.
+- Доор өгөгдсөн баримт бичгийн бодит шаардлагууд (тусгай зөвшөөрөл, борлуулалтын босго, баталгаа, техникийн үзүүлэлт, баримтын задлан)-ыг ашиглаж, яг үнэн зөв тоо баримтаар хариул.
+- Мөнгөн дүнг Их наяд ₮, тэрбум ₮, сая ₮-өөр үнэн зөв заа.
 
-ХЭРЭГЛЭГЧИЙН СОНГОСОН ТЕНДЕР:
-- Тендерийн нэр: ${targetTender.tenderName}
-- Тендерийн дугаар / Код: ${targetTender.tenderCode || targetTender.invitationNumber}
+ХЭРЭГЛЭГЧИЙН СОНГОСОН ТЕНДЕРИЙН МЭДЭЭЛЭЛ:
+- Нэр: ${targetTender.tenderName}
+- Код: ${targetTender.tenderCode || targetTender.invitationNumber}
 - Төсөвт өртөг: ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} ₮)
 - Захиалагч: ${targetTender.budgetEntityName} (${targetTender.positionName || 'Төрийн худалдан авагч'})
-- Төрөл: ${targetTender.tenderTypeName || 'Бараа'}
-- Шалгаруулах арга: ${targetTender.ruleName || 'Нээлттэй тендер шалгаруулалтын арга'}
+- Төрөл: ${targetTender.tenderTypeName || 'Бараа'} | Арга: ${targetTender.ruleName || 'Нээлттэй'}
 - Санхүүжилтийн эх үүсвэр: ${targetTender.fundName || 'Өөрийн хөрөнгө / Төсөв'}
-- Санал авах эцсийн хугацаа: ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
+- Эцсийн хугацаа: ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
 - Төлөв: ${targetTender.docStatusName || 'Нээлттэй'}
 
-ХАРИУЛТЫН БҮТЭЦ:
-1. Товч дүн шинжилгээ: Төсөв, захиалагч, санхүүжилтийн онцлог.
-2. Оролцогчдод өгөх гол зөвлөмж: Техникийн шаардлага, 1-2%-ийн банкны баталгаа, Monpass тоон гарын үсэг, татварын өргүй лавлагаа, санал илгээх хугацаа.
-3. Мөнгөн дүнг Их наяд ₮, тэрбум ₮, сая ₮-өөр яг үнэн зөв заагаарай.`;
+📑 БАРИМТ БИЧГИЙН БҮТЦЭД ОРУУЛСАН ӨГӨГДӨЛ (PDF & ТШББ-ээс задлан шинжилсэн):
+
+1. ТЕНДЕР ШАЛГАРУУЛАЛТЫН ӨГӨГДЛИЙН ХҮСНЭГТ (I БҮЛЭГ: ТШӨХ):
+- Заавал шаардагдах тусгай зөвшөөрөл:
+${bds?.requiredLicenses?.map((l: string) => `  • ${l}`).join('\n') || '  • Улсын бүртгэлийн гэрчилгээ, татварын цахим тодорхойлолт'}
+- Санхүүгийн босго шаардлага:
+  • Сүүлийн жилүүдийн борлуулалтын доод орлого: ${formatBudget(bds?.minAnnualTurnover || 0)} (${(bds?.minAnnualTurnover || 0).toLocaleString()} ₮)
+  • Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих боломж: ${formatBudget(bds?.minLiquidAssets || 0)} (${(bds?.minLiquidAssets || 0).toLocaleString()} ₮)
+  • Ижил төстэй гэрээний дүн: ${formatBudget(bds?.similarContractThreshold || 0)} (${(bds?.similarContractThreshold || 0).toLocaleString()} ₮)
+  • Тендерийн баталгаа (1-2%): ${(bds?.bidSecurity1Pct || 0).toLocaleString()} ₮ - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} ₮
+  • Гүйцэтгэлийн баталгаа (5%): ${(bds?.performanceBond5Pct || 0).toLocaleString()} ₮
+- Түлхүүр боловсон хүчин:
+${bds?.keyPersonnel?.map((p: any) => `  • ${p.role} (${p.count} хүн) - ${p.qualification}`).join('\n') || '  • Төслийн удирдагч, зохицуулагч'}
+- Шаардагдах машин механизм, тоног төхөөрөмж:
+${bds?.machinery?.map((m: string) => `  • ${m}`).join('\n') || '  • Зориулалтын тээврийн хэрэгсэл'}
+
+2. ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & НИЙЛҮҮЛЭЛТ (II БҮЛЭГ):
+- Нийлүүлэх газар: ${technicalSpecs?.deliveryLocation || 'Улаанбаатар'}
+- Нийлүүлэлтийн хугацаа: ${technicalSpecs?.deliveryPeriodDays || 30} хоног
+- Баталгаат хугацаа: ${technicalSpecs?.warrantyMonths || 12} сар
+- Чанарын стандартууд: ${technicalSpecs?.standards?.join(', ') || 'MNS, ISO'}
+- Бараа / ажлын үндсэн задаргаа:
+${technicalSpecs?.sampleItems?.map((i: any) => `  • ${i.name} (Тоо: ${i.quantity} ${i.unit}) - ${i.spec}`).join('\n') || '  • Техникийн даалгаврын дагуу'}
+- Төлбөрийн нөхцөл: Урьдчилгаа ${technicalSpecs?.paymentTerms?.advancePaymentPct || 20}%, явцын акт баримтаар санхүүжинэ
+- Алданги: ${technicalSpecs?.penaltyClause?.description || 'Хоног тутамд 0.1%, дээд тал нь 10%'}
+
+3. ХАВСРАЛТ PDF БАРИМТ БИЧГИЙН ЗАДЛАН ХУРААНГУЙ:
+${technicalSpecs?.documents?.map((d: any) => `[${d.name} (${d.category || 'Баримт'})]:\n${d.extractedSummary}`).join('\n\n') || 'Баримт бичгүүд боловсруулагдсан'}
+
+${results && results.status === 'CONCLUDED' && results.winner ? `
+4. ШАЛГАРУУЛАЛТЫН ҮР ДҮН:
+- Шалгарсан оролцогч: ${results.winner.name} (Регистр: ${results.winner.register})
+- Гэрээний дүн: ${formatBudget(results.winner.bidPrice)} (${results.winner.bidPrice.toLocaleString()} ₮)
+- Төсвийн хэмнэлт: ${formatBudget(results.winner.savingsAmount)} (${results.winner.savingsPct}%)
+- Оролцогчид:
+${results.participants.map((p: any) => `  • ${p.name} - ${p.price.toLocaleString()} ₮ (${p.status}: ${p.reason})`).join('\n')}
+` : ''}
+
+ХАРИУЛТЫН ЧИГЛЭЛ:
+Хэрэглэгчийн асуусан асуултад (жишээ нь: тусгай зөвшөөрөл, санхүүгийн босго, техникийн шаардлага, эрсдэл, өрсөлдөх зөвлөмж г.м) дээрх бодит өгөгдлийг тусган, маш тодорхой хариулна уу.`;
       } else {
         systemPrompt = `Та бол төрийн худалдан авах ажиллагаа (тендер)-ны салбарт олон жил ажилласан, туршлагатай найрсаг зөвлөх туслах юм.
 
@@ -533,8 +594,8 @@ export async function POST(request: NextRequest) {
    - ✅ ОРОНД НЬ: "2026 оны хамгийн өндөр төсөвтэй тендерүүдийг жагсаавал:", "Одоогоор хамгийн өндөр дүнтэй тендерүүд эдгээр байна:", "Таны хайсан тендерүүдийг энд нэгтгэлээ:" гэх мэтээр шууд энгийн, ойлгомжтой, амьд найрсаг монгол хэлээр эхэл.
 2. Мэдээллээ хүнд уншихад эвтэйхэн, цэвэрхэн жагсаалтаар харуул:
    - Дугаар, Нэр (тодоор), Төсөв, Захиалагч, Төлөв.
-   - Төсвийг заахдаа өгөгдсөн их наяд (Их наяд ₮), тэрбум (тэрбум ₮), сая (сая ₮)-ийн нэгжийг огт өөрчилж болохгүй (Жишээ нь 1.21 Их наяд ₮-ийг 1.21 тэрбум ₮ болгож бүү андуур!).
-3. Төгсгөлд нь нөхөрсөг практик зөвлөгөө эсвэл дараагийн алхмыг найрсаг санал болго (Жишээ нь: "💡 Та эдгээрээс аль нэг тендерийг сонирхож байвал шаардагдах бичиг баримт, баталгааг нь дэлгэрүүлээд асуугаарай!").
+   - Төсвийг заахдаа өгөгдсөн их наяд (Их наяд ₮), тэрбум (тэрбум ₮), сая (сая ₮)-ийн нэгжийг огт өөрчилж болохгүй.
+3. Төгсгөлд нь нөхөрсөг практик зөвлөгөө эсвэл дараагийн алхмыг найрсаг санал болго.
 
 БОДИТ МЭДЭЭЛЭЛ:
 ${relevantTenders
@@ -545,9 +606,10 @@ ${relevantTenders
   .join('\n\n')}`;
       }
     } else {
-      if (targetTender) {
+      if (targetTender && structuredInfo) {
+        const { bds, technicalSpecs } = structuredInfo;
         systemPrompt = `You are an experienced, friendly procurement consultant for Mongolia's tender system (tender.gov.mn).
-Answer naturally and helpfully without robotic jargon.
+Answer naturally, accurately and helpfully without robotic jargon.
 Target Tender:
 - Name: ${targetTender.tenderName}
 - Code: ${targetTender.tenderCode || targetTender.invitationNumber}
@@ -557,6 +619,15 @@ Target Tender:
 - Method: ${targetTender.ruleName}
 - Financing: ${targetTender.fundName}
 - Deadline: ${targetTender.receiveDate}
+
+STRUCTURED BDS & SPECIFICATION DATA:
+- Required Licenses: ${bds?.requiredLicenses?.join(', ') || 'Standard registration'}
+- Min Turnover: ${(bds?.minAnnualTurnover || 0).toLocaleString()} MNT
+- Liquid Assets: ${(bds?.minLiquidAssets || 0).toLocaleString()} MNT
+- Bid Bond: ${(bds?.bidSecurity1Pct || 0).toLocaleString()} - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} MNT
+- Delivery Period: ${technicalSpecs?.deliveryPeriodDays || 30} days
+- Warranty: ${technicalSpecs?.warrantyMonths || 12} months
+- Standards: ${technicalSpecs?.standards?.join(', ') || 'MNS, ISO'}
 
 Provide practical guidance on technical requirements, bid security, and key deadlines in clean Markdown.`;
       } else {
@@ -611,7 +682,7 @@ Answer clearly in English using this data.`;
             const choice = data.choices?.[0];
             const reply = choice?.message?.content;
             if (reply && typeof reply === 'string' && reply.trim().length > 30) {
-              return NextResponse.json({ reply });
+              return NextResponse.json({ reply, text: reply, structured: structuredInfo });
             }
           } else {
             console.warn(`Model ${m} returned non-200:`, openRouterRes.status);
@@ -624,29 +695,44 @@ Answer clearly in English using this data.`;
 
     // STEP 6: High-Quality Structured Local Fallback (Guaranteed Relevant)
     if (targetTender) {
+      const { bds, technicalSpecs, results } = structuredInfo || {};
       const fallbackAnalysis = `### 📋 "${targetTender.tenderName}" Тендерийн Шинжилгээ
 
-#### 1. Үндсэн мэдээлэл
+#### 1. Үндсэн үзүүлэлт & Төсөв
 * **Тендерийн нэр:** ${targetTender.tenderName}
-* **Тендерийн дугаар:** ${targetTender.tenderCode || targetTender.invitationNumber || 'Бүртгэлтэй'}
-* **Захиалагч байгууллага:** ${targetTender.budgetEntityName || 'Төрийн байгууллага'}
-* **Төсөвт өртөг:** ${formatBudget(targetTender.totalBudget || 0)} (${(targetTender.totalBudget || 0).toLocaleString()} ₮)
-* **Төрөл:** ${targetTender.tenderTypeName || 'Бараа'}
-* **Шалгаруулах арга:** ${targetTender.ruleName || 'Нээлттэй тендер шалгаруулалт'}
-* **Санхүүжилтийн эх үүсвэр:** ${targetTender.fundName || 'Өөрийн хөрөнгө'}
-* **Эцсийн хугацаа:** ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
+* **Тендерийн код:** \`${targetTender.tenderCode || targetTender.invitationNumber || 'Бүртгэлтэй'}\`
+* **Төсөвт өртөг:** **${formatBudget(targetTender.totalBudget || 0)}** (${(targetTender.totalBudget || 0).toLocaleString()} ₮)
+* **Захиалагч:** ${targetTender.budgetEntityName}
+* **Хугацаа:** Санал авах эцсийн хугацаа: ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
+* **Төлөв:** ${targetTender.docStatusName || 'Нээлттэй'}
 
-#### 2. Төсөв ба Захиалагчийн онцлог
-* **Төсвийн баталгаа:** "${targetTender.fundName || 'Өөрийн хөрөнгө'}" эх үүсвэрээр санхүүжигдэж байгаа нь төлбөрийн эрсдэл бага, санхүүжилт найдвартайг харуулж байна.
-* **Захиалагчийн шаардлага:** ${targetTender.budgetEntityName} нь чанарын стандартыг нарийн шалгадаг тул техникийн тодорхойлолтыг 100% хангах шаардлагатай.
+#### 2. ТШӨХ (I Бүлэг) - Тавигдах үндсэн шаардлагууд
+* **Шаардагдах тусгай зөвшөөрөл:**
+${bds?.requiredLicenses?.map((l: string) => `  - ${l}`).join('\n') || '  - Улсын бүртгэлийн гэрчилгээний дагуух чиглэл'}
+* **Санхүүгийн босго үзүүлэлт:**
+  - Борлуулалтын доод орлого: **${formatBudget(bds?.minAnnualTurnover || 0)}** (${(bds?.minAnnualTurnover || 0).toLocaleString()} ₮)
+  - Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих эрх: **${formatBudget(bds?.minLiquidAssets || 0)}** (${(bds?.minLiquidAssets || 0).toLocaleString()} ₮)
+  - Ижил төстэй гэрээний дүн: **${formatBudget(bds?.similarContractThreshold || 0)}** (${(bds?.similarContractThreshold || 0).toLocaleString()} ₮)
+  - Тендерийн баталгаа (1-2%): **${(bds?.bidSecurity1Pct || 0).toLocaleString()} ₮** - **${(bds?.bidSecurity2Pct || 0).toLocaleString()} ₮**
+  - Гүйцэтгэлийн баталгаа: **5%** (${(bds?.performanceBond5Pct || 0).toLocaleString()} ₮)
+* **Түлхүүр боловсон хүчин:**
+${bds?.keyPersonnel?.map((p: any) => `  - ${p.role} (${p.count} хүн): ${p.qualification}`).join('\n') || '  - Төслийн менежер, инженер'}
 
-#### 3. Оролцогчдод өгөх гол зөвлөмж
-1. **Техникийн тодорхойлолт:** Нийлүүлэх бараа, материалын техникийн паспорт, чанарын гэрчилгээг бүрэн хавсаргах.
-2. **Татвар ба НД:** Татварын ерөнхий газар болон Нийгмийн даатгалын лавлагаагаар хугацаа хэтэрсэн өргүй байх.
-3. **Тендерийн баталгаа:** Төсөвт өртгийн 1-2%-ийн хэмжээтэй арилжааны банкны баталгааг урьдчилан бэлдэх.
-4. **Цахим системээр илгээх:** **tender.gov.mn** системд Monpass тоон гарын үсгээр баталгаажуулж, хугацаанаас 2-3 цагийн өмнө илгээх.`;
+#### 3. Техникийн тодорхойлолт (II Бүлэг) & Гүйцэтгэл
+* **Нийлүүлэх газар:** ${technicalSpecs?.deliveryLocation || 'Захиалагчийн заасан хаяг'}
+* **Гүйцэтгэх хугацаа:** ${technicalSpecs?.deliveryPeriodDays || 30} хоног
+* **Баталгаат хугацаа:** ${technicalSpecs?.warrantyMonths || 12} сар
+* **Урьдчилгаа төлбөр:** ${technicalSpecs?.paymentTerms?.advancePaymentPct || 20}%
+* **Чанарын стандарт:** ${technicalSpecs?.standards?.join(', ') || 'MNS, ISO'}
+${technicalSpecs?.sampleItems && technicalSpecs.sampleItems.length > 0 ? `* **Нийлүүлэх үндсэн бараа / ажил:**\n${technicalSpecs.sampleItems.map((i: any) => `  - ${i.name} (${i.quantity} ${i.unit})`).join('\n')}` : ''}
 
-      return NextResponse.json({ reply: fallbackAnalysis });
+#### 4. Оролцогчдод өгөх шинжээчийн зөвлөмж
+1. **Тусгай зөвшөөрөл:** Заасан тусгай зөвшөөрлийн хүчинтэй хугацааг e-Mongolia-аар шалгаж баталгаажуулах.
+2. **Татвар & НДШ:** Татварын өргүй тухай цахим лавлагаа болон ажилтнуудын НДШ лавлагааг бэлтгэх.
+3. **Банкны баталгаа:** Тендерийн баталгааг зөвшөөрөгдсөн маягтын дагуу арилжааны банкаар гаргуулах.
+4. **tender.gov.mn илгээх:** Эцсийн хугацаанаас хамгийн багадаа 2 цагийн өмнө Monpass тоон гарын үсгээр баталгаажуулж илгээх.`;
+
+      return NextResponse.json({ reply: fallbackAnalysis, text: fallbackAnalysis, structured: structuredInfo });
     }
 
     // List fallback with real database results

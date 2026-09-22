@@ -188,18 +188,38 @@ function generateTechnicalSpecs(tender: any) {
     deliveryLocation: tender.budget_entity_name || 'Захиалагчийн заасан байршил (Улаанбаатар хот)',
     deliveryPeriodDays: budget > 1000000000 ? 90 : 30,
     warrantyMonths: 12,
-    advancePaymentPct: 30,
+    advancePaymentPct: budget > 500000000 ? 20 : 30,
     standards: [
       'Монгол Улсын холбогдох MNS үндэсний стандартын шаардлага хангасан байх',
       'Үйлдвэрлэгчийн чанарын олон улсын ISO стандарт хангасан гэрчилгээтэй байх',
       'Шинэ, үйлдвэрийн лацтай, баталгаат хугацаатай байх'
+    ],
+    paymentTerms: {
+      advancePaymentPct: budget > 500000000 ? 20 : 30,
+      progressPayment: 'Ажил гүйцэтгэлийн явцын акт, хүлээлцсэн баримт, нэхэмжлэхийг үндэслэн ажлын 14 хоногт шилжүүлнэ',
+      retentionBondPct: 5,
+      retentionPeriodMonths: 12
+    },
+    penaltyClause: {
+      dailyRate: '0.1%',
+      maxLimit: '10%',
+      description: 'Гэрээний үүргийг хугацаандаа биелүүлээгүй хоног тутамд гүйцэтгээгүй үүргийн үнийн дүнгийн 0.1%-ийн алданги тооцох ба дээд хэмжээ нь гэрээний үнийн дүнгийн 10%-иас хэтрэхгүй байна.'
+    },
+    submissionChecklist: [
+      { id: 'lic', title: 'Тусгай зөвшөөрөл & Эрхийн бичиг', desc: 'Хүчин төгөлдөр тусгай зөвшөөрлийн гэрчилгээ, улсын бүртгэлийн гэрчилгээний хуулбар', required: true },
+      { id: 'tax', title: 'Татварын өрийн тодорхойлолт', desc: 'Татварын ерөнхий газрын хугацаа хэтэрсэн өргүй цахим лавлагаа (e-Mongolia / E-Tax)', required: true },
+      { id: 'fin', title: 'Санхүүгийн тайлан & Аудит', desc: `Сүүлийн жилүүдийн борлуулалтын доод орлого (${Math.round(budget * (typeCode === 'JOB' ? 0.8 : 0.5)).toLocaleString()} ₮) хангах аудитын дүгнэлт`, required: true },
+      { id: 'sec', title: `Тендерийн баталгаа (${Math.round(budget * 0.015).toLocaleString()} ₮)`, desc: 'Арилжааны банкны баталгаа эсвэл даатгалын батлан даалтын маягт', required: true },
+      { id: 'price', title: 'Үнийн санал & Өртгийн задаргаа', desc: 'Материалын болон ажлын нэгж үнэ, НӨАТ тооцсон үнийн хүснэгт (Маягт)', required: true },
+      { id: 'spec', title: 'Техникийн тодорхойлолтын тохирлын хүснэгт', desc: 'Захиалагчийн тавьсан MNS/ISO шаардлагыг 100% хангаж буйг нотолсон паспорт, гэрчилгээ', required: true },
+      { id: 'staff', title: 'Түлхүүр боловсон хүчний баримт', desc: 'Инженер техникийн ажилтнуудын мэргэжлийн үнэмлэх, нийгмийн даатгалын лавлагаа', required: typeCode === 'JOB' }
     ],
     sampleItems,
     documents
   };
 }
 
-function generateResults(tender: any) {
+export function generateResults(tender: any) {
   const budget = Number(tender.total_budget || tender.totalBudget) || 0;
   const isConcluded = (tender.doc_status_name || tender.docStatusName || '').includes('Үр дүн');
 
@@ -387,3 +407,13 @@ export async function getTenderDetailData(id: string | number) {
     similarTenders
   };
 }
+
+export { generateBDS, generateTechnicalSpecs };
+
+export function getStructuredTenderSummary(tender: any) {
+  const bds = generateBDS(tender);
+  const technicalSpecs = generateTechnicalSpecs(tender);
+  const results = generateResults(tender);
+  return { bds, technicalSpecs, results };
+}
+
