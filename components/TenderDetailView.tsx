@@ -492,12 +492,18 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                   <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Заавал биелүүлэх</span>
                 </div>
                 <div className="space-y-1.5 pt-1">
-                  {bds.requiredLicenses.map((lic: string, idx: number) => (
-                    <div key={idx} className="flex items-start gap-2 text-xs text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-100">
-                      <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>{lic}</span>
+                  {bds.requiredLicenses && bds.requiredLicenses.length > 0 ? (
+                    bds.requiredLicenses.map((lic: string, idx: number) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-100">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <span>{lic}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-md border border-slate-100 italic">
+                      Тусгайлан нэр заасан тусгай зөвшөөрөл шаардаагүй эсвэл улсын бүртгэлийн гэрчилгээний ерөнхий чиглэлийн дагуу байна.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -514,7 +520,9 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
                       {formatCurrency(bds.minAnnualTurnover)}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">* Нийт төсөвт өртгийн {tender.tenderTypeCode === 'JOB' ? '80%' : '50%'}-иас доошгүй</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      {bds.turnoverReq || `* Нийт төсөвт өртгийн ${tender.tenderTypeCode === 'JOB' ? '80%' : '50%'}-иас доошгүй`}
+                    </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
@@ -522,7 +530,9 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
                       {formatCurrency(bds.minLiquidAssets)}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">* Банкны дансны үлдэгдэл эсвэл зээл авах боломжийн тодорхойлолт</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      {bds.liquidAssetsReq || '* Банкны дансны үлдэгдэл эсвэл зээл авах боломжийн тодорхойлолт'}
+                    </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
@@ -530,7 +540,9 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
                       {formatCurrency(bds.similarContractThreshold)}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">* Сүүлийн {bds.similarContractYears} жилд 1-ээс доошгүй удаа ижил төстэй ажил хийсэн байх</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      {bds.similarExpReq || `* Сүүлийн ${bds.similarContractYears} жилд 1-ээс доошгүй удаа ижил төстэй ажил хийсэн байх`}
+                    </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
@@ -550,33 +562,41 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                     <Users className="h-4 w-4 text-blue-600" />
                     <span>3. Түлхүүр боловсон хүчний шаардлага</span>
                   </h4>
-                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                    Нийт {bds.keyPersonnel.reduce((acc: number, p: any) => acc + (p.count || 1), 0)} мэргэжилтэн
-                  </span>
+                  {bds.keyPersonnel && bds.keyPersonnel.length > 0 && (
+                    <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                      Нийт {bds.keyPersonnel.reduce((acc: number, p: any) => acc + (p.count || 1), 0)} мэргэжилтэн
+                    </span>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                  {bds.keyPersonnel.map((p: any, idx: number) => (
-                    <div key={idx} className="p-3 bg-slate-50/70 rounded-lg border border-slate-200 flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <div className="font-bold text-slate-900 text-xs">{p.role}</div>
-                        <div className="text-[11px] text-slate-600 mt-1 leading-relaxed">{p.qualification}</div>
+                {bds.keyPersonnel && bds.keyPersonnel.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    {bds.keyPersonnel.map((p: any, idx: number) => (
+                      <div key={idx} className="p-3 bg-slate-50/70 rounded-lg border border-slate-200 flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-bold text-slate-900 text-xs">{p.role}</div>
+                          <div className="text-[11px] text-slate-600 mt-1 leading-relaxed">{p.qualification || (p.experience ? `${p.experience} туршлагатай` : '')}</div>
+                        </div>
+                        <span className="shrink-0 px-2 py-0.5 rounded bg-blue-50 border border-blue-200 font-mono font-bold text-xs text-blue-700">
+                          {p.count} хүн
+                        </span>
                       </div>
-                      <span className="shrink-0 px-2 py-0.5 rounded bg-blue-50 border border-blue-200 font-mono font-bold text-xs text-blue-700">
-                        {p.count} хүн
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-md border border-slate-100 italic">
+                    Тендерийн баримт бичигт тусгайлан нэр заасан түлхүүр ажилтны жагсаалт заагаагүй байна.
+                  </div>
+                )}
               </div>
 
               {/* 4. Машин механизм, техник тоног төхөөрөмж */}
-              {bds.machinery && bds.machinery.length > 0 && (
-                <div className="border border-slate-200 rounded-lg p-4 space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
-                    <Tag className="h-4 w-4 text-blue-600" />
-                    <span>4. Шаардагдах машин механизм, тоног төхөөрөмж</span>
-                  </h4>
+              <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                  <Tag className="h-4 w-4 text-blue-600" />
+                  <span>4. Шаардагдах машин механизм, тоног төхөөрөмж</span>
+                </h4>
+                {bds.machinery && bds.machinery.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     {bds.machinery.map((m: string, idx: number) => (
                       <div key={idx} className="flex items-center gap-2 text-xs text-slate-800 bg-slate-50 p-2.5 rounded-md border border-slate-100">
@@ -585,8 +605,12 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-md border border-slate-100 italic">
+                    Энэ тендерт тусгайлан нэр заасан техник, машин механизм шаардаагүй эсвэл гүйцэтгэгчийн ерөнхий үүрэгт хамаарна.
+                  </div>
+                )}
+              </div>
 
               {/* 5. Хуулийн ерөнхий нөхцөлүүд */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-3">

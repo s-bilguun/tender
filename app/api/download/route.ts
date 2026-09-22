@@ -3,6 +3,8 @@ import { execFile } from 'child_process';
 
 export const dynamic = 'force-dynamic';
 
+const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
+
 function curlDownloadPdf(fileId: string): Promise<Buffer | null> {
   return new Promise((resolve) => {
     const args = [
@@ -12,7 +14,7 @@ function curlDownloadPdf(fileId: string): Promise<Buffer | null> {
       '-H', 'Accept: application/pdf,application/octet-stream,*/*',
     ];
 
-    execFile('curl.exe', args, {
+    execFile(curlCmd, args, {
       encoding: 'buffer',
       maxBuffer: 50 * 1024 * 1024,
       timeout: 30000,

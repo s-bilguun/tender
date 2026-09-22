@@ -30,6 +30,29 @@ export interface LiveBidder {
   decisionDownloadUrl?: string;
 }
 
+export interface StructuredSpecs {
+  rawSpecText?: string;
+  items?: Array<{ name: string; specs: string; unit: string; qty: string | number }>;
+  qualifications?: string[];
+  turnoverReq?: string;
+  similarExpReq?: string;
+  liquidAssetsReq?: string;
+  warrantyMonths?: number;
+  licenses?: string[];
+  personnel?: Array<{ role: string; count: number; qualification: string; experience?: string }>;
+  machinery?: string[];
+  bidSecurityReq?: string;
+}
+
+export interface ParsedPdfResult extends StructuredSpecs {
+  rawSpecText: string;
+  items: Array<{ name: string; specs: string; unit: string; qty: string | number }>;
+  qualifications: string[];
+  licenses: string[];
+  personnel: Array<{ role: string; count: number; qualification: string; experience?: string }>;
+  machinery: string[];
+}
+
 export interface LiveExtractionResult {
   tenderDocumentId?: number;
   tenderId?: number;
@@ -38,20 +61,14 @@ export interface LiveExtractionResult {
   announcementHtml?: string;
   pdfText?: string;
   pdfPageCount?: number;
-  structuredSpecs?: {
-    rawSpecText?: string;
-    items?: Array<{ name: string; specs: string; unit: string; qty: string | number }>;
-    qualifications?: string[];
-    turnoverReq?: string;
-    similarExpReq?: string;
-    liquidAssetsReq?: string;
-    warrantyMonths?: number;
-  };
+  structuredSpecs?: StructuredSpecs;
 }
 
 // In-memory cache for fast sub-millisecond retrieval
 const liveCache = new Map<string, { timestamp: number; data: LiveExtractionResult }>();
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
+
+const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
 
 // Helper to run curl safely with User-Agent
 function curlGet(url: string, asBuffer = false): Promise<string | Buffer> {
@@ -63,10 +80,10 @@ function curlGet(url: string, asBuffer = false): Promise<string | Buffer> {
       '-H', 'Accept: application/json, text/html, */*'
     ];
 
-    execFile('curl.exe', args, {
+    execFile(curlCmd, args, {
       encoding: asBuffer ? 'buffer' : 'utf8',
       maxBuffer: 50 * 1024 * 1024,
-      timeout: 15000
+      timeout: 25000
     }, (err, stdout) => {
       if (err || !stdout) {
         resolve(asBuffer ? Buffer.from([]) : '');
@@ -88,10 +105,10 @@ function curlPostJson(url: string, body: any): Promise<string> {
       '-d', JSON.stringify(body)
     ];
 
-    execFile('curl.exe', args, {
+    execFile(curlCmd, args, {
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024,
-      timeout: 15000
+      timeout: 25000
     }, (err, stdout) => {
       if (err || !stdout) {
         resolve('');
@@ -103,22 +120,166 @@ function curlPostJson(url: string, body: any): Promise<string> {
 }
 
 // Extract structured specifications and requirements from raw Mongolian PDF text
-export function parsePdfContent(fullText: string) {
-  const result: NonNullable<LiveExtractionResult['structuredSpecs']> = {
+export function parsePdfContent(fullText: string): ParsedPdfResult {
+  const result: ParsedPdfResult = {
     rawSpecText: '',
     items: [],
     qualifications: [],
+    licenses: [],
+    personnel: [],
+    machinery: [],
+    bidSecurityReq: '',
   };
 
   if (!fullText) return result;
 
-  // 1. Look for Chapter III / Technical Specifications
+  // 1. Licenses (ТШЗ 17.4)
+  const licIdx = fullText.indexOf('ТШЗ 17.4');
+  if (licIdx !== -1) {
+    const licSection = fullText.substring(licIdx, licIdx + 1000);
+    const afterFirst = licSection.substring(15);
+    const nextTsz = afterFirst.search(/ТШЗ\s*1[78]\./);
+    const relevant = nextTsz !== -1 ? afterFirst.substring(0, nextTsz) : afterFirst;
+    const lines = relevant.split('\n').map(l => l.trim()).filter(Boolean);
+    for (const l of lines) {
+      if (/^\d+[\.\)]\s+/.test(l)) {
+        result.licenses.push(l.replace(/^\d+[\.\)]\s+/, '').trim());
+      } else if (l.length > 5 && !l.includes('Шаардана') && !l.includes('Зөвшөөрөл') && !l.includes('ТШЗ')) {
+        result.licenses.push(l);
+      }
+    }
+  }
+
+  // 2. Personnel (Хүний нөөц)
+  const hrIdx = fullText.search(/(?:хүний нөөцийн шаардлага|Албан тушаал\s+Хүний тоо)/i);
+  if (hrIdx !== -1) {
+    const hrSection = fullText.substring(hrIdx, hrIdx + 1200);
+    const endHr = hrSection.search(/ТШЗ\s*17\.1/);
+    const relevant = endHr !== -1 ? hrSection.substring(0, endHr) : hrSection;
+    const rawLines = relevant.split('\n').map(l => l.trim()).filter(Boolean);
+    
+    let startLineIdx = 0;
+    for (let i = 0; i < rawLines.length; i++) {
+      if (rawLines[i].includes('Мэргэжил') || rawLines[i].includes('туршлага')) {
+        startLineIdx = i + 1;
+      }
+    }
+    const bodyLines = rawLines.slice(startLineIdx).join(' ');
+    const splitRegex = /(\d{1,2})\s+(\d{1,2}\s*жил(?:ээс доошгүй)?)/g;
+    let match;
+    const markers: Array<{ index: number; length: number; count: number; exp: string }> = [];
+    while ((match = splitRegex.exec(bodyLines)) !== null) {
+      markers.push({
+        index: match.index,
+        length: match[0].length,
+        count: parseInt(match[1], 10),
+        exp: match[2],
+      });
+    }
+
+    for (let i = 0; i < markers.length; i++) {
+      const cur = markers[i];
+      const prevEnd = i === 0 ? 0 : markers[i - 1].index + markers[i - 1].length;
+      const roleAndPrevQual = bodyLines.substring(prevEnd, cur.index).trim();
+      
+      let role = roleAndPrevQual;
+      if (i > 0 && result.personnel.length > 0) {
+        const words = roleAndPrevQual.split(' ');
+        if (words.length > 2) {
+          const splitPoint = Math.max(1, words.length - 2);
+          const prevQual = words.slice(0, splitPoint).join(' ');
+          role = words.slice(splitPoint).join(' ');
+          result.personnel[result.personnel.length - 1].qualification = 
+            (result.personnel[result.personnel.length - 1].qualification + ' ' + prevQual).trim();
+        }
+      }
+
+      const nextStart = i + 1 < markers.length ? markers[i + 1].index : bodyLines.length;
+      const remaining = bodyLines.substring(cur.index + cur.length, nextStart).trim();
+      
+      const cleanRole = role.replace(/Албан тушаал|Хүний тоо|Ажлын туршлага|Мэргэжил|Шаардана/gi, '').replace(/\s+/g, ' ').trim();
+      if (cleanRole.length > 1) {
+        result.personnel.push({
+          role: cleanRole,
+          count: cur.count,
+          experience: cur.exp,
+          qualification: remaining.replace(/\s+/g, ' ').trim()
+        });
+      }
+    }
+  }
+
+  // 3. Machinery & Equipment (ТШЗ 19.1)
+  const machIdx = fullText.indexOf('ТШЗ 19.1');
+  if (machIdx !== -1) {
+    const machSection = fullText.substring(machIdx, machIdx + 1500);
+    const afterFirst = machSection.substring(15);
+    const endMach = afterFirst.search(/ТШЗ\s*2[0-9]\./);
+    const relevant = endMach !== -1 ? afterFirst.substring(0, endMach) : afterFirst;
+
+    const numItemRegex = /(?:^|\n)\s*(\d+)[\.\)]\s+([\s\S]+?)(?=(?:\n\s*\d+[\.\)]\s+|$))/g;
+    let nm;
+    const machKeywords = /(автомашин|чиргүүл|кран|механизм|төхөөрөмж|экскаватор|бульдозер|машин|трактор|самосвал|тээврийн хэрэгсэл|грейдер|миксер|конг)/i;
+    const docExcludes = /(хөдөлмөр хамгаалал|хувцас|танилцуулга|ажиллах хүч|хуваарь|тшм|маягт|зөвшөөрсөн|гэрээний ерөнхий)/i;
+
+    while ((nm = numItemRegex.exec(relevant)) !== null) {
+      const fullItem = nm[2].replace(/\s+/g, ' ').trim();
+      if (machKeywords.test(fullItem) && !docExcludes.test(fullItem)) {
+        result.machinery.push(fullItem);
+      }
+    }
+
+    // Fallback if no numbered items found
+    if (result.machinery.length === 0) {
+      const lines = relevant.split('\n').map(l => l.trim()).filter(Boolean);
+      for (const l of lines) {
+        if (machKeywords.test(l) && !docExcludes.test(l) && !l.includes('ТШЗ') && !l.includes('нотлох баримт') && l.length > 5) {
+          result.machinery.push(l.replace(/\s+/g, ' ').trim());
+        }
+      }
+    }
+  }
+
+  // 4. Bid Security (ТШЗ 23.1)
+  const secIdx = fullText.indexOf('ТШЗ 23.1');
+  if (secIdx !== -1) {
+    const secSection = fullText.substring(secIdx, secIdx + 500);
+    const secMatch = secSection.match(/([\d\s\,\.]+)\s*төгрөг/);
+    if (secMatch) {
+      const rawNumberStr = secMatch[1].trim();
+      const parts = rawNumberStr.split(/\s{2,}|\n/);
+      const cleanAmt = parts.pop()?.trim() || rawNumberStr;
+      result.bidSecurityReq = `${cleanAmt} төгрөг`;
+    }
+  }
+
+  // 5. Financial criteria (ТШЗ 17.1 & 18.1)
+  const turnoverMatch = fullText.match(/Борлуулалтын орлогын хэмжээ[^\.\n;]+(?:[0-9]{1,3}\s*хувиас|[^\.\n;]+)/i) ||
+                        fullText.match(/борлуулалтын орлого[^\.\n;]+/i);
+  if (turnoverMatch) {
+    result.turnoverReq = turnoverMatch[0].replace(/\s+/g, ' ').trim();
+  }
+
+  const similarMatch = fullText.match(/Ижил төстэй ажил[^\.\n;]+/i) ||
+                       fullText.match(/Ижил төстэй бараа[^\.\n;]+/i) ||
+                       fullText.match(/Ижил төстэй[^\.\n;]+/i);
+  if (similarMatch) {
+    result.similarExpReq = similarMatch[0].replace(/\s+/g, ' ').trim();
+  }
+
+  const liquidMatch = fullText.match(/Түргэн хөрвөх чадвартай хөрөнгө[^\.\n;]+/i);
+  if (liquidMatch) {
+    result.liquidAssetsReq = liquidMatch[0].replace(/\s+/g, ' ').trim();
+  }
+
+  // 6. Look for Chapter III / Technical Specifications
   const specKeywords = [
     'БАРАА МАТЕРИАЛ НИЙЛҮҮЛЭХ ХУГАЦАА',
     'БАРАА МАТЕРИАЛЫН ҮЗҮҮЛЭЛТ',
     'Барааны техникийн үзүүлэлт',
     'ТЕХНИКИЙН ҮЗҮҮЛЭЛТ',
     'НИЙЛҮҮЛЭЛТИЙН ХУВААРЬ',
+    'Бараа нийлүүлэлтийн хуваарь',
     'ТЕХНИКИЙН ТОДОРХОЙЛОЛТ',
     'III БҮЛЭГ',
     'АЖЛЫН ДААЛГАВАР'
@@ -141,133 +302,96 @@ export function parsePdfContent(fullText: string) {
 
   if (specStart !== -1) {
     const candidateSlice = fullText.substring(specStart, specStart + 6000);
-    // Find where next major chapter or contract starts
     const endPos = candidateSlice.search(/(IV БҮЛЭГ|V БҮЛЭГ|VI БҮЛЭГ|ГЭРЭЭНИЙ НӨХЦӨЛ)/);
     result.rawSpecText = (endPos !== -1 ? candidateSlice.substring(0, endPos) : candidateSlice).trim();
   }
 
-  // Extract structured specification item rows
-  const textToSearch = bestSection || fullText;
-  const unitPattern = '(?:ширхэг|метр|тоо|ш|м|ком|хос|багц|тонн|тн|т|кг|г|литр|л|боодол|уут|хайрцаг|м2|м3|комплект|цаг|удаа|хүн|өдөр)';
-  const rowStartRegex = new RegExp(`(?:^|\\n)\\s*(\\d{1,3})[\\.\\s]+([^\\n]+(?:\\n[^\\n]+){0,4}?)\\s+(${unitPattern})\\s+(\\d+(?:[\\.,]\\d+)?)\\b`, 'gi');
-  let match;
-  const rawItems: any[] = [];
-
-  while ((match = rowStartRegex.exec(textToSearch)) !== null) {
-    const num = parseInt(match[1], 10);
-    const rawContent = match[2].trim();
-    const unit = match[3].trim();
-    const qty = parseFloat(match[4].replace(',', '.'));
-
-    const contentLines = rawContent
-      .split('\n')
-      .map(l => l.trim())
-      .filter(l => l.length > 0 && !/^[0-9\s\.\,\-]+$/.test(l));
-
-    if (contentLines.length === 0) continue;
-
-    let nameParts: string[] = [];
-    let specParts: string[] = [];
-    let isSpec = false;
-
-    for (const line of contentLines) {
-      if (line.match(/(ISO|MNS|стандарт|диаметр|зузаан|даралт|материал|чанарын|загвар|хэмжээ|хүчин|баталгаат|зориулалт|савалгаа)/i)) {
-        isSpec = true;
-      }
-      if (!isSpec && nameParts.length < 3) {
-        nameParts.push(line);
-      } else {
-        specParts.push(line);
-      }
-    }
-
-    let name = nameParts.join(' ').replace(/\s+/g, ' ').trim();
-    name = name.replace(/^[\d\.\-\s]+/, '').trim();
-
-    const lowerName = name.toLowerCase();
-    if (
-      name.length < 2 ||
-      name.length > 180 ||
-      lowerName.includes('хуулийн') ||
-      lowerName.includes('тшз') ||
-      lowerName.includes('журам') ||
-      lowerName.includes('заасан') ||
-      lowerName.includes('давуу эрх') ||
-      lowerName.includes('оролцогч') ||
-      lowerName.includes('захиалагч бараа хүлээн') ||
-      lowerName.includes('баталгаа') ||
-      lowerName.includes('гэрээ байгуулснаас') ||
-      String(match[4]).includes('.')
-    ) {
-      continue;
-    }
-
-    const spec = specParts.join(' ').replace(/\s+/g, ' ').trim() || `Үзүүлэлт: ${name}`;
-
-    rawItems.push({
-      num,
-      name,
-      unit,
-      quantity: qty,
-      qty,
-      spec,
-      specs: spec
-    });
-  }
-
-  // Deduplicate and sort by item number
-  const uniqueItems: any[] = [];
-  const seenKeys = new Set<string>();
-  for (const item of rawItems) {
-    const normName = item.name.toLowerCase().replace(/[^а-яa-z0-9]/g, '');
-    const key = `${item.num}_${normName.substring(0, 15)}`;
-    if (!seenKeys.has(key)) {
-      seenKeys.add(key);
-      uniqueItems.push(item);
-    }
-  }
-
-  uniqueItems.sort((a, b) => (a.num || 0) - (b.num || 0));
-  result.items = uniqueItems.slice(0, 100);
-
-  // 2. Extract Qualification Requirements (Chapter I ТШӨХ)
-  const qualKeywords = [
-    'ТШЗ 18.1',
-    'ТШЗ 18.',
-    'ТШЗ 19.1',
-    'Борлуулалтын орлого',
-    'Ижил төстэй',
-    'Түргэн хөрвөх'
-  ];
-
-  for (const kw of qualKeywords) {
-    const idx = fullText.indexOf(kw);
-    if (idx !== -1) {
-      const snippet = fullText.substring(idx, idx + 600).replace(/\s+/g, ' ').trim();
-      if (!result.qualifications?.some(q => q.includes(snippet.substring(0, 50)))) {
-        result.qualifications?.push(snippet);
+  // Delivery schedule items
+  const schedIdx = fullText.indexOf('Бараа нийлүүлэлтийн хуваарь');
+  if (schedIdx !== -1) {
+    const schedSection = fullText.substring(schedIdx, schedIdx + 2000);
+    const rowRegex = /(?:^|\n)\s*(\d+)?\s*([А-ЯЁа-яё0-9\s\-№No]+(?:багц[^\n]*)?)\s+([\d\s\,\.]+)\s+(Тонн|тн|ш|ширхэг|ком|багц|метр|м|комплект|удаа|хүн)\s+([^\n]+)/gi;
+    let rm;
+    while ((rm = rowRegex.exec(schedSection)) !== null) {
+      const name = rm[2].replace(/\s+/g, ' ').trim();
+      if (!name.includes('Барааны нэр') && !name.includes('Тоо хэмжээ') && name.length > 2 && !name.includes('хүснэгт')) {
+        result.items.push({
+          name,
+          specs: `Нийлүүлэх газар: ${rm[5].trim()}`,
+          unit: rm[4].trim(),
+          qty: rm[3].trim()
+        });
       }
     }
   }
 
-  // Parse turnover
-  const turnoverMatch = fullText.match(/Борлуулалтын орлогын хэмжээ[^\.\n;]+[0-9]{2,3}\s*хувиас/i) ||
-                        fullText.match(/борлуулалтын орлого[^\.\n;]+/i);
-  if (turnoverMatch) {
-    result.turnoverReq = turnoverMatch[0].trim();
-  }
+  // If no items extracted from schedule, try standard row pattern
+  if (result.items.length === 0) {
+    const textToSearch = bestSection || fullText;
+    const unitPattern = '(?:ширхэг|метр|тоо|ш|м|ком|хос|багц|тонн|тн|т|кг|г|литр|л|боодол|уут|хайрцаг|м2|м3|комплект|цаг|удаа|хүн|өдөр)';
+    const rowStartRegex = new RegExp(`(?:^|\\n)\\s*(\\d{1,3})[\\.\\s]+([^\\n]+(?:\\n[^\\n]+){0,4}?)\\s+(${unitPattern})\\s+(\\d+(?:[\\.,]\\d+)?)\\b`, 'gi');
+    let match;
+    const rawItems: any[] = [];
 
-  // Parse similar experience
-  const similarMatch = fullText.match(/Ижил төстэй бараа[^\.\n;]+(?:100|80|60|50)\s*хувиас[^;\n\.]+/i) ||
-                       fullText.match(/Ижил төстэй[^\.\n;]+/i);
-  if (similarMatch) {
-    result.similarExpReq = similarMatch[0].trim();
-  }
+    while ((match = rowStartRegex.exec(textToSearch)) !== null) {
+      const num = parseInt(match[1], 10);
+      const rawContent = match[2].trim();
+      const unit = match[3].trim();
+      const qty = parseFloat(match[4].replace(',', '.'));
 
-  // Parse liquid assets
-  const liquidMatch = fullText.match(/Түргэн хөрвөх чадвартай хөрөнгө[^\.\n;]+/i);
-  if (liquidMatch) {
-    result.liquidAssetsReq = liquidMatch[0].trim();
+      const contentLines = rawContent
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.length > 0 && !/^[0-9\s\.\,\-]+$/.test(l));
+
+      if (contentLines.length === 0) continue;
+
+      let nameParts: string[] = [];
+      let specParts: string[] = [];
+      let isSpec = false;
+
+      for (const line of contentLines) {
+        if (line.match(/(ISO|MNS|стандарт|диаметр|зузаан|даралт|материал|чанарын|загвар|хэмжээ|хүчин|баталгаат|зориулалт|савалгаа)/i)) {
+          isSpec = true;
+        }
+        if (!isSpec && nameParts.length < 3) {
+          nameParts.push(line);
+        } else {
+          specParts.push(line);
+        }
+      }
+
+      let name = nameParts.join(' ').replace(/\s+/g, ' ').trim();
+      name = name.replace(/^[\d\.\-\s]+/, '').trim();
+
+      const lowerName = name.toLowerCase();
+      if (
+        name.length < 2 ||
+        name.length > 180 ||
+        lowerName.includes('хуулийн') ||
+        lowerName.includes('тшз') ||
+        lowerName.includes('журам') ||
+        lowerName.includes('заасан') ||
+        lowerName.includes('давуу эрх') ||
+        lowerName.includes('оролцогч') ||
+        lowerName.includes('захиалагч бараа хүлээн') ||
+        lowerName.includes('баталгаа') ||
+        lowerName.includes('гэрээ байгуулснаас')
+      ) {
+        continue;
+      }
+
+      const spec = specParts.join(' ').replace(/\s+/g, ' ').trim() || `Үзүүлэлт: ${name}`;
+
+      rawItems.push({
+        name,
+        unit,
+        qty,
+        specs: spec
+      });
+    }
+
+    result.items = rawItems.slice(0, 100);
   }
 
   return result;
@@ -339,8 +463,7 @@ export async function fetchTenderLiveBundle(
     tenderId,
     documents: [],
     bidders: [],
-    announcementHtml: '',
-    structuredSpecs: {}
+    announcementHtml: ''
   };
 
   // 4. Concurrently fetch:

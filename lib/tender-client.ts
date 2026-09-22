@@ -59,7 +59,8 @@ class TenderStore {
       queryParts.push(`page=${page}`);
       const url = `https://www.tender.gov.mn/mn/invitation?${queryParts.join('&')}`;
       
-      execFile('curl.exe', [
+      const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
+      execFile(curlCmd, [
         '-s', '-L',
         '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',

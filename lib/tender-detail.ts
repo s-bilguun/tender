@@ -17,65 +17,14 @@ function generateBDS(tender: any) {
   const similarRatio = typeCode === 'JOB' ? 0.7 : 0.5;
   const minSimilar = Math.round(budget * similarRatio);
 
-  // Required Licenses
-  let requiredLicenses: string[] = [];
-  if (typeCode === 'JOB') {
-    requiredLicenses = [
-      'Барилга хот байгуулалтын яам (БХБЯ)-ны тусгай зөвшөөрөл (холбогдох заалт хүчинтэй байх)',
-      'Хөдөлмөрийн аюулгүй байдал, эрүүл ахуй (ХАБЭА)-н дүрэм журам хангасан гэрчилгээ'
-    ];
-  } else if (name.includes('эм') || name.includes('эмнэлэг') || name.includes('урвалж')) {
-    requiredLicenses = [
-      'Эрүүл мэндийн яамны эм, эмнэлгийн хэрэгсэл нийлүүлэх тусгай зөвшөөрөл',
-      'Эмийн үйлдвэрлэлийн GMP / Хадгалалтын GSP стандарт хангасан гэрчилгээ'
-    ];
-  } else if (name.includes('засвар') || name.includes('сэлбэг') || name.includes('тоног төхөөрөмж')) {
-    requiredLicenses = [
-      'Үйлдвэрлэгчийн албан ёсны дистрибьютерийн эрх (Manufacturer Authorization Form)',
-      'Чанарын удирдлагын тогтолцоо ISO 9001:2015 гэрчилгээ'
-    ];
-  } else {
-    requiredLicenses = [
-      'Улсын бүртгэлийн гэрчилгээний дагуу тухайн үйл ажиллагааны чиглэлээр үйл ажиллагаа эрхэлдэг байх',
-      'Татварын өргүй тухай цахим лавлагаа (e-Mongolia)'
-    ];
-  }
+  // Required Licenses: only populated from official tender documentation / PDF
+  const requiredLicenses: string[] = [];
 
-  // Key Personnel
-  let keyPersonnel: any[] = [];
-  if (typeCode === 'JOB') {
-    keyPersonnel = [
-      { role: 'Төслийн ерөнхий менежер / Инженер', count: 1, qualification: 'Иргэний ба үйлдвэрийн барилгын мэргэшсэн инженер, мэргэжлээрээ 5-аас доошгүй жил ажилласан' },
-      { role: 'Хөдөлмөрийн аюулгүй байдал (ХАБЭА)-н ажилтан', count: 1, qualification: 'ХАБЭА-н сертификаттай, сүүлийн 3 жил ажилласан туршлагатай' },
-      { role: 'Цахилгааны инженер', count: 1, qualification: 'Цахилгааны инженерийн бакалавр ба түүнээс дээш, 3-аас доошгүй жил ажилласан' }
-    ];
-  } else if (name.includes('программ') || name.includes('систем') || name.includes('мэдээллийн')) {
-    keyPersonnel = [
-      { role: 'Ахлах архитектор / Төслийн менежер', count: 1, qualification: 'Мэдээллийн технологийн салбарт 5+ жил ажилласан туршлагатай' },
-      { role: 'Senior Software Engineer / Системийн хөгжүүлэгч', count: 2, qualification: 'Холбогдох чиглэлээр 3+ жил ажилласан мэргэжилтэн' },
-      { role: 'Мэдээллийн аюулгүй байдлын шинжээч', count: 1, qualification: 'Аюулгүй байдлын мэргэшсэн үнэмлэх эсвэл зэрэгтэй' }
-    ];
-  } else {
-    keyPersonnel = [
-      { role: 'Төслийн хариуцсан зохицуулагч', count: 1, qualification: 'Бакалавр болон түүнээс дээш зэрэгтэй, холбогдох салбарт 3+ жил ажилласан' },
-      { role: 'Чанарын хяналтын мэргэжилтэн', count: 1, qualification: 'Бараа бүтээгдэхүүний чанарын хяналтаар мэргэшсэн' }
-    ];
-  }
+  // Key Personnel: only populated from official tender documentation / PDF
+  const keyPersonnel: any[] = [];
 
-  // Machinery
-  let machinery: string[] = [];
-  if (typeCode === 'JOB') {
-    machinery = [
-      'Өөрөө буулгагч авто машин (10тн-оос дээш) - 2 ширхэг',
-      'Бетон зуурагч машин / миксер - 1 ширхэг',
-      'Кран эсвэл өргөгч механизм - 1 ширхэг'
-    ];
-  } else {
-    machinery = [
-      'Бараа хүргэлтийн зориулалтын тээврийн хэрэгсэл',
-      'Баталгаат засвар үйлчилгээний багаж техник'
-    ];
-  }
+  // Machinery & Equipment: only populated from official tender documentation / PDF
+  const machinery: string[] = [];
 
   return {
     isStatutoryEstimate: true,
@@ -118,63 +67,33 @@ function generateTechnicalSpecs(tender: any) {
   const invitationId = tender.invitation_id || tender.invitationId;
   const detailUrl = `https://www.tender.gov.mn/mn/invitation/detail/${invitationId}`;
 
-  // Specific item breakdown: default to honest procurement title (real items are loaded from PDF if available)
+  // Specific item breakdown: honest procurement title (real items are loaded from official PDF)
   const defaultUnit = typeCode === 'JOB' ? 'ажил' : (typeCode === 'SERVICE' ? 'үйлчилгээ' : 'багц');
   const sampleItems: any[] = [
     {
       name: fullName,
       quantity: 1,
       unit: defaultUnit,
-      spec: 'Захиалагчийн зарласан үндсэн худалдан авалтын чиглэл болон тендер шалгаруулалтын баримт бичгийн дагуу',
+      spec: 'Захиалагчийн зарласан албан ёсны тендерийн баримт бичгийн дагуу',
       isRealExtracted: false
     }
   ];
 
-  const documents = [
+  // Default documents: link directly to official portal page until live bundle attaches the actual PDF files
+  const documents: any[] = [
     {
-      id: 'doc-tbb',
-      name: 'Тендер шалгаруулалтын баримт бичиг (ТШББ)',
-      category: 'I Бүлэг: Өгөгдлийн хүснэгт (ТШӨХ)',
-      type: 'Албан ёсны эх баримт (PDF)',
+      id: `doc-${invitationId}`,
+      fileId: null,
+      name: `${fullName} - Албан ёсны баримт бичиг`,
+      category: 'tender.gov.mn эх сурвалж',
+      type: 'Албан ёсны эх баримт (PDF / Вэб)',
       date: tender.publish_date ? tender.publish_date.substring(0, 10) : `${year}`,
       url: detailUrl,
+      downloadUrl: detailUrl,
       officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-      extractedSummary: `ТӨРИЙН ХУДАЛДАН АВАХ АЖИЛЛАГААНЫ ТШББ ШААРДЛАГУУД:\n• Төсөвт өртөг: ${budget.toLocaleString()} ₮\n• Санал авах эцсийн хугацаа: ${tender.receive_date ? tender.receive_date.substring(0, 16) : 'Тендерийн урилгаас харна уу'}\n• Тендерийн баталгаа: ${Math.round(budget * 0.01).toLocaleString()} ₮ - ${Math.round(budget * 0.02).toLocaleString()} ₮ (1-2%)\n• Борлуулалтын доод орлогын жишиг босго: ${Math.round(budget * (typeCode === 'JOB' ? 0.8 : 0.5)).toLocaleString()} ₮\n• Түргэн хөрвөх чадвартай хөрөнгийн жишиг: ${Math.round(budget * 0.1).toLocaleString()} ₮`
-    },
-    {
-      id: 'doc-specs',
-      name: 'Техникийн тодорхойлолт & Ажлын даалгавар (ТЭЗҮ)',
-      category: 'II Бүлэг: Бараа, ажлын шаардлага',
-      type: 'Албан ёсны эх баримт (PDF)',
-      date: tender.publish_date ? tender.publish_date.substring(0, 10) : `${year}`,
-      url: detailUrl,
-      officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-      extractedSummary: `ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & НИЙЛҮҮЛЭЛТ:\n• Бараа, ажил, үйлчилгээ: ${fullName}\n• Нийлүүлэх байршил: ${tender.budget_entity_name || 'Захиалагчийн заасан хаяг'}\n• Баталгаат хугацаа: 12 сар\n• Чанарын стандарт: Монгол Улсын MNS болон олон улсын стандарт хангасан байх`
-    },
-    {
-      id: 'doc-budget',
-      name: 'Төсөвт өртгийн тооцоолол & Үнийн санал',
-      category: 'Санхүүжилт & Төсөв',
-      type: 'Маягт & Задаргаа',
-      date: tender.publish_date ? tender.publish_date.substring(0, 10) : `${year}`,
-      url: detailUrl,
-      officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-      extractedSummary: `САНХҮҮЖИЛТИЙН МЭДЭЭЛЭЛ:\n• Нийт батлагдсан төсөв: ${budget.toLocaleString()} ₮\n• Санхүүжилтийн эх үүсвэр: ${tender.fund_name || 'Төсөв / Өөрийн хөрөнгө'}\n• Сонгон шалгаруулах арга: ${tender.rule_name || 'Нээлттэй'}`
+      isPrimary: true
     }
   ];
-
-  if (isConcluded) {
-    documents.push({
-      id: 'doc-results',
-      name: 'Үнэлгээний хорооны дүгнэлт & Шалгаруулалтын шийдвэр',
-      category: 'Шалгаруулалтын үр дүн',
-      type: 'Албан ёсны протокол',
-      date: tender.receive_date ? tender.receive_date.substring(0, 10) : `${year}`,
-      url: detailUrl,
-      officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-      extractedSummary: `ШАЛГАРУУЛАЛТЫН ҮР ДҮНГИЙН ТӨЛӨВ:\n• Төлөв: Үр дүн гарсан\n• Албан ёсны шийдвэр, шалгарсан болон татгалзсан оролцогчдын үнийн санал, протокол tender.gov.mn дээр нээлттэй баталгаажсан байна.`
-    });
-  }
 
   return {
     deliveryLocation: tender.budget_entity_name || 'Захиалагчийн заасан байршил',
@@ -391,6 +310,29 @@ export async function getTenderDetailData(id: string | number) {
 
     // Extracted PDF text & structured criteria
     if (liveBundle.structuredSpecs) {
+      // Real BDS requirements from official PDF
+      if (liveBundle.structuredSpecs.licenses && liveBundle.structuredSpecs.licenses.length > 0) {
+        bds.requiredLicenses = liveBundle.structuredSpecs.licenses;
+      }
+      if (liveBundle.structuredSpecs.personnel && liveBundle.structuredSpecs.personnel.length > 0) {
+        bds.keyPersonnel = liveBundle.structuredSpecs.personnel;
+      }
+      if (liveBundle.structuredSpecs.machinery && liveBundle.structuredSpecs.machinery.length > 0) {
+        bds.machinery = liveBundle.structuredSpecs.machinery;
+      }
+      if (liveBundle.structuredSpecs.bidSecurityReq) {
+        (bds as any).bidSecurityReq = liveBundle.structuredSpecs.bidSecurityReq;
+      }
+      if (liveBundle.structuredSpecs.turnoverReq) {
+        (bds as any).turnoverReq = liveBundle.structuredSpecs.turnoverReq;
+      }
+      if (liveBundle.structuredSpecs.similarExpReq) {
+        (bds as any).similarExpReq = liveBundle.structuredSpecs.similarExpReq;
+      }
+      if (liveBundle.structuredSpecs.liquidAssetsReq) {
+        (bds as any).liquidAssetsReq = liveBundle.structuredSpecs.liquidAssetsReq;
+      }
+
       (technicalSpecs as any).extractedSpecs = liveBundle.structuredSpecs;
       (technicalSpecs as any).realSpecsText = liveBundle.structuredSpecs.rawSpecText;
       (technicalSpecs as any).extractedQualifications = liveBundle.structuredSpecs.qualifications;
