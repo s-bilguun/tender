@@ -12,6 +12,9 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') || undefined;
     const minBudget = searchParams.get('minBudget') ? Number(searchParams.get('minBudget')) : undefined;
     const maxBudget = searchParams.get('maxBudget') ? Number(searchParams.get('maxBudget')) : undefined;
+    const fundName = searchParams.get('fundName') || undefined;
+    const ruleName = searchParams.get('ruleName') || undefined;
+    const positionName = searchParams.get('positionName') || undefined;
     const year = searchParams.get('year') || undefined;
     const dateFrom = searchParams.get('dateFrom') || undefined;
     const dateTo = searchParams.get('dateTo') || undefined;
@@ -26,18 +29,31 @@ export async function GET(request: NextRequest) {
     try {
       let query = supabase.from('tenders').select('*', { count: 'exact' });
 
-      if (category && category !== 'ALL') {
+      if (category && category !== 'ALL' && category !== 'all') {
         query = query.eq('tender_type_code', category);
       }
-      if (minBudget !== undefined) {
+      if (minBudget !== undefined && !isNaN(minBudget)) {
         query = query.gte('total_budget', minBudget);
       }
-      if (maxBudget !== undefined) {
+      if (maxBudget !== undefined && !isNaN(maxBudget)) {
         query = query.lte('total_budget', maxBudget);
       }
+      if (fundName && fundName !== 'all') {
+        query = query.ilike('fund_name', `%${fundName}%`);
+      }
+      if (ruleName && ruleName !== 'all') {
+        query = query.ilike('rule_name', `%${ruleName}%`);
+      }
+      if (positionName && positionName !== 'all') {
+        query = query.ilike('position_name', `%${positionName}%`);
+      }
+
+      // Multi-keyword tokenized search across all relevant fields
       if (search && search.trim()) {
-        const term = search.trim();
-        query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,tender_code.ilike.%${term}%,invitation_number.ilike.%${term}%,client_code.ilike.%${term}%,position_name.ilike.%${term}%`);
+        const terms = search.trim().split(/\s+/).filter(Boolean);
+        for (const term of terms) {
+          query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,tender_code.ilike.%${term}%,invitation_number.ilike.%${term}%,client_code.ilike.%${term}%,position_name.ilike.%${term}%,rule_name.ilike.%${term}%,fund_name.ilike.%${term}%`);
+        }
       }
 
       // Year filter

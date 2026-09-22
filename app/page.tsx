@@ -89,6 +89,9 @@ export default function Home() {
       if (currentFilters.year && currentFilters.year !== 'all') params.append('year', currentFilters.year);
       if (currentFilters.dateFrom) params.append('dateFrom', currentFilters.dateFrom);
       if (currentFilters.dateTo) params.append('dateTo', currentFilters.dateTo);
+      if (currentFilters.fundName && currentFilters.fundName !== 'all') params.append('fundName', currentFilters.fundName);
+      if (currentFilters.ruleName && currentFilters.ruleName !== 'all') params.append('ruleName', currentFilters.ruleName);
+      if (currentFilters.positionName && currentFilters.positionName !== 'all') params.append('positionName', currentFilters.positionName);
       if (currentFilters.page) params.append('page', String(currentFilters.page));
       if (currentFilters.perPage) params.append('perPage', String(currentFilters.perPage));
 

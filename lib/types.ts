@@ -42,6 +42,9 @@ export interface TenderFilterParams {
   year?: string;           // 'all', '2026', '2025', '2024', '2023', '2022'
   dateFrom?: string;       // YYYY-MM-DD
   dateTo?: string;         // YYYY-MM-DD
+  fundName?: string;       // e.g. 'Улсын төсөв', 'Орон нутгийн төсөв', 'Өөрийн хөрөнгө'
+  ruleName?: string;       // e.g. 'Нээлттэй тендер', 'Харьцуулалтын арга'
+  positionName?: string;   // e.g. 'Сайд', 'Нийслэл', 'Аймаг'
   page?: number;
   perPage?: number;
 }
