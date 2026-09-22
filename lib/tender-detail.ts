@@ -5,6 +5,8 @@ import { fetchTenderLiveBundle } from './live-fetcher';
 
 function generateBDS(tender: any) {
   const budget = Number(tender.total_budget || tender.totalBudget) || 0;
+  const fullName = tender.tender_name || tender.tenderName || 'Тендер';
+  const name = fullName.toLowerCase();
   const typeCode = tender.tender_type_code || tender.tenderTypeCode || 'OTHER';
 
   // Statutory Financial Thresholds calculated per Mongolian Procurement Law
@@ -15,6 +17,66 @@ function generateBDS(tender: any) {
   const similarRatio = typeCode === 'JOB' ? 0.7 : 0.5;
   const minSimilar = Math.round(budget * similarRatio);
 
+  // Required Licenses
+  let requiredLicenses: string[] = [];
+  if (typeCode === 'JOB') {
+    requiredLicenses = [
+      'Барилга хот байгуулалтын яам (БХБЯ)-ны тусгай зөвшөөрөл (холбогдох заалт хүчинтэй байх)',
+      'Хөдөлмөрийн аюулгүй байдал, эрүүл ахуй (ХАБЭА)-н дүрэм журам хангасан гэрчилгээ'
+    ];
+  } else if (name.includes('эм') || name.includes('эмнэлэг') || name.includes('урвалж')) {
+    requiredLicenses = [
+      'Эрүүл мэндийн яамны эм, эмнэлгийн хэрэгсэл нийлүүлэх тусгай зөвшөөрөл',
+      'Эмийн үйлдвэрлэлийн GMP / Хадгалалтын GSP стандарт хангасан гэрчилгээ'
+    ];
+  } else if (name.includes('засвар') || name.includes('сэлбэг') || name.includes('тоног төхөөрөмж')) {
+    requiredLicenses = [
+      'Үйлдвэрлэгчийн албан ёсны дистрибьютерийн эрх (Manufacturer Authorization Form)',
+      'Чанарын удирдлагын тогтолцоо ISO 9001:2015 гэрчилгээ'
+    ];
+  } else {
+    requiredLicenses = [
+      'Улсын бүртгэлийн гэрчилгээний дагуу тухайн үйл ажиллагааны чиглэлээр үйл ажиллагаа эрхэлдэг байх',
+      'Татварын өргүй тухай цахим лавлагаа (e-Mongolia)'
+    ];
+  }
+
+  // Key Personnel
+  let keyPersonnel: any[] = [];
+  if (typeCode === 'JOB') {
+    keyPersonnel = [
+      { role: 'Төслийн ерөнхий менежер / Инженер', count: 1, qualification: 'Иргэний ба үйлдвэрийн барилгын мэргэшсэн инженер, мэргэжлээрээ 5-аас доошгүй жил ажилласан' },
+      { role: 'Хөдөлмөрийн аюулгүй байдал (ХАБЭА)-н ажилтан', count: 1, qualification: 'ХАБЭА-н сертификаттай, сүүлийн 3 жил ажилласан туршлагатай' },
+      { role: 'Цахилгааны инженер', count: 1, qualification: 'Цахилгааны инженерийн бакалавр ба түүнээс дээш, 3-аас доошгүй жил ажилласан' }
+    ];
+  } else if (name.includes('программ') || name.includes('систем') || name.includes('мэдээллийн')) {
+    keyPersonnel = [
+      { role: 'Ахлах архитектор / Төслийн менежер', count: 1, qualification: 'Мэдээллийн технологийн салбарт 5+ жил ажилласан туршлагатай' },
+      { role: 'Senior Software Engineer / Системийн хөгжүүлэгч', count: 2, qualification: 'Холбогдох чиглэлээр 3+ жил ажилласан мэргэжилтэн' },
+      { role: 'Мэдээллийн аюулгүй байдлын шинжээч', count: 1, qualification: 'Аюулгүй байдлын мэргэшсэн үнэмлэх эсвэл зэрэгтэй' }
+    ];
+  } else {
+    keyPersonnel = [
+      { role: 'Төслийн хариуцсан зохицуулагч', count: 1, qualification: 'Бакалавр болон түүнээс дээш зэрэгтэй, холбогдох салбарт 3+ жил ажилласан' },
+      { role: 'Чанарын хяналтын мэргэжилтэн', count: 1, qualification: 'Бараа бүтээгдэхүүний чанарын хяналтаар мэргэшсэн' }
+    ];
+  }
+
+  // Machinery
+  let machinery: string[] = [];
+  if (typeCode === 'JOB') {
+    machinery = [
+      'Өөрөө буулгагч авто машин (10тн-оос дээш) - 2 ширхэг',
+      'Бетон зуурагч машин / миксер - 1 ширхэг',
+      'Кран эсвэл өргөгч механизм - 1 ширхэг'
+    ];
+  } else {
+    machinery = [
+      'Бараа хүргэлтийн зориулалтын тээврийн хэрэгсэл',
+      'Баталгаат засвар үйлчилгээний багаж техник'
+    ];
+  }
+
   return {
     isStatutoryEstimate: true,
     legalBasis: 'Монгол Улсын Төрийн болон орон нутгийн өмчийн хөрөнгөөр бараа, ажил, үйлчилгээ худалдан авах тухай хууль (11, 12, 20, 43-р зүйл)',
@@ -22,11 +84,15 @@ function generateBDS(tender: any) {
     clarificationDays: 5,
     bidSecurity1Pct: Math.round(budget * 0.01),
     bidSecurity2Pct: Math.round(budget * 0.02),
+    bidSecurityAmount: Math.round(budget * 0.015),
     performanceBond5Pct: Math.round(budget * 0.05),
     minAnnualTurnover: minTurnover,
     minLiquidAssets: minLiquid,
     similarContractThreshold: minSimilar,
     similarContractYears: 2,
+    requiredLicenses,
+    keyPersonnel,
+    machinery,
     generalRequirements: [
       'Улсын бүртгэлийн хүчин төгөлдөр гэрчилгээ (үйл ажиллагааны чиглэл тохирсон байх)',
       'Татварын өргүй тухай цахим лавлагаа (e-Mongolia / E-Tax)',
@@ -44,12 +110,36 @@ function generateBDS(tender: any) {
 function generateTechnicalSpecs(tender: any) {
   const budget = Number(tender.total_budget || tender.totalBudget) || 0;
   const fullName = tender.tender_name || tender.tenderName || 'Тендер';
+  const shortName = fullName.split(/[,–\-\/]/)[0].trim().slice(0, 30);
   const year = tender.tenderYear || (tender.publish_date ? new Date(tender.publish_date).getFullYear() : 2026);
   const isConcluded = (tender.doc_status_name || tender.docStatusName || '').includes('Үр дүн') ||
     (tender.doc_status_name || tender.docStatusName || '').includes('Дууссан');
   const typeCode = tender.tender_type_code || tender.tenderTypeCode || 'PRODUCT';
   const invitationId = tender.invitation_id || tender.invitationId;
   const detailUrl = `https://www.tender.gov.mn/mn/invitation/detail/${invitationId}`;
+
+  // Specific item breakdown based on category and title
+  let sampleItems: any[] = [];
+  if (fullName.toLowerCase().includes('өвс') || fullName.toLowerCase().includes('тэжээл')) {
+    sampleItems = [
+      { name: 'Байгалийн хадлангийн ногоон өвс (1-р зэрэг, 20-25кг боодолтой)', quantity: 3500, unit: 'боодол', spec: 'Чийглэг 14%-иас ихгүй, хөгц мөөгөнцөргүй, тэжээллэг чанар өндөр, шинэ ургац' },
+      { name: 'Хүчит тэжээл (хивэг, холимог тэжээл)', quantity: 50, unit: 'тонн', spec: 'Уургийн агууламж 16%-иас дээш, 50кг уутлалттай, стандартын чанарын гэрчилгээтэй' }
+    ];
+  } else if (typeCode === 'JOB') {
+    sampleItems = [
+      { name: 'Барилга угсралт, засвар шинэчлэлийн үндсэн ажил', quantity: 1, unit: 'иж бүрдэл', spec: 'Батлагдсан зураг төсөв, ажлын даалгавар, БНбД норм дүрмийн дагуу' },
+      { name: 'Инженерийн шугам сүлжээ, сантехник, салхивчийн угсралт', quantity: 1, unit: 'иж бүрдэл', spec: 'Монгол Улсын MNS стандартын чанартай материал, тоног төхөөрөмж суурилуулах' }
+    ];
+  } else if (typeCode === 'PRODUCT') {
+    sampleItems = [
+      { name: `${shortName} (үндсэн бүтээгдэхүүн)`, quantity: 1, unit: 'багц / иж бүрдэл', spec: 'Үйлдвэрлэгчийн шинэ, лацтай, албан ёсны чанарын гэрчилгээтэй' },
+      { name: 'Дагалдах хэрэгсэл, сэлбэг эд анги, тоноглол', quantity: 1, unit: 'ком', spec: 'Үйлдвэрийн иж бүрдлийн дагуу' }
+    ];
+  } else {
+    sampleItems = [
+      { name: fullName.length > 50 ? fullName.substring(0, 50) + '...' : fullName, quantity: 1, unit: 'багц', spec: 'Техникийн даалгавар, захиалагчийн шаардлагын дагуу' }
+    ];
+  }
 
   const documents = [
     {
@@ -107,6 +197,7 @@ function generateTechnicalSpecs(tender: any) {
       'Үйлдвэрлэгчийн чанарын гэрчилгээ эсвэл тохирлын гэрчилгээтэй байх',
       'Шинэ, үйлдвэрийн лацтай, баталгаат хугацаатай байх'
     ],
+    sampleItems,
     paymentTerms: {
       advancePaymentPct: budget > 500000000 ? 20 : 30,
       progressPayment: 'Ажил гүйцэтгэлийн явцын акт, хүлээлцсэн баримт, нэхэмжлэхийг үндэслэн санхүүжүүлнэ',

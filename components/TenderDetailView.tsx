@@ -93,7 +93,29 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
     setExpandedDocSummaries(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const { tender, bds, technicalSpecs, results, relatedByEntity, similarTenders } = data;
+  const tender = data?.tender || {};
+  const bds = {
+    ...data?.bds,
+    requiredLicenses: data?.bds?.requiredLicenses || [],
+    keyPersonnel: data?.bds?.keyPersonnel || [],
+    machinery: data?.bds?.machinery || [],
+    generalRequirements: data?.bds?.generalRequirements || [],
+  };
+  const technicalSpecs = {
+    ...data?.technicalSpecs,
+    sampleItems: data?.technicalSpecs?.sampleItems || [],
+    standards: data?.technicalSpecs?.standards || [],
+    submissionChecklist: data?.technicalSpecs?.submissionChecklist || [],
+    documents: data?.technicalSpecs?.documents || [],
+    extractedQualifications: data?.technicalSpecs?.extractedQualifications || [],
+  };
+  const results = {
+    ...data?.results,
+    bidders: data?.results?.bidders || [],
+  };
+  const relatedByEntity: any[] = Array.isArray(data?.relatedByEntity) ? data.relatedByEntity : [];
+  const similarTenders: any[] = Array.isArray(data?.similarTenders) ? data.similarTenders : [];
+
   const publicLink = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
   const supplierLink = `https://user.tender.gov.mn/mn/supplier/available/${tender.invitationId}/detail`;
 
@@ -123,17 +145,17 @@ I БҮЛЭГ. ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ) ШААРДЛАГУУ�
 • Тендерийн баталгаа: ${formatCurrency(bds.bidSecurityAmount)}
 
 ШААРДЛАГАТАЙ ТУСГАЙ ЗӨВШӨӨРЛҮҮД:
-${bds.requiredLicenses.map((lic: string, i: number) => `${i + 1}. ${lic}`).join('\n')}
+${(bds.requiredLicenses || []).map((lic: string, i: number) => `${i + 1}. ${lic}`).join('\n')}
 
 ГОЛ БОЛОВСОН ХҮЧНИЙ ШААРДЛАГА:
-${bds.keyPersonnel.map((p: any) => `• ${p.role}: ${p.count} хүн (${p.qualification})`).join('\n')}
+${(bds.keyPersonnel || []).map((p: any) => `• ${p.role}: ${p.count} хүн (${p.qualification})`).join('\n')}
 
 ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & БАРАА, АЖЛЫН ШААРДЛАГА:
-${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмжээ: ${it.quantity} ${it.unit} | Үзүүлэлт: ${it.spec}`).join('\n')}
+${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо хэмжээ: ${it.quantity} ${it.unit} | Үзүүлэлт: ${it.spec}`).join('\n')}
 
-Нийлүүлэлтийн байршил: ${technicalSpecs.deliveryLocation}
-Хугацаа: ${technicalSpecs.deliveryPeriodDays} хоног
-Баталгаат хугацаа: ${technicalSpecs.warrantyMonths} сар
+Нийлүүлэлтийн байршил: ${technicalSpecs.deliveryLocation || ''}
+Хугацаа: ${technicalSpecs.deliveryPeriodDays || 30} хоног
+Баталгаат хугацаа: ${technicalSpecs.warrantyMonths || 12} сар
 =====================================================
 Эх сурвалж: Монгол Улсын Төрийн Худалдан Авах Ажиллагааны Систем (tender.gov.mn)
 `;
@@ -1130,12 +1152,12 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
               <div className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                   <Building2 className="h-4 w-4 text-slate-500" />
-                  <span>Тус захиалагчийн бусад тендерүүд ({relatedByEntity.length})</span>
+                  <span>Тус захиалагчийн бусад тендерүүд ({(relatedByEntity || []).length})</span>
                 </h4>
 
-                {relatedByEntity.length > 0 ? (
+                {(relatedByEntity || []).length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {relatedByEntity.map((r: any) => (
+                    {(relatedByEntity || []).map((r: any) => (
                       <div
                         key={r.invitationId}
                         className="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-blue-300 transition-colors flex flex-col justify-between space-y-2 shadow-2xs"
@@ -1175,12 +1197,12 @@ ${technicalSpecs.sampleItems.map((it: any) => `• ${it.name} | Тоо хэмж�
               <div className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
                   <Layers className="h-4 w-4 text-slate-500" />
-                  <span>Салбарын ижил төстэй бусад тендерүүд ({similarTenders.length})</span>
+                  <span>Салбарын ижил төстэй бусад тендерүүд ({(similarTenders || []).length})</span>
                 </h4>
 
-                {similarTenders.length > 0 ? (
+                {(similarTenders || []).length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {similarTenders.map((s: any) => (
+                    {(similarTenders || []).map((s: any) => (
                       <div key={s.invitationId} className="p-3.5 rounded-lg border border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-colors flex flex-col justify-between space-y-2">
                         <div>
                           <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1 font-mono">
