@@ -76,8 +76,8 @@ export const TenderTable: React.FC<TenderTableProps> = ({
               return (
                 <tr
                   key={String(tender.invitationId)}
-                  className="hover:bg-blue-50/40 transition-colors group cursor-pointer"
-                  onClick={() => router.push(`/tender/${tender.invitationId}`)}
+                  className="hover:bg-blue-50/50 transition-colors group cursor-pointer"
+                  onClick={() => (onSelect ? onSelect(tender) : router.push(`/tender/${tender.invitationId}`))}
                 >
                   {/* Star Watchlist */}
                   <td className="py-2.5 px-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -113,13 +113,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         </span>
                       )}
                     </div>
-                    <Link 
-                      href={`/tender/${tender.invitationId}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="font-medium text-slate-900 line-clamp-2 leading-snug hover:text-blue-600 transition-colors block"
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onSelect) onSelect(tender);
+                        else router.push(`/tender/${tender.invitationId}`);
+                      }}
+                      className="font-medium text-slate-900 text-left line-clamp-2 leading-snug hover:text-blue-600 transition-colors block cursor-pointer"
                     >
                       {tender.tenderName}
-                    </Link>
+                    </button>
                     {/* On mobile, show entity under title */}
                     <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1 md:hidden">
                       {tender.budgetEntityName}
@@ -192,26 +195,37 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     })()}
                   </td>
 
-                  {/* Actions */}
+                  {/* 1-Click Fast Actions */}
                   <td className="py-2.5 px-3 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-center gap-1">
+                      {/* 1-Click Quick View Modal Button */}
                       <button
-                        onClick={() => onAskAI(tender)}
-                        className="p-1 rounded text-slate-500 hover:text-amber-600 hover:bg-amber-50 border border-slate-200 transition-colors"
-                        title={locale === 'mn' ? 'AI шинжилгээ' : 'AI Analysis'}
+                        onClick={() => (onSelect ? onSelect(tender) : router.push(`/tender/${tender.invitationId}`))}
+                        className="h-6 px-2 rounded bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 text-[11px] font-semibold transition-all shadow-2xs cursor-pointer"
+                        title={locale === 'mn' ? 'Тендерийн дэлгэрэнгүйг шууд харах' : 'Quick view details'}
                       >
-                        <Sparkles className="h-3.5 w-3.5" />
+                        {locale === 'mn' ? 'Үзэх' : 'View'}
                       </button>
 
+                      {/* Direct Official Link */}
                       <a
                         href={`https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 border border-slate-200 transition-colors"
-                        title={locale === 'mn' ? 'tender.gov.mn дээр үзэх' : 'Open in tender.gov.mn'}
+                        className="h-6 w-6 rounded bg-white hover:bg-slate-100 text-slate-500 hover:text-slate-900 border border-slate-200 flex items-center justify-center transition-colors"
+                        title={locale === 'mn' ? 'tender.gov.mn дээр нээх' : 'Open in tender.gov.mn'}
                       >
-                        <ExternalLink className="h-3.5 w-3.5" />
+                        <ExternalLink className="h-3 w-3" />
                       </a>
+
+                      {/* AI Audit */}
+                      <button
+                        onClick={() => onAskAI(tender)}
+                        className="h-6 w-6 rounded bg-white hover:bg-amber-50 text-slate-400 hover:text-amber-600 border border-slate-200 flex items-center justify-center transition-colors cursor-pointer"
+                        title={locale === 'mn' ? 'AI шинжилгээ' : 'AI Analysis'}
+                      >
+                        <Sparkles className="h-3 w-3" />
+                      </button>
                     </div>
                   </td>
                 </tr>
