@@ -80,12 +80,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   return (
     <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-2xs">
       {/* 1. Primary Workflow Tabs */}
-      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-3 flex-wrap">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 w-full sm:w-auto -mx-1 px-1">
           {/* All History / Archive Tab */}
           <button
             onClick={() => handleTabSelect('all')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
               currentTab === 'all'
                 ? 'bg-slate-900 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -98,7 +98,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Active Live Tab */}
           <button
             onClick={() => handleTabSelect('active')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
               currentTab === 'active'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -111,7 +111,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Awarded / Concluded Winners Tab */}
           <button
             onClick={() => handleTabSelect('result')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
               currentTab === 'result'
                 ? 'bg-blue-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -124,7 +124,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Closing Soon Tab */}
           <button
             onClick={() => handleTabSelect('closing_soon')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
               currentTab === 'closing_soon'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -137,7 +137,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Watchlist Tab */}
           <button
             onClick={() => handleTabSelect('watchlist')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
               currentTab === 'watchlist'
                 ? 'bg-amber-500 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -154,27 +154,32 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         </div>
 
         {/* View Mode Toggle: Table / Grid */}
-        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 h-8">
-          <button
-            onClick={() => setViewMode('table')}
-            className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors ${
-              viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
-            }`}
-            title={locale === 'mn' ? 'Хүснэгтээр харах' : 'Table view'}
-          >
-            <TableIcon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{locale === 'mn' ? 'Хүснэгт' : 'Table'}</span>
-          </button>
-          <button
-            onClick={() => setViewMode('grid')}
-            className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors ${
-              viewMode === 'grid' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
-            }`}
-            title={locale === 'mn' ? 'Картаар харах' : 'Grid view'}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{locale === 'mn' ? 'Карт' : 'Cards'}</span>
-          </button>
+        <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0">
+          <span className="text-[11px] text-slate-500 font-medium sm:hidden">
+            Илэрц: <strong className="text-slate-900">{totalFound.toLocaleString()}</strong>
+          </span>
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 h-8 shrink-0 ml-auto sm:ml-0">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors ${
+                viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title={locale === 'mn' ? 'Хүснэгтээр харах' : 'Table view'}
+            >
+              <TableIcon className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{locale === 'mn' ? 'Хүснэгт' : 'Table'}</span>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors ${
+                viewMode === 'grid' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
+              }`}
+              title={locale === 'mn' ? 'Картаар харах' : 'Grid view'}
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{locale === 'mn' ? 'Карт' : 'Cards'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -209,17 +214,17 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       {/* 3. Status, Category & Budget Filter Row */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 text-xs pt-0.5">
         {/* Category Chips */}
-        <div className="flex items-center gap-1 overflow-x-auto w-full lg:w-auto scrollbar-none pb-1 lg:pb-0">
-          <span className="text-[11px] font-medium text-slate-400 mr-1 whitespace-nowrap">
+        <div className="flex items-center gap-1 overflow-x-auto w-full lg:w-auto no-scrollbar py-1 -mx-1 px-1">
+          <span className="text-[11px] font-medium text-slate-400 mr-1 whitespace-nowrap shrink-0">
             {locale === 'mn' ? 'Салбар:' : 'Category:'}
           </span>
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => onFilterChange({ category: cat.id, page: 1 })}
-              className={`h-7 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${
+              className={`h-7 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
                 currentCategory === cat.id
-                  ? 'bg-slate-900 text-white font-semibold'
+                  ? 'bg-slate-900 text-white font-semibold shadow-2xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
@@ -231,7 +236,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         {/* Status Dropdown, Budget Tiers & Sort */}
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
           {/* Explicit Status Filter */}
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700">
+          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0">
             <Filter className="h-3 w-3 text-slate-400" />
             <select
               value={currentStatus}
@@ -252,12 +257,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           </div>
 
           {/* Budget Tiers */}
-          <div className="flex items-center gap-1 overflow-x-auto">
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
             {budgetTiers.map((tier) => (
               <button
                 key={tier.id}
                 onClick={() => onFilterChange({ minBudget: tier.min, maxBudget: tier.max, page: 1 })}
-                className={`h-7 px-2.5 rounded-md text-[11px] whitespace-nowrap transition-colors ${
+                className={`h-7 px-2.5 rounded-md text-[11px] whitespace-nowrap transition-colors shrink-0 ${
                   activeBudgetTier === tier.id
                     ? 'bg-blue-50 text-blue-700 border border-blue-200 font-semibold'
                     : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
@@ -268,7 +273,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             ))}
           </div>
 
-          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2">
+          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2 shrink-0">
             {/* Sort Dropdown */}
             <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700">
               <ArrowUpDown className="h-3 w-3 text-slate-400" />
@@ -289,8 +294,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
       {/* 4. Year & Date Filter Bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs">
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mr-1">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 w-full sm:w-auto -mx-1 px-1">
+          <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mr-1 shrink-0">
             <Calendar className="h-3.5 w-3.5 text-blue-600" />
             <span>{locale === 'mn' ? 'Зарласан он:' : 'Year:'}</span>
           </span>
@@ -310,7 +315,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     page: 1,
                   });
                 }}
-                className={`h-6 px-2.5 rounded-full text-[11px] font-medium transition-all ${
+                className={`h-6 px-2.5 rounded-full text-[11px] font-medium transition-all shrink-0 whitespace-nowrap ${
                   isSelected
                     ? 'bg-blue-600 text-white font-bold shadow-2xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'

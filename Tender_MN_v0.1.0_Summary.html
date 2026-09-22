@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8">
+  <title>Tender.mn — Хувилбар 0.1.0 Прототайп Тайлан</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 8mm 12mm 8mm 12mm;
+    }
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #0f172a;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    /* Header & Banner */
+    .header-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #2563eb;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #0f172a;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand-title span {
+      color: #2563eb;
+    }
+    .brand-subtitle {
+      font-size: 10px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+    .badge-pill {
+      display: inline-block;
+      padding: 2.5px 8px;
+      border-radius: 9999px;
+      font-size: 10px;
+      font-weight: 700;
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+    .meta-date {
+      text-align: right;
+      font-size: 10px;
+      color: #64748b;
+    }
+
+    /* Summary Card */
+    .summary-box {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-left: 3.5px solid #2563eb;
+      border-radius: 5px;
+      padding: 7px 10px;
+      margin-bottom: 10px;
+      font-size: 10.5px;
+      color: #334155;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .metric-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 6px 8px;
+      text-align: center;
+    }
+    .metric-value {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      font-family: monospace;
+    }
+    .metric-label {
+      font-size: 9.5px;
+      color: #64748b;
+      margin-top: 1px;
+      font-weight: 600;
+    }
+
+    /* Section Headings */
+    h2 {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      padding-bottom: 2px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* Comparison Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 10px;
+    }
+    th {
+      background-color: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      text-align: left;
+      padding: 4.5px 8px;
+      border: 1px solid #cbd5e1;
+      font-size: 9.5px;
+      text-transform: uppercase;
+    }
+    td {
+      padding: 4px 8px;
+      border: 1px solid #e2e8f0;
+      color: #1e293b;
+    }
+    tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .tag-yes {
+      color: #15803d;
+      font-weight: 700;
+    }
+    .tag-no {
+      color: #b91c1c;
+      font-weight: 600;
+    }
+    .tag-highlight {
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+
+    /* Feature Grid */
+    .features-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .feature-item {
+      background-color: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 6px 9px;
+    }
+    .feature-title {
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 10.5px;
+      margin-bottom: 2px;
+    }
+    .feature-desc {
+      font-size: 9.5px;
+      color: #475569;
+      line-height: 1.35;
+    }
+
+    /* Tech Stack Cards */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .tech-card {
+      background-color: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      padding: 5px 8px;
+    }
+    .tech-name {
+      font-weight: 700;
+      color: #1e293b;
+      font-size: 10px;
+    }
+    .tech-desc {
+      font-size: 9px;
+      color: #64748b;
+      margin-top: 1px;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid #e2e8f0;
+      padding-top: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 9px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <div class="header-banner">
+    <div>
+      <h1 class="brand-title">TENDER<span>.MN</span> <span style="font-size: 13px; font-weight: 600; color: #475569;">— Прототайп Тайлан</span></h1>
+      <div class="brand-subtitle">Төрийн худалдан авах ажиллагааны нээлттэй ухаалаг хайлт & AI шинжилгээний систем</div>
+    </div>
+    <div class="meta-date">
+      <span class="badge-pill">Хувилбар 0.1.0</span>
+      <div style="margin-top: 2px;">Огноо: 2026.09.21 | Тестийн шат</div>
+    </div>
+  </div>
+
+  <!-- Executive Summary -->
+  <div class="summary-box">
+    <strong>Товч тойм:</strong> Энэхүү систем нь Монгол Улсын төрийн худалдан авах ажиллагааны албан ёсны <strong>22,785 бодит тендер</strong>-ийн өгөгдлийг орчин үеийн хиймэл оюун (Google Gemma 4 AI) болон өндөр хурдны үүлэн сантай холбож, хуучин <code>tender.gov.mn</code> сайтын удаан, төвөгтэй байдлыг бүрэн халсан ухаалаг нээлттэй платформ юм.
+  </div>
+
+  <!-- Numbers at a Glance -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-value">22,785</div>
+      <div class="metric-label">Нийт тендер (2026 он)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color: #16a34a;">737</div>
+      <div class="metric-label">Хүлээн авч буй (Идэвхтэй)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">21,089</div>
+      <div class="metric-label">Үр дүн гарсан (Дууссан)</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color: #2563eb;">21.72 Их наяд ₮</div>
+      <div class="metric-label">Нийт төсөвт өртөг</div>
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <h2>⚖️ Албан ёсны tender.gov.mn ба Tender.mn (v0.1.0) Харьцуулалт</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Үзүүлэлт / Боломж</th>
+        <th style="width: 35%;">Албан ёсны tender.gov.mn</th>
+        <th style="width: 40%;">Шинэ Tender.mn (Хувилбар 0.1.0)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Хайлтын хурд & UX</strong></td>
+        <td>Шүүлтүүр бүрд хуудас дахин ачаалдаг (удаан)</td>
+        <td><span class="tag-highlight">Шуурхай бодит цагийн хайлт (&lt;50ms, гацахгүй)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Хиймэл оюун (AI)</strong></td>
+        <td><span class="tag-no">❌ Огт байхгүй</span></td>
+        <td><span class="tag-yes">✅ Google Gemma 4 26B зөвлөх туслахтай</span></td>
+      </tr>
+      <tr>
+        <td><strong>Хүний яриагаар хайх</strong></td>
+        <td><span class="tag-no">❌ Боломжгүй (үг үсгээр алддаг)</span></td>
+        <td><span class="tag-yes">✅ "Одоо зарлагдсан IT ажил" гэх мэт далд утгыг танина</span></td>
+      </tr>
+      <tr>
+        <td><strong>Банкны баталгаа тооцох</strong></td>
+        <td><span class="tag-no">❌ Байхгүй (гараар калькулятороор боддог)</span></td>
+        <td><span class="tag-yes">✅ Хуулийн дагуу 1%, 2% баталгаа, 5% гүйцэтгэлийг автоматаар бодно</span></td>
+      </tr>
+      <tr>
+        <td><strong>Excel / CSV татах</strong></td>
+        <td>⚠️ Маш төвөгтэй, нэвтрэх шаардлагатай</td>
+        <td><span class="tag-yes">✅ 1 товшилтоор шууд татна (Монгол үсэг гажихгүй UTF-8 BOM)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Хугацааны сэрэмжлүүлэг</strong></td>
+        <td>Зөвхөн огнооны тоо харагддаг</td>
+        <td><span class="tag-yes">✅ ⏰ Шуурхай (&le;3 хоног), ⏳ (&le;7 хоног) өнгөт тоолууртай</span></td>
+      </tr>
+      <tr>
+        <td><strong>Холбоосууд</strong></td>
+        <td>Нийлүүлэгчийн эрхээр нэвтрэхийг шаарддаг</td>
+        <td><span class="tag-yes">✅ Нээлттэй олон нийтийн урилга & Нийлүүлэгчийн систем 2 холбоостой</span></td>
+      </tr>
+      <tr>
+        <td><strong>Тендерийн код хуулах</strong></td>
+        <td><span class="tag-no">❌ Тэмдэглэж чирж хуулдаг</span></td>
+        <td><span class="tag-yes">✅ 1 товшилтоор санах ойд хуулна (Copy Code)</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Key Features Detailed -->
+  <h2>🚀 Системийн Гол Давуу Талууд (Тендерт оролцогчдод олгох үнэ цэн)</h2>
+  <div class="features-list">
+    <div class="feature-item">
+      <div class="feature-title">🤖 1. Хиймэл оюунт зөвлөх туслах (AI Analyst)</div>
+      <div class="feature-desc">Google Gemma 4 AI тендерийн төсөв, захиалагчийн шаардлагыг шинжилж оролцогчдод шаардагдах бичиг баримтын зөвлөгөөг шууд өгнө.</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-title">🧠 2. Семантик 2 шатлалт хайлтын хөдөлгүүр</div>
+      <div class="feature-desc">"Программ хангамж хэрэгтэй байгаа" гэхэд үүнийг цахилгаан/дулаан биш IT салбар, одоо санал авч буй нээлттэй төлөв болохыг зөв танина.</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-title">🛡️ 3. Банкны баталгааны автомат тооцоолуур</div>
+      <div class="feature-desc">Тендер бүрийн хувьд Хуулийн дагуу бэлдэх 1% ба 2% тендерийн баталгаа, 5% гүйцэтгэлийн баталгааны дүнг автоматаар тооцоолж харуулна.</div>
+    </div>
+    <div class="feature-item">
+      <div class="feature-title">📊 4. 1-товчоор Excel / CSV экспорт</div>
+      <div class="feature-desc">Хайж шүүсэн дурын тендерийн жагсаалтаа нэг товч дараад л Excel дээр шууд татаж аван компанийн удирдлага, багтаа танилцуулах боломжтой.</div>
+    </div>
+  </div>
+
+  <!-- Technology Stack -->
+  <h2>💻 Ашигласан Технологиуд (Хялбаршуулсан)</h2>
+  <div class="tech-grid">
+    <div class="tech-card">
+      <div class="tech-name">Next.js 14 & React</div>
+      <div class="tech-desc">Хуудсыг дахин уншуулахгүй, утас ба компьютер дээр апп шиг маш хурдан ажиллана.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Supabase PostgreSQL</div>
+      <div class="tech-desc">22,785 бодит тендерийг найдвартай хадгалж буй өндөр хурдны үүлэн өгөгдлийн сан.</div>
+    </div>
+    <div class="tech-card">
+      <div class="tech-name">Google Gemma 4 (26B)</div>
+      <div class="tech-desc">Монгол хэлийг чөлөөтэй ойлгож санхүү, эрх зүйн шинжилгээ хийдэг дэвшилтэт AI.</div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>Tender.mn — Төрийн худалдан авах ажиллагааны нээлттэй ухаалаг хайлтын систем</div>
+    <div>Эх сурвалж: tender.gov.mn нээлттэй өгөгдөл (22,785 тендер) | Хөгжүүлэлтийн хувилбар: v0.1.0</div>
+  </div>
+
+</body>
+</html>

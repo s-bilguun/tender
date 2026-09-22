@@ -359,55 +359,63 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white border-l border-slate-200 shadow-xl flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-slate-200 flex items-center justify-between gap-2 bg-white">
-        <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100">
-            <Sparkles className="h-4 w-4" />
+    <>
+      {/* Dimmed Backdrop */}
+      <div
+        onClick={onClose}
+        className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+      />
+
+      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white border-l border-slate-200 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+        {/* Header */}
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between gap-2 bg-white">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="h-8 w-8 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shrink-0">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="text-sm font-semibold text-slate-900 truncate">
+                {locale === 'mn' ? 'Тендерийн AI Шинжээч' : 'AI Tender Analyst'}
+              </h3>
+              <p className="text-[11px] text-slate-500 truncate">
+                {locale === 'mn' ? 'Худалдан авалтын зөвлөх туслах' : 'Procurement intelligence assistant'}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-slate-900">
-              {locale === 'mn' ? 'Тендерийн AI Шинжээч' : 'AI Tender Analyst'}
-            </h3>
-            <p className="text-[11px] text-slate-500">
-              {locale === 'mn' ? 'Худалдан авалтын зөвлөх туслах' : 'Procurement intelligence assistant'}
-            </p>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={clearChat}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              title="Цэвэрлэх"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              title="Хаах"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-1">
-          <button
-            onClick={clearChat}
-            className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-            title="Цэвэрлэх"
+        {/* Model Selector Bar */}
+        <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 text-xs">
+          <span className="text-slate-500 text-[11px] shrink-0">
+            {locale === 'mn' ? 'AI Загвар:' : 'Model:'}
+          </span>
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-blue-600 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
           >
-            <Trash2 className="h-4 w-4" />
-          </button>
-          <button
-            onClick={onClose}
-            className="p-1 rounded text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
+            <option value="google/gemma-4-26b-a4b-it:free">🚀 Google Gemma 4 26B (free - Хурдан, Монгол хэл)</option>
+            <option value="nvidia/nemotron-3.5-lightning:free">⚡ NVIDIA Nemotron 3.5 Lightning (free)</option>
+            <option value="openrouter/free">🌐 Автомат сонголт (openrouter/free)</option>
+          </select>
         </div>
-      </div>
-
-      {/* Model Selector Bar */}
-      <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 text-xs">
-        <span className="text-slate-500 text-[11px] shrink-0">
-          {locale === 'mn' ? 'AI Загвар:' : 'Model:'}
-        </span>
-        <select
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-blue-600 w-full max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
-        >
-          <option value="google/gemma-4-26b-a4b-it:free">🚀 Google Gemma 4 26B (free - Хурдан, Монгол хэл)</option>
-          <option value="nvidia/nemotron-3.5-lightning:free">⚡ NVIDIA Nemotron 3.5 Lightning (free)</option>
-          <option value="openrouter/free">🌐 Автомат сонголт (openrouter/free)</option>
-        </select>
-      </div>
 
       {/* Selected tender banner */}
       {selectedTender && (
@@ -474,22 +482,22 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       </div>
 
       {/* Quick Prompts */}
-      <div className="p-2.5 border-t border-slate-200 bg-slate-50 overflow-x-auto whitespace-nowrap scrollbar-none flex gap-1.5 text-[11px]">
+      <div className="p-2.5 border-t border-slate-200 bg-slate-50 overflow-x-auto whitespace-nowrap no-scrollbar flex gap-1.5 text-[11px]">
         <button
           onClick={() => handleSend(t.aiPromptQuick1)}
-          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
+          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0"
         >
           {t.aiPromptQuick1}
         </button>
         <button
           onClick={() => handleSend(t.aiPromptQuick2)}
-          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
+          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0"
         >
           {t.aiPromptQuick2}
         </button>
         <button
           onClick={() => handleSend(t.aiPromptQuick3)}
-          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors"
+          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0"
         >
           {t.aiPromptQuick3}
         </button>
@@ -514,11 +522,12 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
-          className="h-8 w-8 rounded-md bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 flex items-center justify-center transition-colors"
+          className="h-8 w-8 rounded-md bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
         >
           <Send className="h-3.5 w-3.5" />
         </button>
       </form>
     </div>
+  </>
   );
 };

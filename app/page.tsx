@@ -11,7 +11,7 @@ import { TenderFilters } from '@/components/TenderFilters';
 import { TenderDetailModal } from '@/components/TenderDetailModal';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight, FileSpreadsheet, Star } from 'lucide-react';
+import { Loader2, AlertCircle, ChevronLeft, ChevronRight, FileSpreadsheet, Star, Sparkles } from 'lucide-react';
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>('mn');
@@ -216,24 +216,24 @@ export default function Home() {
         {/* Page Title & Context Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-200">
           <div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-emerald-100 text-emerald-800 shrink-0">
+                <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-500 animate-pulse" />
                 {locale === 'mn' ? 'Шуурхай Радар' : 'Live Radar'}
               </span>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
                 {locale === 'mn' ? 'Идэвхтэй нээлттэй тендерийн систем' : 'Active Tender Command Center'}
               </h1>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed">
               {locale === 'mn'
                 ? 'Санал хүлээн авч буй нээлттэй бүх тендерийг хугацааны яаралтай байдлаар хянах, дүн шинжилгээ хийх, оролцох боломж'
                 : 'Monitor active government tenders in real-time, track closing deadlines, and analyze bidding requirements.'}
             </p>
           </div>
 
-          <div className="text-xs text-slate-500 font-mono flex items-center gap-2">
-            <span>Эх сурвалж: <strong>tender.gov.mn</strong></span>
+          <div className="text-[11px] sm:text-xs text-slate-400 font-mono flex items-center gap-1.5">
+            <span>Эх сурвалж: <strong className="text-slate-600">tender.gov.mn</strong></span>
           </div>
         </div>
 
@@ -404,6 +404,19 @@ export default function Home() {
           <span>Өгөгдлийг албан ёсны tender.gov.mn системээс бодит цагт боловсруулав</span>
         </div>
       </footer>
+ 
+      {/* Mobile Floating AI Assistant Button (Always Accessible on Mobile) */}
+      <button
+        onClick={() => {
+          setAiTenderContext(null);
+          setIsAIDrawerOpen(true);
+        }}
+        className="sm:hidden fixed bottom-5 right-4 z-40 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-slate-900 text-white shadow-xl border border-slate-700/80 active:scale-95 transition-all text-xs font-semibold cursor-pointer"
+        aria-label="Open AI Assistant"
+      >
+        <Sparkles className="h-4 w-4 text-amber-400 animate-pulse shrink-0" />
+        <span>AI Шинжээч</span>
+      </button>
 
       {/* Tender Details Modal */}
       <TenderDetailModal

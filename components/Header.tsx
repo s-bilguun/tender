@@ -41,18 +41,18 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-sm tracking-wide shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-sm tracking-wide shadow-sm shrink-0">
             <Building className="h-4 w-4" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-base tracking-tight text-slate-900">
+              <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 truncate">
                 TENDER<span className="text-blue-600">.MN</span>
               </span>
-              <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+              <span className="text-[10px] sm:text-[11px] font-medium px-1.5 sm:px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 hidden sm:inline-block">
                 Нээлттэй өгөгдөл
               </span>
             </div>
@@ -84,36 +84,37 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Analytics button */}
           <button
             onClick={onToggleAnalytics}
-            className={`h-8 px-3 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-colors ${
+            className={`h-8 px-2 sm:px-3 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-colors ${
               isAnalyticsOpen
                 ? 'bg-slate-100 text-slate-900 border-slate-300'
                 : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
             }`}
+            title={locale === 'mn' ? 'Статистик' : 'Analytics'}
           >
-            <BarChart2 className="h-3.5 w-3.5 text-slate-500" />
+            <BarChart2 className="h-3.5 w-3.5 text-slate-500 shrink-0" />
             <span className="hidden sm:inline">{locale === 'mn' ? 'Статистик' : 'Analytics'}</span>
           </button>
 
           {/* Language Switcher */}
           <button
             onClick={() => setLocale(locale === 'mn' ? 'en' : 'mn')}
-            className="h-8 px-2.5 rounded-md text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex items-center gap-1 transition-colors"
+            className="h-8 px-2 sm:px-2.5 rounded-md text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex items-center gap-1 transition-colors shrink-0"
           >
-            <Globe className="h-3.5 w-3.5 text-slate-500" />
-            <span className="font-semibold">{locale === 'mn' ? 'MN' : 'EN'}</span>
+            <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+            <span className="font-semibold text-[11px] sm:text-xs">{locale === 'mn' ? 'MN' : 'EN'}</span>
           </button>
 
           {/* AI Assistant Button */}
           <button
             onClick={onOpenAI}
-            className="h-8 px-3.5 rounded-md text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-1.5 transition-colors shadow-2xs"
+            className="h-8 px-2.5 sm:px-3.5 rounded-md text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-1.5 transition-colors shadow-2xs shrink-0 active:scale-95"
           >
-            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-            <span>{locale === 'mn' ? 'AI Шинжээч' : 'AI Assistant'}</span>
+            <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+            <span className="whitespace-nowrap">{locale === 'mn' ? 'AI Шинжээч' : 'AI Assistant'}</span>
           </button>
         </div>
       </div>
