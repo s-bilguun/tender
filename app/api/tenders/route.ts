@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const search = searchParams.get('search') || undefined;
     const category = searchParams.get('category') || undefined;
+    const industry = (searchParams.get('industry') as any) || undefined;
     const minBudget = searchParams.get('minBudget') ? Number(searchParams.get('minBudget')) : undefined;
     const maxBudget = searchParams.get('maxBudget') ? Number(searchParams.get('maxBudget')) : undefined;
     const fundName = searchParams.get('fundName') || undefined;
@@ -236,6 +237,7 @@ export async function GET(request: NextRequest) {
     const { items, totalCount } = tenderStore.filterTenders({
       search,
       category,
+      industry,
       minBudget,
       maxBudget,
       status,

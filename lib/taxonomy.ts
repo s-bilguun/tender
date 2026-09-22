@@ -1,0 +1,146 @@
+import { IndustryVertical, IndustryInfo } from './types';
+
+export const INDUSTRIES: IndustryInfo[] = [
+  {
+    id: 'it',
+    slug: 'it',
+    labelMn: 'Мэдээллийн технологи & Цахимжилт',
+    labelEn: 'IT & Software Systems',
+    icon: '💻',
+    descriptionMn: 'Програм хангамж, сервер, сүлжээ, компьютерийн тоног төхөөрөмж, цахим систем',
+    descriptionEn: 'Software, servers, network equipment, computers, digital platforms',
+  },
+  {
+    id: 'construction',
+    slug: 'construction',
+    labelMn: 'Барилга, дэд бүтэц & Засвар',
+    labelEn: 'Construction & Civil Works',
+    icon: '🏗️',
+    descriptionMn: 'Барилга угсралт, их болон урсгал засвар, зам гүүр, инженерийн шугам сүлжээ',
+    descriptionEn: 'Building construction, major renovation, civil works, utilities',
+  },
+  {
+    id: 'medical',
+    slug: 'medical',
+    labelMn: 'Эрүүл мэнд & Эм, урвалж',
+    labelEn: 'Medical & Healthcare',
+    icon: '💊',
+    descriptionMn: 'Эм, эмнэлгийн хэрэгсэл, лабораторийн оношлуур, урвалж, тоног төхөөрөмж',
+    descriptionEn: 'Pharmaceuticals, medical devices, laboratory reagents, hospital equipment',
+  },
+  {
+    id: 'food',
+    slug: 'food',
+    labelMn: 'Хүнс, хоол үйлдвэрлэл & Үдийн цай',
+    labelEn: 'Food & Catering Services',
+    icon: '🥪',
+    descriptionMn: 'Сургууль цэцэрлэгийн үдийн хоол, мах, сүү, хүнсний түүхий эд, бэлтгэл',
+    descriptionEn: 'School meal catering, raw food supplies, dairy, meat products',
+  },
+  {
+    id: 'transport',
+    slug: 'transport',
+    labelMn: 'Тээвэр, шатахуун & Авто засвар',
+    labelEn: 'Transport & Fuel Fleet',
+    icon: '🚗',
+    descriptionMn: 'Бензин, дизель түлш, автомашин, сэлбэг хэрэгсэл, тээврийн үйлчилгээ',
+    descriptionEn: 'Fuel supply, vehicles, auto spare parts, transportation services',
+  },
+  {
+    id: 'facility',
+    slug: 'facility',
+    labelMn: 'Харуул, цэвэрлэгээ & Ашиглалт',
+    labelEn: 'Facility & Security',
+    icon: '🧹',
+    descriptionMn: 'Харуул хамгаалалт, байрны цэвэрлэгээ, ариутгал, хог хаягдал, ашиглалт',
+    descriptionEn: 'Security services, janitorial cleaning, disinfection, facility management',
+  },
+  {
+    id: 'stationery',
+    slug: 'stationery',
+    labelMn: 'Бичиг хэрэг, хэвлэл & Тавилга',
+    labelEn: 'Stationery, Furniture & Print',
+    icon: '📚',
+    descriptionMn: 'Албан тасалгааны бичиг хэрэг, хэвлэл, дүрэмт хувцас, оффисын тавилга',
+    descriptionEn: 'Office stationery, book printing, uniforms, office furniture',
+  },
+  {
+    id: 'consulting',
+    slug: 'consulting',
+    labelMn: 'Зөвлөх, аудит & Сургалт',
+    labelEn: 'Consulting, Audit & Legal',
+    icon: '⚖️',
+    descriptionMn: 'Зөвлөх үйлчилгээ, зураг төсөл боловсруулах, аудит, сургалт судалгаа',
+    descriptionEn: 'Consulting services, engineering blueprints, financial audit, training',
+  },
+];
+
+const KEYWORDS_MAP: Record<IndustryVertical, string[]> = {
+  all: [],
+  it: [
+    'програм', 'систем', 'сервер', 'сүлжээ', 'компьютер', 'мт ', 'принтер', 'веб',
+    'цахим', 'лиценз', 'cloud', 'software', 'hardware', 'программ', 'техник хангамж',
+    'дата', 'мэдээллийн', 'өгөгдөл', 'камер', 'хяналтын камер', 'код'
+  ],
+  construction: [
+    'барилга', 'засвар', 'зам', 'шугам', 'инженер', 'фасад', 'дулаан', 'цэвэр ус',
+    'бохир', 'угсралт', 'дээвэр', 'гүүр', 'хашаа', 'тохижилт', 'гэрэлтүүлэг',
+    'хучилт', 'бетон', 'хоолой', 'өрлөг', 'будаг', 'инженерийн'
+  ],
+  medical: [
+    'эм ', 'эмнэлэг', 'урвалж', 'оношлуур', 'эмнэлгийн', 'вакцин', 'шүд', 'эмийн',
+    'рентген', 'эрүүл мэнд', 'хамгаалах хэрэгсэл', 'ариутгал', 'боолт', 'лаборатори'
+  ],
+  food: [
+    'хоол', 'хүнс', 'сүү', 'мах', 'гурил', 'ногоо', 'үдийн цай', 'үдийн хоол',
+    'хүнсний', 'унд', 'талх', 'ундаа', 'махны', 'цагаан идээ', 'хүнсээр'
+  ],
+  transport: [
+    'тээвэр', 'шатахуун', 'бензин', 'дизель', 'автомашин', 'авто', 'дугуй',
+    'сэлбэг', 'машин', 'жолооч', 'аи-92', 'дизелийн', 'түлш'
+  ],
+  facility: [
+    'цэвэрлэгээ', 'харуул', 'хамгаалалт', 'хог', 'халдваргүйжүүлэлт',
+    'цахилгаан шат', 'ашиглалт', 'угаалга', 'цэвэрлэгээний', 'ажил үйлчилгээ'
+  ],
+  stationery: [
+    'бичиг хэрэг', 'хэвлэл', 'тавилга', 'цаас', 'сурах бичиг', 'ном', 'маягт',
+    'оффис', 'сандал', 'ширээ', 'хувцас', 'дүрэмт хувцас', 'хэвлэх', 'дэвтэр'
+  ],
+  consulting: [
+    'зөвлөх', 'аудит', 'сургалт', 'судалгаа', 'үнэлгээ', 'төсөл', 'тэзү',
+    'зураг төсөв', 'зураг төсөл', 'шинжээч', 'хөгжлийн төлөвлөгөө'
+  ],
+};
+
+export function classifyIndustry(name?: string, typeCode?: string): { id: IndustryVertical; labelMn: string; labelEn: string; icon: string } {
+  if (!name) {
+    return { id: 'consulting', labelMn: 'Бусад үйлчилгээ', labelEn: 'General Services', icon: '📦' };
+  }
+
+  const lower = name.toLowerCase();
+
+  for (const ind of INDUSTRIES) {
+    const keywords = KEYWORDS_MAP[ind.id] || [];
+    for (const kw of keywords) {
+      if (lower.includes(kw)) {
+        return {
+          id: ind.id,
+          labelMn: ind.labelMn,
+          labelEn: ind.labelEn,
+          icon: ind.icon,
+        };
+      }
+    }
+  }
+
+  // Fallback by tenderTypeCode
+  if (typeCode === 'JOB') {
+    return { id: 'construction', labelMn: 'Барилга, засвар', labelEn: 'Construction & Works', icon: '🏗️' };
+  }
+  if (typeCode === 'PRODUCT') {
+    return { id: 'stationery', labelMn: 'Бараа, нийлүүлэлт', labelEn: 'Goods & Supplies', icon: '📦' };
+  }
+
+  return { id: 'consulting', labelMn: 'Үйлчилгээ, зөвлөх', labelEn: 'Services & Consulting', icon: '💼' };
+}

@@ -129,6 +129,11 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         {/* Top Badges & Watchlist Star */}
         <div className="flex items-center justify-between gap-2 mb-2.5">
           <div className="flex items-center gap-1.5 flex-wrap">
+            {tender.industryName && (
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">
+                {tender.industryName.split('&')[0].trim()}
+              </span>
+            )}
             <span className={`text-[11px] font-medium px-2 py-0.5 rounded border ${badge.bg}`}>
               {badge.label}
             </span>

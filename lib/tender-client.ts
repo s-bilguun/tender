@@ -1,5 +1,7 @@
 import { TenderItem, TenderFilterParams, TenderStats } from './types';
 import { SEED_TENDERS } from './seed-data';
+import { classifyIndustry } from './taxonomy';
+import { generateBidRequirements } from './bid-requirements';
 import { execFile } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -13,6 +15,17 @@ class TenderStore {
     this.loadFromDisk();
   }
 
+  private enrichItem(item: TenderItem): TenderItem {
+    const classification = classifyIndustry(item.tenderName, item.tenderTypeCode);
+    const bidReqs = generateBidRequirements(item);
+    return {
+      ...item,
+      industry: item.industry || classification.id,
+      industryName: item.industryName || classification.labelMn,
+      bidRequirements: item.bidRequirements || bidReqs,
+    };
+  }
+
   public loadFromDisk() {
     try {
       const livePath = path.join(process.cwd(), 'lib', 'live-tenders.json');
@@ -20,7 +33,7 @@ class TenderStore {
         const liveData: TenderItem[] = JSON.parse(fs.readFileSync(livePath, 'utf8'));
         if (Array.isArray(liveData) && liveData.length > 0) {
           liveData.forEach(item => {
-            this.tenders.set(String(item.invitationId), item);
+            this.tenders.set(String(item.invitationId), this.enrichItem(item));
           });
         }
       }
@@ -29,7 +42,7 @@ class TenderStore {
     }
 
     SEED_TENDERS.forEach(item => {
-      this.tenders.set(String(item.invitationId), item);
+      this.tenders.set(String(item.invitationId), this.enrichItem(item));
     });
     this.lastSyncedAt = new Date();
   }
@@ -47,26 +60,17 @@ class TenderStore {
     return this.tenders.get(String(id));
   }
 
-  public async fetchLiveTenders(searchQuery?: string, page = 1, year?: string): Promise<{ items: TenderItem[]; totalCount: number }> {
+  public async fetchLiveTenders(searchQuery?: string, page = 1): Promise<{ items: TenderItem[]; totalCount: number }> {
     return new Promise((resolve) => {
-      const queryParts: string[] = [];
-      if (searchQuery && searchQuery.trim()) {
-        queryParts.push(`search=${encodeURIComponent(searchQuery.trim())}`);
-      }
-      if (year && year !== 'all') {
-        queryParts.push(`years=${encodeURIComponent(year)}`);
-      }
-      queryParts.push(`page=${page}`);
-      const url = `https://www.tender.gov.mn/mn/invitation?${queryParts.join('&')}`;
+      const url = `https://www.tender.gov.mn/mn/invitation?${searchQuery ? `search=${encodeURIComponent(searchQuery)}&` : ''}page=${page}`;
       
-      const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
-      execFile(curlCmd, [
+      execFile('curl.exe', [
         '-s', '-L',
         '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         '-H', 'Accept-Language: mn,en-US;q=0.7,en;q=0.3',
         url
-      ], { maxBuffer: 50 * 1024 * 1024, timeout: 25000 }, (err, stdout) => {
+      ], { maxBuffer: 30 * 1024 * 1024, timeout: 10000 }, (err, stdout) => {
         if (err || !stdout) {
           console.warn('Direct live fetch timed out or failed, using cached tenders', err?.message);
           return resolve({ items: this.getAllTenders().slice(0, 20), totalCount: this.tenders.size });
@@ -124,12 +128,12 @@ class TenderStore {
                 }
                 const parsed: TenderItem[] = JSON.parse(raw);
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                  // Upsert into memory store
+                  // Upsert into memory store with enrichment
                   parsed.forEach(item => {
-                    this.tenders.set(String(item.invitationId), item);
+                    this.tenders.set(String(item.invitationId), this.enrichItem(item));
                   });
                   this.lastSyncedAt = new Date();
-                  return resolve({ items: parsed, totalCount: parsed.length });
+                  return resolve({ items: parsed.map(p => this.enrichItem(p)), totalCount: parsed.length });
                 }
               }
             }
@@ -166,6 +170,11 @@ class TenderStore {
       result = result.filter(item => item.tenderTypeCode === params.category);
     }
 
+    // B2B Industry Vertical Filter
+    if (params.industry && params.industry !== 'all') {
+      result = result.filter(item => item.industry === params.industry);
+    }
+
     // Budget range filter
     if (params.minBudget !== undefined && params.minBudget > 0) {
       result = result.filter(item => item.totalBudget >= params.minBudget!);
@@ -184,12 +193,10 @@ class TenderStore {
         const diffDays = (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
         return diffDays > 0 && diffDays <= 7;
       });
-    } else if (params.tabMode === 'result' || params.status === 'result') {
-      result = result.filter(item => item.docStatusName?.toLowerCase().includes('үр дүн') || item.docStatusCode?.includes('CLOSED'));
-    } else if (params.tabMode === 'active' || params.status === 'receiving') {
-      result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1);
     } else if (params.status && params.status !== 'all') {
-      if (params.status === 'published') {
+      if (params.status === 'receiving') {
+        result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1);
+      } else if (params.status === 'published') {
         result = result.filter(item => item.docStatusCode === 'PUBLISHING_STATUS' || item.docStatusName?.includes('Нийтлэгдсэн'));
       }
     }
@@ -215,9 +222,9 @@ class TenderStore {
       }
     }
 
-    // Year filter
-    if (params.year && params.year !== 'all') {
-      const yStr = String(params.year);
+    // Year filter (if present)
+    if ((params as any).year && (params as any).year !== 'all') {
+      const yStr = String((params as any).year);
       result = result.filter(item => {
         const pub = item.publishDate || item.actionDate;
         const pubYear = pub ? new Date(pub).getFullYear().toString() : '';
@@ -226,16 +233,16 @@ class TenderStore {
       });
     }
 
-    // Date range filter
-    if (params.dateFrom) {
-      const fromTime = new Date(params.dateFrom).getTime();
+    // Date range filter (if present)
+    if ((params as any).dateFrom) {
+      const fromTime = new Date((params as any).dateFrom).getTime();
       result = result.filter(item => {
         const pub = item.publishDate || item.actionDate;
         return pub ? new Date(pub).getTime() >= fromTime : false;
       });
     }
-    if (params.dateTo) {
-      const toTime = new Date(`${params.dateTo}T23:59:59`).getTime();
+    if ((params as any).dateTo) {
+      const toTime = new Date(`${(params as any).dateTo}T23:59:59`).getTime();
       result = result.filter(item => {
         const pub = item.publishDate || item.actionDate;
         return pub ? new Date(pub).getTime() <= toTime : false;
@@ -277,6 +284,7 @@ class TenderStore {
     let jobCount = 0;
     let serviceCount = 0;
     const ministryMap: Record<string, { count: number; budget: number }> = {};
+    const industryCounts: Record<string, number> = {};
 
     let activeCount = 0;
     let activeBudgetSum = 0;
@@ -294,6 +302,10 @@ class TenderStore {
       if (isActive) {
         activeCount++;
         activeBudgetSum += t.totalBudget || 0;
+
+        if (t.industry) {
+          industryCounts[t.industry] = (industryCounts[t.industry] || 0) + 1;
+        }
 
         const deadline = t.receiveDate || t.openDate;
         if (deadline) {
@@ -337,6 +349,7 @@ class TenderStore {
         job: jobCount,
         service: serviceCount,
       },
+      industryCounts,
       topMinistries,
     };
   }

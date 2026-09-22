@@ -5,6 +5,7 @@ import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types
 import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
 import { ActiveRadarBar } from '@/components/ActiveRadarBar';
+import { IndustryDiscoveryBar } from '@/components/IndustryDiscoveryBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
@@ -78,6 +79,7 @@ export default function Home() {
       const params = new URLSearchParams();
       if (currentFilters.search) params.append('search', currentFilters.search);
       if (currentFilters.category && currentFilters.category !== 'all') params.append('category', currentFilters.category);
+      if (currentFilters.industry && currentFilters.industry !== 'all') params.append('industry', currentFilters.industry);
       if (currentFilters.minBudget !== undefined) params.append('minBudget', String(currentFilters.minBudget));
       if (currentFilters.maxBudget !== undefined) params.append('maxBudget', String(currentFilters.maxBudget));
       if (currentFilters.status && currentFilters.status !== 'all') params.append('status', currentFilters.status);
@@ -244,6 +246,14 @@ export default function Home() {
           locale={locale}
           filters={filters}
           onFilterChange={handleFilterChange}
+        />
+
+        {/* B2B Industry 1-Click Discovery Bar */}
+        <IndustryDiscoveryBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          stats={stats}
+          locale={locale}
         />
 
         {/* Collapsible Analytics View */}

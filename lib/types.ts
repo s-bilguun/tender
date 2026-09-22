@@ -1,5 +1,48 @@
 export type TenderType = 'PRODUCT' | 'JOB' | 'SERVICE' | 'ALL';
 
+export type IndustryVertical =
+  | 'all'
+  | 'it'           // МТ & Програм хангамж, Цахим систем
+  | 'construction' // Барилга, дэд бүтэц, засвар
+  | 'medical'      // Эм, эмнэлгийн тоног төхөөрөмж
+  | 'food'         // Хүнс, хоол үйлдвэрлэл, үдийн цай
+  | 'transport'    // Тээвэр, шатахуун, сэлбэг
+  | 'facility'     // Цэвэрлэгээ, харуул хамгаалалт, ашиглалт
+  | 'stationery'   // Бичиг хэрэг, хэвлэл, тавилга
+  | 'consulting';  // Зөвлөх үйлчилгээ, аудит, сургалт
+
+export interface IndustryInfo {
+  id: IndustryVertical;
+  slug: string;
+  labelMn: string;
+  labelEn: string;
+  icon: string;
+  descriptionMn: string;
+  descriptionEn: string;
+  count?: number;
+}
+
+export interface BidRequirementSummary {
+  estimatedGuaranteeMin: number; // 1%
+  estimatedGuaranteeMax: number; // 2%
+  isElectronic: boolean;
+  requiredClearances: {
+    id: string;
+    nameMn: string;
+    nameEn: string;
+    isMandatory: boolean;
+    descriptionMn: string;
+    descriptionEn: string;
+  }[];
+  submissionSteps: {
+    step: number;
+    titleMn: string;
+    titleEn: string;
+    descMn: string;
+    descEn: string;
+  }[];
+}
+
 export interface TenderItem {
   invitationId: number | string;
   invitationNumber: string;
@@ -26,6 +69,11 @@ export interface TenderItem {
   docStatusColor?: string;
   isPackage?: number;
   tenderDocumentId?: number | string;
+  
+  // B2B Supplier Enrichment Fields
+  industry?: IndustryVertical;
+  industryName?: string;
+  bidRequirements?: BidRequirementSummary;
 }
 
 export type ActiveTabMode = 'all' | 'active' | 'result' | 'closing_soon' | 'watchlist' | 'archive';
@@ -33,6 +81,7 @@ export type ActiveTabMode = 'all' | 'active' | 'result' | 'closing_soon' | 'watc
 export interface TenderFilterParams {
   search?: string;
   category?: string;       // all, PRODUCT, JOB, SERVICE
+  industry?: IndustryVertical;
   minBudget?: number;
   maxBudget?: number;
   status?: string;         // all, receiving, opened, result, cancelled, requested
@@ -61,6 +110,7 @@ export interface TenderStats {
     job: number;
     service: number;
   };
+  industryCounts?: Record<string, number>;
   topMinistries: {
     name: string;
     count: number;
