@@ -1366,7 +1366,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                     const isExpanded = !!expandedDocSummaries[doc.id || idx];
                     const isDirectPdf = !!doc.fileId;
                     const downloadHref = doc.fileId
-                      ? `/api/download?fileId=${doc.fileId}&name=${encodeURIComponent(doc.name || 'tender.pdf')}`
+                      ? `https://user.tender.gov.mn/mn/download/${doc.fileId}`
                       : (doc.downloadUrl || doc.url || '#');
 
                     return (
@@ -1419,6 +1419,8 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                             {isDirectPdf ? (
                               <a
                                 href={downloadHref}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 download={doc.name || 'tender.pdf'}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
                                 title="Албан ёсны эх PDF файлыг шууд татах"
