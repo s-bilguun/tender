@@ -440,7 +440,7 @@ export async function getTenderDetailData(id: string | number) {
         name: d.fileName,
         category: d.category || (d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг'),
         type: `${(d.fileExtention || 'pdf').toUpperCase()} Баримт`,
-        date: d.createdDate ? d.createdDate.substring(0, 10) : (tenderItem.publishDate || '').substring(0, 10),
+        date: d.createdDate ? d.createdDate.substring(0, 16) : (tenderItem.publishDate || '').substring(0, 10),
         url: d.downloadUrl,
         downloadUrl: d.downloadUrl,
         officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',

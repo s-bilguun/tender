@@ -24,7 +24,8 @@ interface AIChatDrawerProps {
 const renderInline = (text: string, isUser: boolean): React.ReactNode => {
   if (!text) return null;
 
-  const regex = /(\*\*\*[\s\S]+?\*\*\*|\*\*[\s\S]+?\*\*|\*[^*\n]+?\*|`[^`\n]+`|\[[^\]]+\]\([^)]+\))/g;
+  // Pattern handles: 1. Code, 2. Links, 3. Triple Asterisk, 4. Bold (**), 5. Italic (*), 6. Strikethrough (~~)
+  const regex = /(`[^`\n]+`|\[[^\]]+\]\([^)]+\)|\*\*\*[\s\S]+?\*\*\*|\*\*[^*\n]+?\*\*|(?<!\*)\*(?!\s|\*)[^*\n]+?(?<!\s|\*)\*(?!\*)|~~[^~\n]+~~)/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -38,15 +39,21 @@ const renderInline = (text: string, isUser: boolean): React.ReactNode => {
 
     if (token.startsWith('***') && token.endsWith('***') && token.length >= 6) {
       parts.push(
-        <strong key={key} className={`font-bold italic ${isUser ? 'text-white' : 'text-slate-900'}`}>
+        <strong key={key} className={`font-black italic ${isUser ? 'text-white' : 'text-slate-950'}`}>
           {token.slice(3, -3)}
         </strong>
       );
     } else if (token.startsWith('**') && token.endsWith('**') && token.length >= 4) {
       parts.push(
-        <strong key={key} className={`font-semibold ${isUser ? 'text-white' : 'text-slate-900'}`}>
+        <strong key={key} className={`font-bold ${isUser ? 'text-white' : 'text-slate-950'}`}>
           {token.slice(2, -2)}
         </strong>
+      );
+    } else if (token.startsWith('~~') && token.endsWith('~~') && token.length >= 4) {
+      parts.push(
+        <span key={key} className="line-through opacity-75">
+          {token.slice(2, -2)}
+        </span>
       );
     } else if (token.startsWith('*') && token.endsWith('*') && token.length >= 2) {
       parts.push(
@@ -58,8 +65,8 @@ const renderInline = (text: string, isUser: boolean): React.ReactNode => {
       parts.push(
         <code
           key={key}
-          className={`px-1 py-0.5 rounded text-[11px] font-mono ${
-            isUser ? 'bg-blue-700 text-blue-100' : 'bg-slate-200 text-slate-800'
+          className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+            isUser ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-800 border border-slate-200'
           }`}
         >
           {token.slice(1, -1)}
@@ -102,6 +109,8 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
   let currentList: { type: 'ul' | 'ol'; items: string[] } | null = null;
   let inCodeBlock = false;
   let codeBlockLines: string[] = [];
+  let inTable = false;
+  let tableRows: string[] = [];
 
   const flushList = () => {
     if (!currentList) return;
@@ -110,18 +119,68 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
     elements.push(
       <ListTag
         key={`list-${elements.length}`}
-        className={`my-1.5 space-y-1 ${
-          currentList.type === 'ul' ? 'list-disc list-inside pl-1' : 'list-decimal list-inside pl-1'
+        className={`my-2 space-y-1.5 ${
+          currentList.type === 'ul'
+            ? `pl-5 list-disc ${isUser ? 'marker:text-blue-200' : 'marker:text-amber-500'}`
+            : `pl-5 list-decimal ${isUser ? 'marker:text-blue-200' : 'marker:text-blue-600 font-semibold'}`
         }`}
       >
         {items.map((item, idx) => (
-          <li key={idx} className="leading-relaxed">
+          <li key={idx} className={`leading-relaxed pl-1 ${isUser ? 'text-white' : 'text-slate-800'}`}>
             {renderInline(item, isUser)}
           </li>
         ))}
       </ListTag>
     );
     currentList = null;
+  };
+
+  const flushTable = () => {
+    if (!inTable || tableRows.length === 0) return;
+    const parsedRows = tableRows.map((r) =>
+      r
+        .split('|')
+        .map((c) => c.trim())
+        .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1)
+    );
+    const isDivider = (row: string[]) => row.every((c) => /^[-:\s]+$/.test(c));
+    const contentRows = parsedRows.filter((r) => !isDivider(r));
+
+    if (contentRows.length > 0) {
+      const headerRow = contentRows[0];
+      const bodyRows = contentRows.slice(1);
+      elements.push(
+        <div
+          key={`table-${elements.length}`}
+          className="my-3 overflow-x-auto rounded-lg border border-slate-200 shadow-2xs"
+        >
+          <table className="min-w-full divide-y divide-slate-200 text-xs">
+            <thead className={isUser ? 'bg-blue-800/80 text-white' : 'bg-slate-100 text-slate-900 font-bold'}>
+              <tr>
+                {headerRow.map((cell, cIdx) => (
+                  <th key={cIdx} className="px-3 py-2 text-left font-bold">
+                    {renderInline(cell, isUser)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {bodyRows.map((row, rIdx) => (
+                <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                  {row.map((cell, cIdx) => (
+                    <td key={cIdx} className="px-3 py-2 text-slate-800">
+                      {renderInline(cell, isUser)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    }
+    inTable = false;
+    tableRows = [];
   };
 
   for (let i = 0; i < lines.length; i++) {
@@ -131,11 +190,12 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
     // Code block toggle
     if (trimmed.startsWith('```')) {
       flushList();
+      flushTable();
       if (inCodeBlock) {
         elements.push(
           <pre
             key={`code-${i}`}
-            className="p-2.5 my-2 bg-slate-900 text-slate-100 rounded-md font-mono text-[11px] overflow-x-auto"
+            className="p-3 my-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs overflow-x-auto border border-slate-800"
           >
             <code>{codeBlockLines.join('\n')}</code>
           </pre>
@@ -153,13 +213,28 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
       continue;
     }
 
+    // Markdown Table row
+    const isTableRow = trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 2;
+    if (isTableRow) {
+      flushList();
+      if (!inTable) {
+        inTable = true;
+        tableRows = [];
+      }
+      tableRows.push(trimmed);
+      continue;
+    } else if (inTable) {
+      flushTable();
+    }
+
     // Horizontal divider (e.g. ***, ---, ___)
     if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed)) {
       flushList();
+      flushTable();
       elements.push(
         <hr
           key={`hr-${i}`}
-          className={`my-2 border-t ${isUser ? 'border-blue-400' : 'border-slate-200'}`}
+          className={`my-3 border-t ${isUser ? 'border-blue-400' : 'border-slate-200'}`}
         />
       );
       continue;
@@ -169,31 +244,70 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
     const hMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
     if (hMatch) {
       flushList();
+      flushTable();
       const level = hMatch[1].length;
       const hText = hMatch[2];
-      const hClasses =
-        level === 1
-          ? 'text-sm font-bold mt-2.5 mb-1'
-          : level === 2
-          ? 'text-xs font-bold mt-2 mb-1'
-          : 'text-xs font-semibold mt-1.5 mb-0.5';
 
-      elements.push(
-        <div key={`h-${i}`} className={`${hClasses} ${isUser ? 'text-white' : 'text-slate-900'}`}>
-          {renderInline(hText, isUser)}
-        </div>
-      );
+      if (level === 1) {
+        elements.push(
+          <div
+            key={`h-${i}`}
+            className={`text-base font-black tracking-tight mt-4 mb-2 pb-1 border-b flex items-center gap-2 ${
+              isUser ? 'text-white border-blue-400' : 'text-slate-900 border-slate-200'
+            }`}
+          >
+            {renderInline(hText, isUser)}
+          </div>
+        );
+      } else if (level === 2) {
+        elements.push(
+          <div
+            key={`h-${i}`}
+            className={`text-sm sm:text-base font-bold tracking-tight mt-3.5 mb-1.5 flex items-center gap-1.5 ${
+              isUser ? 'text-white' : 'text-slate-900 font-extrabold'
+            }`}
+          >
+            {renderInline(hText, isUser)}
+          </div>
+        );
+      } else if (level === 3) {
+        elements.push(
+          <div
+            key={`h-${i}`}
+            className={`text-xs sm:text-sm font-bold mt-3 mb-1.5 px-3 py-1.5 rounded-lg border flex items-center gap-2 ${
+              isUser
+                ? 'bg-blue-700/60 border-blue-400/80 text-white'
+                : 'bg-amber-50/80 border-amber-200/90 text-amber-950 shadow-2xs'
+            }`}
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+            <span>{renderInline(hText, isUser)}</span>
+          </div>
+        );
+      } else {
+        elements.push(
+          <div
+            key={`h-${i}`}
+            className={`text-xs font-bold uppercase tracking-wider mt-2.5 mb-1 ${
+              isUser ? 'text-blue-100' : 'text-slate-800'
+            }`}
+          >
+            {renderInline(hText, isUser)}
+          </div>
+        );
+      }
       continue;
     }
 
     // Blockquote
     if (trimmed.startsWith('> ')) {
       flushList();
+      flushTable();
       elements.push(
         <blockquote
           key={`quote-${i}`}
-          className={`border-l-2 pl-2.5 my-1 italic ${
-            isUser ? 'border-blue-300 text-blue-100' : 'border-blue-500 text-slate-600'
+          className={`border-l-3 pl-3 py-1 my-2 rounded-r-md text-xs sm:text-[13px] leading-relaxed italic ${
+            isUser ? 'border-blue-300 bg-blue-700/30 text-blue-100' : 'border-amber-500 bg-amber-50/50 text-slate-800'
           }`}
         >
           {renderInline(trimmed.slice(2), isUser)}
@@ -207,6 +321,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
     if (bulletMatch) {
       if (!currentList || currentList.type !== 'ul') {
         flushList();
+        flushTable();
         currentList = { type: 'ul', items: [] };
       }
       currentList.items.push(bulletMatch[1]);
@@ -218,6 +333,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
     if (numMatch) {
       if (!currentList || currentList.type !== 'ol') {
         flushList();
+        flushTable();
         currentList = { type: 'ol', items: [] };
       }
       currentList.items.push(numMatch[1]);
@@ -227,33 +343,36 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
     // Empty line
     if (trimmed === '') {
       flushList();
-      elements.push(<div key={`empty-${i}`} className="h-1.5" />);
+      flushTable();
+      elements.push(<div key={`empty-${i}`} className="h-2" />);
       continue;
     }
 
     // Normal paragraph line
     flushList();
+    flushTable();
     elements.push(
-      <p key={`p-${i}`} className="leading-relaxed">
+      <p key={`p-${i}`} className={`leading-relaxed text-xs sm:text-[13px] ${isUser ? 'text-white' : 'text-slate-800'} my-1`}>
         {renderInline(trimmed, isUser)}
       </p>
     );
   }
 
   flushList();
+  flushTable();
 
   if (inCodeBlock && codeBlockLines.length > 0) {
     elements.push(
       <pre
         key="code-unclosed"
-        className="p-2.5 my-2 bg-slate-900 text-slate-100 rounded-md font-mono text-[11px] overflow-x-auto"
+        className="p-3 my-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs overflow-x-auto border border-slate-800"
       >
         <code>{codeBlockLines.join('\n')}</code>
       </pre>
     );
   }
 
-  return <div className="space-y-0.5 text-xs">{elements}</div>;
+  return <div className="space-y-1">{elements}</div>;
 };
 
 export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({

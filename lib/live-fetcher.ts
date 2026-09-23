@@ -78,19 +78,16 @@ const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
 const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
 
-// Helper to run curl safely with User-Agent and Referer
+// Helper to run curl safely with standard browser headers
 function curlGet(url: string, asBuffer = false): Promise<string | Buffer> {
   return new Promise((resolve) => {
     const args = [
       '-s', '-L',
-      url,
-      '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      '-H', 'Referer: https://www.tender.gov.mn/',
-      '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,application/json,image/avif,image/webp,*/*;q=0.8',
-      '-H', 'Accept-Language: mn-MN,mn;q=0.9,en-US;q=0.8,en;q=0.7',
-      '-H', 'Sec-Fetch-Dest: document',
-      '-H', 'Sec-Fetch-Mode: navigate',
-      '-H', 'Sec-Fetch-Site: none'
+      '--connect-timeout', '12',
+      '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
+      '-H', 'Accept-Language: mn,en-US;q=0.7,en;q=0.3',
+      url
     ];
 
     execFile(curlCmd, args, {
@@ -831,7 +828,7 @@ export async function fetchTenderLiveBundle(
                   createdDate: d.createdDate,
                   fileExtention: d.fileExtention || 'pdf',
                   downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'addendum.pdf')}`,
-                  category: 'Техникийн тодруулга / Ажлын даалгавар',
+                  category: 'ТЭЗҮ / Техникийн даалгавар (ТД)',
                   isPrimary: false
                 });
               }
@@ -934,20 +931,33 @@ export async function fetchTenderLiveBundle(
 
   await Promise.all(promises);
 
-  // 5. Download primary specification PDF and extract text
-  const primaryDoc = result.documents.find(d => d.isPrimary) || result.documents[0];
-  if (primaryDoc && primaryDoc.fileId) {
+  // 5. Download and extract text from attached dossier documents (ТШББ + ТД / Техникийн даалгавар)
+  let combinedPdfText = '';
+  let totalPageCount = 0;
+  const docsToParse = result.documents.filter(d => d.fileId && (d.fileExtention === 'pdf' || !d.fileExtention)).slice(0, 3);
+
+  for (const doc of docsToParse) {
+    if (!doc.fileId) continue;
     try {
-      const pdfBuffer = (await curlGet(`https://user.tender.gov.mn/mn/download/${primaryDoc.fileId}`, true)) as Buffer;
-      if (pdfBuffer && pdfBuffer.length > 1000) {
+      const pdfBuffer = (await curlGet(`https://user.tender.gov.mn/mn/download/${doc.fileId}`, true)) as Buffer;
+      if (pdfBuffer && pdfBuffer.length > 500 && pdfBuffer.slice(0, 5).toString().includes('%PDF')) {
         const parsedPdf = await pdf(pdfBuffer);
-        result.pdfPageCount = parsedPdf.numpages;
-        result.pdfText = parsedPdf.text;
-        result.structuredSpecs = parsePdfContent(parsedPdf.text);
+        totalPageCount += parsedPdf.numpages || 0;
+        if (parsedPdf.text && parsedPdf.text.trim().length > 30) {
+          combinedPdfText += `\n\n--- БАРИМТ БИЧИГ: ${doc.fileName} ---\n` + parsedPdf.text;
+        }
       }
     } catch (pdfErr) {
-      console.warn('PDF parsing error for fileId:', primaryDoc.fileId, pdfErr);
+      console.warn(`PDF parsing error for ${doc.fileName} (${doc.fileId}):`, pdfErr);
     }
+  }
+
+  if (totalPageCount > 0) {
+    result.pdfPageCount = totalPageCount;
+  }
+  if (combinedPdfText.trim().length > 30) {
+    result.pdfText = combinedPdfText.trim();
+    result.structuredSpecs = parsePdfContent(result.pdfText);
   }
 
   // 6. Cache into memory
@@ -967,6 +977,7 @@ export async function fetchTenderLiveBundle(
           .update({
             raw_data: {
               ...existingRawData,
+              tenderDocumentId: result.tenderDocumentId || existingRawData.tenderDocumentId,
               liveBundle: dbSafeResult
             },
             updated_at: new Date().toISOString()
