@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Locale, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { RefreshCw, Sparkles, Globe, Building, Clock } from 'lucide-react';
+import { Logo } from '@/components/Logo';
 
 interface HeaderProps {
   locale: Locale;
@@ -65,21 +66,22 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
         {/* Brand */}
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-md bg-slate-900 text-white flex items-center justify-center font-bold text-sm tracking-wide shadow-sm shrink-0">
-            <Building className="h-4 w-4" />
-          </div>
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <Logo className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 drop-shadow-xs" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 truncate">
-                TENDER<span className="text-blue-600">.MN</span>
+              <span className="font-extrabold text-base sm:text-lg tracking-tight text-slate-900 truncate">
+                TENDER<span className="text-blue-600">HUB</span>
               </span>
-              <span className="text-[10px] sm:text-[11px] font-medium px-1.5 sm:px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/60 hidden sm:inline-block">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-900 text-white font-mono uppercase tracking-wider hidden sm:inline-block">
+                MN
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-medium px-1.5 sm:px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/60 hidden md:inline-block">
                 {locale === 'mn' ? 'Нэгдсэн Аналитик' : 'Market Intelligence'}
               </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">
-              {locale === 'mn' ? 'Тендерийн нэгдсэн дата & зах зээлийн платформ' : 'Centralized Tender & Market Intelligence Hub'}
+              {locale === 'mn' ? 'Монголын тендерийн нэгдсэн дата & зах зээлийн платформ' : 'Centralized Tender & Market Intelligence Hub'}
             </p>
           </div>
         </div>

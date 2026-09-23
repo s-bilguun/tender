@@ -2,7 +2,7 @@ import { Locale } from './types';
 
 export const translations = {
   mn: {
-    siteTitle: 'TENDER.MN | Тендерийн нэгдсэн дата & AI аналитик төв',
+    siteTitle: 'TenderHub | Тендерийн нэгдсэн дата & AI аналитик төв',
     siteSubtitle: 'Тендерийн нэгдсэн өгөгдөл, зах зээлийн ухаалаг аналитик',
     searchPlaceholder: 'Тендерийн нэр, дугаар, захиалагч байгууллага, салбар хайх... (жишээ нь: эмнэлэг, IT, сургууль, зам)',
     totalTenders: 'Нийт тендер',
@@ -63,7 +63,7 @@ export const translations = {
     closeModal: 'Хаах',
   },
   en: {
-    siteTitle: 'TENDER.MN | Centralized Tender Intelligence & AI Analytics',
+    siteTitle: 'TenderHub | Centralized Tender Intelligence & AI Analytics',
     siteSubtitle: 'Unified Tender Data & Advanced Market Intelligence',
     searchPlaceholder: 'Search by title, code, agency, or sector... (e.g., hospital, IT, school, road)',
     totalTenders: 'Total Tenders',

@@ -410,7 +410,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200 py-6 bg-white text-xs text-slate-500 text-center mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>TENDER.MN — Төрийн цахим худалдан авах ажиллагааны идэвхтэй тендерийн систем</span>
+          <span>TenderHub — Төрийн цахим худалдан авах ажиллагааны идэвхтэй тендерийн систем</span>
           <span>Өгөгдлийг албан ёсны tender.gov.mn системээс бодит цагт боловсруулав</span>
         </div>
       </footer>

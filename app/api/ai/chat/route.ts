@@ -57,7 +57,7 @@ async function parseNaturalQueryWithLLM(message: string, apiKey: string): Promis
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': 'https://tender.mn',
-        'X-Title': 'Tender.mn',
+        'X-Title': 'TenderHub',
       },
       body: JSON.stringify({
         model: 'google/gemma-4-26b-a4b-it:free',
@@ -664,7 +664,7 @@ Answer clearly in English using this data.`;
               Authorization: `Bearer ${openRouterKey}`,
               'Content-Type': 'application/json',
               'HTTP-Referer': 'https://tender.mn',
-              'X-Title': 'Tender.mn',
+              'X-Title': 'TenderHub',
             },
             body: JSON.stringify({
               model: m,

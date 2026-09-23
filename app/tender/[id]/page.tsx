@@ -15,11 +15,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const data = await getTenderDetailData(params.id);
   if (!data?.tender) {
     return {
-      title: 'Тендер олдсонгүй | Tender.mn'
+      title: 'Тендер олдсонгүй | TenderHub'
     };
   }
   return {
-    title: `${data.tender.tenderName} | Tender.mn`,
+    title: `${data.tender.tenderName} | TenderHub`,
     description: `${data.tender.budgetEntityName} - Төсөвт өртөг: ${Number(data.tender.totalBudget).toLocaleString()} ₮`
   };
 }
