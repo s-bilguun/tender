@@ -1475,7 +1475,29 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                         {/* Inline Extracted Summary Preview */}
                         {isExpanded && (
                           <div className="p-3.5 bg-slate-900 text-slate-100 font-mono text-[11px] leading-relaxed border-t border-slate-800 whitespace-pre-wrap select-text">
-                            {doc.extractedSummary || 'Хураангуй мэдээлэл олдсонгүй.'}
+                            {doc.extractedSummary ? (
+                              doc.extractedSummary
+                            ) : (
+                              <div className="space-y-2 font-sans text-xs">
+                                <div className="text-amber-400 font-semibold flex items-center gap-1.5">
+                                  <span>📄 Албан ёсны баримт бичгийн танилцуулга</span>
+                                </div>
+                                <p className="text-slate-300 text-[11px] leading-relaxed font-normal">
+                                  Энэхүү баримт бичиг (<span className="text-white font-medium">{doc.name}</span>) нь tender.gov.mn төрийн худалдан авах ажиллагааны албан ёсны эх баримт болно. Хэрэв сканердсан зурган хуудас агуулсан бол доорх холбоосоор шууд татан авч бүрэн эхээр нь танилцана уу.
+                                </p>
+                                <div className="pt-1.5 flex items-center gap-2">
+                                  <a
+                                    href={doc.downloadUrl || doc.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs font-semibold transition-colors"
+                                  >
+                                    <Download className="h-3 w-3" />
+                                    <span>Эх файлыг шууд татах ({doc.type || 'PDF'})</span>
+                                  </a>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

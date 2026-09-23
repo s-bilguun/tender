@@ -11,6 +11,7 @@ function curlDownloadPdf(fileId: string): Promise<Buffer | null> {
       '-s', '-L',
       `https://user.tender.gov.mn/mn/download/${fileId}`,
       '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      '-H', 'Referer: https://www.tender.gov.mn/',
       '-H', 'Accept: application/pdf,application/octet-stream,*/*',
     ];
 

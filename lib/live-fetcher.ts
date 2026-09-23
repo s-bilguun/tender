@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import { execFile } from 'child_process';
 const pdf = require('pdf-parse/lib/pdf-parse.js');
 import { supabaseAdmin as supabase } from './supabase';
@@ -79,7 +81,7 @@ const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
 const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
 
 // Helper to run curl safely with standard browser headers
-function curlGet(url: string, asBuffer = false): Promise<string | Buffer> {
+function curlGet(url: string, asBuffer = false, referer = 'https://www.tender.gov.mn/'): Promise<string | Buffer> {
   return new Promise((resolve) => {
     const args = [
       '-s', '-L',
@@ -87,6 +89,7 @@ function curlGet(url: string, asBuffer = false): Promise<string | Buffer> {
       '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
       '-H', 'Accept-Language: mn,en-US;q=0.7,en;q=0.3',
+      '-H', `Referer: ${referer}`,
       url
     ];
 
@@ -684,6 +687,41 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
   return result;
 }
 
+let diskBundles: Record<string, LiveExtractionResult> | null = null;
+
+export function loadDiskBundle(invId: string): LiveExtractionResult | undefined {
+  if (diskBundles === null) {
+    diskBundles = {};
+    try {
+      const p = path.join(process.cwd(), 'lib', 'live-bundles.json');
+      if (fs.existsSync(p)) {
+        diskBundles = JSON.parse(fs.readFileSync(p, 'utf8'));
+      }
+    } catch (e) {
+      console.warn('Could not read lib/live-bundles.json:', e);
+    }
+  }
+  return diskBundles ? diskBundles[invId] : undefined;
+}
+
+export function saveDiskBundle(invId: string, bundle: LiveExtractionResult) {
+  try {
+    const p = path.join(process.cwd(), 'lib', 'live-bundles.json');
+    if (diskBundles === null) {
+      loadDiskBundle(invId);
+    }
+    if (diskBundles) {
+      diskBundles[invId] = {
+        ...bundle,
+        pdfText: bundle.pdfText ? bundle.pdfText.substring(0, 30000) : ''
+      };
+      fs.writeFileSync(p, JSON.stringify(diskBundles, null, 2), 'utf8');
+    }
+  } catch (e) {
+    // ignore on read-only environments
+  }
+}
+
 export async function fetchTenderLiveBundle(
   invitationId: string | number,
   tenderIdHint?: string | number
@@ -694,6 +732,13 @@ export async function fetchTenderLiveBundle(
   const cached = liveCache.get(invIdStr);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.data;
+  }
+
+  // 1.5. Check persistent disk bundles (fast, 0ms, works in serverless Vercel)
+  const diskBundle = loadDiskBundle(invIdStr);
+  if (diskBundle && diskBundle.documents && diskBundle.documents.length > 0) {
+    liveCache.set(invIdStr, { timestamp: Date.now(), data: diskBundle });
+    return diskBundle;
   }
 
   // 2. Check Supabase raw_data
@@ -960,8 +1005,11 @@ export async function fetchTenderLiveBundle(
     result.structuredSpecs = parsePdfContent(result.pdfText);
   }
 
-  // 6. Cache into memory
+  // 6. Cache into memory and persistent disk
   liveCache.set(invIdStr, { timestamp: Date.now(), data: result });
+  if (result.documents && result.documents.length > 0) {
+    saveDiskBundle(invIdStr, result);
+  }
 
   // 7. Persist to Supabase raw_data asynchronously (store structured text, not heavy binary)
   if (existingRawData) {
