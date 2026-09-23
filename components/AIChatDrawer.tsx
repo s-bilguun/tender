@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { X, Send, Sparkles, Bot, User, Trash2, Tag, Loader2 } from 'lucide-react';
+import { X, Send, Sparkles, Bot, User, Trash2, Tag, Loader2, ExternalLink } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -303,7 +304,8 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     if (!messageText) setInput('');
     setIsLoading(true);
 
@@ -313,6 +315,10 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: textToSend,
+          messages: newMessages.map((m) => ({
+            role: m.sender === 'user' ? 'user' : 'assistant',
+            content: m.text,
+          })),
           tenderContext: selectedTender || undefined,
           locale,
           model: selectedModel,
@@ -320,7 +326,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       });
 
       const data = await res.json();
-      const reply = data.reply || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : 'Error generating reply.');
+      const reply = data.reply || data.text || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : 'Error generating reply.');
 
       const assistantMsg: Message = {
         id: `assistant-${Date.now()}`,
@@ -419,20 +425,32 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
 
       {/* Selected tender banner */}
       {selectedTender && (
-        <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-1.5 truncate text-slate-600">
+        <div className="px-4 py-2.5 bg-blue-50/80 border-b border-blue-200 flex items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2 truncate text-slate-700 min-w-0">
             <Tag className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-            <span className="text-slate-400">Сонгосон:</span>
-            <span className="font-medium text-slate-900 truncate max-w-[260px]">
-              {selectedTender.tenderName}
-            </span>
+            <div className="truncate">
+              <span className="text-slate-400 mr-1.5 font-medium">Сонгосон:</span>
+              <span className="font-semibold text-slate-900 truncate">
+                {selectedTender.tenderName}
+              </span>
+            </div>
           </div>
-          <button
-            onClick={onClearSelectedTender}
-            className="text-[11px] text-slate-500 hover:text-slate-800 underline shrink-0"
-          >
-            Арилгах
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href={`/tender/${selectedTender.invitationId}`}
+              className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 bg-white border border-blue-200 hover:border-blue-300 px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 transition-colors"
+            >
+              <span>Дэлгэрэнгүй</span>
+              <ExternalLink className="h-3 w-3" />
+            </Link>
+            <button
+              onClick={onClearSelectedTender}
+              className="text-[11px] text-slate-400 hover:text-slate-700 p-0.5 transition-colors"
+              title="Сонголтыг арилгах"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       )}
 
@@ -483,24 +501,63 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
 
       {/* Quick Prompts */}
       <div className="p-2.5 border-t border-slate-200 bg-slate-50 overflow-x-auto whitespace-nowrap no-scrollbar flex gap-1.5 text-[11px]">
-        <button
-          onClick={() => handleSend(t.aiPromptQuick1)}
-          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0"
-        >
-          {t.aiPromptQuick1}
-        </button>
-        <button
-          onClick={() => handleSend(t.aiPromptQuick2)}
-          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0"
-        >
-          {t.aiPromptQuick2}
-        </button>
-        <button
-          onClick={() => handleSend(t.aiPromptQuick3)}
-          className="h-7 px-2.5 rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0"
-        >
-          {t.aiPromptQuick3}
-        </button>
+        {selectedTender ? (
+          <>
+            <button
+              onClick={() => handleSend('Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.')}
+              className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+            >
+              📦 Нийлүүлэлтийн хуваарь?
+            </button>
+            <button
+              onClick={() => handleSend('Гэрээний тусгай нөхцөл (ГТН)-д заасан алданги, төлбөрийн нөхцөл, хүлээлцэх нөхцөлүүд ямар байна вэ?')}
+              className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+            >
+              📑 Тусгай нөхцөл & Алданги?
+            </button>
+            <button
+              onClick={() => handleSend('Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?')}
+              className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+            >
+              🛡️ Тендерийн баталгаа?
+            </button>
+            <button
+              onClick={() => handleSend('Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?')}
+              className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+            >
+              ⚖️ Өрсөлдөхөд анхаарах эрсдэл?
+            </button>
+            {(selectedTender.docStatusName?.includes('Амжилтгүй') || selectedTender.docStatusCode === 'TENDER_FAILED') && (
+              <button
+                onClick={() => handleSend('Энэхүү амжилтгүй болсон тендер яагаад цуцлагдсан бэ, дараа нь дахин зарлагдах уу, оролцоход юуг анхаарах вэ?')}
+                className="h-7 px-2.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              >
+                ⚠️ Яагаад амжилтгүй болсон бэ?
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => handleSend(t.aiPromptQuick1)}
+              className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+            >
+              {t.aiPromptQuick1}
+            </button>
+            <button
+              onClick={() => handleSend(t.aiPromptQuick2)}
+              className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+            >
+              {t.aiPromptQuick2}
+            </button>
+            <button
+              onClick={() => handleSend(t.aiPromptQuick3)}
+              className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+            >
+              {t.aiPromptQuick3}
+            </button>
+          </>
+        )}
       </div>
 
       {/* Input Form */}
