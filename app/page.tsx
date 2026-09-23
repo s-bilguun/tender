@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
-import { ActiveRadarBar } from '@/components/ActiveRadarBar';
 import { IndustryDiscoveryBar } from '@/components/IndustryDiscoveryBar';
 import { CompanyDiscoveryBar } from '@/components/CompanyDiscoveryBar';
 import { TenderTable } from '@/components/TenderTable';
@@ -218,15 +217,9 @@ export default function Home() {
         {/* Page Title & Context Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-200">
           <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-emerald-100 text-emerald-800 shrink-0">
-                <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-500 animate-pulse" />
-                {locale === 'mn' ? 'Шуурхай Радар • Зах зээлийн дата' : 'Live Radar • Market Intelligence'}
-              </span>
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
-                {locale === 'mn' ? 'Монголын тендерийн нэгдсэн дата & аналитик төв' : 'Centralized Tender Intelligence & Command Center'}
-              </h1>
-            </div>
+            <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
+              {locale === 'mn' ? 'Монголын тендерийн нэгдсэн дата & аналитик төв' : 'Centralized Tender Intelligence & Command Center'}
+            </h1>
             <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed">
               {locale === 'mn'
                 ? 'Төрийн болон хувийн хэвшлийн бүх тендер, худалдан авалтын боломжийг зах зээлийн нарийвчилсан дата, хиймэл оюун ухааны шинжилгээгээр 1 дороос хянах нэгдсэн систем'
@@ -250,14 +243,6 @@ export default function Home() {
           locale={locale}
         />
 
-        {/* Active Radar Quick Metric Cards */}
-        <ActiveRadarBar
-          stats={stats}
-          locale={locale}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-        />
-
         {/* Collapsible Analytics View */}
         {isAnalyticsOpen && stats && (
           <AnalyticsView
@@ -272,7 +257,7 @@ export default function Home() {
           />
         )}
 
-        {/* Workflow Tabs, Search & Filters */}
+        {/* Unified Workflow Tabs, Search & Filters */}
         <TenderFilters
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -281,6 +266,7 @@ export default function Home() {
           watchlistCount={savedIds.size}
           viewMode={viewMode}
           setViewMode={setViewMode}
+          stats={stats}
         />
 
         {/* Results Count Line */}

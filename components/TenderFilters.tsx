@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Locale, TenderFilterParams, ActiveTabMode } from '@/lib/types';
+import { Locale, TenderFilterParams, ActiveTabMode, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { 
   Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, 
@@ -17,6 +17,7 @@ interface TenderFiltersProps {
   watchlistCount?: number;
   viewMode: 'table' | 'grid';
   setViewMode: (mode: 'table' | 'grid') => void;
+  stats?: TenderStats;
 }
 
 export const TenderFilters: React.FC<TenderFiltersProps> = ({
@@ -27,6 +28,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   watchlistCount = 0,
   viewMode,
   setViewMode,
+  stats,
 }) => {
   const t = getTranslation(locale);
 
@@ -124,16 +126,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     { label: 'Улаанбаатар хотын захиргаа', query: 'Улаанбаатар' },
   ];
 
-  const quickPills = [
-    { label: '🏢 Эрдэнэт ТӨҮГ', query: 'Эрдэнэт' },
-    { label: '⛏️ ЭТТ ХК', query: 'Тавантолгой' },
-    { label: '🏥 Эрүүл мэнд', query: 'эмнэлэг' },
-    { label: '💻 IT & Компьютер', query: 'компьютер' },
-    { label: '🏫 Сургууль / Цэцэрлэг', query: 'сургууль' },
-    { label: '🏗️ Барилга, Засвар', query: 'барилга' },
-    { label: '🚗 Шатахуун', query: 'шатахуун' },
-  ];
-
   const currentTab: ActiveTabMode = filters.tabMode || 'all';
   const currentCategory = filters.category || 'all';
   const currentStatus = filters.status || 'all';
@@ -205,7 +197,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
   return (
     <div className="space-y-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
-      {/* 1. Primary Workflow Tabs */}
+      {/* 1. Primary Workflow Tabs with Integrated Live Metrics */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 w-full sm:w-auto -mx-1 px-1">
           {/* All History / Archive Tab */}
@@ -218,7 +210,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <Database className="h-3.5 w-3.5 text-blue-400" />
-            <span>{locale === 'mn' ? '📋 Бүх тендерүүд' : '📋 All Tenders'}</span>
+            <span>{locale === 'mn' ? 'Бүх тендерүүд' : 'All Tenders'}</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+              currentTab === 'all' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
+            }`}>
+              {(stats?.totalCount || totalFound || 22785).toLocaleString()}
+            </span>
           </button>
 
           {/* Active Live Tab */}
@@ -230,8 +227,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <Zap className="h-3.5 w-3.5" />
-            <span>{locale === 'mn' ? '⚡ Санал авч буй' : '⚡ Live Bids'}</span>
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span>{locale === 'mn' ? 'Санал авч буй' : 'Live Bids'}</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+              currentTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+            }`}>
+              {(stats?.activeTendersCount || 301).toLocaleString()}
+            </span>
           </button>
 
           {/* Awarded / Concluded Winners Tab */}
@@ -244,7 +246,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <Trophy className="h-3.5 w-3.5 text-amber-300" />
-            <span>{locale === 'mn' ? '🏆 Шалгарсан / Үр дүн' : '🏆 Awarded'}</span>
+            <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : 'Awarded'}</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+              currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
+            }`}>
+              {stats?.resultCount ? stats.resultCount.toLocaleString() : (locale === 'mn' ? 'Үр дүн' : 'Awarded')}
+            </span>
           </button>
 
           {/* Closing Soon Tab */}
@@ -258,6 +265,11 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           >
             <Flame className="h-3.5 w-3.5 text-rose-400" />
             <span>{locale === 'mn' ? 'Хаагдах дөхсөн (≤ 72ц)' : 'Closing Soon'}</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+              currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
+            }`}>
+              {(stats?.closingSoonCount || 42).toLocaleString()}
+            </span>
           </button>
 
           {/* Watchlist Tab */}
@@ -272,7 +284,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <Star className={`h-3.5 w-3.5 ${currentTab === 'watchlist' ? 'fill-white' : 'text-amber-500'}`} />
             <span>{locale === 'mn' ? 'Миний хянаж буй' : 'Watchlist'}</span>
             {watchlistCount > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] bg-white/20 font-bold tabular-nums">
+              <span className="ml-0.5 px-1.5 py-0.2 rounded text-[10px] bg-white/20 font-bold tabular-nums">
                 {watchlistCount}
               </span>
             )}
@@ -382,40 +394,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         )}
       </div>
 
-      {/* 3. Quick Topic / Entity Pills */}
-      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-0.5 hidden sm:inline">
-          Шуурхай:
-        </span>
-        {quickPills.map((pill, idx) => {
-          const isActive = filters.search === pill.query;
-          return (
-            <button
-              key={idx}
-              onClick={() => {
-                if (isActive) {
-                  handleClearSearch();
-                } else {
-                  handleApplySuggestion(pill.query);
-                }
-              }}
-              className={`h-6 px-2.5 rounded-full text-[11px] font-medium transition-all shrink-0 whitespace-nowrap flex items-center gap-1 ${
-                isActive
-                  ? 'bg-blue-600 text-white shadow-2xs font-bold'
-                  : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 hover:text-slate-900 border border-slate-200/50'
-              }`}
-            >
-              <span>{pill.label}</span>
-              {isActive && <X className="h-3 w-3 ml-0.5" />}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 4. Category, Status, Budget & Sort Filter Row */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 text-xs pt-1 border-t border-slate-100">
+      {/* 3. Category, Status, Budget, Year & Sort Filter Row */}
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 text-xs pt-2 border-t border-slate-100">
         {/* Category Chips */}
-        <div className="flex items-center gap-1 overflow-x-auto w-full lg:w-auto no-scrollbar py-1 -mx-1 px-1">
+        <div className="flex items-center gap-1 overflow-x-auto w-full lg:w-auto no-scrollbar py-0.5 -mx-1 px-1">
           <span className="text-[11px] font-medium text-slate-400 mr-1 whitespace-nowrap shrink-0">
             {locale === 'mn' ? 'Салбар:' : 'Category:'}
           </span>
@@ -434,7 +416,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           ))}
         </div>
 
-        {/* Status Dropdown, Budget Tiers & Sort */}
+        {/* Status Dropdown, Budget Tiers, Clean Year Select, Date Range & Sort */}
         <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
           {/* Explicit Status Filter */}
           <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0">
@@ -474,94 +456,85 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             ))}
           </div>
 
-          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2 shrink-0">
-            {/* Sort Dropdown */}
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700">
-              <ArrowUpDown className="h-3 w-3 text-slate-400" />
-              <select
-                value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
-                onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
-                className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer"
-              >
-                <option value="date_desc">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest First'}</option>
-                <option value="deadline_asc">{locale === 'mn' ? 'Эцсийн хугацаа ойртсоноор' : 'Ending Soonest'}</option>
-                <option value="budget_desc">{t.sortOptions.budget_desc}</option>
-                <option value="budget_asc">{t.sortOptions.budget_asc}</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 5. Year & Date Filter Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100 text-xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 w-full sm:w-auto -mx-1 px-1">
-          <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1 mr-1 shrink-0">
-            <Calendar className="h-3.5 w-3.5 text-blue-600" />
-            <span>{locale === 'mn' ? 'Зарласан он:' : 'Year:'}</span>
-          </span>
-
-          {['all', '2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019'].map((yr) => {
-            const isSelected = (filters.year || 'all') === yr;
-            return (
-              <button
-                key={yr}
-                onClick={() => {
-                  const isPastYear = yr !== 'all' && yr !== '2026';
-                  const shouldResetStatus = isPastYear && filters.status === 'receiving';
-                  onFilterChange({
-                    year: yr === 'all' ? undefined : yr,
-                    ...(shouldResetStatus ? { status: 'all', tabMode: 'all' } : {}),
-                    page: 1,
-                  });
-                }}
-                className={`h-6 px-2.5 rounded-full text-[11px] font-medium transition-all shrink-0 whitespace-nowrap ${
-                  isSelected
-                    ? 'bg-blue-600 text-white font-bold shadow-2xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900'
-                }`}
-              >
-                {yr === 'all' ? (locale === 'mn' ? 'Бүх он' : 'All') : `${yr} он`}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Custom Date Range Picker Inputs */}
-        <div className="flex items-center gap-1.5 ml-auto text-[11px]">
-          <span className="text-slate-400 hidden sm:inline">{locale === 'mn' ? 'Интервал:' : 'Range:'}</span>
-          <input
-            type="date"
-            value={filters.dateFrom || ''}
-            onChange={(e) => onFilterChange({
-              dateFrom: e.target.value || undefined,
-              ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
-              page: 1,
-            })}
-            className="h-6 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
-            title="Эхлэх огноо"
-          />
-          <span className="text-slate-400">-</span>
-          <input
-            type="date"
-            value={filters.dateTo || ''}
-            onChange={(e) => onFilterChange({
-              dateTo: e.target.value || undefined,
-              ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
-              page: 1,
-            })}
-            className="h-6 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
-            title="Дуусах огноо"
-          />
-          {(filters.dateFrom || filters.dateTo || (filters.year && filters.year !== 'all')) && (
-            <button
-              onClick={() => onFilterChange({ year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
-              className="h-6 px-1.5 text-slate-400 hover:text-slate-700 transition-colors"
-              title="Огноо цэвэрлэх"
+          {/* Clean Compact Year Selector (Replaced 9 individual buttons) */}
+          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0">
+            <Calendar className="h-3 w-3 text-blue-600 shrink-0" />
+            <select
+              value={filters.year || 'all'}
+              onChange={(e) => {
+                const yr = e.target.value;
+                const isPastYear = yr !== 'all' && yr !== '2026';
+                const shouldResetStatus = isPastYear && filters.status === 'receiving';
+                onFilterChange({
+                  year: yr === 'all' ? undefined : yr,
+                  ...(shouldResetStatus ? { status: 'all', tabMode: 'all' } : {}),
+                  page: 1,
+                });
+              }}
+              className="bg-transparent text-xs text-slate-800 font-medium focus:outline-none cursor-pointer"
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
+              <option value="all">{locale === 'mn' ? 'Бүх он' : 'All Years'}</option>
+              <option value="2026">2026 он</option>
+              <option value="2025">2025 он</option>
+              <option value="2024">2024 он</option>
+              <option value="2023">2023 он</option>
+              <option value="2022">2022 он</option>
+              <option value="2021">2021 он</option>
+              <option value="2020">2020 он</option>
+              <option value="2019">2019 он</option>
+            </select>
+          </div>
+
+          {/* Custom Date Range Picker */}
+          <div className="flex items-center gap-1 text-[11px] shrink-0">
+            <input
+              type="date"
+              value={filters.dateFrom || ''}
+              onChange={(e) => onFilterChange({
+                dateFrom: e.target.value || undefined,
+                ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
+                page: 1,
+              })}
+              className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
+              title="Эхлэх огноо"
+            />
+            <span className="text-slate-400">-</span>
+            <input
+              type="date"
+              value={filters.dateTo || ''}
+              onChange={(e) => onFilterChange({
+                dateTo: e.target.value || undefined,
+                ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
+                page: 1,
+              })}
+              className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
+              title="Дуусах огноо"
+            />
+            {(filters.dateFrom || filters.dateTo || (filters.year && filters.year !== 'all')) && (
+              <button
+                onClick={() => onFilterChange({ year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
+                className="h-7 px-1 text-slate-400 hover:text-slate-700 transition-colors"
+                title="Огноо цэвэрлэх"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0">
+            <ArrowUpDown className="h-3 w-3 text-slate-400" />
+            <select
+              value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
+              onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
+              className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer font-medium"
+            >
+              <option value="date_desc">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest First'}</option>
+              <option value="deadline_asc">{locale === 'mn' ? 'Эцсийн хугацаа ойртсоноор' : 'Ending Soonest'}</option>
+              <option value="budget_desc">{t.sortOptions.budget_desc}</option>
+              <option value="budget_asc">{t.sortOptions.budget_asc}</option>
+            </select>
+          </div>
         </div>
       </div>
 
