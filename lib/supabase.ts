@@ -41,11 +41,16 @@ const supabaseAnonKey = getValidKey(rawAnonKey, 'sb_publishable_6eN_ZLbhV0u9zjm2
 const rawServiceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SECRET_KEY;
-const supabaseServiceKey = getValidKey(rawServiceKey, 'sb_secret_EhqjXHXl6q60WG0V8rYWyg_0XTO-AHa');
+// The fallback sb_secret_ key is unregistered on Supabase; fall back to the valid working publishable key
+const defaultServiceKey = (rawServiceKey && !rawServiceKey.includes('sb_secret_EhqjXHXl6q60WG0V8rYWyg_0XTO-AHa')) 
+  ? rawServiceKey 
+  : supabaseAnonKey;
+const supabaseServiceKey = getValidKey(defaultServiceKey, supabaseAnonKey);
 
 // Public/Reader client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Admin/Writer client for server tasks bypassing RLS
 export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
 

@@ -78,7 +78,11 @@ function curlGet(url: string, asBuffer = false): Promise<string | Buffer> {
       '-s', '-L',
       url,
       '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      '-H', 'Accept: application/json, text/html, */*'
+      '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,application/json,image/avif,image/webp,*/*;q=0.8',
+      '-H', 'Accept-Language: mn-MN,mn;q=0.9,en-US;q=0.8,en;q=0.7',
+      '-H', 'Sec-Fetch-Dest: document',
+      '-H', 'Sec-Fetch-Mode: navigate',
+      '-H', 'Sec-Fetch-Site: none'
     ];
 
     execFile(curlCmd, args, {
@@ -576,10 +580,10 @@ export async function fetchTenderLiveBundle(
   if (!tenderDocumentId || !tenderId) {
     const detailHtml = (await curlGet(`https://www.tender.gov.mn/mn/invitation/detail/${invitationId}`)) as string;
     if (detailHtml) {
-      const docMatch = detailHtml.match(/tenderDocumentId[\\"]*:\s*(\d+)/);
+      const docMatch = detailHtml.match(/tenderDocumentId[^\d]{1,20}(\d+)/i);
       if (docMatch) tenderDocumentId = Number(docMatch[1]);
 
-      const tenderIdMatch = detailHtml.match(/tenderId[\\"]*:\s*(\d+)/);
+      const tenderIdMatch = detailHtml.match(/tenderId[^\d]{1,20}(\d+)/i);
       if (tenderIdMatch) tenderId = Number(tenderIdMatch[1]);
     }
   }

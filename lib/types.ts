@@ -77,6 +77,9 @@ export interface TenderItem {
   industry?: IndustryVertical;
   industryName?: string;
   bidRequirements?: BidRequirementSummary;
+  bds?: any;
+  technicalSpecs?: any;
+  results?: any;
 }
 
 export type ActiveTabMode = 'all' | 'active' | 'result' | 'closing_soon' | 'watchlist' | 'archive';

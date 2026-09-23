@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { TenderItem } from '@/lib/types';
-import { getStructuredTenderSummary } from '@/lib/tender-detail';
+import { getStructuredTenderSummary, getTenderDetailData } from '@/lib/tender-detail';
 
 export const dynamic = 'force-dynamic';
 
@@ -511,21 +511,38 @@ export async function POST(request: NextRequest) {
     let structuredInfo: any = null;
 
     if (targetTender) {
-      if (tenderContext?.bds && tenderContext?.technicalSpecs) {
+      if (tenderContext?.bds && tenderContext?.technicalSpecs?.realSpecsText) {
         structuredInfo = {
           bds: tenderContext.bds,
           technicalSpecs: tenderContext.technicalSpecs,
           results: tenderContext.results,
         };
       } else {
-        structuredInfo = getStructuredTenderSummary(targetTender);
+        const invId = targetTender.invitationId || targetTender.invitationNumber;
+        if (invId) {
+          try {
+            const fullDetail = await getTenderDetailData(String(invId));
+            if (fullDetail) {
+              structuredInfo = {
+                bds: fullDetail.bds,
+                technicalSpecs: fullDetail.technicalSpecs,
+                results: fullDetail.results,
+              };
+            }
+          } catch (e) {
+            console.warn('Failed to load full live tender detail for AI chat:', e);
+          }
+        }
+        if (!structuredInfo) {
+          structuredInfo = getStructuredTenderSummary(targetTender);
+        }
       }
     }
 
     if (locale === 'mn') {
       if (targetTender && structuredInfo) {
         const { bds, technicalSpecs, results } = structuredInfo;
-        systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны ТШББ, баримт бичиг, хууль зүйн шаардлагыг шинжлэх чиглэлээр мэргэшсэн туршлагатай, найрсаг ахлах шинжээч зөвлөх юм.
+        systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны ТШББ, баримт бичиг, техникийн тодорхойлолт, хууль зүйн шаардлагыг шинжлэх чиглэлээр мэргэшсэн туршлагатай, найрсаг ахлах шинжээч зөвлөх юм.
 
 ХАРИЛЦААНЫ СТАНДАРТ:
 - Робот шиг хуурай, хиймэл албархуу хэллэг БҮҮ ашигла ("Мэдээллийн санд...", "Хэрэглэгчийн асуултын дагуу..." гэх мэт үгс БҮҮ хэрэглэ).
@@ -544,26 +561,28 @@ export async function POST(request: NextRequest) {
 - Эцсийн хугацаа: ${targetTender.receiveDate || 'Тендерийн урилгаас харна уу'}
 - Төлөв: ${targetTender.docStatusName || 'Нээлттэй'}
 
-ХУУЛЬ ЗҮЙН ЖИШИГ ШААРДЛАГУУД (Төрийн худалдан авах ажиллагааны хуулийн дагуу тооцоолсон):
+ХУУЛЬ ЗҮЙН ЖИШИГ ШААРДЛАГУУД:
 1. Санхүүгийн босго үзүүлэлт:
    • Сүүлийн жилүүдийн борлуулалтын доод орлого: ${formatBudget(bds?.minAnnualTurnover || 0)} (${(bds?.minAnnualTurnover || 0).toLocaleString()} ₮)
    • Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих боломж: ${formatBudget(bds?.minLiquidAssets || 0)} (${(bds?.minLiquidAssets || 0).toLocaleString()} ₮)
-   • Тендерийн баталгаа (1-2%): ${(bds?.bidSecurity1Pct || 0).toLocaleString()} ₮ - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} ₮
+   • Тендерийн баталгаа: ${bds?.bidSecurityReq || `${(bds?.bidSecurity1Pct || 0).toLocaleString()} ₮ - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} ₮`}
    • Гүйцэтгэлийн баталгаа (5%): ${(bds?.performanceBond5Pct || 0).toLocaleString()} ₮
+
 2. Бүрдүүлэх ерөнхий бичиг баримтууд:
-   • Улсын бүртгэлийн гэрчилгээ
-   • Татварын өргүй цахим тодорхойлолт (e-Mongolia / E-Tax)
-   • ШШГЕГ-ын хугацаа хэтэрсэн өргүй лавлагаа
-   • НДШ төлөлтийн цахим лавлагаа
+   • Улсын бүртгэлийн гэрчилгээ, Татварын өргүй цахим тодорхойлолт (e-Mongolia / E-Tax)
+   • ШШГЕГ-ын өргүй лавлагаа, НДШ төлөлтийн цахим лавлагаа
    • Банкны баталгаа эсвэл даатгалын батлан даалт
-3. Албан ёсны эх баримт бичиг (ТШББ, ТЭЗҮ, Техникийн тодорхойлолт):
-   • tender.gov.mn эх сурвалжаас татан авч автоматаар задлан шинжилсэн бодит өгөгдөл.
-${technicalSpecs?.realSpecsText ? `\n4. АЛБАН ЁСНЫ ТШББ PDF-ЭЭС БОДИТООР ЗАДАРСАН ТЕХНИКИЙН ҮЗҮҮЛЭЛТҮҮД:\n${technicalSpecs.realSpecsText.substring(0, 4000)}` : ''}
-${technicalSpecs?.extractedQualifications && technicalSpecs.extractedQualifications.length > 0 ? `\n5. ОРОЛЦОГЧИЙН ЧАДАВХЫН ТУХАЙЛСАН ШААРДЛАГУУД (PDF-ээс):\n${technicalSpecs.extractedQualifications.join('\n')}` : ''}
-${results?.bidders && results.bidders.length > 0 ? `\n6. БОДИТ ОРОЛЦОГЧИД БА ҮНЭЛГЭЭНИЙ ХОРООНЫ ДҮГНЭЛТ:\n${results.bidders.map((b: any, idx: number) => `${idx + 1}. Компани: ${b.supplierName} (Регистр: ${b.registerNumber || '-'}) | Үнэ: ${b.openedBidderPrice?.toLocaleString()} ₮ | Төлөв: ${b.wfmStatusName} | Дүгнэлт: "${b.commentText || ''}"`).join('\n')}` : results?.isConcluded ? `\n6. ШАЛГАРУУЛАЛТЫН ҮР ДҮН:\n- Энэ тендер нь шалгаруулалтаа дуусгаж үр дүн нь гарсан байна. Үнэлгээний хорооны албан ёсны протокол tender.gov.mn дээр баталгаажсан байна.` : ''}
+${technicalSpecs?.documents && technicalSpecs.documents.length > 0 ? `\n3. АЛБАН ЁСНЫ ЭХ БАРИМТ БИЧГҮҮД (${technicalSpecs.documents.length} файл):\n${technicalSpecs.documents.map((d: any) => `   - ${d.name} (${d.category || 'Баримт бичиг'})`).join('\n')}` : ''}
+${bds?.requiredLicenses && bds.requiredLicenses.length > 0 ? `\n4. ШААРДАГДАХ ТУСГАЙ ЗӨВШӨӨРӨЛ / СЕРТИФИКАТ (ТШЗ 17.4 / 16.2):\n${bds.requiredLicenses.map((lic: string) => `   • ${lic}`).join('\n')}` : ''}
+${bds?.keyPersonnel && bds.keyPersonnel.length > 0 ? `\n5. ШААРДАГДАХ ТҮЛХҮҮР АЖИЛТНУУД / ХҮНИЙ НӨӨЦ:\n${bds.keyPersonnel.map((p: any) => `   • ${p.role}: ${p.count} хүн (Туршлага: ${p.experience || 'Шаардлагын дагуу'}, Мэргэжил: ${p.qualification || '-'})`).join('\n')}` : ''}
+${bds?.machinery && bds.machinery.length > 0 ? `\n6. ШААРДАГДАХ ТЕХНИК, МАШИН МЕХАНИЗМ, ТЭЭВЭР:\n${bds.machinery.map((m: string) => `   • ${m}`).join('\n')}` : ''}
+${technicalSpecs?.extractedSpecs?.items && technicalSpecs.extractedSpecs.items.length > 0 ? `\n7. НИЙЛҮҮЛЭХ БАРАА, БАГЦЫН БОДИТ ЖАГСААЛТ (${technicalSpecs.extractedSpecs.items.length} зүйл):\n${technicalSpecs.extractedSpecs.items.slice(0, 40).map((it: any) => `   - ${it.name} (${it.qty || ''} ${it.unit || ''}): ${it.specs || ''}`).join('\n')}${technicalSpecs.extractedSpecs.items.length > 40 ? `\n   ... болон цааш нийт ${technicalSpecs.extractedSpecs.items.length} багц/бараа байна.` : ''}` : ''}
+${technicalSpecs?.realSpecsText ? `\n8. АЛБАН ЁСНЫ ТШББ PDF-ЭЭС БОДИТООР ЗАДАРСАН ТЕХНИКИЙН ҮЗҮҮЛЭЛТҮҮД:\n${technicalSpecs.realSpecsText.substring(0, 5000)}` : ''}
+${technicalSpecs?.extractedQualifications && technicalSpecs.extractedQualifications.length > 0 ? `\n9. ОРОЛЦОГЧИЙН ЧАДАВХЫН ТУХАЙЛСАН ШААРДЛАГУУД (PDF-ээс):\n${technicalSpecs.extractedQualifications.join('\n')}` : ''}
+${results?.bidders && results.bidders.length > 0 ? `\n10. БОДИТ ОРОЛЦОГЧИД БА ҮНЭЛГЭЭНИЙ ХОРООНЫ ДҮГНЭЛТ:\n${results.bidders.map((b: any, idx: number) => `${idx + 1}. Компани: ${b.supplierName} (Регистр: ${b.registerNumber || '-'}) | Үнэ: ${b.openedBidderPrice?.toLocaleString()} ₮ | Төлөв: ${b.wfmStatusName} | Дүгнэлт: "${b.commentText || ''}"`).join('\n')}` : results?.isConcluded ? `\n10. ШАЛГАРУУЛАЛТЫН ҮР ДҮН:\n- Энэ тендер нь шалгаруулалтаа дуусгаж үр дүн нь гарсан байна. Үнэлгээний хорооны албан ёсны протокол tender.gov.mn дээр баталгаажсан байна.` : ''}
 
 ХАРИУЛТЫН ЗӨВЛӨМЖ:
-Хэрэглэгчийн асуултад дээрх бодит өгөгдөл, хуулийн шаардлагад үндэслэн хамгийн практик, тодорхой зөвлөгөө өгч хариулна уу.`;
+Хэрэглэгчийн асуултад дээрх ТШББ PDF болон албан ёсны баримтуудаас задлан шинжилсэн бодит өгөгдөл, шаардлагад үндэслэн хамгийн практик, тодорхой зөвлөгөө өгч хариулна уу.`;
       } else {
         systemPrompt = `Та бол төрийн худалдан авах ажиллагаа (тендер)-ны салбарт олон жил ажилласан, туршлагатай найрсаг зөвлөх туслах юм.
 
@@ -601,14 +620,14 @@ Target Tender:
 - Financing: ${targetTender.fundName}
 - Deadline: ${targetTender.receiveDate}
 
-STRUCTURED BDS & SPECIFICATION DATA:
+STRUCTURED BDS & SPECIFICATION DATA (EXTRACTED FROM OFFICIAL PDF DOSSIER):
+- Official Documents: ${technicalSpecs?.documents?.map((d: any) => d.name).join(', ') || 'Official PDF dossier available'}
 - Required Licenses: ${bds?.requiredLicenses?.join(', ') || 'Standard registration'}
-- Min Turnover: ${(bds?.minAnnualTurnover || 0).toLocaleString()} MNT
-- Liquid Assets: ${(bds?.minLiquidAssets || 0).toLocaleString()} MNT
-- Bid Bond: ${(bds?.bidSecurity1Pct || 0).toLocaleString()} - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} MNT
-- Delivery Period: ${technicalSpecs?.deliveryPeriodDays || 30} days
-- Warranty: ${technicalSpecs?.warrantyMonths || 12} months
-- Standards: ${technicalSpecs?.standards?.join(', ') || 'MNS, ISO'}
+- Key Personnel: ${bds?.keyPersonnel?.map((p: any) => `${p.role} (${p.count})`).join(', ') || 'Standard'}
+- Machinery/Equipment: ${bds?.machinery?.join(', ') || 'Standard'}
+- Bid Security: ${bds?.bidSecurityReq || `${(bds?.bidSecurity1Pct || 0).toLocaleString()} - ${(bds?.bidSecurity2Pct || 0).toLocaleString()} MNT`}
+- Specifications Summary:
+${technicalSpecs?.realSpecsText ? technicalSpecs.realSpecsText.substring(0, 3000) : 'Technical requirements outlined in official dossier.'}
 
 Provide practical guidance on technical requirements, bid security, and key deadlines in clean Markdown.`;
       } else {
