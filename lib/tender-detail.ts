@@ -482,8 +482,57 @@ export async function getTenderDetailData(id: string | number) {
       (technicalSpecs as any).pdfPageCount = liveBundle.pdfPageCount;
       (technicalSpecs as any).rawPdfText = liveBundle.pdfText ? liveBundle.pdfText.substring(0, 30000) : undefined;
 
-      // Real items extracted from official PDF
-      if (liveBundle.structuredSpecs.items && liveBundle.structuredSpecs.items.length > 0) {
+      // Real Special Conditions of Contract (ГТН / SCC)
+      if (liveBundle.structuredSpecs.specialConditions && liveBundle.structuredSpecs.specialConditions.length > 0) {
+        (technicalSpecs as any).specialConditions = liveBundle.structuredSpecs.specialConditions;
+        (bds as any).specialConditions = liveBundle.structuredSpecs.specialConditions;
+
+        const scc = liveBundle.structuredSpecs.specialConditions;
+        const locClause = scc.find((c: any) => c.clause.includes('2.5') || c.title.includes('газар') || c.content.includes('газар'));
+        if (locClause) {
+          const cleanedLoc = locClause.content.replace(/^Бараа нийлүүлэх газар\s*:\s*/i, '').trim();
+          if (cleanedLoc) technicalSpecs.deliveryLocation = cleanedLoc;
+        }
+
+        const timeClause = scc.find((c: any) => c.clause.includes('2.6') || c.title.includes('хугацаа') || c.content.includes('хугацаа'));
+        if (timeClause) {
+          const cleanedTime = timeClause.content.replace(/^Бараа нийлүүлэх хугацаа\s*:\s*/i, '').trim();
+          if (cleanedTime) (technicalSpecs as any).deliveryPeriodText = cleanedTime;
+        }
+
+        const payClause = scc.find((c: any) => c.clause.includes('3.9') || c.title.includes('Төлбөр'));
+        if (payClause) {
+          const cleanedPay = payClause.content.replace(/^Төлбөр төлөх хугацаа\s*:\s*/i, '').trim();
+          if (cleanedPay) technicalSpecs.paymentTerms.progressPayment = cleanedPay;
+        }
+
+        const warClause = scc.find((c: any) => c.clause.includes('4.10') || c.title.includes('Баталгаат'));
+        if (warClause) {
+          (technicalSpecs as any).warrantyText = warClause.content;
+        }
+
+        const penClause = scc.find((c: any) => c.clause.includes('4.17') || c.title.includes('алданги'));
+        if (penClause) {
+          (technicalSpecs as any).penaltyText = penClause.content;
+          const rateMatch = penClause.content.match(/(\d+(?:\.\d+)?)\s*хүртэл\s*хувь|(\d+(?:\.\d+)?)\s*хувь/);
+          if (rateMatch) {
+            technicalSpecs.penaltyClause.dailyRate = `${rateMatch[1] || rateMatch[2]}% / хоног тутамд`;
+          }
+        }
+      }
+
+      // Real Delivery Schedule from official PDF
+      if (liveBundle.structuredSpecs.deliverySchedule && liveBundle.structuredSpecs.deliverySchedule.length > 0) {
+        (technicalSpecs as any).deliverySchedule = liveBundle.structuredSpecs.deliverySchedule;
+        technicalSpecs.sampleItems = liveBundle.structuredSpecs.deliverySchedule.map((it: any) => ({
+          name: it.name,
+          quantity: it.quantity,
+          unit: it.unit,
+          spec: `Хүргэх газар: ${it.location} | Хугацаа: ${it.deadline}`,
+          isRealExtracted: true
+        }));
+        (technicalSpecs as any).isRealExtracted = true;
+      } else if (liveBundle.structuredSpecs.items && liveBundle.structuredSpecs.items.length > 0) {
         technicalSpecs.sampleItems = liveBundle.structuredSpecs.items.map((it: any) => ({
           name: it.name,
           quantity: it.quantity || it.qty || 1,
@@ -492,6 +541,24 @@ export async function getTenderDetailData(id: string | number) {
           isRealExtracted: true
         }));
         (technicalSpecs as any).isRealExtracted = true;
+      }
+    }
+
+    // Sub-tenders / Packages & Official Status
+    if (liveBundle.subTenders && liveBundle.subTenders.length > 0) {
+      (results as any).subTenders = liveBundle.subTenders;
+      (tenderItem as any).subTenders = liveBundle.subTenders;
+
+      const allFailed = liveBundle.subTenders.every(
+        (st: any) => st.wfmStatusCode === 'TENDER_FAILED' || (st.wfmStatusName || '').includes('Амжилтгүй')
+      );
+      if (allFailed) {
+        (results as any).status = 'FAILED';
+        (results as any).isFailed = true;
+        (results as any).isConcluded = true;
+        results.message = 'Энэхүү тендерийн сонгон шалгаруулалт амжилтгүй болсон тул гэрээ байгуулах оролцогч шалгараагүй байна (шаардлага хангасан санал ирээгүй эсвэл үнэлгээний хорооноос татгалзсан).';
+        tenderItem.docStatusName = 'Амжилтгүй болсон';
+        tenderItem.docStatusCode = 'TENDER_FAILED';
       }
     }
 

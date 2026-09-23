@@ -95,6 +95,13 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
   const getStatusBadge = () => {
     const s = (tender.docStatusName || '').toLowerCase();
+    const code = (tender.docStatusCode || '').toUpperCase();
+    if (s.includes('амжилтгүй') || code === 'TENDER_FAILED') {
+      return {
+        label: '⚪ Амжилтгүй болсон',
+        color: 'bg-slate-100 text-slate-700 border-slate-300 font-medium',
+      };
+    }
     if (s.includes('үр дүн')) {
       return {
         label: '🏆 Үр дүн гарсан',

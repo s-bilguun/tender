@@ -1,6 +1,7 @@
 import { execFile } from 'child_process';
 const pdf = require('pdf-parse/lib/pdf-parse.js');
 import { supabaseAdmin as supabase } from './supabase';
+import { SpecialConditionClause, DeliveryScheduleItem, LiveSubTender } from './types';
 
 export interface LiveTenderDocument {
   fileId: number;
@@ -43,6 +44,8 @@ export interface StructuredSpecs {
   personnel?: Array<{ role: string; count: number; qualification: string; experience?: string }>;
   machinery?: string[];
   bidSecurityReq?: string;
+  specialConditions?: SpecialConditionClause[];
+  deliverySchedule?: DeliveryScheduleItem[];
 }
 
 export interface ParsedPdfResult extends StructuredSpecs {
@@ -52,6 +55,8 @@ export interface ParsedPdfResult extends StructuredSpecs {
   licenses: string[];
   personnel: Array<{ role: string; count: number; qualification: string; experience?: string }>;
   machinery: string[];
+  specialConditions: SpecialConditionClause[];
+  deliverySchedule: DeliveryScheduleItem[];
 }
 
 export interface LiveExtractionResult {
@@ -63,6 +68,8 @@ export interface LiveExtractionResult {
   pdfText?: string;
   pdfPageCount?: number;
   structuredSpecs?: StructuredSpecs;
+  subTenders?: LiveSubTender[];
+  isFailed?: boolean;
 }
 
 // In-memory cache for fast sub-millisecond retrieval
@@ -71,13 +78,14 @@ const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
 const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
 
-// Helper to run curl safely with User-Agent
+// Helper to run curl safely with User-Agent and Referer
 function curlGet(url: string, asBuffer = false): Promise<string | Buffer> {
   return new Promise((resolve) => {
     const args = [
       '-s', '-L',
       url,
       '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      '-H', 'Referer: https://www.tender.gov.mn/',
       '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,application/json,image/avif,image/webp,*/*;q=0.8',
       '-H', 'Accept-Language: mn-MN,mn;q=0.9,en-US;q=0.8,en;q=0.7',
       '-H', 'Sec-Fetch-Dest: document',
@@ -125,6 +133,142 @@ function curlPostJson(url: string, body: any): Promise<string> {
 }
 
 
+export function extractSubTendersFromHtml(html: string): LiveSubTender[] {
+  if (!html) return [];
+  let fullText = '';
+  const regex = /self\.__next_f\.push\(\[\d+,\s*"([\s\S]*?)"\]\)(?:;|<\/script>)/g;
+  let m;
+  while ((m = regex.exec(html)) !== null) {
+    try {
+      fullText += m[1]
+        .replace(/\\"/g, '"')
+        .replace(/\\\\/g, '\\')
+        .replace(/\\n/g, '\n')
+        .replace(/\\r/g, '\r')
+        .replace(/\\t/g, '\t');
+    } catch {
+      fullText += m[1];
+    }
+  }
+
+  const subMatch = fullText.match(/"subTenders"\s*:\s*(\[[^\]]+\])/);
+  if (subMatch) {
+    try {
+      const parsed = JSON.parse(subMatch[1]);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item: any) => ({
+          subTenderId: Number(item.subTenderId) || 0,
+          subTenderName: String(item.subTenderName || '').replace(/\s+/g, ' ').trim(),
+          subTenderCode: String(item.subTenderCode || '').trim(),
+          totalBudget: Number(item.totalBudget) || 0,
+          wfmStatusId: Number(item.wfmStatusId) || 0,
+          wfmStatusName: String(item.wfmStatusName || 'Бүртгэгдсэн').trim(),
+          wfmStatusColor: String(item.wfmStatusColor || '#94A3B8').trim(),
+          wfmStatusCode: String(item.wfmStatusCode || '').trim(),
+          noticeDate: item.noticeDate && item.noticeDate !== 'null' ? String(item.noticeDate) : undefined
+        }));
+      }
+    } catch (e) {
+      console.warn('Failed to parse subTenders JSON:', e);
+    }
+  }
+  return [];
+}
+
+export function parseSCC(fullText: string): SpecialConditionClause[] {
+  if (!fullText) return [];
+  const sccIdx = fullText.lastIndexOf('ГЭРЭЭНИЙ ТУСГАЙ НӨХЦӨЛ');
+  if (sccIdx === -1) return [];
+
+  const text = fullText.substring(sccIdx);
+  const endIdx = text.search(/ГЭРЭЭ БАТАЛГААЖУУЛАХ МАЯГТ|ТЕНДЕР ШАЛГАРУУЛАЛТЫН ЗАРЛАЛ/);
+  const sccSection = endIdx !== -1 ? text.substring(0, endIdx) : text.substring(0, 10000);
+
+  const regex = /(?:^|\n)\s*(ГЕН|ГТН)\s*([\d\.]+)\.?\s*([^\n\:]*?)[\:\.]?\s*([\s\S]*?)(?=(?:\n\s*(?:ГЕН|ГТН)\s*[\d\.]+|\n\s*ГЭРЭЭ|$))/g;
+  let m;
+  const list: SpecialConditionClause[] = [];
+  while ((m = regex.exec(sccSection)) !== null) {
+    const prefix = m[1];
+    const num = m[2];
+    const rawTitle = m[3].replace(/\s+/g, ' ').trim();
+    let content = m[4].replace(/\s+/g, ' ').trim();
+
+    content = content.replace(/\[[^\]]*\]/g, '').trim();
+
+    let title = rawTitle;
+    if (!title) {
+      if (num === '2.5') title = 'Бараа нийлүүлэх газар';
+      else if (num === '2.6') title = 'Бараа нийлүүлэх хугацаа';
+      else if (num === '2.10') title = 'Бараа хүлээлгэн өгөх нөхцөл';
+      else if (num === '2.14') title = 'Баглаа, боодол';
+      else if (num === '3.8') title = 'Үнийн тохируулга';
+      else if (num === '3.9') title = 'Төлбөр төлөх хугацаа';
+      else if (num === '4.2') title = 'Даатгал';
+      else if (num === '4.10') title = 'Баталгаат хугацаа';
+      else if (num === '4.11') title = 'Чанарын баталгаа';
+      else if (num === '4.17') title = 'Нийлүүлэгчийн төлөх алданги';
+      else if (num === '4.18') title = 'Захиалагчийн төлөх алданги';
+      else title = `Тусгай нөхцөл ${num}`;
+    }
+
+    if (content.length > 0) {
+      list.push({
+        clause: `${prefix} ${num}`,
+        title,
+        content
+      });
+    }
+  }
+
+  return list;
+}
+
+export function parseDeliverySchedule(fullText: string): DeliveryScheduleItem[] {
+  if (!fullText) return [];
+  const schedIdx = fullText.lastIndexOf('БАРАА НИЙЛҮҮЛЭЛТИЙН ХУВААРЬ');
+  if (schedIdx === -1) return [];
+
+  const text = fullText.substring(schedIdx);
+  const endIdx = text.search(/IV БҮЛЭГ|ТЕХНИКИЙН ТОДОРХОЙЛОЛТ|ГЭРЭЭНИЙ НӨХЦӨЛ/);
+  const schedSection = endIdx !== -1 ? text.substring(0, endIdx) : text.substring(0, 6000);
+
+  const rowRegex = /(?:^|\n)\s*(\d{1,2})\s*\n\s*([А-ЯЁа-яёA-Za-z0-9\s\-–\/\.\(\)]+?)\s+([\d\s\,\.]+)\s+(М3|м3|М2|м2|Тонн|тн|ш|ширхэг|ком|багц|метр|м|комплект|кг|литр|л)\b([\s\S]*?)(?=(?:\n\s*\d{1,2}\s*\n\s*[А-ЯЁа-яё]|\n\s*IV БҮЛЭГ|$))/gi;
+  
+  const list: DeliveryScheduleItem[] = [];
+  let m;
+  while ((m = rowRegex.exec(schedSection)) !== null) {
+    const rowNum = m[1];
+    let name = m[2].replace(/\s+/g, ' ').trim();
+    name = name.replace(/^[0-9\s]+/, '').replace(/^No\s*/i, '').trim();
+    const qty = m[3].replace(/\s+/g, '').replace(',', '.');
+    const unit = m[4].trim();
+    const rest = m[5].replace(/\s+/g, ' ').trim();
+
+    if (name.includes('Барааны нэр') || name.includes('Тоо хэмжээ') || name.length < 2) continue;
+
+    let deadline = '';
+    let location = '';
+    const dateMatch = rest.match(/(\d{4}\s*оны[^\.]*?(?:дотор|хүртэл)|[0-9]{1,3}\s*хоног[^\.]*?(?:дотор|хүртэл))/i);
+    if (dateMatch) {
+      deadline = dateMatch[0].trim();
+      location = rest.replace(dateMatch[0], '').replace(/\[[^\]]*\]/g, '').trim();
+    } else {
+      location = rest.replace(/\[[^\]]*\]/g, '').trim();
+    }
+
+    list.push({
+      number: rowNum,
+      name,
+      quantity: qty,
+      unit,
+      location: location || 'Захиалагчийн заасан байршилд',
+      deadline: deadline || 'Гэрээнд заасан хугацаанд'
+    });
+  }
+
+  return list;
+}
+
 // Extract structured specifications and requirements from raw Mongolian PDF text
 export function parsePdfContent(fullText: string): ParsedPdfResult {
   const result: ParsedPdfResult = {
@@ -135,9 +279,25 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     personnel: [],
     machinery: [],
     bidSecurityReq: '',
+    specialConditions: [],
+    deliverySchedule: [],
   };
 
   if (!fullText) return result;
+
+  // Extract Special Conditions of Contract (ГЭРЭЭНИЙ ТУСГАЙ НӨХЦӨЛ - ГТН)
+  result.specialConditions = parseSCC(fullText);
+
+  // Extract Delivery Schedule (БАРАА НИЙЛҮҮЛЭЛТИЙН ХУВААРЬ)
+  result.deliverySchedule = parseDeliverySchedule(fullText);
+  if (result.deliverySchedule.length > 0) {
+    result.items = result.deliverySchedule.map(s => ({
+      name: s.name,
+      specs: `Хүргэх газар: ${s.location} | Хугацаа: ${s.deadline}`,
+      unit: s.unit,
+      qty: s.quantity
+    }));
+  }
 
   // 1. Licenses (ТШЗ 17.4 for standard tenders, ТШЗ 16.2 for framework agreements)
   let licIdx = fullText.indexOf('ТШЗ 17.4');
@@ -562,10 +722,12 @@ export async function fetchTenderLiveBundle(
         tenderDocumentId = Number(existingRawData.tenderDocumentId);
       }
       
-      // If already has live bundle in raw_data with documents, return directly
+      // If already has complete live bundle with specialConditions in raw_data, return directly
       if (
         existingRawData.liveBundle &&
         existingRawData.liveBundle.documents?.length > 0 &&
+        existingRawData.liveBundle.structuredSpecs?.specialConditions !== undefined &&
+        existingRawData.liveBundle.subTenders !== undefined &&
         tenderDocumentId
       ) {
         liveCache.set(invIdStr, { timestamp: Date.now(), data: existingRawData.liveBundle });
@@ -576,15 +738,30 @@ export async function fetchTenderLiveBundle(
     // continue on error
   }
 
-  // 3. Always scrape tenderDocumentId and tenderId from Next.js RSC detail page if missing
-  if (!tenderDocumentId || !tenderId) {
-    const detailHtml = (await curlGet(`https://www.tender.gov.mn/mn/invitation/detail/${invitationId}`)) as string;
-    if (detailHtml) {
+  // 3. Scrape tenderDocumentId, tenderId, and subTenders from Next.js RSC detail page
+  let subTenders: LiveSubTender[] = [];
+  let isFailed = false;
+
+  const detailHtml = (await curlGet(`https://www.tender.gov.mn/mn/invitation/detail/${invitationId}`)) as string;
+  if (detailHtml) {
+    if (!tenderDocumentId) {
       const docMatch = detailHtml.match(/tenderDocumentId[^\d]{1,20}(\d+)/i);
       if (docMatch) tenderDocumentId = Number(docMatch[1]);
+    }
 
+    if (!tenderId) {
       const tenderIdMatch = detailHtml.match(/tenderId[^\d]{1,20}(\d+)/i);
       if (tenderIdMatch) tenderId = Number(tenderIdMatch[1]);
+    }
+
+    subTenders = extractSubTendersFromHtml(detailHtml);
+    if (subTenders.length > 0) {
+      const allFailed = subTenders.every(
+        (st) => st.wfmStatusCode === 'TENDER_FAILED' || st.wfmStatusName.includes('Амжилтгүй')
+      );
+      if (allFailed) {
+        isFailed = true;
+      }
     }
   }
 
@@ -593,7 +770,9 @@ export async function fetchTenderLiveBundle(
     tenderId,
     documents: [],
     bidders: [],
-    announcementHtml: ''
+    announcementHtml: '',
+    subTenders,
+    isFailed
   };
 
   // 4. Concurrently fetch:

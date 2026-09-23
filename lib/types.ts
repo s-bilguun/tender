@@ -46,6 +46,33 @@ export interface BidRequirementSummary {
   }[];
 }
 
+export interface SpecialConditionClause {
+  clause: string;
+  title: string;
+  content: string;
+}
+
+export interface DeliveryScheduleItem {
+  number: string;
+  name: string;
+  quantity: string;
+  unit: string;
+  location: string;
+  deadline: string;
+}
+
+export interface LiveSubTender {
+  subTenderId: number;
+  subTenderName: string;
+  subTenderCode: string;
+  totalBudget: number;
+  wfmStatusId: number;
+  wfmStatusName: string;
+  wfmStatusColor: string;
+  wfmStatusCode: string;
+  noticeDate?: string;
+}
+
 export interface TenderItem {
   invitationId: number | string;
   invitationNumber: string;
@@ -72,6 +99,7 @@ export interface TenderItem {
   docStatusColor?: string;
   isPackage?: number;
   tenderDocumentId?: number | string;
+  subTenders?: LiveSubTender[];
   
   // B2B Supplier Enrichment Fields
   industry?: IndustryVertical;
