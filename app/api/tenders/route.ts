@@ -6,10 +6,16 @@ import { TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
+function sanitizePostgrestSearch(str?: string | null): string {
+  if (!str) return '';
+  return str.replace(/[,()%.\\/]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const search = searchParams.get('search') || undefined;
+    const rawSearch = searchParams.get('search') || undefined;
+    const search = sanitizePostgrestSearch(rawSearch);
     const category = searchParams.get('category') || undefined;
     const industry = (searchParams.get('industry') as any) || undefined;
     const minBudget = searchParams.get('minBudget') ? Number(searchParams.get('minBudget')) : undefined;
@@ -24,8 +30,8 @@ export async function GET(request: NextRequest) {
     const tabMode = (searchParams.get('tabMode') as any) || undefined;
     const urgency = (searchParams.get('urgency') as any) || undefined;
     const sortBy = (searchParams.get('sortBy') as TenderFilterParams['sortBy']) || 'date_desc';
-    const page = searchParams.get('page') ? Number(searchParams.get('page')) : 1;
-    const perPage = searchParams.get('perPage') ? Number(searchParams.get('perPage')) : 15;
+    const page = Math.max(1, Number(searchParams.get('page')) || 1);
+    const perPage = Math.max(1, Math.min(100, Number(searchParams.get('perPage')) || 15));
 
     // Try querying Supabase first
     try {
@@ -34,10 +40,10 @@ export async function GET(request: NextRequest) {
       if (category && category !== 'ALL' && category !== 'all') {
         query = query.eq('tender_type_code', category);
       }
-      if (minBudget !== undefined && !isNaN(minBudget)) {
+      if (minBudget !== undefined && !isNaN(minBudget) && minBudget > 0) {
         query = query.gte('total_budget', minBudget);
       }
-      if (maxBudget !== undefined && !isNaN(maxBudget)) {
+      if (maxBudget !== undefined && !isNaN(maxBudget) && maxBudget > 0) {
         query = query.lte('total_budget', maxBudget);
       }
       if (fundName && fundName !== 'all') {
@@ -50,20 +56,18 @@ export async function GET(request: NextRequest) {
         query = query.ilike('position_name', `%${positionName}%`);
       }
 
-      // Industry filter by domain keywords
-      if (industry && industry !== 'all') {
+      // If search query is present, filter across relevant text columns
+      if (search && search.length > 0) {
+        const terms = search.split(/\s+/).filter(Boolean);
+        for (const term of terms) {
+          query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,position_name.ilike.%${term}%,tender_code.ilike.%${term}%,client_code.ilike.%${term}%,invitation_number.ilike.%${term}%`);
+        }
+      } else if (industry && industry !== 'all') {
+        // Only apply root keyword OR filter if no specific search query is present to avoid PostgREST logical OR collision
         const kwList = KEYWORDS_MAP[industry as keyof typeof KEYWORDS_MAP] || [];
         if (kwList.length > 0) {
           const kwQueries = kwList.map((kw) => `tender_name.ilike.%${kw}%`).join(',');
           query = query.or(kwQueries);
-        }
-      }
-
-      // Multi-keyword tokenized search across all relevant fields
-      if (search && search.trim()) {
-        const terms = search.trim().split(/\s+/).filter(Boolean);
-        for (const term of terms) {
-          query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,tender_code.ilike.%${term}%,invitation_number.ilike.%${term}%,client_code.ilike.%${term}%,position_name.ilike.%${term}%,rule_name.ilike.%${term}%,fund_name.ilike.%${term}%`);
         }
       }
 
@@ -124,12 +128,11 @@ export async function GET(request: NextRequest) {
       query = query.range(from, to);
 
       const { data, count, error } = await query;
-
       const dynamicStats = tenderStore.getStats();
 
       if (!error && data && data.length > 0) {
-        const items: TenderItem[] = data.map((row) => {
-          const classification = classifyIndustry(row.tender_name, row.tender_type_code);
+        let mappedItems: TenderItem[] = data.map((row) => {
+          const classification = classifyIndustry(row.tender_name, row.tender_type_code, row.budget_entity_name || row.position_name);
           return {
             invitationId: row.invitation_id,
             invitationNumber: row.invitation_number,
@@ -154,18 +157,32 @@ export async function GET(request: NextRequest) {
           };
         });
 
-        const totalCount = count || items.length;
+        // Strict post-filtering to guarantee search term and industry intersection
+        if (search && search.length > 0) {
+          const terms = search.toLowerCase().split(/\s+/).filter(Boolean);
+          mappedItems = mappedItems.filter((item) => {
+            const combinedText = `${item.tenderName} ${item.budgetEntityName} ${item.positionName} ${item.tenderCode} ${item.clientCode} ${item.invitationNumber}`.toLowerCase();
+            return terms.every((t) => combinedText.includes(t));
+          });
+        }
 
-        return NextResponse.json({
-          success: true,
-          items,
-          totalCount,
-          page,
-          perPage,
-          totalPages: Math.ceil(totalCount / perPage),
-          source: 'supabase',
-          stats: dynamicStats,
-        });
+        if (industry && industry !== 'all') {
+          mappedItems = mappedItems.filter((item) => item.industry === industry);
+        }
+
+        if (mappedItems.length > 0) {
+          const totalCount = count || mappedItems.length;
+          return NextResponse.json({
+            success: true,
+            items: mappedItems,
+            totalCount,
+            page,
+            perPage,
+            totalPages: Math.max(1, Math.ceil(totalCount / perPage)),
+            source: 'supabase',
+            stats: dynamicStats,
+          });
+        }
       }
 
       // If Supabase has 0 results for a past year or query, live fetch from tender.gov.mn on demand

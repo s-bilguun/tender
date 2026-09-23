@@ -6,6 +6,13 @@ import { execFile } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
+export function parseSafeTimestamp(dateStr?: string | null): number | null {
+  if (!dateStr) return null;
+  const normalized = dateStr.includes('T') ? dateStr : dateStr.replace(' ', 'T');
+  const ts = Date.parse(normalized.endsWith('Z') || normalized.includes('+') ? normalized : `${normalized}+08:00`);
+  return isNaN(ts) ? null : ts;
+}
+
 class TenderStore {
   private tenders: Map<string, TenderItem> = new Map();
   private lastSyncedAt: Date | null = null;
@@ -16,10 +23,12 @@ class TenderStore {
   }
 
   private enrichItem(item: TenderItem): TenderItem {
-    const classification = classifyIndustry(item.tenderName, item.tenderTypeCode);
+    const entity = item.budgetEntityName || (item as any).uusgesenEntityName || item.positionName || '';
+    const classification = classifyIndustry(item.tenderName, item.tenderTypeCode, entity);
     const bidReqs = generateBidRequirements(item);
     return {
       ...item,
+      totalBudget: typeof item.totalBudget === 'number' ? item.totalBudget : Number(item.totalBudget) || 0,
       industry: item.industry || classification.id,
       industryName: item.industryName || classification.labelMn,
       bidRequirements: item.bidRequirements || bidReqs,
@@ -152,17 +161,19 @@ class TenderStore {
     this.loadFromDisk();
     let result = Array.from(this.tenders.values());
 
-    // Search keyword
+    // Multi-field tokenized search keyword
     if (params.search && params.search.trim() !== '') {
       const q = params.search.toLowerCase().trim();
+      const terms = q.split(/\s+/).filter(Boolean);
       result = result.filter(item => {
-        return (
-          (item.tenderName && item.tenderName.toLowerCase().includes(q)) ||
-          (item.tenderCode && item.tenderCode.toLowerCase().includes(q)) ||
-          (item.budgetEntityName && item.budgetEntityName.toLowerCase().includes(q)) ||
-          (item.positionName && item.positionName.toLowerCase().includes(q)) ||
-          (item.invitationNumber && item.invitationNumber.toLowerCase().includes(q))
-        );
+        const name = (item.tenderName || '').toLowerCase();
+        const code = (item.tenderCode || '').toLowerCase();
+        const entity = (item.budgetEntityName || (item as any).uusgesenEntityName || '').toLowerCase();
+        const position = (item.positionName || '').toLowerCase();
+        const invNum = (item.invitationNumber || '').toLowerCase();
+        const client = (item.clientCode || '').toLowerCase();
+        const fullContent = `${name} ${code} ${entity} ${position} ${invNum} ${client}`;
+        return terms.every(term => fullContent.includes(term));
       });
     }
 
@@ -176,29 +187,41 @@ class TenderStore {
       result = result.filter(item => item.industry === params.industry);
     }
 
-    // Budget range filter
-    if (params.minBudget !== undefined && params.minBudget > 0) {
-      result = result.filter(item => item.totalBudget >= params.minBudget!);
+    // Budget range filter (numeric safe)
+    if (params.minBudget !== undefined && !isNaN(params.minBudget) && params.minBudget > 0) {
+      result = result.filter(item => (Number(item.totalBudget) || 0) >= params.minBudget!);
     }
-    if (params.maxBudget !== undefined && params.maxBudget > 0) {
-      result = result.filter(item => item.totalBudget <= params.maxBudget!);
+    if (params.maxBudget !== undefined && !isNaN(params.maxBudget) && params.maxBudget > 0) {
+      result = result.filter(item => (Number(item.totalBudget) || 0) <= params.maxBudget!);
     }
 
     // Status & Active Tab filter
+    const nowTs = Date.now();
     if (params.tabMode === 'closing_soon') {
       result = result.filter(item => {
         const isActive = item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1;
         if (!isActive) return false;
-        const deadline = item.receiveDate || item.openDate;
-        if (!deadline) return false;
-        const diffDays = (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-        return diffDays > 0 && diffDays <= 7;
+        const deadlineTs = parseSafeTimestamp(item.receiveDate || item.openDate);
+        if (!deadlineTs) return false;
+        const diffHours = (deadlineTs - nowTs) / (1000 * 60 * 60);
+        return diffHours > 0 && diffHours <= 72; // Exactly matches ≤ 72 hours / 3 days
+      });
+    } else if (params.tabMode === 'result') {
+      result = result.filter(item => {
+        const status = (item.docStatusName || '').toLowerCase();
+        return status.includes('үр дүн') || status.includes('дууссан') || (item.docStatusCode || '').includes('CLOSED');
+      });
+    } else if (params.tabMode === 'active') {
+      result = result.filter(item => {
+        return item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1;
       });
     } else if (params.status && params.status !== 'all') {
       if (params.status === 'receiving') {
         result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1);
       } else if (params.status === 'published') {
         result = result.filter(item => item.docStatusCode === 'PUBLISHING_STATUS' || item.docStatusName?.includes('Нийтлэгдсэн'));
+      } else if (params.status === 'result') {
+        result = result.filter(item => (item.docStatusName || '').toLowerCase().includes('үр дүн'));
       }
     }
 
@@ -206,20 +229,20 @@ class TenderStore {
     if (params.urgency && params.urgency !== 'all') {
       if (params.urgency === 'urgent_3d') {
         result = result.filter(item => {
-          const deadline = item.receiveDate || item.openDate;
-          if (!deadline) return false;
-          const diffHours = (new Date(deadline).getTime() - Date.now()) / (1000 * 60 * 60);
+          const deadlineTs = parseSafeTimestamp(item.receiveDate || item.openDate);
+          if (!deadlineTs) return false;
+          const diffHours = (deadlineTs - nowTs) / (1000 * 60 * 60);
           return diffHours > 0 && diffHours <= 72;
         });
       } else if (params.urgency === 'new_48h') {
         result = result.filter(item => {
-          const pubDate = item.publishDate || item.actionDate;
-          if (!pubDate) return false;
-          const diffHours = (Date.now() - new Date(pubDate).getTime()) / (1000 * 60 * 60);
+          const pubTs = parseSafeTimestamp(item.publishDate || item.actionDate);
+          if (!pubTs) return false;
+          const diffHours = (nowTs - pubTs) / (1000 * 60 * 60);
           return diffHours >= 0 && diffHours <= 96; // within last 4 days / 96h
         });
       } else if (params.urgency === 'high_budget') {
-        result = result.filter(item => item.totalBudget >= 500_000_000);
+        result = result.filter(item => (Number(item.totalBudget) || 0) >= 500_000_000);
       }
     }
 
@@ -236,42 +259,50 @@ class TenderStore {
 
     // Date range filter (if present)
     if ((params as any).dateFrom) {
-      const fromTime = new Date((params as any).dateFrom).getTime();
-      result = result.filter(item => {
-        const pub = item.publishDate || item.actionDate;
-        return pub ? new Date(pub).getTime() >= fromTime : false;
-      });
+      const fromTime = parseSafeTimestamp((params as any).dateFrom);
+      if (fromTime) {
+        result = result.filter(item => {
+          const pubTs = parseSafeTimestamp(item.publishDate || item.actionDate);
+          return pubTs ? pubTs >= fromTime : false;
+        });
+      }
     }
     if ((params as any).dateTo) {
-      const toTime = new Date(`${(params as any).dateTo}T23:59:59`).getTime();
-      result = result.filter(item => {
-        const pub = item.publishDate || item.actionDate;
-        return pub ? new Date(pub).getTime() <= toTime : false;
-      });
+      const toTime = parseSafeTimestamp(`${(params as any).dateTo}T23:59:59`);
+      if (toTime) {
+        result = result.filter(item => {
+          const pubTs = parseSafeTimestamp(item.publishDate || item.actionDate);
+          return pubTs ? pubTs <= toTime : false;
+        });
+      }
     }
 
-    // Sorting
+    // Sorting (robust numeric & date parsing)
     const sortBy = params.tabMode === 'closing_soon' ? 'deadline_asc' : (params.sortBy || 'date_desc');
     result.sort((a, b) => {
       if (sortBy === 'budget_desc') {
-        return (b.totalBudget || 0) - (a.totalBudget || 0);
+        const budgetA = typeof a.totalBudget === 'number' ? a.totalBudget : Number(a.totalBudget) || 0;
+        const budgetB = typeof b.totalBudget === 'number' ? b.totalBudget : Number(b.totalBudget) || 0;
+        return budgetB - budgetA;
       } else if (sortBy === 'budget_asc') {
-        return (a.totalBudget || 0) - (b.totalBudget || 0);
+        const budgetA = typeof a.totalBudget === 'number' ? a.totalBudget : Number(a.totalBudget) || 0;
+        const budgetB = typeof b.totalBudget === 'number' ? b.totalBudget : Number(b.totalBudget) || 0;
+        return budgetA - budgetB;
       } else if (sortBy === 'deadline_asc') {
-        const dateA = a.receiveDate ? new Date(a.receiveDate).getTime() : Infinity;
-        const dateB = b.receiveDate ? new Date(b.receiveDate).getTime() : Infinity;
+        const dateA = parseSafeTimestamp(a.receiveDate || a.openDate) ?? Infinity;
+        const dateB = parseSafeTimestamp(b.receiveDate || b.openDate) ?? Infinity;
         return dateA - dateB;
       } else {
         // date_desc default
-        const dateA = a.publishDate || a.actionDate ? new Date(a.publishDate || a.actionDate!).getTime() : 0;
-        const dateB = b.publishDate || b.actionDate ? new Date(b.publishDate || b.actionDate!).getTime() : 0;
+        const dateA = parseSafeTimestamp(a.publishDate || a.actionDate) ?? 0;
+        const dateB = parseSafeTimestamp(b.publishDate || b.actionDate) ?? 0;
         return dateB - dateA;
       }
     });
 
     const totalCount = result.length;
-    const page = params.page || 1;
-    const perPage = params.perPage || 15;
+    const page = Math.max(1, Number(params.page) || 1);
+    const perPage = Math.max(1, Math.min(100, Number(params.perPage) || 15));
     const startIndex = (page - 1) * perPage;
     const pagedItems = result.slice(startIndex, startIndex + perPage);
 

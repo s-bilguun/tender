@@ -146,17 +146,16 @@ export const KEYWORDS_MAP: Record<IndustryVertical, string[]> = {
   ],
 };
 
-export function classifyIndustry(name?: string, typeCode?: string): { id: IndustryVertical; labelMn: string; labelEn: string; icon: string } {
-  if (!name) {
+export function classifyIndustry(name?: string, typeCode?: string, entityName?: string): { id: IndustryVertical; labelMn: string; labelEn: string; icon: string } {
+  const combined = `${name || ''} ${entityName || ''}`.toLowerCase().trim();
+  if (!combined) {
     return { id: 'consulting', labelMn: 'Бусад үйлчилгээ', labelEn: 'General Services', icon: '📦' };
   }
-
-  const lower = name.toLowerCase();
 
   for (const ind of INDUSTRIES) {
     const keywords = KEYWORDS_MAP[ind.id] || [];
     for (const kw of keywords) {
-      if (lower.includes(kw)) {
+      if (combined.includes(kw)) {
         return {
           id: ind.id,
           labelMn: ind.labelMn,
@@ -169,11 +168,11 @@ export function classifyIndustry(name?: string, typeCode?: string): { id: Indust
 
   // Fallback by tenderTypeCode
   if (typeCode === 'JOB') {
-    return { id: 'construction', labelMn: 'Барилга, засвар', labelEn: 'Construction & Works', icon: '🏗️' };
+    return { id: 'construction', labelMn: 'Барилга, дэд бүтэц', labelEn: 'Construction & Civil Works', icon: '🏗️' };
   }
   if (typeCode === 'PRODUCT') {
-    return { id: 'stationery', labelMn: 'Бараа, нийлүүлэлт', labelEn: 'Goods & Supplies', icon: '📦' };
+    return { id: 'stationery', labelMn: 'Бичиг хэрэг & Бараа', labelEn: 'Supplies & Equipment', icon: '📚' };
   }
 
-  return { id: 'consulting', labelMn: 'Үйлчилгээ, зөвлөх', labelEn: 'Services & Consulting', icon: '💼' };
+  return { id: 'consulting', labelMn: 'Зөвлөх, аудит & Сургалт', labelEn: 'Consulting & Services', icon: '⚖️' };
 }
