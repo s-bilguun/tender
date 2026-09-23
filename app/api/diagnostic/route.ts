@@ -20,26 +20,38 @@ export async function GET(request: NextRequest) {
   const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
   const versionCheck = await runCmd(curlCmd, ['--version']);
 
-  const curlFetch = await runCmd(curlCmd, [
-    '-s', '-L',
-    '--connect-timeout', '8',
-    '-A', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
-    '-H', 'Accept-Language: mn,en-US;q=0.7,en;q=0.3',
-    'https://www.tender.gov.mn/mn/invitation/detail/1789954038947'
-  ]);
+  const tests = [
+    { name: 'gw153_www', url: 'https://www.tender.gov.mn/api/gw/153/list?tenderDocumentId=1789954038670' },
+    { name: 'gw153_user', url: 'https://user.tender.gov.mn/api/gw/153/list?tenderDocumentId=1789954038670' },
+    { name: 'gw88_www', url: 'https://www.tender.gov.mn/api/gw/88/list?tenderDocumentId=1789954038670' },
+    { name: 'gw88_user', url: 'https://user.tender.gov.mn/api/gw/88/list?tenderDocumentId=1789954038670' },
+    { name: 'detail_user_domain', url: 'https://user.tender.gov.mn/mn/invitation/detail/1789954038947' },
+    { name: 'detail_no_www', url: 'https://tender.gov.mn/mn/invitation/detail/1789954038947' },
+    { name: 'detail_www', url: 'https://www.tender.gov.mn/mn/invitation/detail/1789954038947' }
+  ];
 
-  const detailData = await getTenderDetailData('1789954038947');
+  const results: any[] = [];
+  for (const t of tests) {
+    const res = await runCmd(curlCmd, [
+      '-s', '-L',
+      '--connect-timeout', '6',
+      '-A', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+      '-H', 'Accept: application/json, text/html, */*',
+      '-H', 'Accept-Language: mn',
+      t.url
+    ]);
+    results.push({
+      name: t.name,
+      url: t.url,
+      length: res.stdout.length,
+      snippet: res.stdout.substring(0, 150),
+      isJson: res.stdout.trim().startsWith('[') || res.stdout.trim().startsWith('{'),
+      error: res.error
+    });
+  }
 
   return NextResponse.json({
     platform: process.platform,
-    curlCmd,
-    versionCheck,
-    curlFetchLength: curlFetch.stdout.length,
-    curlFetchError: curlFetch.error,
-    curlFetchStderr: curlFetch.stderr,
-    curlFetchSnippet: curlFetch.stdout.substring(0, 300),
-    detailDocsCount: detailData?.technicalSpecs?.documents?.length,
-    detailDocs: detailData?.technicalSpecs?.documents
+    results
   });
 }
