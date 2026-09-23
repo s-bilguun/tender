@@ -157,6 +157,180 @@ export function generateResults(tender: any) {
   };
 }
 
+const MONGOLIAN_PROCUREMENT_STOP_WORDS = new Set([
+  'төрөл', 'бүрийн', 'бүх', 'нийт', 'тусгай', 'зориулалтын', 'зориулалттай', 'хэрэгцээний',
+  'шаардлагатай', 'хэрэгцээт', 'жилийн', 'оны', 'дахь', 'дэх', 'багц', 'арга', 'хэмжээ',
+  'худалдан', 'авах', 'нийлүүлэх', 'хийх', 'гүйцэтгэх', 'сонгон', 'шалгаруулалт', 'шалгаруулах',
+  'төсөл', 'ажил', 'үйлчилгээ', 'бараа', 'бүтээгдэхүүн', 'гэрээ', 'тендер', 'болон', 'хамт',
+  'тухай', 'газар', 'хэлтэс', 'алба', 'төв', 'аймаг', 'сум', 'дүүрэг', 'хот', 'улсын',
+  'байгууллага', 'хувь', 'нийлүүлсэн', 'нийгэмлэг', 'үйл', 'ажиллагаа', 'ажлын', 'даалгавар',
+  'албан', 'хэрэгцээнд', 'шаардагдах', 'хүрээнд', 'зориулсан'
+]);
+
+function extractSubstantiveKeywords(title: string): string[] {
+  if (!title) return [];
+  const rawWords = title
+    .toLowerCase()
+    .replace(/[^\w\s\u0400-\u04FF]/g, ' ')
+    .split(/\s+/)
+    .map(w => w.trim())
+    .filter(w => w.length > 2 && !MONGOLIAN_PROCUREMENT_STOP_WORDS.has(w));
+
+  const stems: string[] = [];
+  for (const w of rawWords) {
+    let stem = w;
+    if (stem.endsWith('ийн') || stem.endsWith('ний')) stem = stem.slice(0, -3);
+    else if (stem.endsWith('ын') || stem.endsWith('ны') || stem.endsWith('аар') || stem.endsWith('ээр') || stem.endsWith('оор') || stem.endsWith('өөр')) stem = stem.slice(0, -2);
+    else if (stem.endsWith('ууд') || stem.endsWith('үүд') || stem.endsWith('тай') || stem.endsWith('тэй') || stem.endsWith('той')) stem = stem.slice(0, -3);
+
+    if (stem === 'автомаши') stem = 'автомашин';
+    if (stem === 'суудл') stem = 'суудал';
+    if (stem === 'эмнэлг') stem = 'эмнэлэг';
+    if (stem === 'хэрэгсл') stem = 'хэрэгсэл';
+
+    if (stem.length >= 3 && !MONGOLIAN_PROCUREMENT_STOP_WORDS.has(stem)) {
+      stems.push(stem);
+    }
+    if (w.length >= 3 && !MONGOLIAN_PROCUREMENT_STOP_WORDS.has(w)) {
+      stems.push(w);
+    }
+  }
+  return Array.from(new Set(stems));
+}
+
+async function findSimilarTenders(tenderItem: any, currentId: string | number) {
+  const keywords = extractSubstantiveKeywords(tenderItem.tenderName);
+  let candidates: any[] = [];
+
+  // Step 1: Query Supabase with substantive keywords
+  if (keywords.length > 0) {
+    const orClause = keywords.slice(0, 5).map(k => `tender_name.ilike.%${k}%`).join(',');
+    try {
+      const { data } = await supabase
+        .from('tenders')
+        .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_code, tender_type_name, doc_status_name, publish_date')
+        .neq('invitation_id', currentId)
+        .or(orClause)
+        .limit(30);
+      if (data && data.length > 0) {
+        candidates = data;
+      }
+    } catch (e) {
+      console.warn('Keyword search in Supabase failed:', e);
+    }
+  }
+
+  // Step 2: Fallback to local tenderStore if candidates are empty or low
+  if (candidates.length < 5) {
+    try {
+      const allStoreTenders = tenderStore.getAllTenders();
+      const existingIds = new Set([String(currentId), ...candidates.map(c => String(c.invitation_id || c.invitationId))]);
+      
+      for (const item of allStoreTenders) {
+        if (existingIds.has(String(item.invitationId))) continue;
+        const itemTitle = (item.tenderName || '').toLowerCase();
+        let matches = false;
+        for (const kw of keywords) {
+          if (itemTitle.includes(kw)) {
+            matches = true;
+            break;
+          }
+        }
+        if (matches) {
+          candidates.push({
+            invitation_id: item.invitationId,
+            tender_code: item.tenderCode,
+            tender_name: item.tenderName,
+            total_budget: item.totalBudget,
+            budget_entity_name: item.budgetEntityName,
+            tender_type_code: item.tenderTypeCode,
+            tender_type_name: item.tenderTypeName,
+            doc_status_name: item.docStatusName,
+            publish_date: item.publishDate
+          });
+          existingIds.add(String(item.invitationId));
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Step 3: Augment by same category / tender_type_code if still < 5
+  if (candidates.length < 5) {
+    try {
+      const existingIds = new Set([String(currentId), ...candidates.map(c => String(c.invitation_id || c.invitationId))]);
+      const { data: fallbackData } = await supabase
+        .from('tenders')
+        .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_code, tender_type_name, doc_status_name, publish_date')
+        .eq('tender_type_code', tenderItem.tenderTypeCode || 'PRODUCT')
+        .neq('invitation_id', currentId)
+        .order('publish_date', { ascending: false })
+        .limit(10);
+
+      if (fallbackData) {
+        for (const item of fallbackData) {
+          if (!existingIds.has(String(item.invitation_id))) {
+            candidates.push(item);
+            existingIds.add(String(item.invitation_id));
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
+  // Step 4: Intelligent Scoring & Ranking
+  const scored = candidates.map(item => {
+    const itemTitle = (item.tender_name || item.tenderName || '').toLowerCase();
+    let score = 0;
+    const matchedKws: string[] = [];
+
+    for (const kw of keywords) {
+      if (itemTitle.includes(kw)) {
+        score += 20;
+        matchedKws.push(kw);
+      }
+    }
+
+    if (item.tender_type_code === tenderItem.tenderTypeCode) {
+      score += 10;
+    }
+
+    const itemBudget = Number(item.total_budget || item.totalBudget) || 0;
+    const currentBudget = Number(tenderItem.totalBudget) || 0;
+    if (currentBudget > 0 && itemBudget > 0) {
+      const ratio = itemBudget / currentBudget;
+      if (ratio >= 0.2 && ratio <= 5.0) {
+        score += 5;
+      }
+    }
+
+    const matchReason = matchedKws.length > 0
+      ? `Түлхүүр үг: ${matchedKws.slice(0, 3).join(', ')}`
+      : 'Ижил төрлийн худалдан авалт';
+
+    return {
+      invitationId: item.invitation_id || item.invitationId,
+      tenderCode: item.tender_code || item.tenderCode || '',
+      tenderName: item.tender_name || item.tenderName || '',
+      totalBudget: itemBudget,
+      budgetEntityName: item.budget_entity_name || item.budgetEntityName || '',
+      tenderTypeCode: item.tender_type_code || item.tenderTypeCode || '',
+      tenderTypeName: item.tender_type_name || item.tenderTypeName || '',
+      docStatusName: item.doc_status_name || item.docStatusName || '',
+      publishDate: item.publish_date || item.publishDate || '',
+      matchReason,
+      matchedKeywords: matchedKws,
+      score
+    };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 5);
+}
+
 export async function getTenderDetailData(id: string | number) {
   if (!id) return null;
 
@@ -236,40 +410,8 @@ export async function getTenderDetailData(id: string | number) {
     }
   }
 
-  // 3. Fetch similar tenders in category / similar keyword
-  let similarTenders: any[] = [];
-  const firstWord = tenderItem.tenderName.split(' ')[0];
-  try {
-    let q = supabase
-      .from('tenders')
-      .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_code, tender_type_name, doc_status_name, publish_date')
-      .neq('invitation_id', id)
-      .order('publish_date', { ascending: false })
-      .limit(5);
-
-    if (firstWord && firstWord.length > 3) {
-      q = q.ilike('tender_name', `%${firstWord}%`);
-    } else {
-      q = q.eq('tender_type_code', tenderItem.tenderTypeCode);
-    }
-
-    const { data: simData } = await q;
-    if (simData) {
-      similarTenders = simData.map(r => ({
-        invitationId: r.invitation_id,
-        tenderCode: r.tender_code,
-        tenderName: r.tender_name,
-        totalBudget: Number(r.total_budget) || 0,
-        budgetEntityName: r.budget_entity_name,
-        tenderTypeCode: r.tender_type_code,
-        tenderTypeName: r.tender_type_name,
-        docStatusName: r.doc_status_name,
-        publishDate: r.publish_date
-      }));
-    }
-  } catch (e) {
-    // ignore
-  }
+  // 3. Fetch smart similar tenders in category / substantive keywords
+  const similarTenders = await findSimilarTenders(tenderItem, id);
 
   // 4. Fetch live data from tender.gov.mn (documents, bidders, PDF extractions)
   let liveBundle: any = null;
