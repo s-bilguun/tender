@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { Building2, Sparkles, ExternalLink, Star, Clock, AlertTriangle } from 'lucide-react';
+import { Building2, Sparkles, ExternalLink, Star, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface TenderCardProps {
   tender: TenderItem;
@@ -25,6 +25,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   onAskAI,
 }) => {
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
   const t = getTranslation(locale);
 
   const formatCurrency = (amount: number) => {
@@ -120,11 +121,22 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
   return (
     <div
-      onClick={() => router.push(`/tender/${tender.invitationId}`)}
+      onClick={() => {
+        setIsNavigating(true);
+        router.push(`/tender/${tender.invitationId}`);
+      }}
       className={`bg-white border rounded-xl p-5 shadow-2xs hover:shadow-subtle transition-all flex flex-col justify-between gap-4 group relative cursor-pointer hover:border-blue-300 ${
+        isNavigating ? 'ring-2 ring-blue-500 border-blue-400 bg-blue-50/20' : ''
+      } ${
         urgency?.isUrgent ? 'border-rose-300 hover:border-rose-400 ring-1 ring-rose-200/50' : 'border-slate-200'
       }`}
     >
+      {isNavigating && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-2xs rounded-xl z-20 flex items-center justify-center gap-2 text-xs font-bold text-blue-700 shadow-sm animate-in fade-in duration-150">
+          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+          <span>Тендерийг нээж байна...</span>
+        </div>
+      )}
       <div>
         {/* Top Badges & Watchlist Star */}
         <div className="flex items-center justify-between gap-2 mb-2.5">

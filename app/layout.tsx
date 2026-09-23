@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   description: 'Монголын төрийн болон хувийн хэвшлийн тендер, худалдан авалтын нэгдсэн дата, AI шинжилгээ, зах зээлийн аналитик систем',
 };
 
+import { Suspense } from 'react';
+import { NavigationProgressBar } from '@/components/NavigationProgressBar';
+
 export default function RootLayout({
   children,
 }: {
@@ -14,6 +17,9 @@ export default function RootLayout({
   return (
     <html lang="mn">
       <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         {children}
       </body>
     </html>

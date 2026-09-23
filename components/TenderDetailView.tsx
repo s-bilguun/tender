@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { 
   ArrowLeft, Building2, Calendar, ShieldCheck, Tag, FileText, 
   Copy, Check, Trophy, Users, CheckCircle2, XCircle, AlertCircle, 
   ExternalLink, Sparkles, Clock, AlertTriangle, Layers, Briefcase, 
-  CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye, X
+  CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye, X, Loader2
 } from 'lucide-react';
 
 interface TenderDetailViewProps {
@@ -20,7 +20,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
 
   // AI chat question states
   const [aiAnalyzing, setAiAnalyzing] = useState(false);
+  const [aiAnalyzingTarget, setAiAnalyzingTarget] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [aiAnalysisTopic, setAiAnalysisTopic] = useState<string | null>(null);
+  const aiAnalysisRef = useRef<HTMLDivElement>(null);
 
   const formatCurrency = (amount: number) => {
     if (!amount) return '0 ₮';
@@ -40,9 +43,17 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
   const [checklistState, setChecklistState] = useState<Record<string, boolean>>({});
   const [expandedDocSummaries, setExpandedDocSummaries] = useState<Record<string, boolean>>({});
 
-  const handleRunAiAnalysis = async (customPrompt?: string) => {
+  const handleRunAiAnalysis = async (customPrompt?: string, targetId: string = 'general', topicTitle?: string) => {
     if (!data?.tender) return;
     setAiAnalyzing(true);
+    setAiAnalyzingTarget(targetId);
+    if (topicTitle) setAiAnalysisTopic(topicTitle);
+
+    // Smoothly scroll to AI analysis container so user immediately sees action
+    setTimeout(() => {
+      aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+
     const promptText = customPrompt || `Энэ тендерийн ТШББ (I Бүлэг: Өгөгдлийн хүснэгт) болон Техникийн тодорхойлолт (II Бүлэг)-ийн PDF болон баримтуудаас задлан шинжилсэн гол шаардлага, тусгай зөвшөөрөл, санхүүгийн босго, техникийн эрсдэл, өрсөлдөхөд анхаарах зүйлсийг цэгцтэй шинжилж зөвлөнө үү.`;
     try {
       const res = await fetch('/api/ai/chat', {
@@ -60,10 +71,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
       });
       const resJson = await res.json();
       setAiAnalysis(resJson.reply || resJson.text || 'Шинжилгээ амжилттай хийгдлээ.');
+      setTimeout(() => {
+        aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } catch (e) {
       setAiAnalysis('AI шинжилгээ хийх явцад алдаа гарлаа.');
     } finally {
       setAiAnalyzing(false);
+      setAiAnalyzingTarget(null);
     }
   };
 
@@ -191,12 +206,25 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
 
         <div className="flex items-center gap-2">
           <button
-            onClick={() => handleRunAiAnalysis()}
+            onClick={() => handleRunAiAnalysis(undefined, 'nav', 'Ерөнхий ТШББ дүгнэлт')}
             disabled={aiAnalyzing}
-            className="h-8 px-3 rounded-md text-xs font-medium text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 flex items-center gap-1.5 transition-colors"
+            className={`h-8 px-3 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
+              aiAnalyzingTarget === 'nav'
+                ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border-amber-200'
+            }`}
           >
-            <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-            <span>{aiAnalyzing ? 'Шинжилж байна...' : 'AI Шинжээч'}</span>
+            {aiAnalyzingTarget === 'nav' ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 text-amber-600 animate-spin" />
+                <span>Шинжилж байна...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                <span>AI Шинжээч</span>
+              </>
+            )}
           </button>
           <a
             href={publicLink}
@@ -284,70 +312,150 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               <span>AI Шинжээчээс асуух:</span>
             </span>
             <button
-              onClick={() => handleRunAiAnalysis('Энэ тендерт шаардагдах тусгай зөвшөөрөл, түлхүүр боловсон хүчин, өмнөх туршлагын шалгуурыг нарийвчлан шинжилж, оролцогчдод анхаарах зүйлсийг нэгтгэнэ үү.')}
+              onClick={() => handleRunAiAnalysis(
+                'Энэ тендерт шаардагдах тусгай зөвшөөрөл, түлхүүр боловсон хүчин, өмнөх туршлагын шалгуурыг нарийвчлан шинжилж, оролцогчдод анхаарах зүйлсийг нэгтгэнэ үү.',
+                'quick-license',
+                'Тусгай зөвшөөрөл & Шалгуур'
+              )}
               disabled={aiAnalyzing}
-              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+                aiAnalyzingTarget === 'quick-license'
+                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
             >
+              {aiAnalyzingTarget === 'quick-license' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
               <span>🛡️ Тусгай зөвшөөрөл & Шалгуур</span>
             </button>
             <button
-              onClick={() => handleRunAiAnalysis('Энэ тендерийн борлуулалтын доод орлогын босго, түргэн хөрвөх чадвартай хөрөнгө, тендерийн баталгааны тооцоолол болон санхүүгийн эрсдэлийг тооцож өгнө үү.')}
+              onClick={() => handleRunAiAnalysis(
+                'Энэ тендерийн борлуулалтын доод орлогын босго, түргэн хөрвөх чадвартай хөрөнгө, тендерийн баталгааны тооцоолол болон санхүүгийн эрсдэлийг тооцож өгнө үү.',
+                'quick-finance',
+                'Санхүүгийн босго & Баталгаа'
+              )}
               disabled={aiAnalyzing}
-              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+                aiAnalyzingTarget === 'quick-finance'
+                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
             >
+              {aiAnalyzingTarget === 'quick-finance' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
               <span>💰 Санхүүгийн босго & Баталгаа</span>
             </button>
             <button
-              onClick={() => handleRunAiAnalysis('Техникийн тодорхойлолт, нийлүүлэлтийн хуваарь, чанарын стандартууд (MNS/ISO), алданги торгуулийн заалт дээр оролцогчдын зүгээс анхаарах гол эрсдэлүүд юу байна вэ?')}
+              onClick={() => handleRunAiAnalysis(
+                'Техникийн тодорхойлолт, нийлүүлэлтийн хуваарь, чанарын стандартууд (MNS/ISO), алданги торгуулийн заалт дээр оролцогчдын зүгээс анхаарах гол эрсдэлүүд юу байна вэ?',
+                'quick-tech',
+                'Техникийн үзүүлэлтийн эрсдэл'
+              )}
               disabled={aiAnalyzing}
-              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+                aiAnalyzingTarget === 'quick-tech'
+                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
             >
+              {aiAnalyzingTarget === 'quick-tech' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
               <span>⚙️ Техникийн үзүүлэлтийн эрсдэл</span>
             </button>
             <button
-              onClick={() => handleRunAiAnalysis('Тендерт оролцоход бүрдүүлэх баримт бичгийн хяналтын хуудас (Checklist) болон цахим системээр үнийн санал илгээх стратегийг зөвлөнө үү.')}
+              onClick={() => handleRunAiAnalysis(
+                'Тендерт оролцоход бүрдүүлэх баримт бичгийн хяналтын хуудас (Checklist) болон цахим системээр үнийн санал илгээх стратегийг зөвлөнө үү.',
+                'quick-docs',
+                'Баримт бичгийн хяналт'
+              )}
               disabled={aiAnalyzing}
-              className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors border border-slate-200 flex items-center gap-1"
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+                aiAnalyzingTarget === 'quick-docs'
+                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+              }`}
             >
+              {aiAnalyzingTarget === 'quick-docs' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
               <span>📋 Баримт бичгийн хяналт</span>
             </button>
           </div>
         </div>
 
-        {/* AI Analysis Result Callout (if executed) */}
-        {aiAnalysis && (
-          <div className="bg-gradient-to-r from-amber-50/90 via-blue-50/70 to-slate-50 border border-amber-300/80 rounded-xl p-5 shadow-xs animate-in fade-in duration-200 space-y-3">
-            <div className="flex items-center justify-between border-b border-amber-200/60 pb-2.5">
-              <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
-                <Sparkles className="h-4 w-4 text-amber-600" />
-                <span>AI Шинжээчийн Дүгнэлт & Зөвлөмж</span>
+        {/* AI Analysis Section (Visible during loading and after result with auto-scroll) */}
+        <div ref={aiAnalysisRef} className="scroll-mt-24">
+          {aiAnalyzing ? (
+            <div className="bg-gradient-to-r from-amber-50/95 via-blue-50/80 to-slate-50 border-2 border-amber-400 rounded-xl p-5 sm:p-6 shadow-md animate-in fade-in duration-200 space-y-4">
+              <div className="flex items-center justify-between border-b border-amber-200 pb-3">
+                <div className="flex items-center gap-3 font-bold text-slate-900 text-sm sm:text-base">
+                  <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                  <div>
+                    <span className="block leading-snug">AI Шинжээч баримтыг задлан шинжилж байна...</span>
+                    {aiAnalysisTopic && (
+                      <span className="text-xs text-amber-800 font-medium block mt-0.5">Шинжилж буй: {aiAnalysisTopic}</span>
+                    )}
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-semibold animate-pulse border border-amber-300">
+                  <span className="h-2 w-2 rounded-full bg-amber-600 animate-ping" />
+                  <span>Уншиж байна</span>
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(aiAnalysis);
-                    setCopiedAnalysis(true);
-                    setTimeout(() => setCopiedAnalysis(false), 2000);
-                  }}
-                  className="px-2.5 py-1 text-xs font-semibold rounded bg-white border border-amber-200 text-slate-700 hover:bg-amber-50 transition-colors flex items-center gap-1"
-                >
-                  {copiedAnalysis ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
-                  <span>{copiedAnalysis ? 'Хуулагдлаа' : 'Шинжилгээг хуулах'}</span>
-                </button>
-                <button
-                  onClick={() => setAiAnalysis(null)}
-                  className="p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200/50 transition-colors"
-                  title="Хаах"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
+                  <Sparkles className="h-4 w-4 text-amber-500 animate-bounce" />
+                  <span>Төрийн худалдан авах ажиллагааны ТШББ PDF баримт болон шалгуур үзүүлэлтүүдийг нэг бүрчлэн боловсруулж байна...</span>
+                </div>
+                <div className="space-y-2 pt-2 animate-pulse">
+                  <div className="h-3.5 bg-amber-200/60 rounded w-11/12"></div>
+                  <div className="h-3.5 bg-amber-200/50 rounded w-4/5"></div>
+                  <div className="h-3.5 bg-amber-200/40 rounded w-9/12"></div>
+                  <div className="h-3.5 bg-amber-200/30 rounded w-2/3"></div>
+                </div>
               </div>
             </div>
-            <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed font-sans select-text">
-              {aiAnalysis}
+          ) : aiAnalysis ? (
+            <div className="bg-gradient-to-r from-amber-50/90 via-blue-50/70 to-slate-50 border-2 border-amber-300 rounded-xl p-5 sm:p-6 shadow-md animate-in fade-in duration-200 space-y-4">
+              <div className="flex items-center justify-between border-b border-amber-200 pb-3 flex-wrap gap-2">
+                <div className="flex items-center gap-2.5 font-bold text-slate-900 text-sm sm:text-base">
+                  <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
+                    <Sparkles className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <span>AI Шинжээчийн Дүгнэлт & Зөвлөмж</span>
+                    {aiAnalysisTopic && (
+                      <span className="text-xs text-amber-800 font-medium block">Шинжилсэн сэдэв: {aiAnalysisTopic}</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(aiAnalysis);
+                      setCopiedAnalysis(true);
+                      setTimeout(() => setCopiedAnalysis(false), 2000);
+                    }}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-amber-200 text-slate-700 hover:bg-amber-50 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                  >
+                    {copiedAnalysis ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
+                    <span>{copiedAnalysis ? 'Хуулагдлаа' : 'Шинжилгээг хуулах'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAiAnalysis(null);
+                      setAiAnalysisTopic(null);
+                    }}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                    title="Хаах"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed font-sans select-text bg-white/90 p-4 sm:p-5 rounded-xl border border-amber-200/80 shadow-2xs">
+                {aiAnalysis}
+              </div>
             </div>
-          </div>
-        )}
+          ) : null}
+        </div>
 
         {/* Financial Metrics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -854,11 +962,20 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                         III Бүлэг: Бараа материалын техникийн нарийвчилсан үзүүлэлт & Ажлын даалгавар:
                       </span>
                       <button
-                        onClick={() => handleRunAiAnalysis('Энэхүү тендерийн ТШББ PDF дээр заасан техникийн нарийвчилсан үзүүлэлт, бараа материалын төрөл, хэмжээ, стандартуудыг ойлгомжтой нэгтгэн дүгнэж өгнө үү.')}
-                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        onClick={() => handleRunAiAnalysis(
+                          'Энэхүү тендерийн ТШББ PDF дээр заасан техникийн нарийвчилсан үзүүлэлт, бараа материалын төрөл, хэмжээ, стандартуудыг ойлгомжтой нэгтгэн дүгнэж өгнө үү.',
+                          'spec-table',
+                          'Техникийн нарийвчилсан үзүүлэлтийн нэгтгэл'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
-                        <Sparkles className="h-3 w-3" />
-                        <span>AI-аар хүснэгтлэх</span>
+                        {aiAnalyzingTarget === 'spec-table' ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-blue-600" />
+                        ) : (
+                          <Sparkles className="h-3 w-3" />
+                        )}
+                        <span>{aiAnalyzingTarget === 'spec-table' ? 'AI хүснэгтлэж байна...' : 'AI-аар хүснэгтлэх'}</span>
                       </button>
                     </div>
                     <div className="p-4 bg-slate-900 text-slate-100 rounded-xl font-mono text-xs leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap selection:bg-blue-500 selection:text-white border border-slate-800">
@@ -905,17 +1022,35 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
                             <button
                               onClick={() => toggleDocSummary(doc.id || idx)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs cursor-pointer"
                             >
                               <span>{isExpanded ? 'Хураах' : 'Хуулийн шаардлага'}</span>
                             </button>
 
                             <button
-                              onClick={() => handleRunAiAnalysis(`Энэ тендерийн "${doc.name}" баримт бичиг болон ТШББ-ийн шаардлагыг шинжилж, оролцогчдод анхаарах зүйлсийг зөвлөнө үү.`)}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition-colors"
+                              onClick={() => handleRunAiAnalysis(
+                                `Энэ тендерийн "${doc.name}" баримт бичиг болон ТШББ-ийн шаардлагыг шинжилж, оролцогчдод анхаарах зүйлсийг зөвлөнө үү.`,
+                                `doc-${doc.id || idx}`,
+                                `Баримт: ${doc.name}`
+                              )}
+                              disabled={aiAnalyzing}
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md border transition-all cursor-pointer ${
+                                aiAnalyzingTarget === `doc-${doc.id || idx}`
+                                  ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50 cursor-wait'
+                                  : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100 shadow-2xs'
+                              }`}
                             >
-                              <Sparkles className="h-3 w-3 text-amber-600" />
-                              <span>AI-аар задлах</span>
+                              {aiAnalyzingTarget === `doc-${doc.id || idx}` ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 text-amber-700 animate-spin" />
+                                  <span>AI шинжилж байна...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-3 w-3 text-amber-600" />
+                                  <span>AI-аар задлах</span>
+                                </>
+                              )}
                             </button>
 
                             {isDirectPdf ? (
@@ -942,6 +1077,37 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                             )}
                           </div>
                         </div>
+
+                        {/* Inline loading or completion notice for this document */}
+                        {aiAnalyzingTarget === `doc-${doc.id || idx}` && (
+                          <div className="px-3.5 pb-2.5 pt-1 text-[11px] text-amber-800 font-semibold flex items-center justify-between gap-2 bg-amber-50/70 border-t border-amber-200 animate-pulse">
+                            <span className="flex items-center gap-1.5">
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
+                              <span>Дээр байрлах AI Шинжээчийн самбарт тайлан боловсруулж байна...</span>
+                            </span>
+                            <button
+                              onClick={() => aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                              className="text-amber-900 underline font-bold cursor-pointer hover:text-amber-950"
+                            >
+                              Дээр очих ↗
+                            </button>
+                          </div>
+                        )}
+
+                        {aiAnalysis && aiAnalysisTopic?.includes(doc.name) && (
+                          <div className="px-3.5 pb-2.5 pt-1 flex items-center justify-between gap-2 text-[11px] text-emerald-800 font-semibold bg-emerald-50 border-t border-emerald-200">
+                            <span className="flex items-center gap-1.5">
+                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                              <span>Энэ баримтыг AI амжилттай шинжиллээ.</span>
+                            </span>
+                            <button
+                              onClick={() => aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                              className="text-blue-700 underline font-bold cursor-pointer hover:text-blue-900"
+                            >
+                              Дээр үзэх ↗
+                            </button>
+                          </div>
+                        )}
 
                         {/* Inline Extracted Summary Preview */}
                         {isExpanded && (
@@ -1149,12 +1315,29 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                       </a>
 
                       <button
-                        onClick={() => handleRunAiAnalysis('Энэ тендерийн үр дүнгийн хууль эрх зүйн зохицуулалт, шалгаруулалтын дараах гэрээ байгуулах шаардлага болон гомдол гаргах хугацааны талаар мэдээлэл өгнө үү.')}
+                        onClick={() => handleRunAiAnalysis(
+                          'Энэ тендерийн үр дүнгийн хууль эрх зүйн зохицуулалт, шалгаруулалтын дараах гэрээ байгуулах шаардлага болон гомдол гаргах хугацааны талаар мэдээлэл өгнө үү.',
+                          'results-ai',
+                          'Үр дүн ба гэрээ байгуулах зохицуулалт'
+                        )}
                         disabled={aiAnalyzing}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-lg bg-white text-amber-900 border border-amber-300 hover:bg-amber-50 transition-colors"
+                        className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
+                          aiAnalyzingTarget === 'results-ai'
+                            ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50'
+                            : 'bg-white text-amber-900 border-amber-300 hover:bg-amber-50 shadow-2xs'
+                        }`}
                       >
-                        <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                        <span>AI Шинжээчээс үр дүнгийн талаар асуух</span>
+                        {aiAnalyzingTarget === 'results-ai' ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 text-amber-700 animate-spin" />
+                            <span>AI шинжилж байна...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="h-3.5 w-3.5 text-amber-600" />
+                            <span>AI Шинжээчээс үр дүнгийн талаар асуух</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

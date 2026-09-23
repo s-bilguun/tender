@@ -43,6 +43,7 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
 
   const [detailData, setDetailData] = useState<any>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [navigatingToDetail, setNavigatingToDetail] = useState(false);
   const [expandedDoc, setExpandedDoc] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -269,9 +270,11 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
                 </h4>
                 <Link
                   href={`/tender/${tender.invitationId}`}
+                  onClick={() => setNavigatingToDetail(true)}
                   className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1"
                 >
-                  <span>Бүтэн хуудсаар үзэх ↗</span>
+                  {navigatingToDetail && <Loader2 className="h-3 w-3 animate-spin text-blue-600" />}
+                  <span>{navigatingToDetail ? 'Нээж байна...' : 'Бүтэн хуудсаар үзэх ↗'}</span>
                 </Link>
               </div>
 
@@ -455,11 +458,16 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
 
             <Link
               href={`/tender/${tender.invitationId}`}
-              className="h-9 px-3.5 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-1.5 transition-colors"
+              onClick={() => setNavigatingToDetail(true)}
+              className="h-9 px-3.5 rounded-xl text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               title="Бүтэн хуудсаар дэлгэрэнгүй үзэх"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5" />
-              <span>{locale === 'mn' ? 'Дэлгэрэнгүй хуудас ↗' : 'Full View ↗'}</span>
+              {navigatingToDetail ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+              ) : (
+                <FileSpreadsheet className="h-3.5 w-3.5" />
+              )}
+              <span>{navigatingToDetail ? (locale === 'mn' ? 'Нээж байна...' : 'Opening...') : (locale === 'mn' ? 'Дэлгэрэнгүй хуудас ↗' : 'Full View ↗')}</span>
             </Link>
           </div>
 
