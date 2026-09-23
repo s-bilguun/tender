@@ -511,7 +511,13 @@ export async function POST(request: NextRequest) {
     let structuredInfo: any = null;
 
     if (targetTender) {
-      if (tenderContext?.bds && tenderContext?.technicalSpecs?.realSpecsText) {
+      if (tenderContext?.bds && (
+        tenderContext?.technicalSpecs?.realSpecsText ||
+        tenderContext?.technicalSpecs?.deliverySchedule?.length ||
+        tenderContext?.technicalSpecs?.specialConditions?.length ||
+        tenderContext?.results?.subTenders?.length ||
+        tenderContext?.technicalSpecs?.documents?.length
+      )) {
         structuredInfo = {
           bds: tenderContext.bds,
           technicalSpecs: tenderContext.technicalSpecs,
@@ -659,6 +665,18 @@ Answer clearly in English using this data.`;
     ).filter(Boolean);
 
     if (openRouterKey) {
+      const chatHistory = Array.isArray(messages) && messages.length > 0
+        ? messages.slice(-12).map((m: any) => ({
+            role: (m.role === 'assistant' || m.sender === 'assistant') ? 'assistant' : 'user',
+            content: m.content || m.text || '',
+          }))
+        : [{ role: 'user', content: message }];
+
+      // Ensure latest message is present at the end
+      if (chatHistory.length === 0 || chatHistory[chatHistory.length - 1].content !== message) {
+        chatHistory.push({ role: 'user', content: message });
+      }
+
       for (const m of candidateModels) {
         try {
           const openRouterRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -673,7 +691,7 @@ Answer clearly in English using this data.`;
               model: m,
               messages: [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: message },
+                ...chatHistory,
               ],
               temperature: 0.6,
               max_tokens: 1400,
@@ -699,6 +717,38 @@ Answer clearly in English using this data.`;
     // STEP 6: High-Quality Structured Local Fallback (Guaranteed Relevant)
     if (targetTender) {
       const { bds, technicalSpecs, results } = structuredInfo || {};
+
+      // Targeted Follow-up Fallback: Delivery Schedule
+      if (/(хуваарь|бараа|нийлүүлэлт|хүргэлт|тоо\s*хэмжээ)/i.test(message) && technicalSpecs?.deliverySchedule?.length) {
+        const scheduleText = `### 📦 "${targetTender.tenderName}" - Бараа нийлүүлэлтийн албан ёсны хуваарь\n\nТШББ-ээс задлан шинжилсэн нийт **${technicalSpecs.deliverySchedule.length}** нэр төрлийн нийлүүлэлтийн хуваарь:\n\n` +
+          technicalSpecs.deliverySchedule.map((s: any, idx: number) => 
+            `* **${idx + 1}. ${s.name}**\n  - Тоо хэмжээ: **${s.quantity} ${s.unit}**\n  - Хүргэх цэг / Байршил: \`${s.location}\`\n  - Нийлүүлэх хугацаа: **${s.deadline}**`
+          ).join('\n\n') +
+          `\n\n💡 *Нийлүүлэлтийн нөхцөл, хүлээлцэх журмыг ТШББ-ийн V Бүлэг (Гэрээний тусгай нөхцөл)-д зааснаар мөрдөнө.*`;
+        return NextResponse.json({ reply: scheduleText, text: scheduleText, structured: structuredInfo });
+      }
+
+      // Targeted Follow-up Fallback: Special Conditions of Contract (ГТН / SCC)
+      if (/(тусгай\s*нөхцөл|гтн|ген|заалт|алданги|торгууль|төлбөр)/i.test(message) && technicalSpecs?.specialConditions?.length) {
+        const sccText = `### 📑 "${targetTender.tenderName}" - Гэрээний тусгай нөхцөл (ГТН / SCC)\n\nТШББ V Бүлгээс задлан шинжилсэн албан ёсны заалтууд:\n\n` +
+          technicalSpecs.specialConditions.map((sc: any) => 
+            `* **[${sc.clause}] ${sc.title}:**\n  > ${sc.content}`
+          ).join('\n\n') +
+          `\n\n💡 *Эдгээр заалтууд нь захиалагчтай гэрээ байгуулах болон гүйцэтгэлийн явцад мөрдөгдөх албан ёсны хууль зүйн нөхцөлүүд юм.*`;
+        return NextResponse.json({ reply: sccText, text: sccText, structured: structuredInfo });
+      }
+
+      // Targeted Follow-up Fallback: Failed status explanation
+      if (/(амжилтгүй|цуцлагдсан|яагаад|хүчингүй|шалгараагүй)/i.test(message)) {
+        const failText = `### ⚠️ "${targetTender.tenderName}" Тендерийн Шалгаруулалтын Төлөв\n\n* **Албан ёсны төлөв:** **Амжилтгүй болсон** (Tender Failed)\n` +
+          (results?.subTenders?.length 
+            ? `\n**Багцуудын төлөв:**\n` + results.subTenders.map((st: any) => `* **${st.subTenderName}** (${st.subTenderCode || '-'}): \`${st.wfmStatusName}\``).join('\n')
+            : ''
+          ) +
+          `\n\n**Дараагийн шатны зохицуулалт & Зөвлөмж:**\n1. **Дахин зарлалт:** Төрийн болон орон нутгийн өмчийн хөрөнгөөр бараа, ажил, үйлчилгээ худалдан авах тухай хуулийн дагуу энэхүү тендер дахин зарлагдах буюу нөхцөл өөрчлөгдөн нийтлэгдэх боломжтой.\n2. **Шалтгаан:** Ихэнх тохиолдолд үнийн санал ирээгүй, ирсэн саналууд ТШББ-ийн босго шаардлага хангаагүй эсвэл төсөвт өртгөөс хэтэрсэн шалтгаанаар амжилтгүй болдог.\n3. **Дахин оролцох бэлтгэл:** Дараагийн зарлалтад ТШӨХ болон техникийн даалгаврын шалгуурыг сайтар нягтлан саналаа урьдчилан бэлтгэхийг зөвлөж байна.`;
+        return NextResponse.json({ reply: failText, text: failText, structured: structuredInfo });
+      }
+
       const fallbackAnalysis = `### 📋 "${targetTender.tenderName}" Тендерийн Шинжилгээ
 
 #### 1. Үндсэн үзүүлэлт & Төсөв
