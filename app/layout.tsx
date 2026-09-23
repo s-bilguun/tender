@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Төрийн худалдан авах ажиллагааны мэдээллийн нэгдсэн сан | Tender.mn',
-  description: 'Монгол Улсын Засгийн газрын цахим худалдан авах ажиллагааны нээлттэй өгөгдөл, хайлт, статистик дүн шинжилгээ',
+  title: 'TENDER.MN | Тендерийн нэгдсэн дата & зах зээлийн аналитик төв',
+  description: 'Монголын төрийн болон хувийн хэвшлийн тендер, худалдан авалтын нэгдсэн дата, AI шинжилгээ, зах зээлийн аналитик систем',
 };
 
 export default function RootLayout({

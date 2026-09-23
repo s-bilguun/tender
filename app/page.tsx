@@ -221,21 +221,17 @@ export default function Home() {
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold bg-emerald-100 text-emerald-800 shrink-0">
                 <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-emerald-500 animate-pulse" />
-                {locale === 'mn' ? 'Шуурхай Радар' : 'Live Radar'}
+                {locale === 'mn' ? 'Шуурхай Радар • Зах зээлийн дата' : 'Live Radar • Market Intelligence'}
               </span>
               <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
-                {locale === 'mn' ? 'Идэвхтэй нээлттэй тендерийн систем' : 'Active Tender Command Center'}
+                {locale === 'mn' ? 'Монголын тендерийн нэгдсэн дата & аналитик төв' : 'Centralized Tender Intelligence & Command Center'}
               </h1>
             </div>
             <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed">
               {locale === 'mn'
-                ? 'Санал хүлээн авч буй нээлттэй бүх тендерийг хугацааны яаралтай байдлаар хянах, дүн шинжилгээ хийх, оролцох боломж'
-                : 'Monitor active government tenders in real-time, track closing deadlines, and analyze bidding requirements.'}
+                ? 'Төрийн болон хувийн хэвшлийн бүх тендер, худалдан авалтын боломжийг зах зээлийн нарийвчилсан дата, хиймэл оюун ухааны шинжилгээгээр 1 дороос хянах нэгдсэн систем'
+                : 'Unified intelligence platform to track, analyze, and discover procurement opportunities across public and private sectors in real-time.'}
             </p>
-          </div>
-
-          <div className="text-[11px] sm:text-xs text-slate-400 font-mono flex items-center gap-1.5">
-            <span>Эх сурвалж: <strong className="text-slate-600">tender.gov.mn</strong></span>
           </div>
         </div>
 

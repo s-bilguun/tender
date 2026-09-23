@@ -74,12 +74,12 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="font-bold text-sm sm:text-base tracking-tight text-slate-900 truncate">
                 TENDER<span className="text-blue-600">.MN</span>
               </span>
-              <span className="text-[10px] sm:text-[11px] font-medium px-1.5 sm:px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 hidden sm:inline-block">
-                Нээлттэй өгөгдөл
+              <span className="text-[10px] sm:text-[11px] font-medium px-1.5 sm:px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/60 hidden sm:inline-block">
+                {locale === 'mn' ? 'Нэгдсэн Аналитик' : 'Market Intelligence'}
               </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">
-              {locale === 'mn' ? 'Төрийн цахим худалдан авалт' : 'Public Procurement Portal'}
+              {locale === 'mn' ? 'Тендерийн нэгдсэн дата & зах зээлийн платформ' : 'Centralized Tender & Market Intelligence Hub'}
             </p>
           </div>
         </div>

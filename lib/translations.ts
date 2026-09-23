@@ -2,8 +2,8 @@ import { Locale } from './types';
 
 export const translations = {
   mn: {
-    siteTitle: 'TENDER.MN | Ухаалаг Хайлт ба AI Туслах',
-    siteSubtitle: 'Төрийн худалдан авах ажиллагааны нээлттэй өгөгдөл, дүн шинжилгээ',
+    siteTitle: 'TENDER.MN | Тендерийн нэгдсэн дата & AI аналитик төв',
+    siteSubtitle: 'Тендерийн нэгдсэн өгөгдөл, зах зээлийн ухаалаг аналитик',
     searchPlaceholder: 'Тендерийн нэр, дугаар, захиалагч байгууллага, салбар хайх... (жишээ нь: эмнэлэг, IT, сургууль, зам)',
     totalTenders: 'Нийт тендер',
     totalBudget: 'Нийт төсөвт дүн',
@@ -63,8 +63,8 @@ export const translations = {
     closeModal: 'Хаах',
   },
   en: {
-    siteTitle: 'TENDER.MN | Smart Search & AI Assistant',
-    siteSubtitle: 'Mongolian Public Procurement Open Data & Market Intelligence',
+    siteTitle: 'TENDER.MN | Centralized Tender Intelligence & AI Analytics',
+    siteSubtitle: 'Unified Tender Data & Advanced Market Intelligence',
     searchPlaceholder: 'Search by title, code, agency, or sector... (e.g., hospital, IT, school, road)',
     totalTenders: 'Total Tenders',
     totalBudget: 'Total Procurement Budget',
