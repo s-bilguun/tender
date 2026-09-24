@@ -763,12 +763,18 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
 
           <div className="bg-blue-50/60 p-4 rounded-xl border border-blue-200 shadow-2xs">
             <span className="text-[11px] font-bold text-blue-800 uppercase tracking-wider block mb-1">
-              Тендерийн баталгаа (1%-2%)
+              Тендерийн баталгаа
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-blue-950 block">
-              {formatCurrency(bds.bidSecurity1Pct)} - {formatCurrency(bds.bidSecurity2Pct)}
+              {bds.bidSecurityAmount === 0 || (bds.bidSecurityReq && bds.bidSecurityReq.includes('Шаардахгүй')) ? (
+                <span className="text-emerald-700">Шаардахгүй</span>
+              ) : (
+                `${formatCurrency(bds.bidSecurity1Pct)} - ${formatCurrency(bds.bidSecurity2Pct)}`
+              )}
             </span>
-            <span className="text-[10px] text-blue-600 mt-1 block">Банкны баталгаа эсвэл даатгал</span>
+            <span className="text-[10px] text-blue-600 mt-1 block truncate">
+              {bds.bidSecurityReq || 'Банкны баталгаа эсвэл даатгал'}
+            </span>
           </div>
 
           <div className="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 shadow-2xs">
@@ -1135,7 +1141,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               )}
 
               {/* 1c. ГЭРЭЭНИЙ ТУСГАЙ НӨХЦӨЛ (ГТН / SPECIAL CONDITIONS OF CONTRACT) */}
-              {technicalSpecs.specialConditions && technicalSpecs.specialConditions.length > 0 && (
+              {technicalSpecs.specialConditions && technicalSpecs.specialConditions.length > 0 ? (
                 <div className="border border-blue-200 rounded-xl overflow-hidden bg-white shadow-2xs space-y-0">
                   <div className="bg-gradient-to-r from-blue-50/90 to-slate-50 px-4 py-3 border-b border-blue-200 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
@@ -1162,6 +1168,16 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex items-start gap-3 text-xs text-slate-600">
+                  <FileText className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-slate-900 block mb-0.5">Гэрээний нөхцөл ба зохицуулалт:</span>
+                    <span>
+                      {technicalSpecs.sccStandardNotice || 'Захиалагч ТШББ-д гэрээний тусгай нөхцөлийг жишиг загвараар баталсан бөгөөд хуулийн дагуу Гэрээний ерөнхий нөхцөл (ГЕН), ТӨХ болон нийлүүлэлтийн хуваарийн дагуу хэрэгжинэ.'}
+                    </span>
                   </div>
                 </div>
               )}

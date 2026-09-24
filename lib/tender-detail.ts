@@ -485,6 +485,11 @@ export async function getTenderDetailData(id: string | number) {
       }
       if (liveBundle.structuredSpecs.bidSecurityReq) {
         (bds as any).bidSecurityReq = liveBundle.structuredSpecs.bidSecurityReq;
+        if (liveBundle.structuredSpecs.bidSecurityReq.includes('Шаардахгүй')) {
+          bds.bidSecurityAmount = 0;
+          bds.bidSecurity1Pct = 0;
+          bds.bidSecurity2Pct = 0;
+        }
       }
       if (liveBundle.structuredSpecs.turnoverReq) {
         (bds as any).turnoverReq = liveBundle.structuredSpecs.turnoverReq;
@@ -504,40 +509,54 @@ export async function getTenderDetailData(id: string | number) {
 
       // Real Special Conditions of Contract (ГТН / SCC)
       if (liveBundle.structuredSpecs.specialConditions && liveBundle.structuredSpecs.specialConditions.length > 0) {
-        (technicalSpecs as any).specialConditions = liveBundle.structuredSpecs.specialConditions;
-        (bds as any).specialConditions = liveBundle.structuredSpecs.specialConditions;
+        const validScc = liveBundle.structuredSpecs.specialConditions.filter((c: any) => {
+          if (!c.content) return false;
+          const str = c.content.trim();
+          if (str.length === 0 || str.endsWith(':')) return false;
+          const cleanedText = str.replace(/[\[\]\"\'„“”\(\)]/g, '').trim();
+          if (/^(?:он[\,\s]*сар[\,\s]*өдөр|мөнгөн\s*дүн\s*бич|ажлын\s*хоног\s*бичих|сонгох|бичих|тогтоож\s*бичих|нэрлэн\s*бичих|хүртэл\s*хувиар\s*тогтоож\s*бичих|хоног\s*тутамд\s*0\.5\s*хүртэл\s*хувиар\s*тогтоож\s*бичих)$/i.test(cleanedText)) return false;
+          return true;
+        });
 
-        const scc = liveBundle.structuredSpecs.specialConditions;
-        const locClause = scc.find((c: any) => c.clause.includes('2.5') || c.title.includes('газар') || c.content.includes('газар'));
-        if (locClause) {
-          const cleanedLoc = locClause.content.replace(/^Бараа нийлүүлэх газар\s*:\s*/i, '').trim();
-          if (cleanedLoc) technicalSpecs.deliveryLocation = cleanedLoc;
-        }
+        if (validScc.length > 0) {
+          (technicalSpecs as any).specialConditions = validScc;
+          (bds as any).specialConditions = validScc;
 
-        const timeClause = scc.find((c: any) => c.clause.includes('2.6') || c.title.includes('хугацаа') || c.content.includes('хугацаа'));
-        if (timeClause) {
-          const cleanedTime = timeClause.content.replace(/^Бараа нийлүүлэх хугацаа\s*:\s*/i, '').trim();
-          if (cleanedTime) (technicalSpecs as any).deliveryPeriodText = cleanedTime;
-        }
-
-        const payClause = scc.find((c: any) => c.clause.includes('3.9') || c.title.includes('Төлбөр'));
-        if (payClause) {
-          const cleanedPay = payClause.content.replace(/^Төлбөр төлөх хугацаа\s*:\s*/i, '').trim();
-          if (cleanedPay) technicalSpecs.paymentTerms.progressPayment = cleanedPay;
-        }
-
-        const warClause = scc.find((c: any) => c.clause.includes('4.10') || c.title.includes('Баталгаат'));
-        if (warClause) {
-          (technicalSpecs as any).warrantyText = warClause.content;
-        }
-
-        const penClause = scc.find((c: any) => c.clause.includes('4.17') || c.title.includes('алданги'));
-        if (penClause) {
-          (technicalSpecs as any).penaltyText = penClause.content;
-          const rateMatch = penClause.content.match(/(\d+(?:\.\d+)?)\s*хүртэл\s*хувь|(\d+(?:\.\d+)?)\s*хувь/);
-          if (rateMatch) {
-            technicalSpecs.penaltyClause.dailyRate = `${rateMatch[1] || rateMatch[2]}% / хоног тутамд`;
+          const locClause = validScc.find((c: any) => c.clause.includes('2.5') || c.title.includes('газар') || c.content.includes('газар'));
+          if (locClause) {
+            const cleanedLoc = locClause.content.replace(/^Бараа нийлүүлэх газар\s*:\s*/i, '').trim();
+            if (cleanedLoc) technicalSpecs.deliveryLocation = cleanedLoc;
           }
+
+          const timeClause = validScc.find((c: any) => c.clause.includes('2.6') || c.title.includes('хугацаа') || c.content.includes('хугацаа'));
+          if (timeClause) {
+            const cleanedTime = timeClause.content.replace(/^Бараа нийлүүлэх хугацаа\s*:\s*/i, '').trim();
+            if (cleanedTime) (technicalSpecs as any).deliveryPeriodText = cleanedTime;
+          }
+
+          const payClause = validScc.find((c: any) => c.clause.includes('3.9') || c.title.includes('Төлбөр'));
+          if (payClause) {
+            const cleanedPay = payClause.content.replace(/^Төлбөр төлөх хугацаа\s*:\s*/i, '').trim();
+            if (cleanedPay) technicalSpecs.paymentTerms.progressPayment = cleanedPay;
+          }
+
+          const warClause = validScc.find((c: any) => c.clause.includes('4.10') || c.title.includes('Баталгаат'));
+          if (warClause) {
+            (technicalSpecs as any).warrantyText = warClause.content;
+          }
+
+          const penClause = validScc.find((c: any) => c.clause.includes('4.17') || c.title.includes('алданги'));
+          if (penClause) {
+            (technicalSpecs as any).penaltyText = penClause.content;
+            const rateMatch = penClause.content.match(/(\d+(?:\.\d+)?)\s*хүртэл\s*хувь|(\d+(?:\.\d+)?)\s*хувь/);
+            if (rateMatch) {
+              technicalSpecs.penaltyClause.dailyRate = `${rateMatch[1] || rateMatch[2]}% / хоног тутамд`;
+            }
+          }
+        } else {
+          (technicalSpecs as any).specialConditions = [];
+          (bds as any).specialConditions = [];
+          (technicalSpecs as any).sccStandardNotice = 'Захиалагч ТШББ-д гэрээний тусгай нөхцөлийг жишиг загвараар баталсан бөгөөд нарийвчилсан хугацаа, нөхцөлүүд нь ТӨХ болон нийлүүлэлтийн хуваарийн дагуу хэрэгжинэ.';
         }
       }
 

@@ -183,6 +183,22 @@ export function extractSubTendersFromHtml(html: string): LiveSubTender[] {
   return [];
 }
 
+export function isClauseEmptyOrTemplate(content: string): boolean {
+  if (!content) return true;
+  const c = content.trim();
+  if (c.length === 0) return true;
+  if (c.endsWith(':')) return true;
+
+  const cleanedText = c.replace(/[\[\]\"\'„“”\(\)]/g, '').trim();
+  if (
+    /^(?:он[\,\s]*сар[\,\s]*өдөр|мөнгөн\s*дүн\s*бич|ажлын\s*хоног\s*бичих|сонгох|бичих|тогтоож\s*бичих|нэрлэн\s*бичих|хүртэл\s*хувиар\s*тогтоож\s*бичих|хоног\s*тутамд\s*0\.5\s*хүртэл\s*хувиар\s*тогтоож\s*бичих)$/i.test(cleanedText) ||
+    /^(?:“?Тийм”?[\,\s]*“?Үгүй”?\s*аль\s*нэгийг\s*сонгох|“?Хийнэ”?[\,\s]*“?Хийхгүй”?\s*аль\s*нэгийг\s*сонгох)$/i.test(cleanedText)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function parseSCC(fullText: string): SpecialConditionClause[] {
   if (!fullText) return [];
   const sccIdx = fullText.lastIndexOf('ГЭРЭЭНИЙ ТУСГАЙ НӨХЦӨЛ');
@@ -198,34 +214,51 @@ export function parseSCC(fullText: string): SpecialConditionClause[] {
   while ((m = regex.exec(sccSection)) !== null) {
     const prefix = m[1];
     const num = m[2];
-    const rawTitle = m[3].replace(/\s+/g, ' ').trim();
+    let rawTitle = m[3].replace(/\s+/g, ' ').trim();
     let content = m[4].replace(/\s+/g, ' ').trim();
 
-    content = content.replace(/\[[^\]]*\]/g, '').trim();
+    // If content begins with a prompt before colon (e.g. "Ажил эхлэх хугацаа: ...")
+    const colonIdx = content.indexOf(':');
+    if (colonIdx !== -1 && colonIdx < 80 && (!rawTitle || rawTitle.length < 5)) {
+      rawTitle = content.substring(0, colonIdx).trim();
+      content = content.substring(colonIdx + 1).trim();
+    }
+
+    // Unpack brackets if they enclose real content, e.g. [5%] or [Ханбогд сум]
+    if (content.startsWith('[') && content.endsWith(']')) {
+      content = content.slice(1, -1).trim();
+    }
+
+    if (isClauseEmptyOrTemplate(content)) {
+      continue;
+    }
 
     let title = rawTitle;
-    if (!title) {
+    if (!title || title.startsWith('Тусгай нөхцөл')) {
       if (num === '2.5') title = 'Бараа нийлүүлэх газар';
       else if (num === '2.6') title = 'Бараа нийлүүлэх хугацаа';
       else if (num === '2.10') title = 'Бараа хүлээлгэн өгөх нөхцөл';
       else if (num === '2.14') title = 'Баглаа, боодол';
-      else if (num === '3.8') title = 'Үнийн тохируулга';
-      else if (num === '3.9') title = 'Төлбөр төлөх хугацаа';
-      else if (num === '4.2') title = 'Даатгал';
-      else if (num === '4.10') title = 'Баталгаат хугацаа';
-      else if (num === '4.11') title = 'Чанарын баталгаа';
-      else if (num === '4.17') title = 'Нийлүүлэгчийн төлөх алданги';
-      else if (num === '4.18') title = 'Захиалагчийн төлөх алданги';
+      else if (num === '3.8' || num === '5.2') title = 'Үнийн тохируулга';
+      else if (num === '3.9' || num === '5.6') title = 'Төлбөр төлөх хугацаа';
+      else if (num === '4.1') title = 'Ажил эхлэх хугацаа';
+      else if (num === '4.2' || num === '7.5') title = 'Даатгал';
+      else if (num === '4.9') title = 'Ажлын явцын тайлан';
+      else if (num === '4.10' || num === '6.14') title = 'Баталгаат хугацаа';
+      else if (num === '4.11' || num === '6.8') title = 'Чанарын баталгаа';
+      else if (num === '4.17' || num === '10.22') title = 'Гүйцэтгэгчийн төлөх алданги';
+      else if (num === '4.18' || num === '10.21') title = 'Захиалагчийн төлөх алданги';
+      else if (num === '5.4') title = 'Урьдчилгаа төлбөр';
+      else if (num === '5.5') title = 'Урьдчилгаа олгох хугацаа';
+      else if (num === '6.1') title = 'Урьдчилгаа төлбөрийн баталгаа';
       else title = `Тусгай нөхцөл ${num}`;
     }
 
-    if (content.length > 0) {
-      list.push({
-        clause: `${prefix} ${num}`,
-        title,
-        content
-      });
-    }
+    list.push({
+      clause: `${prefix} ${num}`,
+      title,
+      content
+    });
   }
 
   return list;
@@ -486,7 +519,7 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     }
   }
 
-  // 4. Bid Security (ТШЗ 23.1 amount or ТШЗ 22.1 digital declaration)
+  // 4. Bid Security (ТШЗ 23.1 amount or ТШЗ 22.1 digital declaration / exemption)
   const secIdx = fullText.indexOf('ТШЗ 23.1');
   if (secIdx !== -1) {
     const secSection = fullText.substring(secIdx, secIdx + 500);
@@ -497,31 +530,57 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
       const cleanAmt = parts.pop()?.trim() || rawNumberStr;
       result.bidSecurityReq = `${cleanAmt} төгрөг`;
     }
-  } else {
+  }
+  if (!result.bidSecurityReq) {
     const sec22Idx = fullText.indexOf('ТШЗ 22.1');
     if (sec22Idx !== -1) {
       const sec22Section = fullText.substring(sec22Idx, sec22Idx + 500);
-      if (sec22Section.includes('баталгааны мэдэгдэл') || sec22Section.includes('тоон гарын үсгээр')) {
+      if (sec22Section.includes('Шаардахгүй') || sec22Section.includes('/Шаардахгүй/')) {
+        result.bidSecurityReq = 'Шаардахгүй (ТШЗ 22.1 дагуу тендерийн баталгаа шаардагдахгүй)';
+      } else if (sec22Section.includes('баталгааны мэдэгдэл') || sec22Section.includes('тоон гарын үсгээр')) {
         result.bidSecurityReq = 'Тендерийн баталгааны мэдэгдэл (Тоон гарын үсгээр баталгаажуулсан цахим мэдэгдэл)';
       }
     }
   }
+  if (!result.bidSecurityReq) {
+    const noBidSec = fullText.match(/(?:Тендерийн\s+баталгаа|ТШЗ\s*22\.1)[\s\S]{1,100}?(?:Шаардахгүй|\/Шаардахгүй\/|"Шаардахгүй")/i);
+    if (noBidSec) {
+      result.bidSecurityReq = 'Шаардахгүй (ТШЗ 22.1 дагуу тендерийн баталгаа шаардагдахгүй)';
+    }
+  }
 
-  // 5. Financial criteria (ТШЗ 17.1 & 18.1)
-  const turnoverMatch = fullText.match(/Борлуулалтын орлогын хэмжээ[^\.\n;]+(?:[0-9]{1,3}\s*хувиас|[^\.\n;]+)/i) ||
-                        fullText.match(/борлуулалтын орлого[^\.\n;]+/i);
+  // 4b. License & Equipment exemption check (ТШЗ 17.6.1 & 17.6.3)
+  if (result.licenses.length === 0) {
+    const noLicMatch = fullText.match(/ТШЗ\s*17\.6\.1[\s\S]{1,120}?Шаардахгүй/i);
+    if (noLicMatch) {
+      result.licenses.push('Тусгай зөвшөөрөл шаардахгүй (ТШЗ 17.6.1-ийн дагуу ямар нэг тусгай зөвшөөрөл шаардагдахгүй)');
+    }
+  }
+  if (result.machinery.length === 0) {
+    const noMachMatch = fullText.match(/ТШЗ\s*17\.6\.3[\s\S]{1,120}?Шаардахгүй/i);
+    if (noMachMatch) {
+      result.machinery.push('Үндсэн тоног төхөөрөмж шаардахгүй (ТШЗ 17.6.3-ын дагуу)');
+    }
+  }
+
+  // 5. Financial criteria (ТШЗ 17.2.4 & 17.2.5 / 17.1 & 18.1)
+  const turnoverMatch = fullText.match(/Борлуулалтын\s+орлого[\s\S]{1,150}?(?:хувиас\s*багагүй|байна)/i) ||
+                        fullText.match(/Борлуулалтын\s+орлогын\s+хэмжээ[^\.\n;]+(?:[0-9]{1,3}\s*хувиас|[^\.\n;]+)/i) ||
+                        fullText.match(/борлуулалтын\s+орлого[^\.\n;]+/i);
   if (turnoverMatch) {
     result.turnoverReq = turnoverMatch[0].replace(/\s+/g, ' ').trim();
   }
 
-  const similarMatch = fullText.match(/Ижил төстэй ажил[^\.\n;]+/i) ||
+  const similarMatch = fullText.match(/ТШЗ\s*17\.6[\s\S]{1,250}?(?:ажил\s*гүйцэтгэсэн\s*байна[^\n]*|гүйцэтгэсэн\s*байх[^\n]*)/i) ||
+                       fullText.match(/Ижил төстэй ажил[^\.\n;]+/i) ||
                        fullText.match(/Ижил төстэй бараа[^\.\n;]+/i) ||
                        fullText.match(/Ижил төстэй[^\.\n;]+/i);
   if (similarMatch) {
     result.similarExpReq = similarMatch[0].replace(/\s+/g, ' ').trim();
   }
 
-  const liquidMatch = fullText.match(/Түргэн хөрвөх чадвартай хөрөнгө[^\.\n;]+/i);
+  const liquidMatch = fullText.match(/Түргэн\s+хөрвөх\s+чадвартай[\s\S]{1,150}?(?:хувиас\s*багагүй|багагүй\s*байх)/i) ||
+                      fullText.match(/Түргэн хөрвөх чадвартай хөрөнгө[^\.\n;]+/i);
   if (liquidMatch) {
     result.liquidAssetsReq = liquidMatch[0].replace(/\s+/g, ' ').trim();
   }
@@ -560,91 +619,112 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     result.rawSpecText = (endPos !== -1 ? candidateSlice.substring(0, endPos) : candidateSlice).trim();
   }
 
-  // 7. Delivery schedule items
-  const schedIdx = fullText.indexOf('Бараа нийлүүлэлтийн хуваарь');
-  if (schedIdx !== -1) {
-    const schedSection = fullText.substring(schedIdx, schedIdx + 2000);
-    const rowRegex = /(?:^|\n)\s*(\d+)?\s*([А-ЯЁа-яё0-9\s\-№No]+(?:багц[^\n]*)?)  \s+([\d\s\,\.]+)\s+(Тонн|тн|ш|ширхэг|ком|багц|метр|м|комплект|удаа|хүн)\s+([^\n]+)/gi;
-    let rm;
-    while ((rm = rowRegex.exec(schedSection)) !== null) {
-      const name = rm[2].replace(/\s+/g, ' ').trim();
-      if (!name.includes('Барааны нэр') && !name.includes('Тоо хэмжээ') && name.length > 2 && !name.includes('хүснэгт')) {
-        result.items.push({
-          name,
-          specs: `Нийлүүлэх газар: ${rm[5].trim()}`,
-          unit: rm[4].trim(),
-          qty: rm[3].trim()
-        });
+  const unitPattern = 'ширхэг|метр|тоо|ш|м|ком|хос|багц|тонн|тн|т|кг|г|литр|л|боодол|уут|хайрцаг|м2|м3|комплект|цаг|удаа|хүн|өдөр|хуудас|боть|систем';
+
+  // Strategy 1: Pipe / Markdown tables (| item | qty | unit | specs |)
+  if (fullText.includes('|')) {
+    const lines = fullText.split('\n');
+    for (const line of lines) {
+      if (!line.includes('|')) continue;
+      const parts = line.split('|').map(p => p.trim()).filter(Boolean);
+      if (parts.length >= 3) {
+        let name = parts[0];
+        let qtyStr = parts[1].replace(/\s+/g, '').replace(',', '.');
+        let unit = parts[2];
+        let specs = parts[3] || '';
+
+        if (/^\d+$/.test(name) && parts.length >= 4) {
+          name = parts[1];
+          qtyStr = parts[2].replace(/\s+/g, '').replace(',', '.');
+          unit = parts[3];
+          specs = parts[4] || '';
+        }
+
+        const qty = parseFloat(qtyStr);
+        if (!isNaN(qty) && qty > 0 && qty < 100000000 && !name.includes('---') && !name.includes('нэр') && name.length >= 2) {
+          result.items.push({ name, qty, unit, specs: specs || 'Техникийн тодорхойлолтын дагуу' });
+        }
       }
     }
   }
 
-  // 8. Standard row pattern (numbered item tables in spec sections)
+  // Strategy 2: Delivery schedule items (Бараа нийлүүлэлтийн хуваарь)
+  if (result.items.length === 0) {
+    const schedIdx = fullText.search(/(?:БАРАА\s*НИЙЛҮҮЛЭЛТИЙН\s*ХУВААРЬ|НИЙЛҮҮЛЭЛТИЙН\s*ХУВААРЬ)/i);
+    if (schedIdx !== -1) {
+      const schedSection = fullText.substring(schedIdx, schedIdx + 5000);
+      const rowRegex = /(?:^|\n)\s*(\d+)?\s*([А-ЯЁа-яё0-9\s\-№No]+(?:багц[^\n]*)?)  \s+([\d\s\,\.]+)\s+(Тонн|тн|ш|ширхэг|ком|багц|метр|м|комплект|удаа|хүн|боодол|кг)\s+([^\n]+)/gi;
+      let rm;
+      while ((rm = rowRegex.exec(schedSection)) !== null) {
+        const name = rm[2].replace(/\s+/g, ' ').trim();
+        if (!name.includes('Барааны нэр') && !name.includes('Тоо хэмжээ') && name.length > 2 && !name.includes('хүснэгт')) {
+          result.items.push({
+            name,
+            specs: `Нийлүүлэх газар: ${rm[5].trim()}`,
+            unit: rm[4].trim(),
+            qty: rm[3].trim()
+          });
+        }
+      }
+    }
+  }
+
+  // Strategy 3: Multi-column regex (Quantity then Unit, or Unit then Quantity)
   if (result.items.length === 0) {
     const textToSearch = bestSection || fullText;
-    const unitPattern = '(?:ширхэг|метр|тоо|ш|м|ком|хос|багц|тонн|тн|т|кг|г|литр|л|боодол|уут|хайрцаг|м2|м3|комплект|цаг|удаа|хүн|өдөр)';
-    const rowStartRegex = new RegExp(`(?:^|\\n)\\s*(\\d{1,3})[\\.\\s]+([^\\n]+(?:\\n[^\\n]+){0,4}?)\\s+(${unitPattern})\\s+(\\d+(?:[\\.,]\\d+)?)\\b`, 'gi');
-    let match;
-    const rawItems: any[] = [];
 
-    while ((match = rowStartRegex.exec(textToSearch)) !== null) {
-      const rawContent = match[2].trim();
-      const unit = match[3].trim();
-      const qty = parseFloat(match[4].replace(',', '.'));
+    // 3a. RowNum? Name Qty Unit
+    const p3a = new RegExp(`(?:^|\\n)\\s*(?:(\\d{1,3})[\\.\\)]\\s+)?([А-ЯЁа-яёA-Za-z0-9\\s\\-–\\/\\.\\(\\)]{3,60}?)\\s+([\\d\\s\\,\\.]{1,10})\\s*(${unitPattern})\\b([^\n]*)`, 'gi');
+    let m3a;
+    while ((m3a = p3a.exec(textToSearch)) !== null && result.items.length < 50) {
+      const name = m3a[2].replace(/\s+/g, ' ').trim();
+      const qtyStr = m3a[3].replace(/\s+/g, '').replace(',', '.');
+      const unit = m3a[4].trim();
+      const rest = (m3a[5] || '').trim();
+      const qty = parseFloat(qtyStr);
 
-      const contentLines = rawContent
-        .split('\n')
-        .map((l: string) => l.trim())
-        .filter((l: string) => l.length > 0 && !/^[0-9\s\.\,\-]+$/.test(l));
+      if (isNaN(qty) || qty <= 0 || qty > 100000000) continue;
+      if (name.includes('Бүлэг') || name.includes('Хууль') || name.includes('ТШЗ') || name.includes('Хүснэгт') || name.includes('хувь') || name.includes('Тендер') || name.length < 3) continue;
 
-      if (contentLines.length === 0) continue;
-
-      let nameParts: string[] = [];
-      let specParts: string[] = [];
-      let isSpec = false;
-
-      for (const line of contentLines) {
-        if (line.match(/(ISO|MNS|стандарт|диаметр|зузаан|даралт|материал|чанарын|загвар|хэмжээ|хүчин|баталгаат|зориулалт|савалгаа)/i)) {
-          isSpec = true;
-        }
-        if (!isSpec && nameParts.length < 3) {
-          nameParts.push(line);
-        } else {
-          specParts.push(line);
-        }
-      }
-
-      let name = nameParts.join(' ').replace(/\s+/g, ' ').trim();
-      name = name.replace(/^[\d\.\-\s]+/, '').trim();
-
-      const lowerName = name.toLowerCase();
-      if (
-        name.length < 2 ||
-        name.length > 180 ||
-        lowerName.includes('хуулийн') ||
-        lowerName.includes('тшз') ||
-        lowerName.includes('журам') ||
-        lowerName.includes('заасан') ||
-        lowerName.includes('давуу эрх') ||
-        lowerName.includes('оролцогч') ||
-        lowerName.includes('захиалагч бараа хүлээн') ||
-        lowerName.includes('баталгаа') ||
-        lowerName.includes('гэрээ байгуулснаас')
-      ) {
-        continue;
-      }
-
-      const spec = specParts.join(' ').replace(/\s+/g, ' ').trim() || `Үзүүлэлт: ${name}`;
-
-      rawItems.push({
-        name,
-        unit,
-        qty,
-        specs: spec
-      });
+      result.items.push({ name, qty, unit, specs: rest || 'Техникийн тодорхойлолтын дагуу' });
     }
 
-    result.items = rawItems.slice(0, 100);
+    // 3b. RowNum? Name Unit Qty
+    if (result.items.length === 0) {
+      const p3b = new RegExp(`(?:^|\\n)\\s*(?:(\\d{1,3})[\\.\\)]\\s+)?([А-ЯЁа-яёA-Za-z0-9\\s\\-–\\/\\.\\(\\)]{3,60}?)\\s+(${unitPattern})\\s+([\\d\\s\\,\\.]{1,10})\\b([^\n]*)`, 'gi');
+      let m3b;
+      while ((m3b = p3b.exec(textToSearch)) !== null && result.items.length < 50) {
+        const name = m3b[2].replace(/\s+/g, ' ').trim();
+        const unit = m3b[3].trim();
+        const qtyStr = m3b[4].replace(/\s+/g, '').replace(',', '.');
+        const rest = (m3b[5] || '').trim();
+        const qty = parseFloat(qtyStr);
+
+        if (isNaN(qty) || qty <= 0 || qty > 100000000) continue;
+        if (name.includes('Бүлэг') || name.includes('Хууль') || name.includes('ТШЗ') || name.includes('Хүснэгт') || name.includes('хувь') || name.includes('Тендер') || name.length < 3) continue;
+
+        result.items.push({ name, qty, unit, specs: rest || 'Техникийн тодорхойлолтын дагуу' });
+      }
+    }
+  }
+
+  // Strategy 4: Direct Goods mention with quantity (e.g. "Хэмжээ: 64 тонн буюу 3200 боодол")
+  if (result.items.length === 0) {
+    const directQtyMatch = fullText.match(/Хэмжээ\s*:\s*(\d+[\.,]?\d*)\s*(тонн|тн|ш|боодол|кг|метр|м|ком|багц)(?:\s*буюу\s*(\d+[\.,]?\d*)\s*(боодол|ш|кг))?/i);
+    if (directQtyMatch) {
+      const qty = parseFloat(directQtyMatch[1].replace(',', '.'));
+      const unit = directQtyMatch[2];
+      const secondary = directQtyMatch[3] ? ` (буюу ${directQtyMatch[3]} ${directQtyMatch[4]})` : '';
+      const nameMatch = fullText.match(/(?:Барааны тодорхойлолт|Нэр)\s*:\s*([^\n\.]+)/i);
+      const itemName = nameMatch ? nameMatch[1].trim() : 'Нийлүүлэх бараа, бүтээгдэхүүн';
+
+      result.items.push({
+        name: itemName,
+        qty,
+        unit: `${unit}${secondary}`,
+        specs: 'Техникийн тодорхойлолт болон стандартын шаардлагын дагуу'
+      });
+    }
   }
 
   // 9. Framework agreement package list (ТШЗ 1.3) — fallback when no items found yet
@@ -988,16 +1068,44 @@ export async function fetchTenderLiveBundle(
   // 5. Download and extract text from attached dossier documents (ТШББ + ТД / Техникийн даалгавар)
   let combinedPdfText = '';
   let totalPageCount = 0;
-  const docsToParse = result.documents.filter(d => d.fileId && (d.fileExtention === 'pdf' || !d.fileExtention)).slice(0, 3);
+  const docsToParse = result.documents.filter(d => {
+    if (!d.fileId) return false;
+    const ext = (d.fileExtention || '').toLowerCase();
+    return ext === 'pdf' || !ext || ['png', 'jpg', 'jpeg'].includes(ext);
+  }).slice(0, 4);
 
   for (const doc of docsToParse) {
     if (!doc.fileId) continue;
     try {
-      const pdfBuffer = (await curlGet(`https://user.tender.gov.mn/mn/download/${doc.fileId}`, true)) as Buffer;
-      if (pdfBuffer && pdfBuffer.length > 500 && pdfBuffer.slice(0, 5).toString().includes('%PDF')) {
+      const ext = (doc.fileExtention || '').toLowerCase();
+      const isImg = ['png', 'jpg', 'jpeg'].includes(ext);
+      const fileBuffer = (await curlGet(`https://user.tender.gov.mn/mn/download/${doc.fileId}`, true)) as Buffer;
+
+      // Handle standalone image files (PNG/JPG) using Tesseract OCR
+      if (isImg && fileBuffer && fileBuffer.length > 500) {
+        try {
+          const { createWorker } = require('tesseract.js');
+          const worker = await createWorker('rus+eng');
+          const ocrRes = await worker.recognize(fileBuffer);
+          await worker.terminate();
+          if (ocrRes?.data?.text && ocrRes.data.text.trim().length > 20) {
+            const extractedDocText = ocrRes.data.text.trim();
+            doc.isScannedOcr = true;
+            doc.ocrModel = 'Tesseract OCR';
+            result.isScannedOcr = true;
+            totalPageCount += 1;
+            combinedPdfText += `\n\n--- БАРИМТ БИЧИГ: ${doc.fileName} ---\n` + extractedDocText;
+          }
+        } catch (ocrErr) {
+          console.warn(`Image OCR error for ${doc.fileName}:`, ocrErr);
+        }
+        continue;
+      }
+
+      if (fileBuffer && fileBuffer.length > 500 && fileBuffer.slice(0, 5).toString().includes('%PDF')) {
         let extractedDocText = '';
         try {
-          const parsedPdf = await pdf(pdfBuffer);
+          const parsedPdf = await pdf(fileBuffer);
           totalPageCount += parsedPdf.numpages || 0;
           if (parsedPdf.text && parsedPdf.text.trim().length > 30) {
             extractedDocText = parsedPdf.text.trim();
@@ -1007,9 +1115,9 @@ export async function fetchTenderLiveBundle(
         }
 
         // If standard text extraction yielded nothing/little and buffer has scanned images, run Vision OCR
-        if (extractedDocText.length < 50 && isScannedPdf(pdfBuffer, extractedDocText.length)) {
+        if (extractedDocText.length < 50 && isScannedPdf(fileBuffer, extractedDocText.length)) {
           try {
-            const pageImages = extractJpegImagesFromPdfBuffer(pdfBuffer, 3);
+            const pageImages = extractJpegImagesFromPdfBuffer(fileBuffer, 3);
             if (pageImages.length > 0) {
               totalPageCount = Math.max(totalPageCount, pageImages.length);
               console.log(`[OCR] Detected ${pageImages.length} scanned pages in ${doc.fileName} (${doc.fileId}). Running vision extraction...`);
@@ -1048,7 +1156,7 @@ export async function fetchTenderLiveBundle(
         }
       }
     } catch (pdfErr) {
-      console.warn(`PDF parsing error for ${doc.fileName} (${doc.fileId}):`, pdfErr);
+      console.warn(`File parsing error for ${doc.fileName} (${doc.fileId}):`, pdfErr);
     }
   }
 
