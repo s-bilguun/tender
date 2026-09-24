@@ -446,8 +446,10 @@ export async function getTenderDetailData(id: string | number) {
           if (rawSection.length > 20) {
             extractedSummary = rawSection.substring(0, 2500);
           }
-        } else if (d.isPrimary && liveBundle.structuredSpecs?.rawSpecText) {
-          extractedSummary = `ХУУЛЬ ЗҮЙН БА ТЕХНИКИЙН ШААРДЛАГА:\n${liveBundle.structuredSpecs.rawSpecText.substring(0, 1500)}`;
+        } else if (liveBundle.structuredSpecs?.rawSpecText) {
+          extractedSummary = `ХУУЛЬ ЗҮЙН БА ТЕХНИКИЙН ШААРДЛАГА:\n${liveBundle.structuredSpecs.rawSpecText.substring(0, 2500)}`;
+        } else if (liveBundle.pdfText && liveBundle.pdfText.length > 50) {
+          extractedSummary = liveBundle.pdfText.substring(0, 2500);
         }
 
         return {

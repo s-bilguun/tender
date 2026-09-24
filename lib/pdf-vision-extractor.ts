@@ -117,11 +117,17 @@ export function isScannedPdf(pdfBuffer: Buffer, extractedTextLength: number): bo
  * Sends extracted scanned page images to OpenRouter Vision models
  * and returns structured Mongolian procurement markdown and extracted items.
  */
+let openRouterVisionUnavailable = process.env.ENABLE_VISION_OCR !== 'true';
+
 export async function extractScannedPdfWithVision(
   images: Buffer[],
   tenderName = 'Төрийн худалдан авах ажиллагаа',
   apiKey?: string
 ): Promise<ExtractedVisionResult | null> {
+  if (openRouterVisionUnavailable) {
+    return null;
+  }
+
   const key = apiKey || getOpenRouterApiKey();
   if (!key || images.length === 0) {
     console.warn(`[OCR] No OPENROUTER_API_KEY found or no images (images: ${images.length})`);
@@ -194,12 +200,19 @@ export async function extractScannedPdfWithVision(
           ],
           max_tokens: 2500,
           temperature: 0.1,
-        })
+        }),
+        signal: AbortSignal.timeout(10000), // Prevent hanging
       });
 
       if (!res.ok) {
         const errText = await res.text();
-        console.warn(`Vision model ${model} returned HTTP ${res.status}:`, errText.substring(0, 200));
+        console.warn(`Vision model ${model} returned HTTP ${res.status}:`, errText.substring(0, 150));
+        // If account has no credits (402), don't waste time retrying other paid models
+        if (res.status === 402) {
+          console.warn('[OCR] OpenRouter account has no credits, skipping further vision model calls.');
+          openRouterVisionUnavailable = true;
+          break;
+        }
         continue;
       }
 

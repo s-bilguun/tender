@@ -40,7 +40,8 @@ export async function GET(req: NextRequest) {
 
   const pdfBuffer = await curlDownloadPdf(fileId);
   if (!pdfBuffer || pdfBuffer.length < 50) {
-    return NextResponse.json({ error: 'Failed to download document from official portal' }, { status: 502 });
+    // If serverless environment is IP-blocked or times out, redirect user browser to download directly
+    return NextResponse.redirect(`https://user.tender.gov.mn/mn/download/${fileId}`, 307);
   }
 
   // Ensure safe clean filename
