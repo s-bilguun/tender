@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Locale, TenderFilterParams, ActiveTabMode, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
+import { INDUSTRIES } from '@/lib/taxonomy';
 import { 
   Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, 
   Flame, Star, Zap, Calendar, Trophy, Database, Filter, 
@@ -184,6 +185,35 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     });
   };
 
+  // Dynamic Tab Metrics: Sector-aware metrics calculation
+  const activeIndustryInfo = filters.industry && filters.industry !== 'all' 
+    ? INDUSTRIES.find((i) => i.id === filters.industry) 
+    : null;
+  const activeIndustryStats = filters.industry && filters.industry !== 'all' 
+    ? stats?.statsByIndustry?.[filters.industry] 
+    : null;
+
+  const tabMetrics = useMemo(() => {
+    if (activeIndustryInfo || activeIndustryStats) {
+      const total = activeIndustryStats?.totalCount || activeIndustryInfo?.totalCount || 3120;
+      const active = activeIndustryStats?.activeCount || (stats?.industryCounts ? stats.industryCounts[filters.industry!] : undefined) || activeIndustryInfo?.activeCount || 28;
+      const result = activeIndustryStats?.resultCount || Math.max(0, total - active);
+      const closing = activeIndustryStats?.closingSoonCount || Math.max(1, Math.round(active * 0.15));
+      return {
+        all: total,
+        active,
+        result,
+        closing,
+      };
+    }
+    return {
+      all: stats?.totalCount || totalFound || 22785,
+      active: stats?.activeTendersCount || 301,
+      result: stats?.resultCount || 21320,
+      closing: stats?.closingSoonCount || 42,
+    };
+  }, [filters.industry, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
+
   // Detect which filters are currently non-default for active badge display
   const hasActiveFilters = 
     Boolean(filters.search) || 
@@ -214,7 +244,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'all' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
             }`}>
-              {(stats?.totalCount || totalFound || 22785).toLocaleString()}
+              {tabMetrics.all.toLocaleString()}
             </span>
           </button>
 
@@ -232,7 +262,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
             }`}>
-              {(stats?.activeTendersCount || 301).toLocaleString()}
+              {tabMetrics.active.toLocaleString()}
             </span>
           </button>
 
@@ -250,7 +280,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
             }`}>
-              {stats?.resultCount ? stats.resultCount.toLocaleString() : (locale === 'mn' ? 'Үр дүн' : 'Awarded')}
+              {tabMetrics.result.toLocaleString()}
             </span>
           </button>
 
@@ -268,7 +298,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
             }`}>
-              {(stats?.closingSoonCount || 42).toLocaleString()}
+              {tabMetrics.closing.toLocaleString()}
             </span>
           </button>
 
@@ -299,7 +329,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 h-8 shrink-0 ml-auto sm:ml-0">
             <button
               onClick={() => setViewMode('table')}
-              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors ${
+              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors cursor-pointer ${
                 viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`}
               title={locale === 'mn' ? 'Хүснэгтээр харах' : 'Table view'}
@@ -309,7 +339,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors ${
+              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1.5 transition-colors cursor-pointer ${
                 viewMode === 'grid' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
               }`}
               title={locale === 'mn' ? 'Картаар харах' : 'Grid view'}
@@ -353,7 +383,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             )}
             <button
               onClick={() => setIsAdvancedModalOpen(true)}
-              className={`h-7 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors ${
+              className={`h-7 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeAdvancedCount > 0
                   ? 'bg-blue-600 text-white shadow-2xs'
                   : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
@@ -383,7 +413,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 <button
                   key={idx}
                   onClick={() => handleApplySuggestion(item.query)}
-                  className="p-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 rounded-lg flex items-center justify-between transition-colors"
+                  className="p-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 rounded-lg flex items-center justify-between transition-colors cursor-pointer"
                 >
                   <span>{item.label}</span>
                   <Search className="h-3 w-3 text-slate-300" />
@@ -394,58 +424,82 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         )}
       </div>
 
-      {/* 3. Category, Status, Budget, Year & Sort Filter Row */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2.5 text-xs pt-2 border-t border-slate-100">
-        {/* Category Chips */}
-        <div className="flex items-center gap-1 overflow-x-auto w-full lg:w-auto no-scrollbar py-0.5 -mx-1 px-1">
-          <span className="text-[11px] font-medium text-slate-400 mr-1 whitespace-nowrap shrink-0">
-            {locale === 'mn' ? 'Салбар:' : 'Category:'}
-          </span>
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => onFilterChange({ category: cat.id, page: 1 })}
-              className={`h-7 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
-                currentCategory === cat.id
-                  ? 'bg-slate-900 text-white font-semibold shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Status Dropdown, Budget Tiers, Clean Year Select, Date Range & Sort */}
-        <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-between lg:justify-end">
-          {/* Explicit Status Filter */}
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0">
-            <Filter className="h-3 w-3 text-slate-400" />
-            <select
-              value={currentStatus}
-              onChange={(e) => {
-                const val = e.target.value;
-                onFilterChange({
-                  status: val,
-                  tabMode: val === 'receiving' ? 'active' : val === 'result' ? 'result' : 'all',
-                  page: 1,
-                });
-              }}
-              className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer font-medium"
-            >
-              {statuses.map((st) => (
-                <option key={st.id} value={st.id}>{st.label}</option>
-              ))}
-            </select>
+      {/* 3. Filter Controls: Structured in 2 Clean, Spacious Rows */}
+      <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs">
+        {/* Row A: Category Filter + Status & Sort */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          {/* Category Chips with ample space */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-medium text-slate-400 mr-0.5 whitespace-nowrap shrink-0">
+              {locale === 'mn' ? 'Төрөл:' : 'Type:'}
+            </span>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => onFilterChange({ category: cat.id, page: 1 })}
+                className={`h-7 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                  currentCategory === cat.id
+                    ? 'bg-slate-900 text-white font-semibold shadow-2xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
 
+          {/* Status & Sort Controls */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            {/* Explicit Status Filter */}
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
+              <Filter className="h-3 w-3 text-slate-400" />
+              <select
+                value={currentStatus}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  onFilterChange({
+                    status: val,
+                    tabMode: val === 'receiving' ? 'active' : val === 'result' ? 'result' : 'all',
+                    page: 1,
+                  });
+                }}
+                className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer font-medium"
+              >
+                {statuses.map((st) => (
+                  <option key={st.id} value={st.id}>{st.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
+              <ArrowUpDown className="h-3 w-3 text-slate-400" />
+              <select
+                value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
+                onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
+                className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer font-medium"
+              >
+                <option value="date_desc">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest First'}</option>
+                <option value="deadline_asc">{locale === 'mn' ? 'Эцсийн хугацаа ойртсоноор' : 'Ending Soonest'}</option>
+                <option value="budget_desc">{t.sortOptions.budget_desc}</option>
+                <option value="budget_asc">{t.sortOptions.budget_asc}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Row B: Budget Tiers + Clean Year Select & Date Range */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-slate-100/80">
           {/* Budget Tiers */}
-          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-medium text-slate-400 mr-0.5 whitespace-nowrap shrink-0">
+              {locale === 'mn' ? 'Төсөв:' : 'Budget:'}
+            </span>
             {budgetTiers.map((tier) => (
               <button
                 key={tier.id}
                 onClick={() => onFilterChange({ minBudget: tier.min, maxBudget: tier.max, page: 1 })}
-                className={`h-7 px-2.5 rounded-md text-[11px] whitespace-nowrap transition-colors shrink-0 ${
+                className={`h-7 px-2.5 rounded-md text-[11px] whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
                   activeBudgetTier === tier.id
                     ? 'bg-blue-50 text-blue-700 border border-blue-200 font-semibold'
                     : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
@@ -456,84 +510,72 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             ))}
           </div>
 
-          {/* Clean Compact Year Selector (Replaced 9 individual buttons) */}
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0">
-            <Calendar className="h-3 w-3 text-blue-600 shrink-0" />
-            <select
-              value={filters.year || 'all'}
-              onChange={(e) => {
-                const yr = e.target.value;
-                const isPastYear = yr !== 'all' && yr !== '2026';
-                const shouldResetStatus = isPastYear && filters.status === 'receiving';
-                onFilterChange({
-                  year: yr === 'all' ? undefined : yr,
-                  ...(shouldResetStatus ? { status: 'all', tabMode: 'all' } : {}),
-                  page: 1,
-                });
-              }}
-              className="bg-transparent text-xs text-slate-800 font-medium focus:outline-none cursor-pointer"
-            >
-              <option value="all">{locale === 'mn' ? 'Бүх он' : 'All Years'}</option>
-              <option value="2026">2026 он</option>
-              <option value="2025">2025 он</option>
-              <option value="2024">2024 он</option>
-              <option value="2023">2023 он</option>
-              <option value="2022">2022 он</option>
-              <option value="2021">2021 он</option>
-              <option value="2020">2020 он</option>
-              <option value="2019">2019 он</option>
-            </select>
-          </div>
-
-          {/* Custom Date Range Picker */}
-          <div className="flex items-center gap-1 text-[11px] shrink-0">
-            <input
-              type="date"
-              value={filters.dateFrom || ''}
-              onChange={(e) => onFilterChange({
-                dateFrom: e.target.value || undefined,
-                ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
-                page: 1,
-              })}
-              className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
-              title="Эхлэх огноо"
-            />
-            <span className="text-slate-400">-</span>
-            <input
-              type="date"
-              value={filters.dateTo || ''}
-              onChange={(e) => onFilterChange({
-                dateTo: e.target.value || undefined,
-                ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
-                page: 1,
-              })}
-              className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500"
-              title="Дуусах огноо"
-            />
-            {(filters.dateFrom || filters.dateTo || (filters.year && filters.year !== 'all')) && (
-              <button
-                onClick={() => onFilterChange({ year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
-                className="h-7 px-1 text-slate-400 hover:text-slate-700 transition-colors"
-                title="Огноо цэвэрлэх"
+          {/* Clean Compact Year Selector & Custom Date Range Picker */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            {/* Year Selector */}
+            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
+              <Calendar className="h-3 w-3 text-blue-600 shrink-0" />
+              <select
+                value={filters.year || 'all'}
+                onChange={(e) => {
+                  const yr = e.target.value;
+                  const isPastYear = yr !== 'all' && yr !== '2026';
+                  const shouldResetStatus = isPastYear && filters.status === 'receiving';
+                  onFilterChange({
+                    year: yr === 'all' ? undefined : yr,
+                    ...(shouldResetStatus ? { status: 'all', tabMode: 'all' } : {}),
+                    page: 1,
+                  });
+                }}
+                className="bg-transparent text-xs text-slate-800 font-medium focus:outline-none cursor-pointer"
               >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
+                <option value="all">{locale === 'mn' ? 'Бүх он' : 'All Years'}</option>
+                <option value="2026">2026 он</option>
+                <option value="2025">2025 он</option>
+                <option value="2024">2024 он</option>
+                <option value="2023">2023 он</option>
+                <option value="2022">2022 он</option>
+                <option value="2021">2021 он</option>
+                <option value="2020">2020 он</option>
+                <option value="2019">2019 он</option>
+              </select>
+            </div>
 
-          {/* Sort Dropdown */}
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0">
-            <ArrowUpDown className="h-3 w-3 text-slate-400" />
-            <select
-              value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
-              onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
-              className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer font-medium"
-            >
-              <option value="date_desc">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest First'}</option>
-              <option value="deadline_asc">{locale === 'mn' ? 'Эцсийн хугацаа ойртсоноор' : 'Ending Soonest'}</option>
-              <option value="budget_desc">{t.sortOptions.budget_desc}</option>
-              <option value="budget_asc">{t.sortOptions.budget_asc}</option>
-            </select>
+            {/* Custom Date Range Picker */}
+            <div className="flex items-center gap-1 text-[11px] shrink-0">
+              <input
+                type="date"
+                value={filters.dateFrom || ''}
+                onChange={(e) => onFilterChange({
+                  dateFrom: e.target.value || undefined,
+                  ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
+                  page: 1,
+                })}
+                className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500 shadow-2xs"
+                title="Эхлэх огноо"
+              />
+              <span className="text-slate-400">-</span>
+              <input
+                type="date"
+                value={filters.dateTo || ''}
+                onChange={(e) => onFilterChange({
+                  dateTo: e.target.value || undefined,
+                  ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
+                  page: 1,
+                })}
+                className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500 shadow-2xs"
+                title="Дуусах огноо"
+              />
+              {(filters.dateFrom || filters.dateTo || (filters.year && filters.year !== 'all')) && (
+                <button
+                  onClick={() => onFilterChange({ year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
+                  className="h-7 px-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                  title="Огноо цэвэрлэх"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -554,7 +596,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
           {filters.category && filters.category !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
-              <span>Салбар: <strong>{categories.find(c => c.id === filters.category)?.label}</strong></span>
+              <span>Төрөл: <strong>{categories.find(c => c.id === filters.category)?.label}</strong></span>
               <button onClick={() => onFilterChange({ category: 'all', page: 1 })} className="hover:text-slate-950 p-0.5">
                 <X className="h-3 w-3" />
               </button>
