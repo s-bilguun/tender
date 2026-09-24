@@ -105,8 +105,29 @@ function curlGet(url: string, asBuffer = false, referer = 'https://www.tender.go
       encoding: asBuffer ? 'buffer' : 'utf8',
       maxBuffer: 50 * 1024 * 1024,
       timeout: 25000
-    }, (err, stdout) => {
-      if (err || !stdout) {
+    }, async (err, stdout) => {
+      const isEmpty = !stdout || (asBuffer ? (stdout as Buffer).length === 0 : stdout.toString().trim().length === 0);
+      if (err || isEmpty) {
+        try {
+          const res = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8',
+              'Referer': referer
+            }
+          });
+          if (res.ok) {
+            if (asBuffer) {
+              const ab = await res.arrayBuffer();
+              return resolve(Buffer.from(ab));
+            } else {
+              const text = await res.text();
+              return resolve(text);
+            }
+          }
+        } catch {
+          // ignore fallback error
+        }
         resolve(asBuffer ? Buffer.from([]) : '');
       } else {
         resolve(stdout);
