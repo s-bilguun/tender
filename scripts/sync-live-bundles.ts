@@ -15,7 +15,7 @@ async function main() {
 
   // Target critical tenders first
   const targetIds = [
-    '1789954038947', // Хоол хүнс (User's specific reported tender with 3 PDFs)
+    '1789954038947', // Хоол хүнс (User's specific reported tender with 3 scanned PDFs)
     '1789954035593', // МТЗ Дохиолол холбооны сэлбэг хэрэгсэл (ТББ.pdf + ТД.pdf)
     '1787266442855', // Хоол хүнс (Failed tender with 4 subTenders, delivery schedule & SCC)
   ];
@@ -26,9 +26,10 @@ async function main() {
     try {
       const liveList = JSON.parse(fs.readFileSync(liveTendersPath, 'utf8'));
       if (Array.isArray(liveList)) {
-        liveList.slice(0, 30).forEach((t: any) => {
-          if (t.invitationId && !targetIds.includes(String(t.invitationId))) {
-            targetIds.push(String(t.invitationId));
+        liveList.slice(0, 50).forEach((t: any) => {
+          const invId = String(t.invitationId || t.invitation_id || '');
+          if (invId && !targetIds.includes(invId)) {
+            targetIds.push(invId);
           }
         });
       }
@@ -41,16 +42,27 @@ async function main() {
 
   for (let i = 0; i < targetIds.length; i++) {
     const id = targetIds[i];
-    console.log(`[${i + 1}/${targetIds.length}] Fetching bundle for ${id}...`);
+    const existing = currentBundles[id];
+    // If already fully extracted with rich text or structured specs, skip re-fetching
+    const hasCompleteData = existing && existing.documents?.length > 0 && existing.pdfText && existing.pdfText.length > 200;
+    if (hasCompleteData) {
+      console.log(`[${i + 1}/${targetIds.length}] Bundle for ${id} already has complete extracted data (${existing.documents.length} docs, ${existing.pdfText.length} chars). Skipping.`);
+      continue;
+    }
+
+    // If existing has docs but 0 text, it might be scanned PDFs needing Vision OCR
+    const forceOcr = existing && existing.documents?.length > 0 && (!existing.pdfText || existing.pdfText.length < 50);
+
+    console.log(`[${i + 1}/${targetIds.length}] Fetching bundle for ${id} (forceRefresh: ${!!forceOcr})...`);
     try {
-      const bundle = await fetchTenderLiveBundle(id);
+      const bundle = await fetchTenderLiveBundle(id, undefined, !!forceOcr);
       if (bundle && bundle.documents && bundle.documents.length > 0) {
         currentBundles[id] = {
           ...bundle,
           // Limit heavy pdfText in bundles.json
           pdfText: bundle.pdfText ? bundle.pdfText.substring(0, 30000) : ''
         };
-        console.log(`  -> SUCCESS: ${bundle.documents.length} docs, ${bundle.subTenders?.length || 0} subTenders`);
+        console.log(`  -> SUCCESS: ${bundle.documents.length} docs, isScannedOcr: ${bundle.isScannedOcr}, specs: ${bundle.structuredSpecs?.items?.length || 0} items`);
       } else {
         console.log(`  -> No documents returned for ${id}`);
       }

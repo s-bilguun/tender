@@ -1375,7 +1375,15 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                           <div className="flex items-start sm:items-center gap-3">
                             <FileText className="h-5 w-5 text-red-500 shrink-0 mt-0.5 sm:mt-0" />
                             <div>
-                              <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
+                                {doc.isScannedOcr && (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                                    <Sparkles className="h-2.5 w-2.5 text-purple-600" />
+                                    <span>AI Vision OCR</span>
+                                  </span>
+                                )}
+                              </div>
                               <span className="text-[11px] text-slate-500 block mt-0.5">
                                 {doc.category || 'Баримт бичиг'} • {doc.type} {doc.date ? `• ${doc.date}` : ''}
                               </span>
@@ -1387,7 +1395,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                               onClick={() => toggleDocSummary(doc.id || idx)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs cursor-pointer"
                             >
-                              <span>{isExpanded ? 'Хураах' : 'Хуулийн шаардлага'}</span>
+                              <span>{isExpanded ? 'Хураах' : doc.extractedSummary ? 'Задарсан агуулга' : 'Мэдээлэл'}</span>
                             </button>
 
                             <button
@@ -1476,9 +1484,25 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
 
                         {/* Inline Extracted Summary Preview */}
                         {isExpanded && (
-                          <div className="p-3.5 bg-slate-900 text-slate-100 font-mono text-[11px] leading-relaxed border-t border-slate-800 whitespace-pre-wrap select-text">
+                          <div className="p-4 bg-slate-900 text-slate-100 font-sans text-xs leading-relaxed border-t border-slate-800 select-text">
                             {doc.extractedSummary ? (
-                              doc.extractedSummary
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-2">
+                                  <span className="flex items-center gap-1.5 font-semibold text-amber-400">
+                                    <Sparkles className="h-3.5 w-3.5" />
+                                    <span>{doc.isScannedOcr ? 'Сканердсан эх баримтаас AI Vision-оор задалсан өгөгдөл' : 'Албан ёсны ТШББ-аас задалсан хууль зүй & техникийн өгөгдөл'}</span>
+                                  </span>
+                                  <button
+                                    onClick={() => handleRunAiAnalysis(`"${doc.name}" баримтын энэхүү агуулгаас техникийн гол шаардлага болон нийлүүлэлтийн нөхцөлийг тайлбарлана уу:\n\n${doc.extractedSummary}`, `doc-${doc.id || idx}`, `Дүн шинжилгээ: ${doc.name}`)}
+                                    className="text-amber-400 hover:text-amber-300 font-medium underline flex items-center gap-1"
+                                  >
+                                    AI-аар лавшруулан асуух ↗
+                                  </button>
+                                </div>
+                                <div className="text-slate-200 text-xs font-mono whitespace-pre-wrap max-h-96 overflow-y-auto pr-2">
+                                  {doc.extractedSummary}
+                                </div>
+                              </div>
                             ) : (
                               <div className="space-y-2 font-sans text-xs">
                                 <div className="text-amber-400 font-semibold flex items-center gap-1.5">
@@ -2054,8 +2078,30 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
                   Баримт бичгийн агуулга ба шаардлагууд
                 </span>
-                <div className="p-4 rounded-lg bg-slate-900 text-slate-100 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap select-text border border-slate-800 shadow-inner">
-                  {selectedDoc.extractedSummary || 'Энэ баримт бичгийн хураангуй мэдээлэл одоогоор бэлэн бус байна.'}
+                <div className="p-4 rounded-lg bg-slate-900 text-slate-100 font-sans text-xs leading-relaxed border border-slate-800 shadow-inner select-text">
+                  {selectedDoc.extractedSummary ? (
+                    <div className="font-mono text-[11.5px] whitespace-pre-wrap max-h-[500px] overflow-y-auto pr-2">
+                      {selectedDoc.extractedSummary}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <p className="text-slate-300">
+                        Энэхүү албан баримт бичгийг tender.gov.mn эх сурвалжаас шууд татан авч бүрэн эхээр нь танилцах боломжтой.
+                      </p>
+                      {selectedDoc.fileId && (
+                        <a
+                          href={`https://user.tender.gov.mn/mn/download/${selectedDoc.fileId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download={selectedDoc.name || 'tender.pdf'}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition-colors shadow-2xs"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Албан ёсны эх баримтыг татах (PDF)</span>
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 

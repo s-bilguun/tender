@@ -434,20 +434,38 @@ export async function getTenderDetailData(id: string | number) {
   if (liveBundle) {
     // Official attached files
     if (liveBundle.documents && liveBundle.documents.length > 0) {
-      technicalSpecs.documents = liveBundle.documents.map((d: any) => ({
-        id: String(d.fileId),
-        fileId: d.fileId,
-        name: d.fileName,
-        category: d.category || (d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг'),
-        type: `${(d.fileExtention || 'pdf').toUpperCase()} Баримт`,
-        date: d.createdDate ? d.createdDate.substring(0, 16) : (tenderItem.publishDate || '').substring(0, 10),
-        url: d.downloadUrl,
-        downloadUrl: d.downloadUrl,
-        officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-        extractedSummary: d.isPrimary && liveBundle.structuredSpecs?.rawSpecText
-          ? `ХУУЛЬ ЗҮЙН БА ТЕХНИКИЙН ШААРДЛАГА:\n${liveBundle.structuredSpecs.rawSpecText.substring(0, 1500)}`
-          : undefined
-      }));
+      technicalSpecs.documents = liveBundle.documents.map((d: any) => {
+        let extractedSummary: string | undefined = undefined;
+        const docMarker = `--- БАРИМТ БИЧИГ: ${d.fileName} ---`;
+        if (liveBundle.pdfText && liveBundle.pdfText.includes(docMarker)) {
+          const start = liveBundle.pdfText.indexOf(docMarker) + docMarker.length;
+          const nextMarker = liveBundle.pdfText.indexOf('--- БАРИМТ БИЧИГ:', start);
+          const rawSection = nextMarker !== -1
+            ? liveBundle.pdfText.substring(start, nextMarker).trim()
+            : liveBundle.pdfText.substring(start).trim();
+          if (rawSection.length > 20) {
+            extractedSummary = rawSection.substring(0, 2500);
+          }
+        } else if (d.isPrimary && liveBundle.structuredSpecs?.rawSpecText) {
+          extractedSummary = `ХУУЛЬ ЗҮЙН БА ТЕХНИКИЙН ШААРДЛАГА:\n${liveBundle.structuredSpecs.rawSpecText.substring(0, 1500)}`;
+        }
+
+        return {
+          id: String(d.fileId),
+          fileId: d.fileId,
+          name: d.fileName,
+          category: d.category || (d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг'),
+          type: `${(d.fileExtention || 'pdf').toUpperCase()} Баримт`,
+          date: d.createdDate ? d.createdDate.substring(0, 16) : (tenderItem.publishDate || '').substring(0, 10),
+          url: d.downloadUrl,
+          downloadUrl: d.downloadUrl,
+          officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
+          isScannedOcr: !!d.isScannedOcr,
+          ocrModel: d.ocrModel,
+          extractedSummary
+        };
+      });
+      (technicalSpecs as any).isScannedOcr = !!liveBundle.isScannedOcr;
     }
 
 

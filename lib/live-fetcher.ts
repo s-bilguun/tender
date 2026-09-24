@@ -4,6 +4,11 @@ import { execFile } from 'child_process';
 const pdf = require('pdf-parse/lib/pdf-parse.js');
 import { supabaseAdmin as supabase } from './supabase';
 import { SpecialConditionClause, DeliveryScheduleItem, LiveSubTender } from './types';
+import {
+  extractJpegImagesFromPdfBuffer,
+  isScannedPdf,
+  extractScannedPdfWithVision
+} from './pdf-vision-extractor';
 
 export interface LiveTenderDocument {
   fileId: number;
@@ -13,6 +18,8 @@ export interface LiveTenderDocument {
   downloadUrl: string;
   isPrimary?: boolean;
   category?: string;
+  isScannedOcr?: boolean;
+  ocrModel?: string;
 }
 
 export interface LiveBidder {
@@ -72,6 +79,7 @@ export interface LiveExtractionResult {
   structuredSpecs?: StructuredSpecs;
   subTenders?: LiveSubTender[];
   isFailed?: boolean;
+  isScannedOcr?: boolean;
 }
 
 // In-memory cache for fast sub-millisecond retrieval
@@ -724,21 +732,24 @@ export function saveDiskBundle(invId: string, bundle: LiveExtractionResult) {
 
 export async function fetchTenderLiveBundle(
   invitationId: string | number,
-  tenderIdHint?: string | number
+  tenderIdHint?: string | number,
+  forceRefresh = false
 ): Promise<LiveExtractionResult> {
   const invIdStr = String(invitationId);
 
-  // 1. Check in-memory cache
-  const cached = liveCache.get(invIdStr);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-    return cached.data;
-  }
+  if (!forceRefresh) {
+    // 1. Check in-memory cache
+    const cached = liveCache.get(invIdStr);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data;
+    }
 
-  // 1.5. Check persistent disk bundles (fast, 0ms, works in serverless Vercel)
-  const diskBundle = loadDiskBundle(invIdStr);
-  if (diskBundle && diskBundle.documents && diskBundle.documents.length > 0) {
-    liveCache.set(invIdStr, { timestamp: Date.now(), data: diskBundle });
-    return diskBundle;
+    // 1.5. Check persistent disk bundles (fast, 0ms, works in serverless Vercel)
+    const diskBundle = loadDiskBundle(invIdStr);
+    if (diskBundle && diskBundle.documents && diskBundle.documents.length > 0) {
+      liveCache.set(invIdStr, { timestamp: Date.now(), data: diskBundle });
+      return diskBundle;
+    }
   }
 
   // 2. Check Supabase raw_data
@@ -986,10 +997,56 @@ export async function fetchTenderLiveBundle(
     try {
       const pdfBuffer = (await curlGet(`https://user.tender.gov.mn/mn/download/${doc.fileId}`, true)) as Buffer;
       if (pdfBuffer && pdfBuffer.length > 500 && pdfBuffer.slice(0, 5).toString().includes('%PDF')) {
-        const parsedPdf = await pdf(pdfBuffer);
-        totalPageCount += parsedPdf.numpages || 0;
-        if (parsedPdf.text && parsedPdf.text.trim().length > 30) {
-          combinedPdfText += `\n\n--- БАРИМТ БИЧИГ: ${doc.fileName} ---\n` + parsedPdf.text;
+        let extractedDocText = '';
+        try {
+          const parsedPdf = await pdf(pdfBuffer);
+          totalPageCount += parsedPdf.numpages || 0;
+          if (parsedPdf.text && parsedPdf.text.trim().length > 30) {
+            extractedDocText = parsedPdf.text.trim();
+          }
+        } catch (pdfErr) {
+          console.warn(`PDF text parse library error for ${doc.fileName}:`, pdfErr);
+        }
+
+        // If standard text extraction yielded nothing/little and buffer has scanned images, run Vision OCR
+        if (extractedDocText.length < 50 && isScannedPdf(pdfBuffer, extractedDocText.length)) {
+          try {
+            const pageImages = extractJpegImagesFromPdfBuffer(pdfBuffer, 3);
+            if (pageImages.length > 0) {
+              totalPageCount = Math.max(totalPageCount, pageImages.length);
+              console.log(`[OCR] Detected ${pageImages.length} scanned pages in ${doc.fileName} (${doc.fileId}). Running vision extraction...`);
+              const visionResult = await extractScannedPdfWithVision(pageImages, doc.fileName);
+              if (visionResult?.text) {
+                extractedDocText = visionResult.text;
+                doc.isScannedOcr = true;
+                doc.ocrModel = visionResult.modelUsed;
+                result.isScannedOcr = true;
+
+                // Pre-populate structuredSpecs if vision identified items or delivery schedule
+                if (!result.structuredSpecs) {
+                  result.structuredSpecs = {
+                    rawSpecText: visionResult.text,
+                    items: visionResult.items || [],
+                    deliverySchedule: visionResult.deliverySchedule || [],
+                    specialConditions: visionResult.specialConditions || []
+                  };
+                } else {
+                  if (visionResult.items && (!result.structuredSpecs.items || result.structuredSpecs.items.length === 0)) {
+                    result.structuredSpecs.items = visionResult.items;
+                  }
+                  if (visionResult.deliverySchedule && (!result.structuredSpecs.deliverySchedule || result.structuredSpecs.deliverySchedule.length === 0)) {
+                    result.structuredSpecs.deliverySchedule = visionResult.deliverySchedule;
+                  }
+                }
+              }
+            }
+          } catch (visionErr) {
+            console.warn(`Vision OCR extraction error for ${doc.fileName}:`, visionErr);
+          }
+        }
+
+        if (extractedDocText.length > 30) {
+          combinedPdfText += `\n\n--- БАРИМТ БИЧИГ: ${doc.fileName} ---\n` + extractedDocText;
         }
       }
     } catch (pdfErr) {
@@ -1002,7 +1059,23 @@ export async function fetchTenderLiveBundle(
   }
   if (combinedPdfText.trim().length > 30) {
     result.pdfText = combinedPdfText.trim();
-    result.structuredSpecs = parsePdfContent(result.pdfText);
+    const parsedFromText = parsePdfContent(result.pdfText);
+    
+    // Preserve existing items or delivery schedules if vision OCR already extracted them
+    if (result.structuredSpecs) {
+      result.structuredSpecs = {
+        ...parsedFromText,
+        items: (result.structuredSpecs.items && result.structuredSpecs.items.length > 0)
+          ? result.structuredSpecs.items
+          : parsedFromText.items,
+        deliverySchedule: (result.structuredSpecs.deliverySchedule && result.structuredSpecs.deliverySchedule.length > 0)
+          ? result.structuredSpecs.deliverySchedule
+          : parsedFromText.deliverySchedule,
+        rawSpecText: result.structuredSpecs.rawSpecText || parsedFromText.rawSpecText
+      };
+    } else {
+      result.structuredSpecs = parsedFromText;
+    }
   }
 
   // 6. Cache into memory and persistent disk

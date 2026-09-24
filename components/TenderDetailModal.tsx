@@ -192,9 +192,17 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
                         <div className="flex items-start sm:items-center gap-2.5 min-w-0">
                           <FileText className="h-4 w-4 text-rose-500 shrink-0 mt-0.5 sm:mt-0" />
                           <div className="min-w-0">
-                            <span className="text-xs font-bold text-slate-900 block truncate" title={doc.name}>
-                              {doc.name}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-xs font-bold text-slate-900 block truncate" title={doc.name}>
+                                {doc.name}
+                              </span>
+                              {doc.isScannedOcr && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.2 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
+                                  <Sparkles className="h-2 w-2 text-purple-600" />
+                                  <span>AI OCR</span>
+                                </span>
+                              )}
+                            </div>
                             <span className="text-[10px] text-slate-500 block">
                               {doc.category || 'Баримт бичиг'}
                             </span>
@@ -207,7 +215,7 @@ export const TenderDetailModal: React.FC<TenderDetailModalProps> = ({
                               onClick={() => setExpandedDoc((prev) => ({ ...prev, [doc.id || idx]: !prev[doc.id || idx] }))}
                               className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 shadow-2xs transition-colors cursor-pointer"
                             >
-                              {isExpanded ? 'Хураах' : 'Хуулийн шаардлага'}
+                              {isExpanded ? 'Хураах' : 'Задарсан агуулга'}
                             </button>
                           )}
 
