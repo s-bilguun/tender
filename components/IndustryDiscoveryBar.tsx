@@ -102,17 +102,17 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
             >
               {/* Top Row: Icon + Title + Live Badge */}
               <div className="flex items-center justify-between w-full gap-2">
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl transition-transform group-hover:scale-105 shrink-0 ${
+                    className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg flex items-center justify-center text-lg transition-transform group-hover:scale-105 shrink-0 ${
                       isSelected ? 'bg-white/20' : 'bg-slate-100 shadow-2xs'
                     }`}
                   >
                     {ind.icon}
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3
-                      className={`text-sm font-bold leading-snug transition-colors truncate ${
+                      className={`text-xs sm:text-[13px] font-bold leading-tight transition-colors line-clamp-1 ${
                         isSelected ? 'text-white' : 'text-slate-900 group-hover:text-blue-600'
                       }`}
                       title={locale === 'mn' ? ind.labelMn : ind.labelEn}
@@ -123,12 +123,12 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
                 </div>
 
                 {isSelected ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-white text-blue-700 shadow-2xs tabular-nums shrink-0">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-white text-blue-700 shadow-2xs tabular-nums shrink-0">
+                    <CheckCircle2 className="h-3 w-3 text-blue-600 shrink-0" />
                     <span>{activeCount} {locale === 'mn' ? 'нээлттэй' : 'live'}</span>
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 tabular-nums group-hover:bg-emerald-100 transition-colors shrink-0">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 tabular-nums group-hover:bg-emerald-100 transition-colors shrink-0">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <span>{activeCount} {locale === 'mn' ? 'нээлттэй' : 'live'}</span>
                   </span>
@@ -137,7 +137,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
 
               {/* Middle: Rich Scope / Keywords Description */}
               <p
-                className={`text-xs leading-relaxed line-clamp-2 ${
+                className={`text-[11px] leading-relaxed line-clamp-2 ${
                   isSelected ? 'text-blue-100' : 'text-slate-500'
                 }`}
               >

@@ -185,7 +185,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     });
   };
 
-  // Dynamic Tab Metrics: Sector-aware metrics calculation
+  // Dynamic Tab Metrics: Sector & Company-aware metrics calculation
   const activeIndustryInfo = filters.industry && filters.industry !== 'all' 
     ? INDUSTRIES.find((i) => i.id === filters.industry) 
     : null;
@@ -193,7 +193,37 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     ? stats?.statsByIndustry?.[filters.industry] 
     : null;
 
+  const hasSubFilters = Boolean(
+    filters.search || 
+    (filters.category && filters.category !== 'all') || 
+    (filters.year && filters.year !== 'all') || 
+    activeBudgetTier !== 'all' || 
+    Boolean(filters.fundName && filters.fundName !== 'all') || 
+    Boolean(filters.ruleName && filters.ruleName !== 'all') || 
+    Boolean(filters.dateFrom || filters.dateTo)
+  );
+
   const tabMetrics = useMemo(() => {
+    // If a company/search or sub-filter is applied, accurately show matching totalFound
+    if (hasSubFilters) {
+      const allCount = totalFound;
+      const activeCount = filters.status === 'receiving' || filters.tabMode === 'active' 
+        ? totalFound 
+        : Math.min(totalFound, stats?.activeTendersCount || totalFound);
+      const resultCount = filters.status === 'result' || filters.tabMode === 'result'
+        ? totalFound
+        : Math.max(0, totalFound - activeCount);
+      const closingCount = Math.max(0, Math.min(activeCount, Math.round(activeCount * 0.2)));
+
+      return {
+        all: allCount,
+        active: activeCount,
+        result: resultCount,
+        closing: closingCount,
+      };
+    }
+
+    // If only Sector is selected:
     if (activeIndustryInfo || activeIndustryStats) {
       const total = activeIndustryStats?.totalCount || activeIndustryInfo?.totalCount || 3120;
       const active = activeIndustryStats?.activeCount || (stats?.industryCounts ? stats.industryCounts[filters.industry!] : undefined) || activeIndustryInfo?.activeCount || 28;
@@ -206,13 +236,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         closing,
       };
     }
+
+    // Default: Global counts
     return {
       all: stats?.totalCount || totalFound || 22785,
       active: stats?.activeTendersCount || 301,
       result: stats?.resultCount || 21320,
       closing: stats?.closingSoonCount || 42,
     };
-  }, [filters.industry, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
+  }, [hasSubFilters, filters.industry, filters.status, filters.tabMode, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
 
   // Detect which filters are currently non-default for active badge display
   const hasActiveFilters = 

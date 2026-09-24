@@ -213,7 +213,7 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 space-y-3.5">
         {/* Page Title & Context Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-200">
           <div>
@@ -229,7 +229,7 @@ export default function Home() {
         </div>
 
         {/* B2B Interactive Discovery Center: 2/3 Sectors (Left) + 1/3 Top Buyers (Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
           {/* Left: 2/3 (8 cols) for Sector Discovery */}
           <div className="lg:col-span-8 flex flex-col">
             <IndustryDiscoveryBar
