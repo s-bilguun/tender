@@ -228,20 +228,27 @@ export default function Home() {
           </div>
         </div>
 
-        {/* B2B Industry 1-Click Discovery Bar */}
-        <IndustryDiscoveryBar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          stats={stats}
-          locale={locale}
-        />
+        {/* B2B Interactive Discovery Center: 2/3 Sectors (Left) + 1/3 Top Buyers (Right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+          {/* Left: 2/3 (8 cols) for Sector Discovery */}
+          <div className="lg:col-span-8 flex flex-col">
+            <IndustryDiscoveryBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              stats={stats}
+              locale={locale}
+            />
+          </div>
 
-        {/* B2B Top Procuring Companies Discovery Bar */}
-        <CompanyDiscoveryBar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          locale={locale}
-        />
+          {/* Right: 1/3 (4 cols) for Top Procuring Companies */}
+          <div className="lg:col-span-4 flex flex-col">
+            <CompanyDiscoveryBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              locale={locale}
+            />
+          </div>
+        </div>
 
         {/* Collapsible Analytics View */}
         {isAnalyticsOpen && stats && (

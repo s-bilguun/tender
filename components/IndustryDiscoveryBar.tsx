@@ -24,7 +24,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
   const statsByIndustry = stats?.statsByIndustry || {};
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs space-y-4">
+    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs space-y-4 h-full flex flex-col justify-between">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div className="flex items-center gap-3">
@@ -83,7 +83,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
       )}
 
       {/* 3x3 Balanced & Legible Industry Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3 flex-1">
         {INDUSTRIES.map((ind) => {
           const isSelected = currentIndustry === ind.id;
           const indStat = statsByIndustry[ind.id];
@@ -94,7 +94,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
             <button
               key={ind.id}
               onClick={() => onFilterChange({ industry: isSelected ? 'all' : ind.id, sortBy: 'date_desc', page: 1 })}
-              className={`p-4 rounded-xl border text-left flex flex-col justify-between gap-3 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
+              className={`p-3 sm:p-3.5 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
                 isSelected
                   ? 'bg-gradient-to-br from-blue-600 via-indigo-600 to-indigo-700 text-white border-blue-600 shadow-md ring-2 ring-blue-400/50 -translate-y-0.5'
                   : 'bg-white hover:bg-slate-50/80 text-slate-800 border-slate-200/90 hover:border-blue-300 hover:shadow-xs hover:-translate-y-0.5'

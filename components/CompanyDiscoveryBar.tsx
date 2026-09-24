@@ -705,33 +705,32 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-3.5">
+    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs space-y-3.5 h-full flex flex-col justify-between">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-2xs">
-            <Building2 className="h-4 w-4 text-indigo-600" />
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">
+            <Building2 className="h-5 w-5 text-indigo-600" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate">
                 {currentIndustry !== 'all' && selectedIndustryObj
                   ? locale === 'mn'
-                    ? `${selectedIndustryObj.icon} ${selectedIndustryObj.labelMn.split('&')[0].trim()} салбарын томоохон захиалагчид`
-                    : `Top ${selectedIndustryObj.labelEn.split('&')[0].trim()} Procuring Entities`
+                    ? `${selectedIndustryObj.icon} ${selectedIndustryObj.labelMn.split('&')[0].trim()} захиалагчид`
+                    : `Top ${selectedIndustryObj.labelEn.split('&')[0].trim()} Buyers`
                   : locale === 'mn'
-                  ? 'Томоохон захиалагч байгууллага, компаниуд'
-                  : 'Top Procuring Companies & State Enterprises'}
+                  ? 'Томоохон захиалагчид'
+                  : 'Top Procuring Entities'}
               </h2>
-              {currentIndustry !== 'all' && (
-                <span className="text-[10px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-                  {locale === 'mn' ? 'Салбарын шүүлт' : 'Filtered'}
-                </span>
-              )}
+              <span className="text-[11px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60 shrink-0">
+                {companyList.length} {locale === 'mn' ? 'байгууллага' : 'entities'}
+              </span>
             </div>
-            <p className="text-[11px] text-slate-500 hidden md:block">
+            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
               {locale === 'mn'
-                ? 'Захиалагч байгууллагыг сонгон тухайн байгууллагын зарласан тендерүүдийг 1 товшилтоор шүүх'
-                : 'Filter active tenders by major government agencies and state-owned enterprises'}
+                ? 'Байгууллага сонгон зарласан тендерийг шүүх'
+                : 'Filter active tenders by major procuring enterprise'}
             </p>
           </div>
         </div>
@@ -739,9 +738,9 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
         {activeCompany && (
           <button
             onClick={() => onFilterChange({ search: undefined, sortBy: 'date_desc', page: 1 })}
-            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors self-start sm:self-auto flex items-center gap-1.5 cursor-pointer bg-indigo-50 hover:bg-indigo-100/80 px-2.5 py-1 rounded-lg"
+            className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors self-start sm:self-auto flex items-center gap-1.5 cursor-pointer bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg shrink-0"
           >
-            <span>{locale === 'mn' ? 'Бүх захиалагчийг харах' : 'View All Companies'}</span>
+            <span>{locale === 'mn' ? 'Бүгдийг харах' : 'View All'}</span>
             <span className="text-indigo-400 font-bold">✕</span>
           </button>
         )}
@@ -750,28 +749,27 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
       {/* Active Company Banner */}
       {activeCompany && (
         <div className="flex items-center justify-between bg-gradient-to-r from-indigo-50 via-blue-50/50 to-indigo-50 border border-indigo-200/80 rounded-xl px-3.5 py-2 text-xs text-indigo-950 shadow-2xs">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-slate-700">
-              {locale === 'mn' ? 'Сонгосон захиалагч:' : 'Selected Procuring Entity:'}
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span className="font-bold text-slate-700 shrink-0">
+              {locale === 'mn' ? 'Сонгосон:' : 'Selected:'}
             </span>
-            <span className="inline-flex items-center gap-1.5 bg-indigo-600 text-white font-bold px-3 py-0.5 rounded-full text-[11px] shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 bg-indigo-600 text-white font-bold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs truncate">
               <span>{activeCompany.icon}</span>
-              <span>{activeCompany.name}</span>
-              <span className="opacity-85 font-mono">({activeCompany.approxTenders} тендер)</span>
+              <span className="truncate">{activeCompany.name}</span>
             </span>
           </div>
           <button
             onClick={() => onFilterChange({ search: undefined, sortBy: 'date_desc', page: 1 })}
-            className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 hover:underline cursor-pointer shrink-0"
+            className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 hover:underline cursor-pointer shrink-0 ml-2"
           >
-            <span>{locale === 'mn' ? 'Шүүлтүүр арилгах' : 'Clear'}</span>
+            <span>{locale === 'mn' ? 'Арилгах' : 'Clear'}</span>
             <span>✕</span>
           </button>
         </div>
       )}
 
-      {/* Company Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+      {/* Company Grid - 2 columns for 1/3 container */}
+      <div className="grid grid-cols-2 gap-2.5 flex-1 content-start">
         {companyList.map((comp) => {
           const isSelected = activeCompany?.id === comp.id;
 
@@ -779,7 +777,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             <button
               key={comp.id}
               onClick={() => handleSelectCompany(comp)}
-              className={`p-3 rounded-xl border text-left flex flex-col justify-between gap-2.5 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
+              className={`p-2.5 sm:p-3 rounded-xl border text-left flex flex-col justify-between gap-2 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
                 isSelected
                   ? 'bg-gradient-to-br from-indigo-600 to-blue-700 text-white border-indigo-600 shadow-md ring-2 ring-indigo-400/40 -translate-y-0.5'
                   : 'bg-white hover:bg-slate-50/90 text-slate-800 border-slate-200/90 hover:border-indigo-300 hover:shadow-xs hover:-translate-y-0.5'
