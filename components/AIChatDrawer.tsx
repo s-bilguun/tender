@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
+import { cleanThoughtBlocks } from '@/lib/ai-cleaner';
 import { X, Send, Sparkles, Bot, User, Trash2, Tag, Loader2, ExternalLink } from 'lucide-react';
 
 interface Message {
@@ -104,7 +105,8 @@ const renderInline = (text: string, isUser: boolean): React.ReactNode => {
 };
 
 export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> = ({ text, isUser }) => {
-  const lines = text.split('\n');
+  const sanitizedText = isUser ? text : cleanThoughtBlocks(text);
+  const lines = sanitizedText.split('\n');
   const elements: React.ReactNode[] = [];
   let currentList: { type: 'ul' | 'ol'; items: string[] } | null = null;
   let inCodeBlock = false;
@@ -445,7 +447,8 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       });
 
       const data = await res.json();
-      const reply = data.reply || data.text || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : 'Error generating reply.');
+      const rawReply = data.reply || data.text || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : 'Error generating reply.');
+      const reply = cleanThoughtBlocks(rawReply);
 
       const assistantMsg: Message = {
         id: `assistant-${Date.now()}`,

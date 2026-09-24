@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
 import { DeliveryScheduleItem, SpecialConditionClause } from './types';
+import { cleanThoughtBlocks } from './ai-cleaner';
 
 function getOpenRouterApiKey(): string | undefined {
   if (process.env.OPENROUTER_API_KEY) return process.env.OPENROUTER_API_KEY;
@@ -217,7 +218,8 @@ export async function extractScannedPdfWithVision(
       }
 
       const data = await res.json();
-      const outputText = data.choices?.[0]?.message?.content;
+      const rawOutput = data.choices?.[0]?.message?.content;
+      const outputText = cleanThoughtBlocks(rawOutput || '');
       if (outputText && outputText.trim().length > 50) {
         // Parse structured items from markdown table
         const items = parseTableItemsFromMarkdown(outputText);

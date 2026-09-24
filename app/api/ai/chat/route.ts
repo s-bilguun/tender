@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { TenderItem } from '@/lib/types';
 import { getStructuredTenderSummary, getTenderDetailData } from '@/lib/tender-detail';
+import { cleanThoughtBlocks } from '@/lib/ai-cleaner';
 
 export const dynamic = 'force-dynamic';
 
@@ -551,6 +552,7 @@ export async function POST(request: NextRequest) {
         systemPrompt = `Та бол Монгол Улсын төрийн худалдан авах ажиллагаа (tender.gov.mn)-ны ТШББ, баримт бичиг, техникийн тодорхойлолт, хууль зүйн шаардлагыг шинжлэх чиглэлээр мэргэшсэн туршлагатай, найрсаг ахлах шинжээч зөвлөх юм.
 
 ХАРИЛЦААНЫ СТАНДАРТ:
+- ХЭЗЭЭ Ч дотоод бодол, төлөвлөгөө, "Here's a thinking process:" эсвэл <think> таг бүү гарга! Зөвхөн хэрэглэгчид зориулсан эцсийн бэлэн хариултыг шууд эхлүүл.
 - Робот шиг хуурай, хиймэл албархуу хэллэг БҮҮ ашигла ("Мэдээллийн санд...", "Хэрэглэгчийн асуултын дагуу..." гэх мэт үгс БҮҮ хэрэглэ).
 - Хэрэглэгчийн асуултад шууд, тодорхой, практик, бодитой хариулт өг.
 - Баталгаажсан бодит тоо баримтуудыг (төсөв, хугацаа, код, захиалагч, арга, санхүүжилт) яг үнэн зөвөөр хэл.
@@ -638,10 +640,12 @@ STRUCTURED BDS & SPECIFICATION DATA (EXTRACTED FROM OFFICIAL PDF DOSSIER):
 - Specifications Summary:
 ${technicalSpecs?.realSpecsText ? technicalSpecs.realSpecsText.substring(0, 3000) : 'Technical requirements outlined in official dossier.'}
 
-Provide practical guidance on technical requirements, bid security, and key deadlines in clean Markdown.`;
+Provide practical guidance on technical requirements, bid security, and key deadlines in clean Markdown.
+CRITICAL: Output ONLY the final response in Markdown. NEVER include internal reasoning, scratchpad, or preambles like "Here is a thinking process:".`;
       } else {
         systemPrompt = `You are a friendly, helpful procurement advisor for Mongolia's tender portal.
 Give direct, clear answers in natural English without robotic clichés.
+CRITICAL: Output ONLY the final answer. NEVER output chain of thought or thinking process headers.
 Tenders:
 ${relevantTenders
   .map(
@@ -701,8 +705,9 @@ Answer clearly in English using this data.`;
           if (openRouterRes.ok) {
             const data = await openRouterRes.json();
             const choice = data.choices?.[0];
-            const reply = choice?.message?.content;
-            if (reply && typeof reply === 'string' && reply.trim().length > 30) {
+            const rawReply = choice?.message?.content;
+            const reply = cleanThoughtBlocks(rawReply || '');
+            if (reply && reply.trim().length > 20) {
               return NextResponse.json({ reply, text: reply, structured: structuredInfo });
             }
           } else {
