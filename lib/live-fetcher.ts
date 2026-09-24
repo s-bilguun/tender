@@ -775,13 +775,11 @@ export async function fetchTenderLiveBundle(
         tenderDocumentId = Number(existingRawData.tenderDocumentId);
       }
       
-      // If already has complete live bundle with specialConditions in raw_data, return directly
+      // If already has complete live bundle in raw_data, return directly
       if (
         existingRawData.liveBundle &&
-        existingRawData.liveBundle.documents?.length > 0 &&
-        existingRawData.liveBundle.structuredSpecs?.specialConditions !== undefined &&
-        existingRawData.liveBundle.subTenders !== undefined &&
-        tenderDocumentId
+        existingRawData.liveBundle.documents &&
+        existingRawData.liveBundle.documents.length > 0
       ) {
         liveCache.set(invIdStr, { timestamp: Date.now(), data: existingRawData.liveBundle });
         return existingRawData.liveBundle;
@@ -1085,30 +1083,29 @@ export async function fetchTenderLiveBundle(
   }
 
   // 7. Persist to Supabase raw_data asynchronously (store structured text, not heavy binary)
-  if (existingRawData) {
-    (async () => {
-      try {
-        // Truncate raw full pdf text to safe limit (~60KB) for DB storage while keeping structured specs
-        const dbSafeResult = {
-          ...result,
-          pdfText: result.pdfText ? result.pdfText.substring(0, 50000) : ''
-        };
-        await supabase
-          .from('tenders')
-          .update({
-            raw_data: {
-              ...existingRawData,
-              tenderDocumentId: result.tenderDocumentId || existingRawData.tenderDocumentId,
-              liveBundle: dbSafeResult
-            },
-            updated_at: new Date().toISOString()
-          })
-          .eq('invitation_id', invitationId);
-      } catch (dbErr) {
-        console.warn('Could not persist liveBundle to Supabase:', dbErr);
-      }
-    })();
-  }
+  (async () => {
+    try {
+      // Truncate raw full pdf text to safe limit (~50KB) for DB storage while keeping structured specs
+      const dbSafeResult = {
+        ...result,
+        pdfText: result.pdfText ? result.pdfText.substring(0, 50000) : ''
+      };
+      await supabase
+        .from('tenders')
+        .update({
+          raw_data: {
+            ...(existingRawData || {}),
+            tenderDocumentId: result.tenderDocumentId || existingRawData?.tenderDocumentId,
+            tenderId: result.tenderId || existingRawData?.tenderId,
+            liveBundle: dbSafeResult
+          },
+          updated_at: new Date().toISOString()
+        })
+        .eq('invitation_id', invitationId);
+    } catch (dbErr) {
+      console.warn('Could not persist liveBundle to Supabase:', dbErr);
+    }
+  })();
 
   return result;
 }

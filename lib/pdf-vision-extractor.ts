@@ -142,10 +142,13 @@ export async function extractScannedPdfWithVision(
   }
 
   const candidateModels = [
+    'google/gemini-2.0-flash-exp:free',
+    'meta-llama/llama-3.2-11b-vision-instruct:free',
+    'qwen/qwen-2-vl-72b-instruct:free',
     'openrouter/free',
-    'qwen/qwen2.5-vl-72b-instruct',
-    'google/gemini-2.5-flash-image',
     'nex-agi/nex-n2.5-mini:free',
+    'google/gemini-2.5-flash-image',
+    'qwen/qwen2.5-vl-72b-instruct',
     'google/gemini-3.1-flash-lite-image',
     'qwen/qwen3-vl-8b-instruct',
   ];
