@@ -108,9 +108,20 @@ export interface TenderItem {
   bds?: any;
   technicalSpecs?: any;
   results?: any;
+
+  // Real PDF & Live Spec Extraction Summary (for listing previews)
+  liveBundleSummary?: {
+    hasBundle: boolean;
+    docCount: number;
+    hasOcr: boolean;
+    bidSecurityReq?: string;
+    isBidSecurityExempt?: boolean;
+    turnoverReq?: string;
+    topItems?: Array<{ name: string; qty?: string | number; unit?: string }>;
+  };
 }
 
-export type ActiveTabMode = 'all' | 'active' | 'result' | 'closing_soon' | 'watchlist' | 'archive';
+export type ActiveTabMode = 'all' | 'active' | 'result' | 'closing_soon' | 'no_guarantee' | 'watchlist' | 'archive';
 
 export interface TenderFilterParams {
   search?: string;
@@ -120,6 +131,7 @@ export interface TenderFilterParams {
   maxBudget?: number;
   status?: string;         // all, receiving, opened, result, cancelled, requested
   tabMode?: ActiveTabMode;
+  noBidSecurityOnly?: boolean;
   urgency?: 'all' | 'urgent_3d' | 'new_48h' | 'high_budget';
   sortBy?: 'date_desc' | 'budget_desc' | 'budget_asc' | 'deadline_asc';
   year?: string;           // 'all', '2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019'

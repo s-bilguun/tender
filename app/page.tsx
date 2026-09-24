@@ -5,7 +5,6 @@ import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types
 import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
 import { IndustryDiscoveryBar } from '@/components/IndustryDiscoveryBar';
-import { CompanyDiscoveryBar } from '@/components/CompanyDiscoveryBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
@@ -56,12 +55,12 @@ export default function Home() {
     });
   };
 
-  // Default: Show All Tenders (22,700+ records) by default, with easy tabs for Active & Awarded
+  // Default: Show Active Open Tenders first (immediately actionable opportunities)
   const [filters, setFilters] = useState<TenderFilterParams>({
     search: '',
     category: 'all',
-    status: 'all',
-    tabMode: 'all',
+    status: 'receiving',
+    tabMode: 'active',
     urgency: 'all',
     page: 1,
     perPage: 15,
@@ -213,42 +212,34 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 space-y-3.5">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 space-y-3">
         {/* Page Title & Context Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-200">
           <div>
-            <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
-              {locale === 'mn' ? 'Монголын тендерийн нэгдсэн дата & аналитик төв' : 'Centralized Tender Intelligence & Command Center'}
-            </h1>
-            <p className="text-[11px] sm:text-xs text-slate-500 mt-1 leading-relaxed">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">
+                {locale === 'mn' ? 'Монгол Улсын нээлттэй бүх тендерүүд' : 'Active Public & Private Procurements'}
+              </h1>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{locale === 'mn' ? 'Шууд холболттой' : 'Live Sync'}</span>
+              </span>
+            </div>
+            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-relaxed">
               {locale === 'mn'
-                ? 'Төрийн болон хувийн хэвшлийн бүх тендер, худалдан авалтын боломжийг зах зээлийн нарийвчилсан дата, хиймэл оюун ухааны шинжилгээгээр 1 дороос хянах нэгдсэн систем'
-                : 'Unified intelligence platform to track, analyze, and discover procurement opportunities across public and private sectors in real-time.'}
+                ? 'Албан ёсны эх баримт (PDF), OCR технологиор уншсан барааны бодит тоо хэмжээ, гэрээний шалгуурыг 1 дороос харах систем'
+                : 'Direct access to official tender PDFs, OCR-extracted bill of quantities, and statutory bidding qualifications.'}
             </p>
           </div>
         </div>
 
-        {/* B2B Interactive Discovery Center: 2/3 Sectors (Left) + 1/3 Top Buyers (Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-stretch">
-          {/* Left: 2/3 (8 cols) for Sector Discovery */}
-          <div className="lg:col-span-8 flex flex-col">
-            <IndustryDiscoveryBar
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              stats={stats}
-              locale={locale}
-            />
-          </div>
-
-          {/* Right: 1/3 (4 cols) for Top Procuring Companies */}
-          <div className="lg:col-span-4 flex flex-col">
-            <CompanyDiscoveryBar
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              locale={locale}
-            />
-          </div>
-        </div>
+        {/* Compact B2B Industry Horizontal Sector Bar (Sleek 38px, not pushing list down) */}
+        <IndustryDiscoveryBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          stats={stats}
+          locale={locale}
+        />
 
         {/* Collapsible Analytics View */}
         {isAnalyticsOpen && stats && (

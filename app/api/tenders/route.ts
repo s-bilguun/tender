@@ -96,6 +96,8 @@ export async function GET(request: NextRequest) {
         query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
       } else if (tabMode === 'closing_soon') {
         query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+      } else if (tabMode === 'no_guarantee') {
+        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
       } else if (status && status !== 'all') {
         if (status === 'opened') {
           query = query.ilike('doc_status_name', '%нээгдсэн%');
@@ -133,6 +135,28 @@ export async function GET(request: NextRequest) {
       if (!error && data && data.length > 0) {
         let mappedItems: TenderItem[] = data.map((row) => {
           const classification = classifyIndustry(row.tender_name, row.tender_type_code, row.budget_entity_name || row.position_name);
+          const liveBundle = row.raw_data?.liveBundle;
+          let liveBundleSummary = undefined;
+          if (liveBundle) {
+            const specs = liveBundle.structuredSpecs;
+            const items = specs?.deliverySchedule || specs?.items || [];
+            const bidSecReq = specs?.bidSecurityReq;
+            const isBidSecExempt = typeof bidSecReq === 'string' && bidSecReq.includes('Шаардахгүй');
+            liveBundleSummary = {
+              hasBundle: true,
+              docCount: liveBundle.documents?.length || 0,
+              hasOcr: !!liveBundle.isScannedOcr,
+              bidSecurityReq: bidSecReq,
+              isBidSecurityExempt: isBidSecExempt,
+              turnoverReq: specs?.turnoverReq,
+              topItems: items.slice(0, 3).map((it: any) => ({
+                name: String(it.name || '').replace(/\s+/g, ' ').trim(),
+                qty: it.quantity || it.qty || '',
+                unit: it.unit || ''
+              }))
+            };
+          }
+
           return {
             invitationId: row.invitation_id,
             invitationNumber: row.invitation_number,
@@ -154,6 +178,7 @@ export async function GET(request: NextRequest) {
             isPackage: 0,
             industry: classification.id,
             industryName: classification.labelMn,
+            liveBundleSummary,
           };
         });
 
@@ -168,6 +193,10 @@ export async function GET(request: NextRequest) {
 
         if (industry && industry !== 'all') {
           mappedItems = mappedItems.filter((item) => item.industry === industry);
+        }
+
+        if (tabMode === 'no_guarantee') {
+          mappedItems = mappedItems.filter((item) => item.liveBundleSummary?.isBidSecurityExempt);
         }
 
         if (mappedItems.length > 0) {

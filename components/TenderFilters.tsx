@@ -7,7 +7,7 @@ import { INDUSTRIES } from '@/lib/taxonomy';
 import { 
   Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, 
   Flame, Star, Zap, Calendar, Trophy, Database, Filter, 
-  SlidersHorizontal, RotateCcw, Building2, Coins, ChevronDown, Check, Sparkles
+  SlidersHorizontal, RotateCcw, Building2, Coins, ChevronDown, Check, Sparkles, ShieldCheck
 } from 'lucide-react';
 
 interface TenderFiltersProps {
@@ -151,14 +151,16 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   ].filter(Boolean).length;
 
   const handleTabSelect = (tab: ActiveTabMode) => {
-    if (tab === 'all') {
-      onFilterChange({ tabMode: 'all', status: 'all', urgency: 'all', page: 1 });
-    } else if (tab === 'active') {
+    if (tab === 'active') {
       onFilterChange({ tabMode: 'active', status: 'receiving', urgency: 'all', page: 1 });
-    } else if (tab === 'result') {
-      onFilterChange({ tabMode: 'result', status: 'result', urgency: 'all', page: 1 });
     } else if (tab === 'closing_soon') {
       onFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_3d', sortBy: 'deadline_asc', page: 1 });
+    } else if (tab === 'no_guarantee') {
+      onFilterChange({ tabMode: 'no_guarantee', status: 'receiving', urgency: 'all', page: 1 });
+    } else if (tab === 'result') {
+      onFilterChange({ tabMode: 'result', status: 'result', urgency: 'all', page: 1 });
+    } else if (tab === 'all') {
+      onFilterChange({ tabMode: 'all', status: 'all', urgency: 'all', page: 1 });
     } else if (tab === 'watchlist') {
       onFilterChange({ tabMode: 'watchlist', page: 1 });
     }
@@ -262,28 +264,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       {/* 1. Primary Workflow Tabs with Integrated Live Metrics */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 w-full sm:w-auto -mx-1 px-1">
-          {/* All History / Archive Tab */}
-          <button
-            onClick={() => handleTabSelect('all')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
-              currentTab === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <Database className="h-3.5 w-3.5 text-blue-400" />
-            <span>{locale === 'mn' ? 'Бүх тендерүүд' : 'All Tenders'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'all' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
-            }`}>
-              {tabMetrics.all.toLocaleString()}
-            </span>
-          </button>
-
-          {/* Active Live Tab */}
+          {/* 1. Active Live Tab (Default First) */}
           <button
             onClick={() => handleTabSelect('active')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'active'
                 ? 'bg-emerald-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -298,28 +282,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </span>
           </button>
 
-          {/* Awarded / Concluded Winners Tab */}
-          <button
-            onClick={() => handleTabSelect('result')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
-              currentTab === 'result'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-            }`}
-          >
-            <Trophy className="h-3.5 w-3.5 text-amber-300" />
-            <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : 'Awarded'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
-            }`}>
-              {tabMetrics.result.toLocaleString()}
-            </span>
-          </button>
-
-          {/* Closing Soon Tab */}
+          {/* 2. Closing Soon Tab */}
           <button
             onClick={() => handleTabSelect('closing_soon')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'closing_soon'
                 ? 'bg-rose-600 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -334,10 +300,59 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </span>
           </button>
 
-          {/* Watchlist Tab */}
+          {/* 3. No Bid Bond Required Tab (High Value for SMEs) */}
+          <button
+            onClick={() => handleTabSelect('no_guarantee')}
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'no_guarantee'
+                ? 'bg-teal-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5 text-teal-300" />
+            <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : 'No Bid Bond'}</span>
+          </button>
+
+          {/* 4. Awarded / Concluded Winners Tab */}
+          <button
+            onClick={() => handleTabSelect('result')}
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'result'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            <Trophy className="h-3.5 w-3.5 text-amber-300" />
+            <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : 'Awarded'}</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+              currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
+            }`}>
+              {tabMetrics.result.toLocaleString()}
+            </span>
+          </button>
+
+          {/* 5. All History / Archive Tab */}
+          <button
+            onClick={() => handleTabSelect('all')}
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'all'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            <Database className="h-3.5 w-3.5 text-blue-400" />
+            <span>{locale === 'mn' ? 'Бүх түүхэн сан' : 'All Tenders'}</span>
+            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+              currentTab === 'all' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
+            }`}>
+              {tabMetrics.all.toLocaleString()}
+            </span>
+          </button>
+
+          {/* 6. Watchlist Tab */}
           <button
             onClick={() => handleTabSelect('watchlist')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap ${
+            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'watchlist'
                 ? 'bg-amber-500 text-white shadow-xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'

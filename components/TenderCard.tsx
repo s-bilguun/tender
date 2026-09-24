@@ -30,6 +30,12 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
   const formatCurrency = (amount: number) => {
     if (!amount) return '0 ₮';
+    if (amount >= 1_000_000_000) {
+      return `${(amount / 1_000_000_000).toFixed(2)} тэрбум ₮`;
+    }
+    if (amount >= 10_000_000) {
+      return `${(amount / 1_000_000).toFixed(1)} сая ₮`;
+    }
     return `${amount.toLocaleString()} ₮`;
   };
 
@@ -195,10 +201,45 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         </Link>
 
         {/* Procuring Entity */}
-        <div className="mt-2.5 flex items-start gap-1.5 text-xs text-slate-500">
+        <div className="mt-2 flex items-start gap-1.5 text-xs text-slate-500">
           <Building2 className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" />
           <span className="line-clamp-1">{tender.budgetEntityName}</span>
         </div>
+
+        {/* Real Extracted Goods / Specifications Preview */}
+        {tender.liveBundleSummary?.topItems && tender.liveBundleSummary.topItems.length > 0 && (
+          <div className="mt-2.5 p-2 rounded-lg bg-blue-50/70 border border-blue-200/60 text-xs">
+            <div className="text-[10px] font-bold text-blue-800 uppercase tracking-wide flex items-center justify-between mb-0.5">
+              <span>📦 Албан ёсны задаргаа</span>
+              {tender.liveBundleSummary.docCount > 0 && (
+                <span className="text-slate-400 font-normal">
+                  {tender.liveBundleSummary.docCount} PDF {tender.liveBundleSummary.hasOcr ? '(OCR)' : ''}
+                </span>
+              )}
+            </div>
+            <div className="font-semibold text-slate-900 line-clamp-1 text-[11px]">
+              {tender.liveBundleSummary.topItems[0].name}
+              {tender.liveBundleSummary.topItems[0].qty && (
+                <span className="text-blue-700 ml-1 font-bold">
+                  ({tender.liveBundleSummary.topItems[0].qty} {tender.liveBundleSummary.topItems[0].unit || ''})
+                </span>
+              )}
+            </div>
+            {tender.liveBundleSummary.topItems.length > 1 && (
+              <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
+                +{tender.liveBundleSummary.topItems.length - 1} нэмэлт төрөл
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Highlight if Bid Bond is Exempt */}
+        {tender.liveBundleSummary?.isBidSecurityExempt && (
+          <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+            <span>🛡️</span>
+            <span>Тендерийн баталгаа шаардахгүй</span>
+          </div>
+        )}
       </div>
 
       {/* Budget & Deadline Urgency Bar */}
