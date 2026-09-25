@@ -137,29 +137,35 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     </Link>
 
                     {/* Real Extracted PDF Specs / Goods Preview */}
-                    {tender.liveBundleSummary?.topItems && tender.liveBundleSummary.topItems.length > 0 && (
-                      <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-medium text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60 inline-flex items-center gap-1 max-w-[340px] truncate">
-                          <span className="font-semibold">📦</span>
-                          <span className="truncate">{tender.liveBundleSummary.topItems[0].name}</span>
-                          {tender.liveBundleSummary.topItems[0].qty && (
-                            <strong className="text-blue-900 font-bold shrink-0">
-                              ({tender.liveBundleSummary.topItems[0].qty} {tender.liveBundleSummary.topItems[0].unit || ''})
-                            </strong>
+                    {tender.liveBundleSummary && (
+                      ((tender.liveBundleSummary.topItems && tender.liveBundleSummary.topItems.length > 0) ||
+                       tender.liveBundleSummary.isBidSecurityExempt ||
+                       (tender.liveBundleSummary.docCount && tender.liveBundleSummary.docCount > 0)) && (
+                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                          {tender.liveBundleSummary.topItems && tender.liveBundleSummary.topItems.length > 0 && (
+                            <span className="text-[10px] font-medium text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60 inline-flex items-center gap-1 max-w-[340px] truncate">
+                              <span className="font-semibold">📦</span>
+                              <span className="truncate">{tender.liveBundleSummary.topItems[0].name}</span>
+                              {tender.liveBundleSummary.topItems[0].qty && (
+                                <strong className="text-blue-900 font-bold shrink-0">
+                                  ({tender.liveBundleSummary.topItems[0].qty} {tender.liveBundleSummary.topItems[0].unit || ''})
+                                </strong>
+                              )}
+                            </span>
                           )}
-                        </span>
-                        {tender.liveBundleSummary.isBidSecurityExempt && (
-                          <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 shrink-0">
-                            🛡️ Баталгаа шаардахгүй
-                          </span>
-                        )}
-                        {tender.liveBundleSummary.docCount > 0 && (
-                          <span className="text-[10px] text-slate-400 font-medium inline-flex items-center gap-0.5 shrink-0">
-                            📄 {tender.liveBundleSummary.docCount} PDF
-                            {tender.liveBundleSummary.hasOcr && <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1 rounded border border-amber-200">OCR</span>}
-                          </span>
-                        )}
-                      </div>
+                          {tender.liveBundleSummary.isBidSecurityExempt && (
+                            <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 shrink-0">
+                              🛡️ Баталгаа шаардахгүй
+                            </span>
+                          )}
+                          {tender.liveBundleSummary.docCount > 0 && (
+                            <span className="text-[10px] text-slate-400 font-medium inline-flex items-center gap-0.5 shrink-0">
+                              📄 {tender.liveBundleSummary.docCount} PDF
+                              {tender.liveBundleSummary.hasOcr && <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1 rounded border border-amber-200">OCR</span>}
+                            </span>
+                          )}
+                        </div>
+                      )
                     )}
 
                     {/* On mobile, show entity under title */}

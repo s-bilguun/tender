@@ -56,6 +56,54 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
   const [copiedStructuredJson, setCopiedStructuredJson] = useState(false);
   const [checklistState, setChecklistState] = useState<Record<string, boolean>>({});
   const [expandedDocSummaries, setExpandedDocSummaries] = useState<Record<string, boolean>>({});
+  const [itemSearchQuery, setItemSearchQuery] = useState('');
+  const [previewModalDoc, setPreviewModalDoc] = useState<{ name: string; text: string } | null>(null);
+  const [copiedPreviewText, setCopiedPreviewText] = useState(false);
+
+  const handleExportItemsCsv = () => {
+    const items = data?.technicalSpecs?.sampleItems || [];
+    if (items.length === 0) return;
+    const headers = ['№', 'Бараа / Ажлын нэр', 'Тоо хэмжээ', 'Хэмжих нэгж', 'Техникийн үзүүлэлт / Стандарт'];
+    const rows = items.map((it: any, idx: number) => [
+      idx + 1,
+      `"${(it.name || '').replace(/"/g, '""')}"`,
+      it.quantity || 1,
+      `"${(it.unit || '').replace(/"/g, '""')}"`,
+      `"${(it.spec || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r: (string | number)[]) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Tender_${data?.tender?.tenderCode || data?.tender?.invitationId}_items.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleExportDeliveryCsv = () => {
+    const schedule = data?.technicalSpecs?.deliverySchedule || [];
+    if (schedule.length === 0) return;
+    const headers = ['№', 'Барааны нэр', 'Тоо хэмжээ', 'Хэмжих нэгж', 'Хүргэх газар / Цэг', 'Нийлүүлэх хугацаа'];
+    const rows = schedule.map((row: any, rIdx: number) => [
+      row.number || rIdx + 1,
+      `"${(row.name || '').replace(/"/g, '""')}"`,
+      row.quantity || '',
+      `"${(row.unit || '').replace(/"/g, '""')}"`,
+      `"${(row.location || '').replace(/"/g, '""')}"`,
+      `"${(row.deadline || '').replace(/"/g, '""')}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r: (string | number)[]) => r.join(','))].join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Tender_${data?.tender?.tenderCode || data?.tender?.invitationId}_delivery_schedule.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleRunAiAnalysis = async (customPrompt?: string, targetId: string = 'general', topicTitle?: string) => {
     if (!data?.tender) return;
@@ -1050,49 +1098,87 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               </div>
 
               {/* 1. БҮТЦЭД ОРУУЛСАН БАРАА / АЖЛЫН ҮЗҮҮЛЭЛТИЙН КАРТУУД */}
-              {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
-                <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                  <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                      <Layers className="h-4 w-4 text-indigo-600" />
-                      <span>Нийлүүлэх бараа, гүйцэтгэх ажлын нарийвчилсан үзүүлэлт ({technicalSpecs.sampleItems.length})</span>
-                    </span>
-                    {(technicalSpecs.isRealExtracted || technicalSpecs.sampleItems?.some((i: any) => i.isRealExtracted)) ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <Sparkles className="h-3 w-3 text-emerald-600" />
-                        <span>PDF-ээс ялгасан бодит өгөгдөл ({technicalSpecs.sampleItems.length})</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
-                        <span>Үндсэн худалдан авах чиглэл</span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="p-3 sm:p-4 space-y-3 bg-white">
-                    {technicalSpecs.sampleItems.map((item: any, idx: number) => (
-                      <div key={idx} className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/90 hover:border-slate-300 transition-colors">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/60">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
-                              {idx + 1}
-                            </span>
-                            <span className="font-bold text-slate-900 text-xs sm:text-sm">{item.name}</span>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                            <span className="px-2.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono font-bold text-xs text-blue-700 shadow-2xs">
-                              {item.quantity} {item.unit}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="pt-2 text-xs text-slate-600 leading-relaxed text-pretty">
-                          <span className="text-[11px] font-semibold text-slate-500 block mb-0.5">Техникийн тодорхойлолт & Чанарын шаардлага:</span>
-                          {item.spec}
-                        </div>
+              {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (() => {
+                const query = itemSearchQuery.toLowerCase().trim();
+                const filtered = query
+                  ? technicalSpecs.sampleItems.filter((i: any) => 
+                      (i.name && i.name.toLowerCase().includes(query)) ||
+                      (i.spec && i.spec.toLowerCase().includes(query)) ||
+                      (i.unit && i.unit.toLowerCase().includes(query))
+                    )
+                  : technicalSpecs.sampleItems;
+
+                return (
+                  <div className="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                    <div className="p-3.5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                          <Layers className="h-4 w-4 text-indigo-600" />
+                          <span>Нийлүүлэх бараа, гүйцэтгэх ажлын нарийвчилсан үзүүлэлт ({technicalSpecs.sampleItems.length})</span>
+                        </span>
+                        {(technicalSpecs.isRealExtracted || technicalSpecs.sampleItems?.some((i: any) => i.isRealExtracted)) ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <Sparkles className="h-3 w-3 text-emerald-600" />
+                            <span>PDF-ээс ялгасан бодит өгөгдөл ({technicalSpecs.sampleItems.length})</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 border border-slate-200">
+                            <span>Үндсэн худалдан авах чиглэл</span>
+                          </span>
+                        )}
                       </div>
-                    ))}
+
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <input
+                          type="text"
+                          value={itemSearchQuery}
+                          onChange={(e) => setItemSearchQuery(e.target.value)}
+                          placeholder="Бараа, үзүүлэлтээс хайх..."
+                          className="px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full sm:w-44"
+                        />
+                        <button
+                          onClick={handleExportItemsCsv}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors shrink-0 cursor-pointer"
+                          title="Барааны жагсаалтыг Excel / CSV форматаар татаж авах"
+                        >
+                          <Download className="h-3 w-3" />
+                          <span>CSV Татах</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="p-3 sm:p-4 space-y-3 bg-white max-h-[600px] overflow-y-auto">
+                      {filtered.length === 0 ? (
+                        <div className="text-xs text-slate-500 text-center py-6 italic">
+                          &quot;{itemSearchQuery}&quot; хайлтад тохирох бараа, үзүүлэлт олдсонгүй.
+                        </div>
+                      ) : (
+                        filtered.map((item: any, idx: number) => (
+                          <div key={idx} className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/90 hover:border-slate-300 transition-colors">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/60">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <span className="font-bold text-slate-900 text-xs sm:text-sm">{item.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
+                                <span className="px-2.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono font-bold text-xs text-blue-700 shadow-2xs">
+                                  {item.quantity} {item.unit}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="pt-2 text-xs text-slate-600 leading-relaxed text-pretty">
+                              <span className="text-[11px] font-semibold text-slate-500 block mb-0.5">Техникийн тодорхойлолт & Чанарын шаардлага:</span>
+                              {item.spec}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* 1b. БАРАА НИЙЛҮҮЛЭЛТИЙН АЛБАН ЁСНЫ ХУВААРЬ (DELIVERY SCHEDULE) */}
               {technicalSpecs.deliverySchedule && technicalSpecs.deliverySchedule.length > 0 && (
@@ -1104,10 +1190,20 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                         Бараа нийлүүлэлтийн албан ёсны хуваарь & Тоо хэмжээ
                       </h4>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      <Sparkles className="h-3 w-3" />
-                      <span>ТШББ-ээс ялгасан ({technicalSpecs.deliverySchedule.length} нэр төрөл)</span>
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        <Sparkles className="h-3 w-3" />
+                        <span>ТШББ-ээс ялгасан ({technicalSpecs.deliverySchedule.length} нэр төрөл)</span>
+                      </span>
+                      <button
+                        onClick={handleExportDeliveryCsv}
+                        className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors shrink-0 cursor-pointer"
+                        title="Нийлүүлэлтийн хуваарийг CSV форматаар татаж авах"
+                      >
+                        <Download className="h-3 w-3" />
+                        <span>CSV Татах</span>
+                      </button>
+                    </div>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-slate-200 text-xs">
@@ -1407,6 +1503,18 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                           </div>
 
                           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
+                            <button
+                              onClick={() => setPreviewModalDoc({
+                                name: doc.name,
+                                text: doc.extractedSummary || technicalSpecs.realSpecsText || 'Энэхүү баримт бичгийн агуулга ачаалагдаж байна...'
+                              })}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-blue-700 hover:bg-blue-50 transition-colors border border-blue-200 shadow-2xs cursor-pointer"
+                              title="Баримтын текстийг цонхонд шууд бүтнээр нь унших"
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              <span>Текст унших</span>
+                            </button>
+
                             <button
                               onClick={() => toggleDocSummary(doc.id || idx)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs cursor-pointer"
@@ -2165,6 +2273,58 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span>Задлалыг татах (.txt)</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal for Instant Document Text Preview */}
+      {previewModalDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <FileText className="h-5 w-5 text-blue-600 shrink-0" />
+                <div className="min-w-0">
+                  <h3 className="font-bold text-slate-900 text-sm truncate">{previewModalDoc.name}</h3>
+                  <p className="text-[11px] text-slate-500">PDF баримтаас ялган авсан албан ёсны текст</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPreviewModalDoc(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 overflow-y-auto bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed whitespace-pre-wrap selection:bg-blue-600 selection:text-white">
+              {previewModalDoc.text}
+            </div>
+
+            <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-slate-500 font-mono">
+                {previewModalDoc.text.length.toLocaleString()} тэмдэгт
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(previewModalDoc.text);
+                    setCopiedPreviewText(true);
+                    setTimeout(() => setCopiedPreviewText(false), 2000);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  {copiedPreviewText ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
+                  <span>{copiedPreviewText ? 'Хуулагдлаа' : 'Текстийг хуулах'}</span>
+                </button>
+                <button
+                  onClick={() => setPreviewModalDoc(null)}
+                  className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                >
+                  Хаах
                 </button>
               </div>
             </div>
