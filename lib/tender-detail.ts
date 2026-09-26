@@ -233,7 +233,7 @@ async function findSimilarTenders(tenderItem: any, currentId: string | number) {
   return scored.slice(0, 5);
 }
 
-export async function getTenderDetailData(id: string | number) {
+export async function getTenderDetailData(id: string | number, options: { useStoredLiveBundle?: boolean } = {}) {
   if (!id) return null;
 
   // 1. Fetch main tender
@@ -317,14 +317,18 @@ export async function getTenderDetailData(id: string | number) {
 
   // 4. Fetch live data from tender.gov.mn (documents, bidders, PDF extractions)
   let liveBundle: any = null;
-  try {
-    const rawData = tenderData.raw_data || tenderData.rawData;
-    liveBundle = await fetchTenderLiveBundle(
-      id,
-      rawData?.tenderId
-    );
-  } catch (liveErr) {
-    console.warn('Live bundle fetch failed:', liveErr);
+  const rawData = tenderData.raw_data || tenderData.rawData;
+  if (options.useStoredLiveBundle) {
+    liveBundle = rawData?.liveBundle || null;
+  } else {
+    try {
+      liveBundle = await fetchTenderLiveBundle(
+        id,
+        rawData?.tenderId
+      );
+    } catch (liveErr) {
+      console.warn('Live bundle fetch failed:', liveErr);
+    }
   }
 
   // 5. Generate structured BDS & Specs & Results
@@ -338,7 +342,8 @@ export async function getTenderDetailData(id: string | number) {
     if (liveBundle.documents && liveBundle.documents.length > 0) {
       technicalSpecs.documents = liveBundle.documents.map((d: any) => {
         let extractedSummary: string | undefined = undefined;
-        const idMarker = `--- DOCUMENT ${d.fileId}:`;
+        const documentIdentifier = d.id || d.fileId;
+        const idMarker = `--- DOCUMENT ${documentIdentifier}:`;
         const legacyMarker = `--- БАРИМТ БИЧИГ: ${d.fileName} ---`;
         const docMarker = liveBundle.pdfText?.includes(idMarker) ? idMarker : legacyMarker;
         if (liveBundle.pdfText && liveBundle.pdfText.includes(docMarker)) {
@@ -356,7 +361,7 @@ export async function getTenderDetailData(id: string | number) {
         }
 
         return {
-          id: String(d.fileId),
+          id: String(documentIdentifier || d.fileName),
           fileId: d.fileId,
           name: d.fileName,
           fileExtention: d.fileExtention || 'pdf',
@@ -365,7 +370,10 @@ export async function getTenderDetailData(id: string | number) {
           date: d.createdDate ? d.createdDate.substring(0, 16) : (tenderItem.publishDate || '').substring(0, 10),
           url: d.downloadUrl,
           downloadUrl: d.downloadUrl,
-          officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
+          officialNotice: d.source === 'manual_upload'
+            ? 'Гараар оруулсан PDF; задласан текстийг эх файлтай тулгана уу.'
+            : 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
+          source: d.source || 'official',
           isScannedOcr: !!d.isScannedOcr,
           ocrModel: d.ocrModel,
           extractionStatus: d.extractionStatus || (extractedSummary ? 'text_extracted' : 'not_extracted'),

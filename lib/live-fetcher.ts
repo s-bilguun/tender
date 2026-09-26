@@ -13,11 +13,14 @@ import {
 } from './pdf-vision-extractor';
 
 export interface LiveTenderDocument {
-  fileId: number;
+  id?: string;
+  fileId?: number;
   fileName: string;
   createdDate?: string;
   fileExtention?: string;
   downloadUrl: string;
+  source?: 'official' | 'manual_upload';
+  storagePath?: string;
   isPrimary?: boolean;
   category?: string;
   isScannedOcr?: boolean;
@@ -97,10 +100,17 @@ export interface LiveExtractionResult {
 const liveCache = new Map<string, { timestamp: number; data: LiveExtractionResult }>();
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
+export function cacheTenderLiveBundle(invitationId: string | number, bundle: LiveExtractionResult) {
+  liveCache.set(String(invitationId), { timestamp: Date.now(), data: bundle });
+}
+
 function hasFreshFetch(bundle?: LiveExtractionResult | null): bundle is LiveExtractionResult {
   if (!bundle?.fetchedAt || bundle.schemaVersion !== LIVE_BUNDLE_SCHEMA_VERSION) return false;
   const fetchedAt = Date.parse(bundle.fetchedAt);
-  const ttl = bundle.extractionStatus === 'complete'
+  const hasManualUpload = bundle.documents?.some((doc) => doc.source === 'manual_upload');
+  const ttl = hasManualUpload
+    ? 60 * 1000
+    : bundle.extractionStatus === 'complete'
     ? CACHE_TTL_MS
     : bundle.extractionStatus === 'partial'
       ? 60 * 60 * 1000
@@ -113,10 +123,22 @@ function hasPriorExtractedText(bundle?: LiveExtractionResult): bundle is LiveExt
     typeof bundle.pdfText === 'string' && bundle.pdfText.trim().length > 30;
 }
 
+function preserveMissingStructuredSpecs(current: any, previous: any) {
+  const merged = { ...(current || {}) };
+  for (const [key, value] of Object.entries(previous || {})) {
+    const currentValue = merged[key];
+    const isEmpty = currentValue == null || currentValue === '' || (Array.isArray(currentValue) && currentValue.length === 0);
+    if (isEmpty && value != null && value !== '' && (!Array.isArray(value) || value.length > 0)) {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
 const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
 
 /** OCR sparse pages from scanned PDFs when Poppler is available (the daily worker installs it). */
-async function ocrSparsePdfPages(
+export async function ocrSparsePdfPages(
   pdfBuffer: Buffer,
   pageCount: number,
   pageNumbers: number[],
@@ -1172,12 +1194,33 @@ export async function fetchTenderLiveBundle(
     }
   }
 
-  if (totalPageCount > 0) result.pdfPageCount = totalPageCount;
+  const priorBundle = existingRawData?.liveBundle as LiveExtractionResult | undefined;
   if (combinedPdfText.trim().length > 30) {
     result.pdfText = combinedPdfText.trim();
     const parsedFromText = parsePdfContent(verbatimPdfText.trim());
     result.structuredSpecs = parsedFromText;
   }
+
+  const priorManualDocs = priorBundle?.documents?.filter((doc) => doc.source === 'manual_upload') || [];
+  if (priorManualDocs.length > 0 && priorBundle) {
+    const manualIds = new Set(priorManualDocs.map((doc) => String(doc.id || doc.fileId || '')));
+    const manualSections = String(priorBundle.pdfText || '')
+      .split(/(?=---\s*DOCUMENT\s+[^:]+:)/i)
+      .filter((section) => Array.from(manualIds).some((id) => id && section.startsWith(`--- DOCUMENT ${id}:`)))
+      .join('\n\n')
+      .trim();
+    result.documents = [
+      ...result.documents,
+      ...priorManualDocs.filter((manualDoc) => !result.documents.some((doc) => doc.id && doc.id === manualDoc.id)),
+    ];
+    if (manualSections) {
+      result.pdfText = [manualSections, result.pdfText].filter(Boolean).join('\n\n');
+    }
+    totalPageCount += priorManualDocs.reduce((sum, doc) => sum + (Number(doc.totalPageCount) || 0), 0);
+    result.structuredSpecs = preserveMissingStructuredSpecs(result.structuredSpecs, priorBundle.structuredSpecs);
+    result.isScannedOcr = Boolean(result.isScannedOcr || priorBundle.isScannedOcr);
+  }
+  if (totalPageCount > 0) result.pdfPageCount = totalPageCount;
 
   const processedDocs = result.documents.filter((doc) => ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus || ''));
   result.extractionStatus = result.documents.length === 0
@@ -1189,7 +1232,6 @@ export async function fetchTenderLiveBundle(
         : 'unavailable';
   result.fetchedAt = new Date().toISOString();
   // Keep the last good extraction visible if the source portal temporarily denies a refresh.
-  const priorBundle = existingRawData?.liveBundle as LiveExtractionResult | undefined;
   const readableDocumentCount = result.documents.filter((doc) =>
     ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus || '')
   ).length;

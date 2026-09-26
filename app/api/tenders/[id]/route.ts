@@ -13,7 +13,9 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Invitation ID is required' }, { status: 400 });
     }
 
-    const data = await getTenderDetailData(id);
+    const data = await getTenderDetailData(id, {
+      useStoredLiveBundle: request.nextUrl.searchParams.get('source') === 'stored',
+    });
     if (!data) {
       return NextResponse.json({ success: false, error: 'Тендер олдсонгүй' }, { status: 404 });
     }

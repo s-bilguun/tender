@@ -7,7 +7,7 @@ import {
   Copy, Check, Trophy, Users, CheckCircle2, XCircle, AlertCircle, 
   ExternalLink, Sparkles, Clock, AlertTriangle, Layers, Briefcase, 
   CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye, X, Loader2,
-  Send, MessageSquare, Bot, User, Trash2, ChevronDown, ChevronUp, Package
+  Send, MessageSquare, Bot, User, Trash2, ChevronDown, ChevronUp, Package, Upload
 } from 'lucide-react';
 import { FormattedChatMessage } from './AIChatDrawer';
 
@@ -59,6 +59,68 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
   const [itemSearchQuery, setItemSearchQuery] = useState('');
   const [previewModalDoc, setPreviewModalDoc] = useState<{ name: string; text: string } | null>(null);
   const [copiedPreviewText, setCopiedPreviewText] = useState(false);
+  const [manualPdfSecret, setManualPdfSecret] = useState('');
+  const [manualPdfFile, setManualPdfFile] = useState<File | null>(null);
+  const [manualPdfBusy, setManualPdfBusy] = useState(false);
+  const [manualPdfMessage, setManualPdfMessage] = useState('');
+  const [manualPdfError, setManualPdfError] = useState(false);
+
+  const handleManualPdfImport = async () => {
+    if (!manualPdfFile || !manualPdfSecret || !data?.tender?.invitationId) return;
+    setManualPdfBusy(true);
+    setManualPdfError(false);
+    setManualPdfMessage('PDF-г хувийн сан руу оруулж байна...');
+    try {
+      const authorization = `Bearer ${manualPdfSecret}`;
+      const uploadPreparation = await fetch(`/api/tenders/${data.tender.invitationId}/pdf-import/upload`, {
+        method: 'POST',
+        headers: { Authorization: authorization, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: manualPdfFile.name,
+          type: manualPdfFile.type,
+          size: manualPdfFile.size,
+        }),
+      });
+      const uploadDetails = await uploadPreparation.json();
+      if (!uploadPreparation.ok) throw new Error(uploadDetails.error || 'PDF upload бэлтгэж чадсангүй.');
+
+      const { supabaseBrowser } = await import('@/lib/supabase-browser');
+      if (!supabaseBrowser) throw new Error('Supabase-ийн нийтэд харагдах тохиргоо байхгүй байна.');
+      const { error: storageError } = await supabaseBrowser.storage
+        .from(uploadDetails.bucket)
+        .uploadToSignedUrl(uploadDetails.path, uploadDetails.token, manualPdfFile, {
+          contentType: 'application/pdf',
+          upsert: false,
+        });
+      if (storageError) throw new Error(`PDF upload failed: ${storageError.message}`);
+
+      setManualPdfMessage('PDF-ийн хуудсуудыг уншиж, тендерт хадгалж байна...');
+      const processResponse = await fetch(`/api/tenders/${data.tender.invitationId}/pdf-import/process`, {
+        method: 'POST',
+        headers: { Authorization: authorization, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: uploadDetails.path, fileName: uploadDetails.fileName }),
+      });
+      const result = await processResponse.json();
+      if (!processResponse.ok) throw new Error(result.error || 'PDF-г боловсруулахад алдаа гарлаа.');
+
+      const outcome = result.workerOcrQueued
+        ? `Файл хадгалагдлаа. ${result.hasReadableText ? `${result.extractedPageCount}/${result.totalPageCount} хуудсын текст уншсан; ` : ''}Скан/дутуу хуудсыг OCR хийхийн тулд GitHub Actions дээр “Daily tender listing sync” workflow-г нэг удаа ажиллуулна уу.`
+        : result.hasReadableText
+          ? `${result.extractedPageCount}/${result.totalPageCount} хуудсын текст уншлаа.`
+          : result.extractionStatus === 'scanned_not_processed'
+            ? 'Энэ PDF скан зурагтай байна. OCR ажилд ороогүй; tender_pdf_jobs migration болон GitHub Actions worker-ийг шалгана уу.'
+            : 'Файл хадгалагдлаа, уншигдах текст олдсонгүй.';
+      const refreshed = await fetch(`/api/tenders/${data.tender.invitationId}?source=stored`, { cache: 'no-store' });
+      if (refreshed.ok) setData(await refreshed.json());
+      setManualPdfSecret('');
+      setManualPdfBusy(false);
+      setManualPdfMessage(outcome);
+    } catch (error: any) {
+      setManualPdfError(true);
+      setManualPdfMessage(error?.message || 'PDF-г боловсруулахад алдаа гарлаа.');
+      setManualPdfBusy(false);
+    }
+  };
 
   const handleExportItemsCsv = () => {
     const items = data?.technicalSpecs?.sampleItems || [];
@@ -440,6 +502,56 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
               Эх тендерийг нээх ↗
             </a>
           </div>
+
+          <details className="rounded-lg border border-slate-200 bg-white">
+            <summary className="cursor-pointer list-none px-3.5 py-3 text-xs font-semibold text-slate-700 flex items-center gap-2">
+              <Upload className="h-4 w-4 text-blue-600" />
+              PDF-г гараар оруулж уншуулах
+            </summary>
+            <div className="border-t border-slate-100 p-3.5 space-y-3">
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Албан хуудсаас PDF-г өөрөө татаж энд оруулна. Тексттэй PDF шууд уншигдана; скан PDF-ийн OCR-ийг GitHub Actions worker боловсруулна.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                <label className="block space-y-1">
+                  <span className="text-[10px] font-semibold text-slate-600">TENDER_PDF_IMPORT_SECRET</span>
+                  <input
+                    type="password"
+                    autoComplete="current-password"
+                    value={manualPdfSecret}
+                    onChange={(event) => setManualPdfSecret(event.target.value)}
+                    disabled={manualPdfBusy}
+                    placeholder="Серверийн нууц түлхүүр"
+                    className="w-full h-9 rounded-md border border-slate-300 px-2.5 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                  />
+                </label>
+                <label className="block space-y-1">
+                  <span className="text-[10px] font-semibold text-slate-600">Тендерийн PDF · 20 MB хүртэл</span>
+                  <input
+                    type="file"
+                    accept="application/pdf,.pdf"
+                    disabled={manualPdfBusy}
+                    onChange={(event) => setManualPdfFile(event.target.files?.[0] || null)}
+                    className="block w-full h-9 text-[10px] text-slate-600 file:mr-2 file:h-9 file:rounded-md file:border-0 file:bg-slate-100 file:px-2.5 file:text-[10px] file:font-semibold file:text-slate-700 hover:file:bg-slate-200"
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={handleManualPdfImport}
+                  disabled={manualPdfBusy || !manualPdfSecret || !manualPdfFile}
+                  className="h-9 inline-flex items-center justify-center gap-1.5 rounded-md bg-blue-600 px-3 text-xs font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                >
+                  {manualPdfBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                  {manualPdfBusy ? 'Уншиж байна...' : 'Оруулах'}
+                </button>
+              </div>
+              {manualPdfMessage && (
+                <p role="status" className={`text-[11px] ${manualPdfError ? 'text-rose-700' : 'text-blue-700'}`}>
+                  {manualPdfMessage}
+                </p>
+              )}
+            </div>
+          </details>
 
           {/* Interactive AI Quick Prompts based on Structured PDF Data */}
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
@@ -1540,6 +1652,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
+                                {doc.source === 'manual_upload' && (
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200">
+                                    Гараар оруулсан
+                                  </span>
+                                )}
                                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                                   {doc.isScannedOcr && <Sparkles className="h-2.5 w-2.5 text-purple-600" />}
                                   <span>{extractionLabel}</span>
@@ -1597,17 +1714,17 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                               )}
                             </button>
 
-                            {doc.fileId ? (
+                            {doc.fileId || doc.source === 'manual_upload' ? (
                               <a
                                 href={downloadHref}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 download={doc.name || 'tender.pdf'}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
-                                title="Албан ёсны эх баримтыг шууд татах"
+                                title={doc.source === 'manual_upload' ? 'Оруулсан PDF-г татах' : 'Албан ёсны эх баримтыг шууд татах'}
                               >
                                 <Download className="h-3.5 w-3.5" />
-                                <span>Эх файлыг татах</span>
+                                <span>{doc.source === 'manual_upload' ? 'PDF татах' : 'Эх файлыг татах'}</span>
                               </a>
                             ) : (
                               <a
@@ -2300,7 +2417,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 font-medium transition-colors"
               >
-                <span>tender.gov.mn эх хуудас</span>
+                <span>{selectedDoc.source === 'manual_upload' ? 'Оруулсан PDF-г татах' : 'tender.gov.mn эх хуудас'}</span>
                 <ExternalLink className="h-3 w-3" />
               </a>
 

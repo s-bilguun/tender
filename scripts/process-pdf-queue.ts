@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '../lib/supabase';
-import { fetchTenderLiveBundle } from '../lib/live-fetcher';
+import { fetchTenderLiveBundle, ocrSparsePdfPages, parsePdfContent, type LiveExtractionResult } from '../lib/live-fetcher';
+import { extractUploadedPdf, MANUAL_PDF_BUCKET, MAX_LIVE_PDF_TEXT_CHARS } from '../lib/manual-pdf-import';
 
 const CONCURRENCY = Math.max(1, Math.min(Number(process.env.PDF_JOB_CONCURRENCY) || 3, 10));
 
@@ -8,12 +9,111 @@ function isSupportedDocument(doc: any): boolean {
   return ['pdf', 'png', 'jpg', 'jpeg'].includes(extension);
 }
 
+function removeDocumentSection(text: string, markerId: string): string {
+  return text.split(/(?=---\s*DOCUMENT\s+[^:]+:)/i)
+    .filter((section) => !section.startsWith(`--- DOCUMENT ${markerId}:`))
+    .join('\n\n')
+    .trim();
+}
+
+function mergeParsedSpecs(previous: any, next: any) {
+  if (!next) return previous;
+  const merged = { ...(previous || {}) };
+  for (const [key, value] of Object.entries(next)) {
+    if (Array.isArray(value)) {
+      if (value.length > 0) merged[key] = value;
+    } else if (value !== undefined && value !== null && value !== '') {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+async function processManualScannedDocuments(invitationId: string, bundle: LiveExtractionResult): Promise<void> {
+  if (!supabaseAdmin) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to process manual PDFs.');
+  let updated = false;
+
+  for (const document of bundle.documents || []) {
+    if (document.source !== 'manual_upload' || !document.storagePath || document.extractionStatus === 'text_extracted') continue;
+
+    const { data: file, error } = await supabaseAdmin.storage
+      .from(MANUAL_PDF_BUCKET)
+      .download(document.storagePath);
+    if (error || !file) throw new Error(`Could not load uploaded PDF ${document.fileName}: ${error?.message || 'file missing'}`);
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const extraction = await extractUploadedPdf(buffer, document.fileName, 'Тендер', { allowVision: false });
+    const ocrPages = await ocrSparsePdfPages(buffer, extraction.pageCount, extraction.sparsePageNumbers);
+    const ocrByPage = new Map((ocrPages || []).map((page) => [page.page, page.text]));
+    const pageText = extraction.pageTexts
+      .map((text, index) => {
+        const ocrText = ocrByPage.get(index + 1);
+        return [text, ocrText ? `[OCR: Tesseract.js + Poppler]\n${ocrText}` : '']
+          .filter(Boolean)
+          .join('\n');
+      })
+      .map((text, index) => text ? `[Page ${index + 1}]\n${text}` : '')
+      .filter(Boolean)
+      .join('\n\n');
+
+    if (pageText.length > 30) {
+      const docId = String(document.id || document.fileId || '');
+      const marker = `--- DOCUMENT ${docId}: ${document.fileName} ---`;
+      bundle.pdfText = [
+        marker + '\n' + pageText,
+        removeDocumentSection(String(bundle.pdfText || ''), docId),
+      ].filter(Boolean).join('\n\n').slice(0, MAX_LIVE_PDF_TEXT_CHARS);
+      bundle.structuredSpecs = mergeParsedSpecs(bundle.structuredSpecs, parsePdfContent(pageText));
+    }
+
+    const readablePages = extraction.pageTexts.filter((text, index) => `${text} ${ocrByPage.get(index + 1) || ''}`.trim().length > 20).length;
+    document.extractedPageCount = readablePages;
+    document.totalPageCount = extraction.pageCount;
+    if (ocrByPage.size > 0) {
+      document.isScannedOcr = true;
+      document.ocrModel = 'Tesseract.js + Poppler page rendering';
+      document.extractionStatus = readablePages >= extraction.pageCount ? 'text_extracted' : 'ocr_partial';
+      bundle.isScannedOcr = true;
+    } else {
+      document.extractionStatus = extraction.extractionStatus;
+    }
+    updated = true;
+    console.log(`${document.fileName}: ${readablePages}/${extraction.pageCount} pages readable with local PDF OCR.`);
+  }
+
+  if (!updated) return;
+  const supportedDocuments = (bundle.documents || []).filter(isSupportedDocument);
+  const readableDocuments = supportedDocuments.filter((doc: any) =>
+    ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus || ''),
+  );
+  bundle.extractionStatus = supportedDocuments.length === 0
+    ? 'unavailable'
+    : readableDocuments.length === supportedDocuments.length && supportedDocuments.every((doc: any) => doc.extractionStatus === 'text_extracted')
+      ? 'complete'
+      : readableDocuments.length > 0
+        ? 'partial'
+        : 'unavailable';
+  bundle.fetchedAt = new Date().toISOString();
+  bundle.stale = false;
+
+  const { data: updatedRows, error: saveError } = await supabaseAdmin.rpc('merge_tender_live_bundle', {
+    p_invitation_id: invitationId,
+    p_live_bundle: bundle,
+    p_tender_document_id: bundle.tenderDocumentId ?? null,
+    p_tender_id: bundle.tenderId ?? null,
+  });
+  if (saveError) throw new Error(`Could not save local OCR results: ${saveError.message}`);
+  if (updatedRows === 0) throw new Error('Tender was not found while saving local OCR results.');
+}
+
 async function processTender(invitationId: string): Promise<boolean> {
   if (!supabaseAdmin) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to process the PDF job queue.');
 
   try {
     const bundle = await fetchTenderLiveBundle(invitationId, undefined, true);
-    if (bundle.stale) throw new Error('Tender source refresh failed; the previous extraction was retained as stale.');
+    const hasUploadedPdf = bundle.documents?.some((doc) => doc.source === 'manual_upload' && doc.storagePath);
+    if (bundle.stale && !hasUploadedPdf) throw new Error('Tender source refresh failed; the previous extraction was retained as stale.');
+    await processManualScannedDocuments(invitationId, bundle);
 
     const documents = Array.isArray(bundle.documents) ? bundle.documents : [];
     const supportedDocuments = documents.filter(isSupportedDocument);
