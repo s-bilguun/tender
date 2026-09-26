@@ -36,3 +36,7 @@ next-env.d.ts
 
 # vercel
 .vercel
+
+# Local and cloud source-access diagnostic outputs
+/scratch/source-diagnostic/
+/scratch/cloud-pdf-diagnostic/
