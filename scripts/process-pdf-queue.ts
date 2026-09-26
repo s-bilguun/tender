@@ -39,16 +39,17 @@ async function processTender(invitationId: string): Promise<boolean> {
 }
 
 async function main() {
-  if (!supabaseAdmin) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to process the PDF job queue.');
+  const admin = supabaseAdmin;
+  if (!admin) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to process the PDF job queue.');
 
-  const { data: queuedCount, error: enqueueError } = await supabaseAdmin.rpc('enqueue_stale_tender_pdf_jobs');
+  const { data: queuedCount, error: enqueueError } = await admin.rpc('enqueue_stale_tender_pdf_jobs');
   if (enqueueError) throw new Error(`Could not enqueue stale tenders: ${enqueueError.message}. Apply the tender PDF jobs migration first.`);
   console.log(`Enqueued or refreshed ${queuedCount || 0} stale tender PDF jobs.`);
 
   let completed = 0;
   let failed = 0;
   while (true) {
-    const { data, error } = await supabaseAdmin.rpc('claim_tender_pdf_jobs', { p_limit: CONCURRENCY });
+    const { data, error } = await admin.rpc('claim_tender_pdf_jobs', { p_limit: CONCURRENCY });
     if (error) throw new Error(`Could not claim tender PDF jobs: ${error.message}`);
     const invitationIds = (Array.isArray(data) ? data : [])
       .map((row: any) => String(row.invitation_id || ''))
@@ -57,7 +58,7 @@ async function main() {
 
     await Promise.all(invitationIds.map(async (invitationId: string) => {
       const succeeded = await processTender(invitationId);
-      const { error: finishError } = await supabaseAdmin.rpc('finish_tender_pdf_job', {
+      const { error: finishError } = await admin.rpc('finish_tender_pdf_job', {
         p_invitation_id: invitationId,
         p_success: succeeded,
         p_error: succeeded ? null : 'PDF extraction failed; see workflow logs for details.',

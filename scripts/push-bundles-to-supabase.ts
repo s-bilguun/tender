@@ -3,7 +3,8 @@ import path from 'path';
 import { supabaseAdmin as supabase } from '../lib/supabase';
 
 async function main() {
-  if (!supabase) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to write tender bundles.');
+  const admin = supabase;
+  if (!admin) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to write tender bundles.');
   console.log('=== PUSHING LOCAL BUNDLES TO SUPABASE ===');
   const bundlesPath = path.join(process.cwd(), 'lib', 'live-bundles.json');
   if (!fs.existsSync(bundlesPath)) {
@@ -38,7 +39,7 @@ async function main() {
           pdfText: bundle.pdfText ? bundle.pdfText.substring(0, 40000) : ''
         };
 
-        const { data: updatedRows, error: updErr } = await supabase.rpc('merge_tender_live_bundle', {
+        const { data: updatedRows, error: updErr } = await admin.rpc('merge_tender_live_bundle', {
           p_invitation_id: id,
           p_live_bundle: dbSafeBundle,
           p_tender_document_id: bundle.tenderDocumentId ?? null,

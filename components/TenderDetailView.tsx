@@ -1457,7 +1457,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                     const downloadHref = doc.fileId
                       ? `/api/download?fileId=${encodeURIComponent(doc.fileId)}&name=${encodeURIComponent(doc.name || 'tender.pdf')}${isImageAttachment ? '&allowImage=1' : ''}`
                       : (doc.downloadUrl || doc.url || '#');
-                    const extractionLabel: Record<string, string> = {
+                    const extractionLabel = ({
                       text_extracted: `${doc.isScannedOcr ? 'OCR уншсан' : 'Текст уншсан'}${doc.totalPageCount ? ` · ${doc.extractedPageCount || 0}/${doc.totalPageCount} хуудас` : ''}`,
                       partial: `${doc.isScannedOcr ? 'OCR хэсэгчлэн уншсан' : 'Хэсэгчлэн уншсан'}${doc.totalPageCount ? ` · ${doc.extractedPageCount || 0}/${doc.totalPageCount} хуудас` : ''}`,
                       ocr_partial: doc.ocrSampleCount
@@ -1468,7 +1468,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                         : 'Скан PDF · OCR ажиллаагүй',
                       source_error: 'Эх PDF татаж чадсангүй',
                       not_extracted: 'Текст хараахан боловсруулаагүй',
-                    }[doc.extractionStatus || 'not_extracted'];
+                    } as Record<string, string>)[String(doc.extractionStatus || 'not_extracted')] || 'Текст хараахан боловсруулаагүй';
 
                     return (
                       <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 transition-colors overflow-hidden">
