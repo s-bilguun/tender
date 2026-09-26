@@ -13,6 +13,7 @@ interface HeaderProps {
   isSyncing: boolean;
   onSync: () => void;
   onOpenAI: () => void;
+  onOpenCommandPalette?: () => void;
   onToggleAnalytics?: () => void;
   isAnalyticsOpen?: boolean;
 }
@@ -24,6 +25,7 @@ export const Header: React.FC<HeaderProps> = ({
   isSyncing,
   onSync,
   onOpenAI,
+  onOpenCommandPalette,
 }) => {
   const t = getTranslation(locale);
 
@@ -112,6 +114,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          {/* Command Palette Trigger */}
+          {onOpenCommandPalette && (
+            <button
+              onClick={onOpenCommandPalette}
+              className="h-8 px-2 sm:px-2.5 rounded-md text-xs font-medium bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/80 flex items-center gap-1.5 transition-colors"
+              title="Шуурхай хайлт & комманд (⌘K)"
+            >
+              <span className="hidden sm:inline text-[11px] text-slate-600 font-medium">Комманд</span>
+              <kbd className="px-1.5 py-0.2 text-[10px] font-mono font-semibold text-slate-500 bg-white border border-slate-200 rounded shadow-2xs">
+                ⌘K
+              </kbd>
+            </button>
+          )}
+
           {/* Language Switcher */}
           <button
             onClick={() => setLocale(locale === 'mn' ? 'en' : 'mn')}

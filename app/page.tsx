@@ -10,8 +10,12 @@ import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
+import { CommandPalette } from '@/components/CommandPalette';
+import { TenderSkeleton } from '@/components/TenderSkeleton';
+import { ToastContainer, ToastMessage } from '@/components/Toast';
+import { exportTendersToCSV } from '@/lib/export';
 import { 
-  Loader2, AlertCircle, ChevronLeft, ChevronRight, 
+  AlertCircle, ChevronLeft, ChevronRight, 
   FileSpreadsheet, Star, Sparkles, TrendingUp, 
   ShieldCheck, Clock, Layers, Coins, CheckCircle2,
   ArrowRight
@@ -28,6 +32,22 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+
+  // Command Palette & Toasts
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const showToast = useCallback((msg: Omit<ToastMessage, 'id'>) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts((prev) => [...prev, { ...msg, id }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3500);
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
 
   // Watchlist LocalStorage State
   const [savedIds, setSavedIds] = useState<Set<string | number>>(new Set());
@@ -47,11 +67,21 @@ export default function Home() {
     setSavedIds((prev) => {
       const next = new Set(prev);
       const strId = String(id);
-      if (next.has(id) || next.has(strId)) {
+      const wasSaved = next.has(id) || next.has(strId);
+      if (wasSaved) {
         next.delete(id);
         next.delete(strId);
+        showToast({
+          type: 'info',
+          title: locale === 'mn' ? 'Хадгалснаас хаслаа' : 'Removed from watchlist',
+        });
       } else {
         next.add(id);
+        showToast({
+          type: 'success',
+          title: locale === 'mn' ? 'Хянахаар хадгаллаа' : 'Added to watchlist',
+          description: locale === 'mn' ? 'Таны хянаж буй тендерийн жагсаалтад нэмэгдлээ.' : 'Pinned to your private watchlist.',
+        });
       }
       try {
         localStorage.setItem('tender_watchlist', JSON.stringify(Array.from(next)));
@@ -75,6 +105,63 @@ export default function Home() {
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState<boolean>(false);
   const [aiTenderContext, setAiTenderContext] = useState<TenderItem | null>(null);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(false);
+
+  // Read URL params on initial mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const initialFilters: Partial<TenderFilterParams> = {};
+      if (params.get('search')) initialFilters.search = params.get('search')!;
+      if (params.get('category')) initialFilters.category = params.get('category') as any;
+      if (params.get('industry')) initialFilters.industry = params.get('industry') as any;
+      if (params.get('status')) initialFilters.status = params.get('status') as any;
+      if (params.get('tabMode')) initialFilters.tabMode = params.get('tabMode') as any;
+      if (params.get('urgency')) initialFilters.urgency = params.get('urgency') as any;
+      if (params.get('page')) initialFilters.page = parseInt(params.get('page')!, 10);
+      if (params.get('view')) setViewMode(params.get('view') === 'grid' ? 'grid' : 'table');
+
+      if (Object.keys(initialFilters).length > 0) {
+        setFilters((prev) => ({ ...prev, ...initialFilters }));
+      }
+    } catch (e) {}
+  }, []);
+
+  // Sync URL query params when filters change (without full reload)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams();
+    if (filters.search) params.set('search', filters.search);
+    if (filters.category && filters.category !== 'all') params.set('category', filters.category);
+    if (filters.industry && filters.industry !== 'all') params.set('industry', filters.industry);
+    if (filters.status && filters.status !== 'receiving') params.set('status', filters.status);
+    if (filters.tabMode && filters.tabMode !== 'active') params.set('tabMode', filters.tabMode);
+    if (filters.urgency && filters.urgency !== 'all') params.set('urgency', filters.urgency);
+    if (filters.page && filters.page > 1) params.set('page', String(filters.page));
+    if (viewMode === 'grid') params.set('view', 'grid');
+
+    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+    window.history.replaceState({}, '', newUrl);
+  }, [filters, viewMode]);
+
+  // Global Keyboard Shortcuts (⌘K, v for viewMode)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing inside an input/textarea
+      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      } else if (e.key === 'v' && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault();
+        setViewMode((prev) => (prev === 'table' ? 'grid' : 'table'));
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Fetch tenders
   const loadTenders = useCallback(async (currentFilters: TenderFilterParams) => {
@@ -157,48 +244,12 @@ export default function Home() {
 
   const handleExportCSV = () => {
     if (!displayedTenders || displayedTenders.length === 0) return;
-
-    const headers = [
-      'Тендерийн дугаар/код',
-      'Тендерийн нэр',
-      'Захиалагч байгууллага',
-      'Төрөл',
-      'Төсөвт өртөг (₮)',
-      'Төлөв',
-      'Зарласан огноо',
-      'Эцсийн хугацаа',
-      'Албан ёсны холбоос',
-    ];
-
-    const escapeCSV = (val: any) => {
-      if (val === null || val === undefined) return '""';
-      const str = String(val).replace(/"/g, '""');
-      return `"${str}"`;
-    };
-
-    const rows = displayedTenders.map((t) => [
-      escapeCSV(t.tenderCode || t.invitationNumber),
-      escapeCSV(t.tenderName),
-      escapeCSV(t.budgetEntityName),
-      escapeCSV(t.tenderTypeName),
-      escapeCSV(t.totalBudget),
-      escapeCSV(t.docStatusName),
-      escapeCSV(t.publishDate ? t.publishDate.substring(0, 10) : ''),
-      escapeCSV(t.receiveDate ? t.receiveDate.substring(0, 10) : ''),
-      escapeCSV(`https://www.tender.gov.mn/mn/invitation/detail/${t.invitationId}`),
-    ]);
-
-    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\r\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const dateStr = new Date().toISOString().substring(0, 10);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `tender_mn_active_export_${dateStr}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    exportTendersToCSV(displayedTenders, `tender_export_${new Date().toISOString().substring(0, 10)}.csv`);
+    showToast({
+      type: 'success',
+      title: locale === 'mn' ? 'CSV амжилттай татагдлаа' : 'CSV exported successfully',
+      description: locale === 'mn' ? `${displayedTenders.length} тендерийн өгөгдлийг Excel файлд хадгаллаа.` : `${displayedTenders.length} items exported to spreadsheet.`,
+    });
   };
 
   return (
@@ -210,6 +261,7 @@ export default function Home() {
         stats={stats}
         isSyncing={isSyncing}
         onSync={handleSync}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenAI={() => {
           setAiTenderContext(null);
           setIsAIDrawerOpen(true);
@@ -378,10 +430,7 @@ export default function Home() {
 
         {/* Main Content: Table or Grid */}
         {isLoading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <Loader2 className="h-6 w-6 animate-spin text-slate-800" />
-            <span className="text-xs text-slate-500">{locale === 'mn' ? 'Тендерүүдийг татаж байна...' : 'Loading tenders...'}</span>
-          </div>
+          <TenderSkeleton viewMode={viewMode} count={8} />
         ) : displayedTenders.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center space-y-3 shadow-2xs">
             {filters.tabMode === 'watchlist' ? (
@@ -508,6 +557,25 @@ export default function Home() {
         onClearSelectedTender={() => setAiTenderContext(null)}
         locale={locale}
       />
+
+      {/* Raycast & Linear Style Global Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onFilterChange={handleFilterChange}
+        onOpenAI={(tender) => {
+          setAiTenderContext(tender || null);
+          setIsAIDrawerOpen(true);
+        }}
+        onExportCSV={handleExportCSV}
+        onToggleView={() => setViewMode((prev) => (prev === 'table' ? 'grid' : 'table'))}
+        viewMode={viewMode}
+        tenders={tenders}
+        savedCount={savedIds.size}
+      />
+
+      {/* Accessible Toast Notification System */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
