@@ -158,7 +158,9 @@ export interface TenderStats {
   totalBudgetSum: number;
   activeTendersCount: number;
   activeBudgetSum?: number;
+  totalActiveBudget?: number;
   closingSoonCount?: number;
+  noGuaranteeCount?: number;
   resultCount?: number;
   newCount?: number;
   categoryCounts: {

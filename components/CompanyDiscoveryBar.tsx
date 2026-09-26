@@ -3,6 +3,7 @@
 import React from 'react';
 import { Locale, TenderFilterParams, IndustryVertical } from '@/lib/types';
 import { INDUSTRIES } from '@/lib/taxonomy';
+import { IndustryIcon } from '@/components/IndustryIcon';
 import { Building2, CheckCircle2, Landmark, Sparkles, X } from 'lucide-react';
 
 interface CompanyDiscoveryBarProps {
@@ -717,13 +718,13 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
               <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate">
                 {currentIndustry !== 'all' && selectedIndustryObj
                   ? locale === 'mn'
-                    ? `${selectedIndustryObj.icon} ${selectedIndustryObj.labelMn.split('&')[0].trim()} захиалагчид`
+                    ? `${selectedIndustryObj.labelMn.split('&')[0].trim()} захиалагчид`
                     : `Top ${selectedIndustryObj.labelEn.split('&')[0].trim()} Buyers`
                   : locale === 'mn'
                   ? 'Томоохон захиалагчид'
                   : 'Top Procuring Entities'}
               </h2>
-              <span className="text-[11px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60 shrink-0">
+              <span className="text-[11px] font-semibold px-2 py-0.2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60 shrink-0 font-mono">
                 {companyList.length} {locale === 'mn' ? 'байгууллага' : 'entities'}
               </span>
             </div>
@@ -741,20 +742,20 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors self-start sm:self-auto flex items-center gap-1.5 cursor-pointer bg-indigo-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg shrink-0"
           >
             <span>{locale === 'mn' ? 'Бүгдийг харах' : 'View All'}</span>
-            <span className="text-indigo-400 font-bold">✕</span>
+            <X className="h-3.5 w-3.5 text-indigo-500" />
           </button>
         )}
       </div>
 
       {/* Active Company Banner */}
       {activeCompany && (
-        <div className="flex items-center justify-between bg-gradient-to-r from-indigo-50 via-blue-50/50 to-indigo-50 border border-indigo-200/80 rounded-xl px-3.5 py-2 text-xs text-indigo-950 shadow-2xs">
+        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-xl px-3.5 py-2 text-xs text-indigo-950 shadow-2xs">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-bold text-slate-700 shrink-0">
               {locale === 'mn' ? 'Сонгосон:' : 'Selected:'}
             </span>
-            <span className="inline-flex items-center gap-1.5 bg-indigo-600 text-white font-bold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs truncate">
-              <span>{activeCompany.icon}</span>
+            <span className="inline-flex items-center gap-1.5 bg-indigo-600 text-white font-semibold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs truncate">
+              <IndustryIcon id={activeCompany.category} className="h-3 w-3 text-white shrink-0" />
               <span className="truncate">{activeCompany.name}</span>
             </span>
           </div>
@@ -763,7 +764,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 hover:underline cursor-pointer shrink-0 ml-2"
           >
             <span>{locale === 'mn' ? 'Арилгах' : 'Clear'}</span>
-            <span>✕</span>
+            <X className="h-3 w-3" />
           </button>
         </div>
       )}
@@ -779,22 +780,22 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
               onClick={() => handleSelectCompany(comp)}
               className={`p-2.5 sm:p-3 rounded-xl border text-left flex flex-col justify-between gap-2 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
                 isSelected
-                  ? 'bg-gradient-to-br from-indigo-600 to-blue-700 text-white border-indigo-600 shadow-md ring-2 ring-indigo-400/40 -translate-y-0.5'
-                  : 'bg-white hover:bg-slate-50/90 text-slate-800 border-slate-200/90 hover:border-indigo-300 hover:shadow-xs hover:-translate-y-0.5'
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10'
+                  : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
               }`}
             >
               <div className="flex items-center justify-between w-full">
                 <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center text-base transition-transform group-hover:scale-105 ${
-                    isSelected ? 'bg-white/20' : 'bg-slate-100 shadow-2xs'
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 ${
+                    isSelected ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600 shadow-2xs'
                   }`}
                 >
-                  {comp.icon}
+                  <IndustryIcon id={comp.category} className="h-4 w-4" />
                 </div>
                 {isSelected ? (
-                  <CheckCircle2 className="h-4 w-4 text-white" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                 ) : (
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 tabular-nums">
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 tabular-nums font-mono">
                     {comp.approxTenders}
                   </span>
                 )}

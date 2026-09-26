@@ -537,17 +537,17 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
           <select
             value={selectedModel}
             onChange={(e) => setSelectedModel(e.target.value)}
-            className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-blue-600 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
+            className="bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-800 focus:outline-none focus:border-slate-900 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
           >
-            <option value="google/gemma-4-26b-a4b-it:free">🚀 Google Gemma 4 26B (free - Хурдан, Монгол хэл)</option>
-            <option value="nvidia/nemotron-3.5-lightning:free">⚡ NVIDIA Nemotron 3.5 Lightning (free)</option>
-            <option value="openrouter/free">🌐 Автомат сонголт (openrouter/free)</option>
+            <option value="google/gemma-4-26b-a4b-it:free">Google Gemma 4 26B (free - Хурдан, Монгол хэл)</option>
+            <option value="nvidia/nemotron-3.5-lightning:free">NVIDIA Nemotron 3.5 Lightning (free)</option>
+            <option value="openrouter/free">Автомат сонголт (openrouter/free)</option>
           </select>
         </div>
 
       {/* Selected tender banner */}
       {selectedTender && (
-        <div className="px-4 py-2.5 bg-blue-50/80 border-b border-blue-200 flex items-center justify-between gap-2 text-xs">
+        <div className="px-4 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2 truncate text-slate-700 min-w-0">
             <Tag className="h-3.5 w-3.5 text-blue-600 shrink-0" />
             <div className="truncate">
@@ -560,14 +560,14 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <Link
               href={`/tender/${selectedTender.invitationId}`}
-              className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 bg-white border border-blue-200 hover:border-blue-300 px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 transition-colors"
+              className="text-[11px] font-semibold text-slate-700 hover:text-slate-900 bg-white border border-slate-200 hover:border-slate-300 px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 transition-colors"
             >
               <span>Дэлгэрэнгүй</span>
               <ExternalLink className="h-3 w-3" />
             </Link>
             <button
               onClick={onClearSelectedTender}
-              className="text-[11px] text-slate-400 hover:text-slate-700 p-0.5 transition-colors"
+              className="text-[11px] text-slate-400 hover:text-slate-700 p-0.5 transition-colors cursor-pointer"
               title="Сонголтыг арилгах"
             >
               <X className="h-3.5 w-3.5" />
@@ -596,14 +596,14 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
             <div
               className={`max-w-[85%] rounded-lg p-3 leading-relaxed ${
                 msg.sender === 'user'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-slate-900 text-white'
                   : 'bg-slate-50 text-slate-800 border border-slate-200'
               }`}
             >
               <FormattedChatMessage text={msg.text} isUser={msg.sender === 'user'} />
               <div
                 className={`mt-1 text-[10px] text-right font-mono ${
-                  msg.sender === 'user' ? 'text-blue-200' : 'text-slate-400'
+                  msg.sender === 'user' ? 'text-slate-400' : 'text-slate-400'
                 }`}
               >
                 {msg.timestamp}
@@ -614,7 +614,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
 
         {isLoading && (
           <div className="flex items-center gap-2 text-xs text-slate-500 p-2">
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-800" />
             <span>{locale === 'mn' ? 'Шинжилгээ хийж байна...' : 'Analyzing tender data...'}</span>
           </div>
         )}
@@ -629,32 +629,32 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
               onClick={() => handleSend('Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.')}
               className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
-              📦 Нийлүүлэлтийн хуваарь?
+              Нийлүүлэлтийн хуваарь?
             </button>
             <button
               onClick={() => handleSend('Гэрээний тусгай нөхцөл (ГТН)-д заасан алданги, төлбөрийн нөхцөл, хүлээлцэх нөхцөлүүд ямар байна вэ?')}
               className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
-              📑 Тусгай нөхцөл & Алданги?
+              Тусгай нөхцөл & Алданги?
             </button>
             <button
               onClick={() => handleSend('Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?')}
               className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
-              🛡️ Тендерийн баталгаа?
+              Тендерийн баталгаа?
             </button>
             <button
               onClick={() => handleSend('Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?')}
               className="h-7 px-2.5 rounded-full bg-white text-slate-700 border border-slate-200 hover:bg-slate-100 hover:border-slate-300 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
-              ⚖️ Өрсөлдөхөд анхаарах эрсдэл?
+              Өрсөлдөхөд анхаарах эрсдэл?
             </button>
             {(selectedTender.docStatusName?.includes('Амжилтгүй') || selectedTender.docStatusCode === 'TENDER_FAILED') && (
               <button
                 onClick={() => handleSend('Энэхүү амжилтгүй болсон тендер яагаад цуцлагдсан бэ, дараа нь дахин зарлагдах уу, оролцоход юуг анхаарах вэ?')}
                 className="h-7 px-2.5 rounded-full bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
               >
-                ⚠️ Яагаад амжилтгүй болсон бэ?
+                Яагаад амжилтгүй болсон бэ?
               </button>
             )}
           </>

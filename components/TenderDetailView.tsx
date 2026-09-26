@@ -7,7 +7,7 @@ import {
   Copy, Check, Trophy, Users, CheckCircle2, XCircle, AlertCircle, 
   ExternalLink, Sparkles, Clock, AlertTriangle, Layers, Briefcase, 
   CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye, X, Loader2,
-  Send, MessageSquare, Bot, User, Trash2, ChevronDown, ChevronUp
+  Send, MessageSquare, Bot, User, Trash2, ChevronDown, ChevronUp, Package
 } from 'lucide-react';
 import { FormattedChatMessage } from './AIChatDrawer';
 
@@ -391,7 +391,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 ? 'bg-amber-50 text-amber-800 border-amber-300'
                 : 'bg-emerald-50 text-emerald-700 border-emerald-200'
             }`}>
-              {isFailed ? '⚪ Амжилтгүй болсон' : (tender.docStatusName || 'Идэвхтэй')}
+              {isFailed ? 'Амжилтгүй болсон' : (tender.docStatusName || 'Идэвхтэй')}
             </span>
             {tender.receiveDate && (
               <span className="text-slate-500 font-medium ml-auto flex items-center gap-1">
@@ -430,7 +430,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
           {/* Interactive AI Quick Prompts based on Structured PDF Data */}
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
             <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 shrink-0">
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
               <span>AI Шинжээчээс асуух:</span>
             </span>
             <button
@@ -440,14 +440,14 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 'Тусгай зөвшөөрөл & Шалгуур'
               )}
               disabled={aiAnalyzing}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
                 aiAnalyzingTarget === 'quick-license'
-                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
               }`}
             >
-              {aiAnalyzingTarget === 'quick-license' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
-              <span>🛡️ Тусгай зөвшөөрөл & Шалгуур</span>
+              {aiAnalyzingTarget === 'quick-license' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />}
+              <span>Тусгай зөвшөөрөл & Шалгуур</span>
             </button>
             <button
               onClick={() => handleRunAiAnalysis(
@@ -456,14 +456,14 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 'Санхүүгийн босго & Баталгаа'
               )}
               disabled={aiAnalyzing}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
                 aiAnalyzingTarget === 'quick-finance'
-                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
               }`}
             >
-              {aiAnalyzingTarget === 'quick-finance' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
-              <span>💰 Санхүүгийн босго & Баталгаа</span>
+              {aiAnalyzingTarget === 'quick-finance' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <Tag className="h-3.5 w-3.5 text-blue-600" />}
+              <span>Санхүүгийн босго & Баталгаа</span>
             </button>
             <button
               onClick={() => handleRunAiAnalysis(
@@ -472,14 +472,14 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 'Техникийн үзүүлэлтийн эрсдэл'
               )}
               disabled={aiAnalyzing}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
                 aiAnalyzingTarget === 'quick-tech'
-                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
               }`}
             >
-              {aiAnalyzingTarget === 'quick-tech' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
-              <span>⚙️ Техникийн үзүүлэлтийн эрсдэл</span>
+              {aiAnalyzingTarget === 'quick-tech' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <FileText className="h-3.5 w-3.5 text-blue-600" />}
+              <span>Техникийн үзүүлэлтийн эрсдэл</span>
             </button>
             <button
               onClick={() => handleRunAiAnalysis(
@@ -488,14 +488,14 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 'Баримт бичгийн хяналт'
               )}
               disabled={aiAnalyzing}
-              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1 cursor-pointer ${
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
                 aiAnalyzingTarget === 'quick-docs'
-                  ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
                   : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
               }`}
             >
-              {aiAnalyzingTarget === 'quick-docs' && <Loader2 className="h-3 w-3 animate-spin text-amber-600" />}
-              <span>📋 Баримт бичгийн хяналт</span>
+              {aiAnalyzingTarget === 'quick-docs' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <CheckSquare className="h-3.5 w-3.5 text-blue-600" />}
+              <span>Баримт бичгийн хяналт</span>
             </button>
           </div>
         </div>
@@ -690,9 +690,10 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                           type="button"
                           onClick={() => handleRunAiAnalysis('Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.', 'chip-delivery', 'Нийлүүлэлтийн хуваарь')}
                           disabled={aiAnalyzing}
-                          className="px-2.5 py-1 rounded-full bg-white hover:bg-amber-100 border border-amber-200 text-slate-700 transition-colors shadow-2xs cursor-pointer"
+                          className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
                         >
-                          📦 Бараа нийлүүлэлтийн хуваарь?
+                          <Package className="h-3 w-3 text-blue-600" />
+                          <span>Нийлүүлэлтийн хуваарь?</span>
                         </button>
                       )}
                       {technicalSpecs.specialConditions && technicalSpecs.specialConditions.length > 0 && (
@@ -700,9 +701,10 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                           type="button"
                           onClick={() => handleRunAiAnalysis('Гэрээний тусгай нөхцөл (ГТН)-д заасан алданги, төлбөрийн нөхцөл, хүлээлцэх нөхцөлүүд ямар байна вэ?', 'chip-scc', 'Гэрээний тусгай нөхцөл')}
                           disabled={aiAnalyzing}
-                          className="px-2.5 py-1 rounded-full bg-white hover:bg-amber-100 border border-amber-200 text-slate-700 transition-colors shadow-2xs cursor-pointer"
+                          className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
                         >
-                          📑 Гэрээний тусгай нөхцөл & Алданги?
+                          <FileText className="h-3 w-3 text-blue-600" />
+                          <span>Гэрээний тусгай нөхцөл & Алданги?</span>
                         </button>
                       )}
                       {isFailed && (
@@ -710,26 +712,29 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                           type="button"
                           onClick={() => handleRunAiAnalysis('Энэхүү амжилтгүй болсон тендер яагаад цуцлагдсан бэ, дараа нь дахин зарлагдах уу, оролцоход юуг анхаарах вэ?', 'chip-failed', 'Амжилтгүй болсон шалтгаан')}
                           disabled={aiAnalyzing}
-                          className="px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 font-semibold transition-colors shadow-2xs cursor-pointer"
+                          className="px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 font-semibold transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
                         >
-                          ⚠️ Яагаад амжилтгүй болсон бэ?
+                          <AlertTriangle className="h-3 w-3 text-rose-600" />
+                          <span>Яагаад амжилтгүй болсон бэ?</span>
                         </button>
                       )}
                       <button
                         type="button"
                         onClick={() => handleRunAiAnalysis('Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?', 'chip-guarantee', 'Тендерийн баталгаа')}
                         disabled={aiAnalyzing}
-                        className="px-2.5 py-1 rounded-full bg-white hover:bg-amber-100 border border-amber-200 text-slate-700 transition-colors shadow-2xs cursor-pointer"
+                        className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
                       >
-                        🛡️ Тендерийн баталгааны шаардлага?
+                        <ShieldCheck className="h-3 w-3 text-teal-600" />
+                        <span>Тендерийн баталгааны шаардлага?</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleRunAiAnalysis('Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?', 'chip-risk', 'Эрсдэлийн шинжилгээ')}
                         disabled={aiAnalyzing}
-                        className="px-2.5 py-1 rounded-full bg-white hover:bg-amber-100 border border-amber-200 text-slate-700 transition-colors shadow-2xs cursor-pointer"
+                        className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
                       >
-                        ⚖️ Өрсөлдөхөд анхаарах гол эрсдэл?
+                        <AlertCircle className="h-3 w-3 text-amber-600" />
+                        <span>Өрсөлдөхөд анхаарах гол эрсдэл?</span>
                       </button>
                     </div>
                   </div>
@@ -1629,8 +1634,9 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                               </div>
                             ) : (
                               <div className="space-y-2 font-sans text-xs">
-                                <div className="text-amber-400 font-semibold flex items-center gap-1.5">
-                                  <span>📄 Албан ёсны баримт бичгийн танилцуулга</span>
+                                <div className="text-blue-400 font-semibold flex items-center gap-1.5">
+                                  <FileText className="h-4 w-4 text-blue-400" />
+                                  <span>Албан ёсны баримт бичгийн танилцуулга</span>
                                 </div>
                                 <p className="text-slate-300 text-[11px] leading-relaxed font-normal">
                                   Энэхүү баримт бичиг (<span className="text-white font-medium">{doc.name}</span>) нь tender.gov.mn төрийн худалдан авах ажиллагааны албан ёсны эх баримт болно. Хэрэв сканердсан зурган хуудас агуулсан бол доорх холбоосоор шууд татан авч бүрэн эхээр нь танилцана уу.
@@ -1740,7 +1746,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                         <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-emerald-50 border border-emerald-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
                           <div className="flex items-start sm:items-center gap-3.5">
                             <div className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xl">
-                              🏆
+                              <Trophy className="h-6 w-6 text-white" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
@@ -1865,7 +1871,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2 font-bold text-slate-900 text-sm">
                           <AlertTriangle className="h-5 w-5 text-rose-500" />
-                          <span>⚠️ ТЕНДЕР ШАЛГАРУУЛАЛТ АМЖИЛТГҮЙ БОЛСОН</span>
+                          <span>ТЕНДЕР ШАЛГАРУУЛАЛТ АМЖИЛТГҮЙ БОЛСОН</span>
                         </div>
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-200">
                           {tender.docStatusName || 'Амжилтгүй болсон'}
@@ -1940,7 +1946,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2 font-bold text-amber-950 text-sm">
                           <Trophy className="h-5 w-5 text-amber-600" />
-                          <span>🏆 ШАЛГАРУУЛАЛТЫН ҮР ДҮН НИЙТЛЭГДСЭН</span>
+                          <span>ШАЛГАРУУЛАЛТЫН ҮР ДҮН НИЙТЛЭГДСЭН</span>
                         </div>
                         <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300">
                           {tender.docStatusName || 'Үр дүн гарсан'}
@@ -2126,8 +2132,9 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                               </span>
                             )}
                             {s.budgetEntityName && (
-                              <span className="text-[11px] text-slate-500 truncate max-w-[200px]">
-                                🏛️ {s.budgetEntityName}
+                              <span className="text-[11px] text-slate-500 truncate max-w-[200px] inline-flex items-center gap-1">
+                                <Building2 className="h-3 w-3 text-slate-400 shrink-0" />
+                                <span className="truncate">{s.budgetEntityName}</span>
                               </span>
                             )}
                           </div>
@@ -2231,7 +2238,10 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
 
               {/* Notice */}
               <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-500 space-y-1">
-                <span className="font-bold text-slate-700 block">💡 Анхаарах:</span>
+                <div className="flex items-center gap-1.5 font-bold text-slate-700">
+                  <AlertCircle className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+                  <span>Анхаарах:</span>
+                </div>
                 <p>
                   Тендерт оролцогч аж ахуйн нэгж нь төрийн худалдан авах ажиллагааны албан ёсны цахим систем (tender.gov.mn)-ийн ТШББ-д заасан шаардлагатай нягтлан танилцаж, үнийн санал болон баталгааг хуулийн хугацаанд ирүүлэх үүрэгтэй.
                 </p>

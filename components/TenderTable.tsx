@@ -5,7 +5,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { ExternalLink, Sparkles, Star } from 'lucide-react';
+import { 
+  ExternalLink, Sparkles, Star, Package, ShieldCheck, 
+  FileText, Clock, AlertCircle, Eye, ArrowUpRight 
+} from 'lucide-react';
 
 interface TenderTableProps {
   tenders: TenderItem[];
@@ -21,43 +24,50 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   locale,
   savedIds,
   onToggleSave,
-  onSelect,
   onAskAI,
 }) => {
   const router = useRouter();
   const t = getTranslation(locale);
 
   const formatCurrency = (amount: number) => {
-    if (!amount) return <span className="text-slate-400">0 ₮</span>;
+    if (!amount) return <span className="text-slate-400 font-mono">0 ₮</span>;
     if (amount >= 1_000_000_000) {
       return (
         <div className="text-right">
-          <div className="font-bold text-slate-900 text-xs">{(amount / 1_000_000_000).toFixed(2)} тэрбум ₮</div>
-          <div className="text-[10px] text-slate-400 font-mono">{amount.toLocaleString()} ₮</div>
+          <div className="font-bold text-slate-900 text-xs tabular-nums font-mono">
+            {(amount / 1_000_000_000).toFixed(2)} {locale === 'mn' ? 'тэрбум ₮' : 'B ₮'}
+          </div>
+          <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString()} ₮</div>
         </div>
       );
     }
     if (amount >= 10_000_000) {
       return (
         <div className="text-right">
-          <div className="font-bold text-slate-900 text-xs">{(amount / 1_000_000).toFixed(1)} сая ₮</div>
-          <div className="text-[10px] text-slate-400 font-mono">{amount.toLocaleString()} ₮</div>
+          <div className="font-bold text-slate-900 text-xs tabular-nums font-mono">
+            {(amount / 1_000_000).toFixed(1)} {locale === 'mn' ? 'сая ₮' : 'M ₮'}
+          </div>
+          <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString()} ₮</div>
         </div>
       );
     }
-    return <div className="font-bold text-slate-900 text-xs text-right font-mono">{amount.toLocaleString()} ₮</div>;
+    return (
+      <div className="font-bold text-slate-900 text-xs text-right font-mono tabular-nums">
+        {amount.toLocaleString()} ₮
+      </div>
+    );
   };
 
   const getCategoryBadge = (code?: string, name?: string) => {
     switch (code) {
       case 'PRODUCT':
-        return { label: locale === 'mn' ? 'Бараа' : 'Goods', bg: 'bg-blue-50 text-blue-700 border-blue-200' };
+        return { label: locale === 'mn' ? 'Бараа' : 'Goods', bg: 'bg-blue-50 text-blue-700 border-blue-200/80' };
       case 'JOB':
-        return { label: locale === 'mn' ? 'Ажил' : 'Works', bg: 'bg-amber-50 text-amber-700 border-amber-200' };
+        return { label: locale === 'mn' ? 'Ажил' : 'Works', bg: 'bg-amber-50 text-amber-700 border-amber-200/80' };
       case 'SERVICE':
-        return { label: locale === 'mn' ? 'Үйлчилгээ' : 'Services', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+        return { label: locale === 'mn' ? 'Үйлчилгээ' : 'Services', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' };
       default:
-        return { label: name || (locale === 'mn' ? 'Тендер' : 'Tender'), bg: 'bg-slate-50 text-slate-700 border-slate-200' };
+        return { label: name || (locale === 'mn' ? 'Тендер' : 'Tender'), bg: 'bg-slate-50 text-slate-700 border-slate-200/80' };
     }
   };
 
@@ -69,19 +79,19 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
+    <div className="bg-white border border-slate-200/90 rounded-xl shadow-2xs overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs table-auto">
           <thead>
-            <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+            <tr className="bg-slate-50/90 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
               <th className="py-2.5 px-2 w-[36px] text-center"></th>
-              <th className="py-2.5 px-3 min-w-[260px]">{locale === 'mn' ? 'Тендерийн нэр & дугаар' : 'Tender Title & Code'}</th>
-              <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч' : 'Procuring Entity'}</th>
+              <th className="py-2.5 px-3 min-w-[280px]">{locale === 'mn' ? 'Тендерийн нэр & Код' : 'Tender Title & Code'}</th>
+              <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity'}</th>
               <th className="py-2.5 px-3 w-[85px]">{locale === 'mn' ? 'Төрөл' : 'Category'}</th>
               <th className="py-2.5 px-3 text-right w-[130px]">{locale === 'mn' ? 'Төсөвт өртөг' : 'Budget'}</th>
-              <th className="py-2.5 px-3 w-[125px] hidden sm:table-cell">{locale === 'mn' ? 'Эцсийн огноо' : 'Deadline'}</th>
+              <th className="py-2.5 px-3 w-[125px] hidden sm:table-cell">{locale === 'mn' ? 'Эцсийн хугацаа' : 'Deadline'}</th>
               <th className="py-2.5 px-3 w-[135px]">{locale === 'mn' ? 'Төлөв' : 'Status'}</th>
-              <th className="py-2.5 px-3 text-center w-[85px]">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
+              <th className="py-2.5 px-3 text-center w-[90px]">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -92,7 +102,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
               return (
                 <tr
                   key={String(tender.invitationId)}
-                  className="hover:bg-blue-50/50 transition-colors group cursor-pointer"
+                  className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
                   onClick={() => router.push(`/tender/${tender.invitationId}`)}
                 >
                   {/* Star Watchlist */}
@@ -118,7 +128,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   <td className="py-2.5 px-3">
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                       <span
-                        className="font-mono text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0 font-medium"
+                        className="font-mono text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200/80 shrink-0 font-medium"
                         title={tender.tenderCode}
                       >
                         {tender.tenderCode || tender.invitationNumber}
@@ -141,27 +151,31 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       ((tender.liveBundleSummary.topItems && tender.liveBundleSummary.topItems.length > 0) ||
                        tender.liveBundleSummary.isBidSecurityExempt ||
                        (tender.liveBundleSummary.docCount && tender.liveBundleSummary.docCount > 0)) && (
-                        <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                        <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
                           {tender.liveBundleSummary.topItems && tender.liveBundleSummary.topItems.length > 0 && (
-                            <span className="text-[10px] font-medium text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200/60 inline-flex items-center gap-1 max-w-[340px] truncate">
-                              <span className="font-semibold">📦</span>
+                            <span className="text-[10px] font-medium text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 inline-flex items-center gap-1 max-w-[340px] truncate">
+                              <Package className="h-3 w-3 text-blue-600 shrink-0" />
                               <span className="truncate">{tender.liveBundleSummary.topItems[0].name}</span>
                               {tender.liveBundleSummary.topItems[0].qty && (
-                                <strong className="text-blue-900 font-bold shrink-0">
+                                <strong className="text-slate-900 font-bold shrink-0 font-mono tabular-nums">
                                   ({tender.liveBundleSummary.topItems[0].qty} {tender.liveBundleSummary.topItems[0].unit || ''})
                                 </strong>
                               )}
                             </span>
                           )}
                           {tender.liveBundleSummary.isBidSecurityExempt && (
-                            <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 shrink-0">
-                              🛡️ Баталгаа шаардахгүй
+                            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/80 inline-flex items-center gap-1 shrink-0">
+                              <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" />
+                              <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : 'No Bid Bond'}</span>
                             </span>
                           )}
                           {tender.liveBundleSummary.docCount > 0 && (
-                            <span className="text-[10px] text-slate-400 font-medium inline-flex items-center gap-0.5 shrink-0">
-                              📄 {tender.liveBundleSummary.docCount} PDF
-                              {tender.liveBundleSummary.hasOcr && <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1 rounded border border-amber-200">OCR</span>}
+                            <span className="text-[10px] text-slate-500 font-medium inline-flex items-center gap-1 shrink-0">
+                              <FileText className="h-3 w-3 text-slate-400 shrink-0" />
+                              <span>{tender.liveBundleSummary.docCount} PDF</span>
+                              {tender.liveBundleSummary.hasOcr && (
+                                <span className="text-[9px] text-amber-700 font-bold bg-amber-50 px-1 rounded border border-amber-200">OCR</span>
+                              )}
                             </span>
                           )}
                         </div>
@@ -187,7 +201,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   </td>
 
                   {/* Budget */}
-                  <td className="py-2.5 px-3 text-right whitespace-nowrap font-medium text-slate-900 tabular-nums">
+                  <td className="py-2.5 px-3 text-right whitespace-nowrap font-medium text-slate-900">
                     {formatCurrency(tender.totalBudget)}
                   </td>
 
@@ -196,15 +210,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     <div>{tender.receiveDate ? tender.receiveDate.substring(0, 10) : 'Тодорхойгүй'}</div>
                     {days !== null && days > 0 ? (
                       <div
-                        className={`text-[10px] font-semibold ${
+                        className={`text-[10px] font-semibold flex items-center gap-1 ${
                           days <= 3
-                            ? 'text-rose-600 font-bold'
+                            ? 'text-rose-600'
                             : days <= 7
                             ? 'text-amber-600'
                             : 'text-emerald-600'
                         }`}
                       >
-                        {days <= 3 ? `⏰ Шуурхай: ${days} ${t.daysRemaining}` : `${days} ${t.daysRemaining}`}
+                        <Clock className="h-2.5 w-2.5 shrink-0" />
+                        <span>{days <= 3 ? `Шуурхай: ${days} ${t.daysRemaining}` : `${days} ${t.daysRemaining}`}</span>
                       </div>
                     ) : days !== null && days <= 0 ? (
                       <div className="text-[10px] text-slate-400 font-medium">
@@ -235,9 +250,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
 
                       const fallbackStatus = tender.receiveDate && new Date(tender.receiveDate) < new Date() ? 'Хугацаа дууссан' : 'Хүлээн авч буй';
                       const label = isFailed
-                        ? '⚪ Амжилтгүй болсон'
+                        ? 'Амжилтгүй болсон'
                         : isConcluded
-                        ? `🏆 ${tender.docStatusName}`
+                        ? tender.docStatusName
                         : (tender.docStatusName || fallbackStatus);
 
                       return (
@@ -255,7 +270,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       {/* Direct Details Page Link */}
                       <Link
                         href={`/tender/${tender.invitationId}`}
-                        className="h-6 px-2 rounded bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 text-[11px] font-semibold transition-all shadow-2xs flex items-center justify-center cursor-pointer"
+                        className="h-6 px-2 rounded bg-slate-900 text-white hover:bg-slate-800 border border-slate-900 text-[11px] font-semibold transition-all shadow-2xs flex items-center justify-center cursor-pointer"
                         title={locale === 'mn' ? 'Тендерийн дэлгэрэнгүйг үзэх' : 'View tender details'}
                       >
                         {locale === 'mn' ? 'Үзэх' : 'View'}
@@ -275,7 +290,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       {/* AI Audit */}
                       <button
                         onClick={() => onAskAI(tender)}
-                        className="h-6 w-6 rounded bg-white hover:bg-amber-50 text-slate-400 hover:text-amber-600 border border-slate-200 flex items-center justify-center transition-colors cursor-pointer"
+                        className="h-6 w-6 rounded bg-white hover:bg-blue-50 text-slate-400 hover:text-blue-600 border border-slate-200 flex items-center justify-center transition-colors cursor-pointer"
                         title={locale === 'mn' ? 'AI шинжилгээ' : 'AI Analysis'}
                       >
                         <Sparkles className="h-3 w-3" />

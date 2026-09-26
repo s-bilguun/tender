@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Locale, BidRequirementSummary } from '@/lib/types';
-import { FileText, FileSpreadsheet, KeyRound, ExternalLink } from 'lucide-react';
+import { FileText, FileSpreadsheet, KeyRound, ExternalLink, CheckCircle2 } from 'lucide-react';
 
 interface SubmissionRoadmapProps {
   steps: BidRequirementSummary['submissionSteps'];
@@ -25,7 +25,7 @@ export const SubmissionRoadmap: React.FC<SubmissionRoadmapProps> = ({
     <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
         <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-1.5">
-          <span>🚀</span>
+          <CheckCircle2 className="h-4 w-4 text-blue-600" />
           <span>{locale === 'mn' ? 'Тендерт оролцох алхамчилсан заавар' : 'Step-by-Step Submission Roadmap'}</span>
         </h4>
         <span className="text-[11px] font-mono text-slate-400">tender.gov.mn</span>

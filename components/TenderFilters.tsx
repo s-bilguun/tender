@@ -6,8 +6,9 @@ import { getTranslation } from '@/lib/translations';
 import { INDUSTRIES } from '@/lib/taxonomy';
 import { 
   Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, 
-  Flame, Star, Zap, Calendar, Trophy, Database, Filter, 
-  SlidersHorizontal, RotateCcw, Building2, Coins, ChevronDown, Check, Sparkles, ShieldCheck
+  Clock, Star, Calendar, Award, Database, Filter, 
+  SlidersHorizontal, RotateCcw, Building2, ChevronDown, 
+  Check, Sparkles, ShieldCheck, Package, Briefcase, Layers
 } from 'lucide-react';
 
 interface TenderFiltersProps {
@@ -78,18 +79,18 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   };
 
   const categories = [
-    { id: 'all', label: t.categories.all },
-    { id: 'PRODUCT', label: t.categories.product },
-    { id: 'JOB', label: t.categories.job },
-    { id: 'SERVICE', label: t.categories.service },
+    { id: 'all', label: locale === 'mn' ? 'Бүх төрөл' : 'All Types', icon: <Layers className="h-3.5 w-3.5" /> },
+    { id: 'PRODUCT', label: locale === 'mn' ? 'Бараа' : 'Goods', icon: <Package className="h-3.5 w-3.5" /> },
+    { id: 'JOB', label: locale === 'mn' ? 'Ажил' : 'Works', icon: <Building2 className="h-3.5 w-3.5" /> },
+    { id: 'SERVICE', label: locale === 'mn' ? 'Үйлчилгээ' : 'Services', icon: <Briefcase className="h-3.5 w-3.5" /> },
   ];
 
   const statuses = [
     { id: 'all', label: locale === 'mn' ? 'Бүх төлөв' : 'All Statuses' },
-    { id: 'receiving', label: locale === 'mn' ? '🟢 Санал авч буй' : '🟢 Receiving' },
-    { id: 'result', label: locale === 'mn' ? '🏆 Үр дүн гарсан' : '🏆 Awarded' },
-    { id: 'opened', label: locale === 'mn' ? '🟡 Нээгдсэн' : '🟡 Opened' },
-    { id: 'cancelled', label: locale === 'mn' ? '🔴 Хүчингүй' : '🔴 Cancelled' },
+    { id: 'receiving', label: locale === 'mn' ? 'Санал авч буй' : 'Receiving' },
+    { id: 'result', label: locale === 'mn' ? 'Үр дүн гарсан' : 'Awarded' },
+    { id: 'opened', label: locale === 'mn' ? 'Нээгдсэн' : 'Opened' },
+    { id: 'cancelled', label: locale === 'mn' ? 'Хүчингүй' : 'Cancelled' },
   ];
 
   const budgetTiers = [
@@ -187,7 +188,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     });
   };
 
-  // Dynamic Tab Metrics: Sector & Company-aware metrics calculation
+  // Dynamic Tab Metrics
   const activeIndustryInfo = filters.industry && filters.industry !== 'all' 
     ? INDUSTRIES.find((i) => i.id === filters.industry) 
     : null;
@@ -206,7 +207,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   );
 
   const tabMetrics = useMemo(() => {
-    // If a company/search or sub-filter is applied, accurately show matching totalFound
     if (hasSubFilters) {
       const allCount = totalFound;
       const activeCount = filters.status === 'receiving' || filters.tabMode === 'active' 
@@ -225,7 +225,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       };
     }
 
-    // If only Sector is selected:
     if (activeIndustryInfo || activeIndustryStats) {
       const total = activeIndustryStats?.totalCount || activeIndustryInfo?.totalCount || 3120;
       const active = activeIndustryStats?.activeCount || (stats?.industryCounts ? stats.industryCounts[filters.industry!] : undefined) || activeIndustryInfo?.activeCount || 28;
@@ -239,7 +238,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       };
     }
 
-    // Default: Global counts
     return {
       all: stats?.totalCount || totalFound || 22785,
       active: stats?.activeTendersCount || 301,
@@ -248,7 +246,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     };
   }, [hasSubFilters, filters.industry, filters.status, filters.tabMode, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
 
-  // Detect which filters are currently non-default for active badge display
   const hasActiveFilters = 
     Boolean(filters.search) || 
     (filters.category && filters.category !== 'all') || 
@@ -260,23 +257,23 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     Boolean(filters.dateFrom || filters.dateTo);
 
   return (
-    <div className="space-y-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
+    <div className="space-y-3 bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/90 shadow-2xs">
       {/* 1. Primary Workflow Tabs with Integrated Live Metrics */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 pb-2.5">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 w-full sm:w-auto -mx-1 px-1">
-          {/* 1. Active Live Tab (Default First) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 w-full sm:w-auto -mx-1 px-1">
+          {/* 1. Active Live Tab */}
           <button
             onClick={() => handleTabSelect('active')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+            className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'active'
-                ? 'bg-emerald-600 text-white shadow-xs'
+                ? 'bg-slate-900 text-white shadow-2xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
             <span>{locale === 'mn' ? 'Санал авч буй' : 'Live Bids'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums font-mono ml-0.5 ${
+              currentTab === 'active' ? 'bg-slate-800 text-white' : 'bg-slate-200/80 text-slate-700'
             }`}>
               {tabMetrics.active.toLocaleString()}
             </span>
@@ -285,46 +282,46 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* 2. Closing Soon Tab */}
           <button
             onClick={() => handleTabSelect('closing_soon')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+            className={`h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'closing_soon'
-                ? 'bg-rose-600 text-white shadow-xs'
+                ? 'bg-rose-600 text-white font-semibold shadow-2xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <Flame className="h-3.5 w-3.5 text-rose-400" />
-            <span>{locale === 'mn' ? 'Хаагдах дөхсөн (≤ 72ц)' : 'Closing Soon'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+            <Clock className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+            <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : 'Closing Soon'}</span>
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums font-mono ml-0.5 ${
               currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
             }`}>
               {tabMetrics.closing.toLocaleString()}
             </span>
           </button>
 
-          {/* 3. No Bid Bond Required Tab (High Value for SMEs) */}
+          {/* 3. No Bid Bond Required Tab */}
           <button
             onClick={() => handleTabSelect('no_guarantee')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+            className={`h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'no_guarantee'
-                ? 'bg-teal-600 text-white shadow-xs'
+                ? 'bg-teal-700 text-white font-semibold shadow-2xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <ShieldCheck className="h-3.5 w-3.5 text-teal-300" />
+            <ShieldCheck className="h-3.5 w-3.5 text-teal-600 shrink-0" />
             <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : 'No Bid Bond'}</span>
           </button>
 
           {/* 4. Awarded / Concluded Winners Tab */}
           <button
             onClick={() => handleTabSelect('result')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+            className={`h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'result'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-blue-600 text-white font-semibold shadow-2xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <Trophy className="h-3.5 w-3.5 text-amber-300" />
+            <Award className="h-3.5 w-3.5 text-blue-500 shrink-0" />
             <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : 'Awarded'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums font-mono ml-0.5 ${
               currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
             }`}>
               {tabMetrics.result.toLocaleString()}
@@ -334,15 +331,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* 5. All History / Archive Tab */}
           <button
             onClick={() => handleTabSelect('all')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+            className={`h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'all'
-                ? 'bg-slate-900 text-white shadow-xs'
+                ? 'bg-slate-900 text-white font-semibold shadow-2xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
-            <Database className="h-3.5 w-3.5 text-blue-400" />
+            <Database className="h-3.5 w-3.5 text-slate-500 shrink-0" />
             <span>{locale === 'mn' ? 'Бүх түүхэн сан' : 'All Tenders'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
+            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums font-mono ml-0.5 ${
               currentTab === 'all' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
             }`}>
               {tabMetrics.all.toLocaleString()}
@@ -352,16 +349,16 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* 6. Watchlist Tab */}
           <button
             onClick={() => handleTabSelect('watchlist')}
-            className={`h-8 px-3.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
+            className={`h-8 px-3 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'watchlist'
-                ? 'bg-amber-500 text-white shadow-xs'
+                ? 'bg-amber-500 text-white font-semibold shadow-2xs'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
             }`}
           >
             <Star className={`h-3.5 w-3.5 ${currentTab === 'watchlist' ? 'fill-white' : 'text-amber-500'}`} />
             <span>{locale === 'mn' ? 'Миний хянаж буй' : 'Watchlist'}</span>
             {watchlistCount > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.2 rounded text-[10px] bg-white/20 font-bold tabular-nums">
+              <span className="ml-0.5 px-1.5 py-0.2 rounded text-[10px] bg-white/25 font-bold tabular-nums font-mono">
                 {watchlistCount}
               </span>
             )}
@@ -371,7 +368,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         {/* View Mode Toggle: Table / Grid */}
         <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto shrink-0">
           <span className="text-[11px] text-slate-500 font-medium sm:hidden">
-            Илэрц: <strong className="text-slate-900">{totalFound.toLocaleString()}</strong>
+            Илэрц: <strong className="text-slate-900 font-mono tabular-nums">{totalFound.toLocaleString()}</strong>
           </span>
           <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 h-8 shrink-0 ml-auto sm:ml-0">
             <button
@@ -416,13 +413,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 ? (locale === 'mn' ? 'Идэвхтэй тендерээс хайх (жишээ: зам засвар, сургууль, шатахуун)...' : 'Search open active tenders...')
                 : (locale === 'mn' ? 'Бүх 22,000+ тендерийн сангаас хайх (нэр, байгууллага, салбар, код)...' : 'Search all historical tenders...')
             }
-            className="w-full pl-10 pr-20 py-2.5 bg-slate-50 border border-slate-200 hover:border-slate-300 focus:border-blue-600 focus:bg-white focus:outline-none rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition-all shadow-2xs"
+            className="w-full pl-10 pr-20 py-2.5 bg-slate-50/80 border border-slate-200 hover:border-slate-300 focus:border-slate-900 focus:bg-white focus:outline-none rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition-all shadow-2xs"
           />
           <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
             {searchTerm && (
               <button
                 onClick={handleClearSearch}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors cursor-pointer"
                 title="Цэвэрлэх"
               >
                 <X className="h-4 w-4" />
@@ -432,7 +429,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               onClick={() => setIsAdvancedModalOpen(true)}
               className={`h-7 px-2 sm:px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
                 activeAdvancedCount > 0
-                  ? 'bg-blue-600 text-white shadow-2xs'
+                  ? 'bg-slate-900 text-white shadow-2xs'
                   : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
               }`}
               title="Нарийвчилсан шүүлтүүр"
@@ -440,7 +437,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               <SlidersHorizontal className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Шүүлтүүр</span>
               {activeAdvancedCount > 0 && (
-                <span className="h-4 w-4 rounded-full bg-white text-blue-700 text-[10px] font-bold flex items-center justify-center">
+                <span className="h-4 w-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center font-mono">
                   {activeAdvancedCount}
                 </span>
               )}
@@ -452,7 +449,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         {showSuggestions && !searchTerm && (
           <div className="absolute top-full left-0 right-0 mt-1.5 z-40 bg-white rounded-xl border border-slate-200 shadow-xl p-3 animate-in fade-in duration-150">
             <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3 text-amber-500" />
+              <Sparkles className="h-3 w-3 text-blue-600" />
               <span>Түгээмэл хайлтууд & Сэдвүүд</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -471,11 +468,11 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         )}
       </div>
 
-      {/* 3. Filter Controls: Structured in 2 Clean, Spacious Rows */}
+      {/* 3. Filter Controls: Category Chips + Status & Sort */}
       <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs">
         {/* Row A: Category Filter + Status & Sort */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          {/* Category Chips with ample space */}
+          {/* Category Chips */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-[11px] font-medium text-slate-400 mr-0.5 whitespace-nowrap shrink-0">
               {locale === 'mn' ? 'Төрөл:' : 'Type:'}
@@ -484,21 +481,22 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               <button
                 key={cat.id}
                 onClick={() => onFilterChange({ category: cat.id, page: 1 })}
-                className={`h-7 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                className={`h-7 px-3 rounded-lg text-xs font-medium whitespace-nowrap transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer ${
                   currentCategory === cat.id
                     ? 'bg-slate-900 text-white font-semibold shadow-2xs'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
-                {cat.label}
+                {cat.icon}
+                <span>{cat.label}</span>
               </button>
             ))}
           </div>
 
           {/* Status & Sort Controls */}
           <div className="flex items-center gap-2 flex-wrap shrink-0">
-            {/* Explicit Status Filter */}
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
               <Filter className="h-3 w-3 text-slate-400" />
               <select
                 value={currentStatus}
@@ -510,7 +508,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     page: 1,
                   });
                 }}
-                className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer font-medium"
+                className="bg-transparent text-xs text-slate-800 focus:outline-none cursor-pointer font-medium"
               >
                 {statuses.map((st) => (
                   <option key={st.id} value={st.id}>{st.label}</option>
@@ -519,15 +517,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </div>
 
             {/* Sort Dropdown */}
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
               <ArrowUpDown className="h-3 w-3 text-slate-400" />
               <select
                 value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
                 onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
-                className="bg-transparent text-xs text-slate-700 focus:outline-none cursor-pointer font-medium"
+                className="bg-transparent text-xs text-slate-800 focus:outline-none cursor-pointer font-medium"
               >
                 <option value="date_desc">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest First'}</option>
-                <option value="deadline_asc">{locale === 'mn' ? 'Эцсийн хугацаа ойртсоноор' : 'Ending Soonest'}</option>
+                <option value="deadline_asc">{locale === 'mn' ? 'Хугацаа ойртсоноор' : 'Ending Soonest'}</option>
                 <option value="budget_desc">{t.sortOptions.budget_desc}</option>
                 <option value="budget_asc">{t.sortOptions.budget_asc}</option>
               </select>
@@ -546,9 +544,9 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               <button
                 key={tier.id}
                 onClick={() => onFilterChange({ minBudget: tier.min, maxBudget: tier.max, page: 1 })}
-                className={`h-7 px-2.5 rounded-md text-[11px] whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
+                className={`h-7 px-2.5 rounded-lg text-[11px] whitespace-nowrap transition-colors shrink-0 cursor-pointer ${
                   activeBudgetTier === tier.id
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200 font-semibold'
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200/80 font-semibold'
                     : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
                 }`}
               >
@@ -557,11 +555,11 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             ))}
           </div>
 
-          {/* Clean Compact Year Selector & Custom Date Range Picker */}
+          {/* Year & Date Range Controls */}
           <div className="flex items-center gap-2 flex-wrap shrink-0">
             {/* Year Selector */}
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-2 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
-              <Calendar className="h-3 w-3 text-blue-600 shrink-0" />
+            <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-2.5 h-7 text-xs text-slate-700 shrink-0 shadow-2xs">
+              <Calendar className="h-3 w-3 text-slate-500 shrink-0" />
               <select
                 value={filters.year || 'all'}
                 onChange={(e) => {
@@ -598,7 +596,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                   ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
                   page: 1,
                 })}
-                className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500 shadow-2xs"
+                className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-slate-800 shadow-2xs"
                 title="Эхлэх огноо"
               />
               <span className="text-slate-400">-</span>
@@ -610,7 +608,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                   ...(filters.status === 'receiving' ? { status: 'all', tabMode: 'all' } : {}),
                   page: 1,
                 })}
-                className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded text-slate-700 focus:outline-none focus:border-blue-500 shadow-2xs"
+                className="h-7 px-1.5 text-[11px] bg-white border border-slate-200 rounded-lg text-slate-700 focus:outline-none focus:border-slate-800 shadow-2xs"
                 title="Дуусах огноо"
               />
               {(filters.dateFrom || filters.dateTo || (filters.year && filters.year !== 'all')) && (
@@ -627,15 +625,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         </div>
       </div>
 
-      {/* 6. Active Filters Dismissible Badges Bar */}
+      {/* 4. Active Filters Dismissible Badges Bar */}
       {hasActiveFilters && (
         <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 text-[11px]">
           <span className="text-slate-400 font-semibold mr-1">Идэвхтэй:</span>
 
           {filters.search && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200/80">
               <span>Хайлт: <strong>"{filters.search}"</strong></span>
-              <button onClick={handleClearSearch} className="hover:text-blue-950 p-0.5">
+              <button onClick={handleClearSearch} className="hover:text-blue-950 p-0.5 cursor-pointer">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -644,7 +642,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {filters.category && filters.category !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
               <span>Төрөл: <strong>{categories.find(c => c.id === filters.category)?.label}</strong></span>
-              <button onClick={() => onFilterChange({ category: 'all', page: 1 })} className="hover:text-slate-950 p-0.5">
+              <button onClick={() => onFilterChange({ category: 'all', page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -653,7 +651,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {filters.status && filters.status !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
               <span>Төлөв: <strong>{statuses.find(s => s.id === filters.status)?.label}</strong></span>
-              <button onClick={() => onFilterChange({ status: 'all', tabMode: 'all', page: 1 })} className="hover:text-slate-950 p-0.5">
+              <button onClick={() => onFilterChange({ status: 'all', tabMode: 'all', page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -662,7 +660,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {filters.year && filters.year !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
               <span>Он: <strong>{filters.year}</strong></span>
-              <button onClick={() => onFilterChange({ year: undefined, page: 1 })} className="hover:text-slate-950 p-0.5">
+              <button onClick={() => onFilterChange({ year: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -671,7 +669,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {activeBudgetTier !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
               <span>Төсөв: <strong>{budgetTiers.find(b => b.id === activeBudgetTier)?.label}</strong></span>
-              <button onClick={() => onFilterChange({ minBudget: undefined, maxBudget: undefined, page: 1 })} className="hover:text-slate-950 p-0.5">
+              <button onClick={() => onFilterChange({ minBudget: undefined, maxBudget: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -680,7 +678,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {filters.fundName && filters.fundName !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
               <span>Санхүүжилт: <strong>{filters.fundName}</strong></span>
-              <button onClick={() => onFilterChange({ fundName: undefined, page: 1 })} className="hover:text-slate-950 p-0.5">
+              <button onClick={() => onFilterChange({ fundName: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -689,7 +687,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {filters.ruleName && filters.ruleName !== 'all' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
               <span>Арга: <strong>{filters.ruleName}</strong></span>
-              <button onClick={() => onFilterChange({ ruleName: undefined, page: 1 })} className="hover:text-slate-950 p-0.5">
+              <button onClick={() => onFilterChange({ ruleName: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
                 <X className="h-3 w-3" />
               </button>
             </span>
@@ -697,7 +695,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
           <button
             onClick={handleResetAll}
-            className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-rose-600 hover:text-rose-800 hover:bg-rose-50 font-semibold transition-colors"
+            className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-rose-600 hover:text-rose-800 hover:bg-rose-50 font-semibold transition-colors cursor-pointer"
           >
             <RotateCcw className="h-3 w-3" />
             <span>Шүүлтүүр цэвэрлэх</span>
@@ -705,7 +703,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         </div>
       )}
 
-      {/* 7. Advanced Filter Slide-Over Modal */}
+      {/* 5. Advanced Filter Slide-Over Modal */}
       {isAdvancedModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden">
@@ -716,7 +714,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               </div>
               <button
                 onClick={() => setIsAdvancedModalOpen(false)}
-                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -733,7 +731,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     <button
                       key={f.id}
                       onClick={() => onFilterChange({ fundName: f.id === 'all' ? undefined : f.id, page: 1 })}
-                      className={`p-2 rounded-lg text-left border transition-all ${
+                      className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
                         (filters.fundName || 'all') === f.id || (!filters.fundName && f.id === 'all')
                           ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold'
                           : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -755,7 +753,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     <button
                       key={r.id}
                       onClick={() => onFilterChange({ ruleName: r.id === 'all' ? undefined : r.id, page: 1 })}
-                      className={`p-2 rounded-lg text-left border transition-all ${
+                      className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
                         (filters.ruleName || 'all') === r.id || (!filters.ruleName && r.id === 'all')
                           ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold'
                           : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -806,13 +804,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     page: 1,
                   });
                 }}
-                className="text-xs font-semibold text-slate-600 hover:text-slate-900"
+                className="text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer"
               >
                 Бүгдийг арилгах
               </button>
               <button
                 onClick={() => setIsAdvancedModalOpen(false)}
-                className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-2xs"
+                className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs shadow-2xs cursor-pointer"
               >
                 Шүүлтүүр хэрэгжүүлэх ({totalFound.toLocaleString()} илэрц)
               </button>

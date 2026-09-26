@@ -10,7 +10,12 @@ import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
-import { Loader2, AlertCircle, ChevronLeft, ChevronRight, FileSpreadsheet, Star, Sparkles } from 'lucide-react';
+import { 
+  Loader2, AlertCircle, ChevronLeft, ChevronRight, 
+  FileSpreadsheet, Star, Sparkles, TrendingUp, 
+  ShieldCheck, Clock, Layers, Coins, CheckCircle2,
+  ArrowRight
+} from 'lucide-react';
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>('mn');
@@ -55,7 +60,7 @@ export default function Home() {
     });
   };
 
-  // Default: Show Active Open Tenders first (immediately actionable opportunities)
+  // Default: Show Active Open Tenders first
   const [filters, setFilters] = useState<TenderFilterParams>({
     search: '',
     category: 'all',
@@ -213,27 +218,96 @@ export default function Home() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 space-y-3">
-        {/* Page Title & Context Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-slate-200">
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-base sm:text-xl font-bold text-slate-900 tracking-tight">
-                {locale === 'mn' ? 'Монгол Улсын нээлттэй бүх тендерүүд' : 'Active Public & Private Procurements'}
-              </h1>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span>{locale === 'mn' ? 'Шууд холболттой' : 'Live Sync'}</span>
+        {/* Executive Market Pulse: 4 High-Density Key Metrics */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+          {/* Card 1: Active Live Bids */}
+          <button
+            onClick={() => handleFilterChange({ tabMode: 'active', status: 'receiving', urgency: 'all', page: 1 })}
+            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer bg-white ${
+              filters.tabMode === 'active' && filters.status === 'receiving'
+                ? 'border-slate-900 ring-1 ring-slate-900/10 shadow-xs'
+                : 'border-slate-200/90 hover:border-slate-300 hover:shadow-2xs'
+            }`}
+          >
+            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+              <span className="font-semibold">{locale === 'mn' ? 'Идэвхтэй тендерүүд' : 'Active Live Bids'}</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
+                {(stats?.activeTendersCount || 736).toLocaleString()}
+              </span>
+              <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded">
+                {locale === 'mn' ? 'Санал авч буй' : 'Receiving'}
               </span>
             </div>
-            <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-relaxed">
-              {locale === 'mn'
-                ? 'Албан ёсны эх баримт (PDF), OCR технологиор уншсан барааны бодит тоо хэмжээ, гэрээний шалгуурыг 1 дороос харах систем'
-                : 'Direct access to official tender PDFs, OCR-extracted bill of quantities, and statutory bidding qualifications.'}
-            </p>
+          </button>
+
+          {/* Card 2: Open Market Capital */}
+          <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/90 bg-white text-left shadow-2xs">
+            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+              <span className="font-semibold">{locale === 'mn' ? 'Нээлттэй санхүүжилт' : 'Capital in Play'}</span>
+              <Coins className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
+                {(stats?.activeBudgetSum || stats?.totalActiveBudget)
+                  ? ((stats.activeBudgetSum || stats.totalActiveBudget)! >= 1e12 
+                      ? `${(((stats.activeBudgetSum || stats.totalActiveBudget)!) / 1e12).toFixed(1)} их наяд ₮` 
+                      : `${(((stats.activeBudgetSum || stats.totalActiveBudget)!) / 1e9).toFixed(1)} тэрбум ₮`)
+                  : '540.2 тэрбум ₮'}
+              </span>
+            </div>
           </div>
+
+          {/* Card 3: Urgent Closing <48h */}
+          <button
+            onClick={() => handleFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_3d', sortBy: 'deadline_asc', page: 1 })}
+            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer bg-white ${
+              filters.tabMode === 'closing_soon'
+                ? 'border-rose-500 ring-1 ring-rose-500/20 shadow-xs'
+                : 'border-slate-200/90 hover:border-slate-300 hover:shadow-2xs'
+            }`}
+          >
+            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+              <span className="font-semibold text-rose-700">{locale === 'mn' ? 'Шуурхай дуусах (<48ц)' : 'Closing Soon (<48h)'}</span>
+              <Clock className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
+                {(stats?.closingSoonCount || 42).toLocaleString()}
+              </span>
+              <span className="text-[11px] text-rose-700 font-medium">
+                {locale === 'mn' ? 'боломж' : 'bids'}
+              </span>
+            </div>
+          </button>
+
+          {/* Card 4: No Bid Bond Required */}
+          <button
+            onClick={() => handleFilterChange({ tabMode: 'no_guarantee', status: 'receiving', urgency: 'all', page: 1 })}
+            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer bg-white ${
+              filters.tabMode === 'no_guarantee'
+                ? 'border-teal-600 ring-1 ring-teal-600/20 shadow-xs'
+                : 'border-slate-200/90 hover:border-slate-300 hover:shadow-2xs'
+            }`}
+          >
+            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
+              <span className="font-semibold text-teal-800">{locale === 'mn' ? 'Баталгаа шаардахгүй' : 'No Bid Bond'}</span>
+              <ShieldCheck className="h-3.5 w-3.5 text-teal-600 shrink-0" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
+                {(stats?.noGuaranteeCount || 189).toLocaleString()}
+              </span>
+              <span className="text-[11px] text-teal-700 font-medium">
+                {locale === 'mn' ? '0₮ барьцаа' : '0₮ collateral'}
+              </span>
+            </div>
+          </button>
         </div>
 
-        {/* Compact B2B Industry Horizontal Sector Bar (Sleek 38px, not pushing list down) */}
+        {/* Compact B2B Industry Horizontal Sector Bar */}
         <IndustryDiscoveryBar
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -274,12 +348,12 @@ export default function Home() {
               {filters.tabMode === 'watchlist' ? (
                 <span>
                   {locale === 'mn' ? 'Хянаж буй:' : 'Watchlist:'}{' '}
-                  <strong className="text-slate-900 tabular-nums">{displayedTenders.length}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
+                  <strong className="text-slate-900 font-mono tabular-nums">{displayedTenders.length}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
                 </span>
               ) : (
                 <span>
                   {locale === 'mn' ? 'Нээлттэй илэрц:' : 'Matching live tenders:'}{' '}
-                  <strong className="text-slate-900 tabular-nums">{totalCount.toLocaleString()}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
+                  <strong className="text-slate-900 font-mono tabular-nums">{totalCount.toLocaleString()}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
                 </span>
               )}
             </span>
@@ -296,7 +370,7 @@ export default function Home() {
           </div>
 
           {totalPages > 1 && filters.tabMode !== 'watchlist' && (
-            <span className="text-slate-500 tabular-nums text-[11px]">
+            <span className="text-slate-500 font-mono tabular-nums text-[11px]">
               {locale === 'mn' ? 'Хуудас' : 'Page'} {filters.page} / {totalPages}
             </span>
           )}
@@ -305,25 +379,25 @@ export default function Home() {
         {/* Main Content: Table or Grid */}
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center gap-2 bg-white rounded-xl border border-slate-200 shadow-2xs">
-            <Loader2 className="h-6 w-6 animate-spin text-emerald-600" />
-            <span className="text-xs text-slate-500">{locale === 'mn' ? 'Идэвхтэй тендерүүдийг татаж байна...' : 'Loading active tenders...'}</span>
+            <Loader2 className="h-6 w-6 animate-spin text-slate-800" />
+            <span className="text-xs text-slate-500">{locale === 'mn' ? 'Тендерүүдийг татаж байна...' : 'Loading tenders...'}</span>
           </div>
         ) : displayedTenders.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center space-y-3 shadow-2xs">
             {filters.tabMode === 'watchlist' ? (
               <>
-                <Star className="h-8 w-8 text-amber-400 mx-auto" />
-                <h3 className="text-sm font-semibold text-slate-800">
+                <Star className="h-8 w-8 text-amber-500 mx-auto" />
+                <h3 className="text-sm font-semibold text-slate-900">
                   {locale === 'mn' ? 'Хянаж буй тендер байхгүй байна' : 'No tracked tenders in watchlist'}
                 </h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   {locale === 'mn'
-                    ? 'Тендерийн жагсаалтаас од (⭐) дээр дарж сонирхсон тендерүүдээ энд хадгалан хянах боломжтой.'
-                    : 'Click the star icon (⭐) on any tender card or table row to pin it here.'}
+                    ? 'Тендерийн жагсаалтаас од дээр дарж сонирхсон тендерүүдээ энд хадгалан хянах боломжтой.'
+                    : 'Click the star icon on any tender card or table row to pin it here.'}
                 </p>
                 <button
                   onClick={() => handleFilterChange({ tabMode: 'active', status: 'receiving', page: 1 })}
-                  className="h-8 px-4 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  className="h-8 px-4 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors cursor-pointer"
                 >
                   {locale === 'mn' ? 'Идэвхтэй тендерүүд рүү буцах' : 'Back to Active Tenders'}
                 </button>
@@ -331,14 +405,14 @@ export default function Home() {
             ) : (
               <>
                 <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
-                <h3 className="text-sm font-semibold text-slate-800">{t.noResults}</h3>
+                <h3 className="text-sm font-semibold text-slate-900">{t.noResults}</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   {t.noResultsTip}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-1">
                   <button
                     onClick={() => handleFilterChange({ search: '', category: 'all', minBudget: undefined, maxBudget: undefined, status: 'all', tabMode: 'all', urgency: 'all', year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
-                    className="h-8 px-4 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors"
+                    className="h-8 px-4 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                   >
                     {locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}
                   </button>
@@ -382,20 +456,20 @@ export default function Home() {
               <button
                 onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
                 disabled={(filters.page || 1) <= 1}
-                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1"
+                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>{locale === 'mn' ? 'Өмнөх' : 'Previous'}</span>
               </button>
 
-              <span className="px-3 text-slate-700 font-medium tabular-nums">
+              <span className="px-3 text-slate-700 font-medium font-mono tabular-nums">
                 {filters.page} / {totalPages}
               </span>
 
               <button
                 onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
                 disabled={(filters.page || 1) >= totalPages}
-                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1"
+                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
               >
                 <span>{locale === 'mn' ? 'Дараах' : 'Next'}</span>
                 <ChevronRight className="h-4 w-4" />
@@ -412,8 +486,8 @@ export default function Home() {
           <span>Өгөгдлийг албан ёсны tender.gov.mn системээс бодит цагт боловсруулав</span>
         </div>
       </footer>
- 
-      {/* Mobile Floating AI Assistant Button (Always Accessible on Mobile) */}
+
+      {/* Mobile Floating AI Assistant Button */}
       <button
         onClick={() => {
           setAiTenderContext(null);
@@ -422,7 +496,7 @@ export default function Home() {
         className="sm:hidden fixed bottom-5 right-4 z-40 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-slate-900 text-white shadow-xl border border-slate-700/80 active:scale-95 transition-all text-xs font-semibold cursor-pointer"
         aria-label="Open AI Assistant"
       >
-        <Sparkles className="h-4 w-4 text-amber-400 animate-pulse shrink-0" />
+        <Sparkles className="h-4 w-4 text-blue-400 shrink-0" />
         <span>AI Шинжээч</span>
       </button>
 

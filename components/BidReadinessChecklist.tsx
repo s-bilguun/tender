@@ -37,7 +37,7 @@ export const BidReadinessChecklist: React.FC<BidReadinessChecklistProps> = ({
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-4 w-4 text-emerald-600" />
           <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-            {locale === 'mn' ? '📋 Оролцох шалгуур & Бэлтгэх баримт бичиг' : '📋 Bid Eligibility & Document Checklist'}
+            {locale === 'mn' ? 'Оролцох шалгуур & Бэлтгэх баримт бичиг' : 'Bid Eligibility & Document Checklist'}
           </h4>
         </div>
 

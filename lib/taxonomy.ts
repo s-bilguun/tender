@@ -6,7 +6,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'mining',
     labelMn: 'Уул уурхай & Хүнд үйлдвэр',
     labelEn: 'Mining & Heavy Industry',
-    icon: '⛏️',
+    icon: 'mining',
     descriptionMn: 'Уул уурхайн тоног төхөөрөмж, баяжуулах, өрөмдлөг, хүнд машин механизм, геологи, эрдэс баялаг',
     descriptionEn: 'Mining equipment, heavy machinery, mineral processing, drilling, geological services',
     totalCount: 4350,
@@ -17,7 +17,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'construction',
     labelMn: 'Барилга, дэд бүтэц & Засвар',
     labelEn: 'Construction & Civil Works',
-    icon: '🏗️',
+    icon: 'construction',
     descriptionMn: 'Барилга угсралт, их болон урсгал засвар, зам гүүр, инженерийн шугам сүлжээ',
     descriptionEn: 'Building construction, major renovation, civil works, utilities',
     totalCount: 6420,
@@ -28,7 +28,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'medical',
     labelMn: 'Эрүүл мэнд & Эм, урвалж',
     labelEn: 'Medical & Healthcare',
-    icon: '💊',
+    icon: 'medical',
     descriptionMn: 'Эм, эмнэлгийн хэрэгсэл, лабораторийн оношлуур, урвалж, тоног төхөөрөмж',
     descriptionEn: 'Pharmaceuticals, medical devices, laboratory reagents, hospital equipment',
     totalCount: 3120,
@@ -39,7 +39,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'food',
     labelMn: 'Хүнс, хоол үйлдвэрлэл & Үдийн цай',
     labelEn: 'Food & Catering Services',
-    icon: '🥪',
+    icon: 'food',
     descriptionMn: 'Сургууль цэцэрлэгийн үдийн хоол, мах, сүү, хүнсний түүхий эд, бэлтгэл',
     descriptionEn: 'School meal catering, raw food supplies, dairy, meat products',
     totalCount: 2890,
@@ -50,7 +50,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'it',
     labelMn: 'Мэдээллийн технологи & Цахимжилт',
     labelEn: 'IT & Software Systems',
-    icon: '💻',
+    icon: 'it',
     descriptionMn: 'Програм хангамж, сервер, сүлжээ, компьютерийн тоног төхөөрөмж, цахим систем',
     descriptionEn: 'Software, servers, network equipment, computers, digital platforms',
     totalCount: 1840,
@@ -61,7 +61,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'transport',
     labelMn: 'Тээвэр, шатахуун & Авто засвар',
     labelEn: 'Transport & Fuel Fleet',
-    icon: '🚗',
+    icon: 'transport',
     descriptionMn: 'Бензин, дизель түлш, автомашин, сэлбэг хэрэгсэл, тээврийн үйлчилгээ',
     descriptionEn: 'Fuel supply, vehicles, auto spare parts, transportation services',
     totalCount: 2150,
@@ -72,7 +72,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'facility',
     labelMn: 'Харуул, цэвэрлэгээ & Ашиглалт',
     labelEn: 'Facility & Security',
-    icon: '🧹',
+    icon: 'facility',
     descriptionMn: 'Харуул хамгаалалт, байрны цэвэрлэгээ, ариутгал, хог хаягдал, ашиглалт',
     descriptionEn: 'Security services, janitorial cleaning, disinfection, facility management',
     totalCount: 1450,
@@ -83,7 +83,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'stationery',
     labelMn: 'Бичиг хэрэг, хэвлэл & Тавилга',
     labelEn: 'Stationery, Furniture & Print',
-    icon: '📚',
+    icon: 'stationery',
     descriptionMn: 'Албан тасалгааны бичиг хэрэг, хэвлэл, дүрэмт хувцас, оффисын тавилга',
     descriptionEn: 'Office stationery, book printing, uniforms, office furniture',
     totalCount: 2780,
@@ -94,7 +94,7 @@ export const INDUSTRIES: IndustryInfo[] = [
     slug: 'consulting',
     labelMn: 'Зөвлөх, аудит & Сургалт',
     labelEn: 'Consulting, Audit & Legal',
-    icon: '⚖️',
+    icon: 'consulting',
     descriptionMn: 'Зөвлөх үйлчилгээ, зураг төсөл боловсруулах, аудит, сургалт судалгаа',
     descriptionEn: 'Consulting services, engineering blueprints, financial audit, training',
     totalCount: 2135,
@@ -149,7 +149,7 @@ export const KEYWORDS_MAP: Record<IndustryVertical, string[]> = {
 export function classifyIndustry(name?: string, typeCode?: string, entityName?: string): { id: IndustryVertical; labelMn: string; labelEn: string; icon: string } {
   const combined = `${name || ''} ${entityName || ''}`.toLowerCase().trim();
   if (!combined) {
-    return { id: 'consulting', labelMn: 'Бусад үйлчилгээ', labelEn: 'General Services', icon: '📦' };
+    return { id: 'consulting', labelMn: 'Бусад үйлчилгээ', labelEn: 'General Services', icon: 'consulting' };
   }
 
   for (const ind of INDUSTRIES) {
@@ -168,11 +168,11 @@ export function classifyIndustry(name?: string, typeCode?: string, entityName?: 
 
   // Fallback by tenderTypeCode
   if (typeCode === 'JOB') {
-    return { id: 'construction', labelMn: 'Барилга, дэд бүтэц', labelEn: 'Construction & Civil Works', icon: '🏗️' };
+    return { id: 'construction', labelMn: 'Барилга, дэд бүтэц', labelEn: 'Construction & Civil Works', icon: 'construction' };
   }
   if (typeCode === 'PRODUCT') {
-    return { id: 'stationery', labelMn: 'Бичиг хэрэг & Бараа', labelEn: 'Supplies & Equipment', icon: '📚' };
+    return { id: 'stationery', labelMn: 'Бичиг хэрэг & Бараа', labelEn: 'Supplies & Equipment', icon: 'stationery' };
   }
 
-  return { id: 'consulting', labelMn: 'Зөвлөх, аудит & Сургалт', labelEn: 'Consulting & Services', icon: '⚖️' };
+  return { id: 'consulting', labelMn: 'Зөвлөх, аудит & Сургалт', labelEn: 'Consulting & Services', icon: 'consulting' };
 }
