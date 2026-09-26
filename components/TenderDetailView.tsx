@@ -235,6 +235,36 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
     documents: data?.technicalSpecs?.documents || [],
     extractedQualifications: data?.technicalSpecs?.extractedQualifications || [],
   };
+  const pdfDocuments: any[] = Array.isArray(technicalSpecs.documents) ? technicalSpecs.documents : [];
+  const readablePdfDocuments = pdfDocuments.filter((doc: any) =>
+    ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus) || !!doc.extractedSummary,
+  );
+  const hasPdfTextEvidence = typeof data?.liveBundle?.pdfText === 'string'
+    ? data.liveBundle.pdfText.trim().length > 0
+    : readablePdfDocuments.length > 0;
+  const pdfCoverageNotice = pdfDocuments.length === 0
+    ? {
+        title: 'Эх баримтын файлууд татагдаагүй байна',
+        message: 'Энэ тендерийн PDF файлын жагсаалтыг эх сурвалжаас авч чадсангүй. “—” нь шаардлага байхгүй гэсэн үг биш; эх тендерийн баримтаар нягтална уу.',
+        tone: 'amber',
+      }
+    : readablePdfDocuments.length === 0
+      ? {
+          title: 'PDF-ийн текст уншигдаагүй байна',
+          message: 'Баримт байгаа ч текстийг хараахан уншиж чадаагүй. “—” талбарууд баталгаажаагүй утгыг тэмдэглэнэ.',
+          tone: 'amber',
+        }
+      : data?.liveBundle?.stale || data?.liveBundle?.extractionStatus !== 'complete'
+        ? {
+            title: 'PDF-ийн мэдээлэл хэсэгчлэн уншигдсан',
+            message: 'Зарим хуудас эсвэл баримт дутуу байж болно. “—” нь шаардлага байхгүй гэсэн үг биш; эх файлыг шалгана уу.',
+            tone: 'amber',
+          }
+        : {
+            title: 'PDF-ийн текст боловсруулагдсан',
+            message: 'Эдгээр нь автоматаар уншсан хураангуй. “—” талбаруудыг эх баримтын заалтаар нягтална уу.',
+            tone: 'blue',
+          };
   const results = {
     ...data?.results,
     bidders: data?.results?.bidders || [],
@@ -396,6 +426,21 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
             )}
           </div>
 
+          <div className={`flex flex-col sm:flex-row sm:items-center gap-2.5 rounded-lg border px-3.5 py-3 ${
+            pdfCoverageNotice.tone === 'blue'
+              ? 'bg-blue-50 border-blue-200 text-blue-900'
+              : 'bg-amber-50 border-amber-200 text-amber-950'
+          }`} role="status">
+            <FileText className="h-4 w-4 shrink-0 opacity-80" />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold">{pdfCoverageNotice.title}</p>
+              <p className="mt-0.5 text-[11px] leading-relaxed opacity-80">{pdfCoverageNotice.message}</p>
+            </div>
+            <a href={publicLink} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[11px] font-semibold underline underline-offset-2">
+              Эх тендерийг нээх ↗
+            </a>
+          </div>
+
           {/* Interactive AI Quick Prompts based on Structured PDF Data */}
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
             <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 shrink-0">
@@ -485,7 +530,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                         AI Шинжээчийн Харилцан Яриа
                       </h3>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                        PDF & ТШББ Мэдлэгтэй
+                        {hasPdfTextEvidence ? 'PDF-ийн текст бэлэн' : 'PDF-ийн текст уншигдаагүй'}
                       </span>
                       {aiMessages.length > 0 && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-slate-100 text-slate-700">
@@ -494,7 +539,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                       )}
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Энэ тендерийн ТШББ PDF баримт, нийлүүлэлтийн хуваарь, гэрээний тусгай нөхцөлийг шинжилж залгамж асуултад хариулна.
+                      {hasPdfTextEvidence
+                        ? 'Уншсан эх баримтын эшлэлээр хариулна. Шаардлага бүрийг албан ёсны заалтаар нягтална уу.'
+                        : 'Одоогоор уншсан PDF текст алга. AI нөхцөл таамаглахгүй; албан эх баримтаас шалгах шаардлагатайг хэлнэ.'}
                     </p>
                   </div>
                 </div>
@@ -593,7 +640,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                             <span>AI Шинжээч хариултыг боловсруулж байна...</span>
                           </div>
                           <p className="text-[11px] text-slate-500">
-                            ТШББ PDF баримтын заалтууд, нийлүүлэлтийн хуваарь болон өмнөх харилцан яриаг боловсруулж байна.
+                            Уншигдсан баримтын эшлэл болон өмнөх асуултыг боловсруулж байна.
                           </p>
                           <div className="space-y-1.5 pt-1 animate-pulse">
                             <div className="h-2.5 bg-amber-200/60 rounded w-11/12"></div>
@@ -721,7 +768,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                     Тендерийн AI Шинжээчтэй ярилцах
                   </h4>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    ТШББ PDF-ийн бодит заалт, нийлүүлэлтийн хуваарь, тусгай нөхцөлөөс хүссэн асуултаа асууж залгамж тодруулга аваарай.
+                    AI нь уншсан эх баримтын эшлэлээр хариулна. Эшлэл байхгүй үед таамаглахгүй гэдгээ шууд хэлнэ.
                   </p>
                 </div>
               </div>
@@ -777,7 +824,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                 ? formatCurrency(tender.yearBudget)
                 : (technicalSpecs.paymentTerms?.advancePaymentPct != null
                   ? `${technicalSpecs.paymentTerms.advancePaymentPct}%`
-                  : 'PDF-ээс олдоогүй')}
+                  : '—')}
             </span>
             <span className="text-[10px] text-slate-400 mt-1 block">
               {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Энэ оны хуваарьт санхүүжилт' : 'Албан ёсны эх баримтаас шалгана уу'}
@@ -794,7 +841,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
               ) : bds.bidSecurityReq ? (
                 <span className="text-sm">{bds.bidSecurityReq}</span>
               ) : (
-                'PDF-ээс олдоогүй'
+                '—'
               )}
             </span>
             <span className="text-[10px] text-blue-600 mt-1 block truncate">
@@ -807,7 +854,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
               Гүйцэтгэлийн баталгаа
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-emerald-950 block">
-              {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : 'PDF-ээс олдоогүй'}
+              {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : '—'}
             </span>
             <span className="text-[10px] text-emerald-600 mt-1 block">Албан ёсны эх баримтаас шалгана уу</span>
           </div>
@@ -938,30 +985,30 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 text-[11px] block">Сүүлийн 1-3 жилийн дундаж борлуулалтын доод орлого:</span>
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
-                      {bds.minAnnualTurnover != null ? formatCurrency(bds.minAnnualTurnover) : (bds.turnoverReq || 'PDF-ээс олдоогүй')}
+                      {bds.minAnnualTurnover != null ? formatCurrency(bds.minAnnualTurnover) : (bds.turnoverReq || '—')}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      {bds.turnoverReq ? 'PDF текстээс автоматаар илрүүлсэн; эх заалтаар шалгана уу.' : 'PDF баримтаас шалгуур олдоогүй. Энэ нь шаардлага байхгүй гэсэн үг биш.'}
+                      {bds.turnoverReq ? 'Эх баримтын текстээс илрүүлсэн; заалтаар нягтална уу.' : ''}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 text-[11px] block">Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих боломж:</span>
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
-                      {bds.minLiquidAssets != null ? formatCurrency(bds.minLiquidAssets) : (bds.liquidAssetsReq || 'PDF-ээс олдоогүй')}
+                      {bds.minLiquidAssets != null ? formatCurrency(bds.minLiquidAssets) : (bds.liquidAssetsReq || '—')}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      {bds.liquidAssetsReq ? 'PDF текстээс автоматаар илрүүлсэн; эх заалтаар шалгана уу.' : 'PDF баримтаас шалгуур олдоогүй.'}
+                      {bds.liquidAssetsReq ? 'Эх баримтын текстээс илрүүлсэн; заалтаар нягтална уу.' : ''}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 text-[11px] block">Ижил төстэй ажил гүйцэтгэсэн гэрээний доод босго:</span>
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
-                      {bds.similarContractThreshold != null ? formatCurrency(bds.similarContractThreshold) : (bds.similarExpReq || 'PDF-ээс олдоогүй')}
+                      {bds.similarContractThreshold != null ? formatCurrency(bds.similarContractThreshold) : (bds.similarExpReq || '—')}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      {bds.similarExpReq ? 'PDF текстээс автоматаар илрүүлсэн; эх заалтаар шалгана уу.' : 'PDF баримтаас шалгуур олдоогүй.'}
+                      {bds.similarExpReq ? 'Эх баримтын текстээс илрүүлсэн; заалтаар нягтална уу.' : ''}
                     </span>
                   </div>
 
@@ -1040,19 +1087,19 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Тендер хүчинтэй байх:</span>
-                    <span className="font-bold text-slate-900 mt-1 block">{bds.validityDays != null ? `${bds.validityDays} хоног` : 'PDF-ээс олдоогүй'}</span>
+                    <span className="font-bold text-slate-900 mt-1 block">{bds.validityDays != null ? `${bds.validityDays} хоног` : '—'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Тодруулга авах хугацаа:</span>
-                    <span className="font-bold text-slate-900 mt-1 block">{bds.clarificationDays != null ? `Нээхээс ${bds.clarificationDays} хоногийн өмнө` : 'PDF-ээс олдоогүй'}</span>
+                    <span className="font-bold text-slate-900 mt-1 block">{bds.clarificationDays != null ? `Нээхээс ${bds.clarificationDays} хоногийн өмнө` : '—'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Үнийн саналын жин:</span>
-                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria?.priceWeight != null ? `${bds.evaluationCriteria.priceWeight}%` : 'PDF-ээс олдоогүй'}</span>
+                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria?.priceWeight != null ? `${bds.evaluationCriteria.priceWeight}%` : '—'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Чанарын үнэлгээний жин:</span>
-                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria?.qualityWeight != null ? `${bds.evaluationCriteria.qualityWeight}%` : 'PDF-ээс олдоогүй'}</span>
+                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria?.qualityWeight != null ? `${bds.evaluationCriteria.qualityWeight}%` : '—'}</span>
                   </div>
                 </div>
               </div>
@@ -1257,18 +1304,18 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="text-slate-500 text-xs block mb-1">Нийлүүлэх / Гүйцэтгэх газар:</span>
-                    <span className="text-xs font-bold text-slate-900 block">{technicalSpecs.deliveryLocation || 'PDF-ээс олдоогүй'}</span>
+                    <span className="text-xs font-bold text-slate-900 block">{technicalSpecs.deliveryLocation || '—'}</span>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="text-slate-500 text-xs block mb-1">Нийлүүлэлтийн хугацаа:</span>
                   <span className="text-xs font-bold text-slate-900 block">
-                    {technicalSpecs.deliveryPeriodText || (technicalSpecs.deliveryPeriodDays != null ? `Гэрээ байгуулснаас хойш ${technicalSpecs.deliveryPeriodDays} хоног` : 'PDF-ээс олдоогүй')}
+                    {technicalSpecs.deliveryPeriodText || (technicalSpecs.deliveryPeriodDays != null ? `Гэрээ байгуулснаас хойш ${technicalSpecs.deliveryPeriodDays} хоног` : '—')}
                   </span>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="text-slate-500 text-xs block mb-1">Баталгаат хугацаа:</span>
                   <span className="text-xs font-bold text-slate-900 block">
-                    {technicalSpecs.warrantyText || (technicalSpecs.warrantyMonths != null ? `${technicalSpecs.warrantyMonths} сар` : 'PDF-ээс олдоогүй')}
+                    {technicalSpecs.warrantyText || (technicalSpecs.warrantyMonths != null ? `${technicalSpecs.warrantyMonths} сар` : '—')}
                   </span>
                 </div>
               </div>
@@ -1283,7 +1330,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 block text-[11px]">Төлбөр төлөх нөхцөл:</span>
                     <span className="font-bold text-slate-900 mt-1 block">
-                      {technicalSpecs.paymentTerms?.progressPayment || 'PDF-ээс олдоогүй'}
+                      {technicalSpecs.paymentTerms?.progressPayment || '—'}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">PDF-ийн заалттай тулгана уу.</span>
                   </div>
@@ -1292,14 +1339,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                     <span className="font-bold text-slate-900 mt-1 block">
                       {technicalSpecs.paymentTerms?.retentionBondPct != null
                         ? `${technicalSpecs.paymentTerms.retentionBondPct}%${technicalSpecs.paymentTerms.retentionPeriodMonths != null ? ` (${technicalSpecs.paymentTerms.retentionPeriodMonths} сар)` : ''}`
-                        : 'PDF-ээс олдоогүй'}
+                        : '—'}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">PDF-ийн заалтаар шалгана уу.</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 block text-[11px]">Алданги, хариуцлага:</span>
                     <span className="font-bold text-rose-700 mt-1 block">
-                      {technicalSpecs.penaltyText || technicalSpecs.penaltyClause?.dailyRate || 'PDF-ээс олдоогүй'}
+                      {technicalSpecs.penaltyText || technicalSpecs.penaltyClause?.dailyRate || '—'}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">Албан ёсны заалтаар шалгана уу.</span>
                   </div>
@@ -1451,7 +1498,22 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                 </div>
 
                 <div className="space-y-3 pt-1">
-                  {technicalSpecs.documents.map((doc: any, idx: number) => {
+                  {pdfDocuments.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-amber-300 bg-amber-50/70 p-4">
+                      <div className="flex items-start gap-3">
+                        <FileText className="h-5 w-5 shrink-0 text-amber-700 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-amber-950">Албан баримтын файл манай системд хараахан алга</p>
+                          <p className="text-[11px] leading-relaxed text-amber-900/80">
+                            Тиймээс энэ хуудсанд PDF-ийн хураангуй болон уншсан текст харагдахгүй. Албан эх дээрх баримтыг нээгээд шалгана уу.
+                          </p>
+                          <a href={publicLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-950 underline underline-offset-2">
+                            Тендерийн албан хуудсыг нээх <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ) : pdfDocuments.map((doc: any, idx: number) => {
                     const isExpanded = !!expandedDocSummaries[doc.id || idx];
                     const isImageAttachment = /^(?:png|jpe?g)$/i.test(doc.fileExtention || '') || /\.(?:png|jpe?g)$/i.test(doc.name || '');
                     const downloadHref = doc.fileId
