@@ -5,6 +5,15 @@ on:
     # 00:00 in Mongolia (UTC+8), once per day.
     - cron: '0 16 * * *'
   workflow_dispatch:
+    inputs:
+      diagnostics_only:
+        description: Test source access and PDF retrieval without changing tender data
+        type: boolean
+        default: false
+      tender_id:
+        description: Public invitation ID to test in diagnostic mode
+        type: string
+        default: '1789954037772'
 
 permissions:
   contents: read
@@ -24,16 +33,37 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci --include=dev
+      - name: Install browser for source diagnostic
+        if: inputs.diagnostics_only == true
+        run: npx playwright install --with-deps chromium
+      - name: Diagnose public PDF access from this cloud runner
+        if: inputs.diagnostics_only == true
+        run: node scripts/diagnose-pdf-source.cjs
+        env:
+          DIAGNOSTIC_TENDER_ID: ${{ inputs.tender_id }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Save source diagnostic report
+        if: always() && inputs.diagnostics_only == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-source-diagnostic
+          path: |
+            scratch/source-diagnostic/report.json
+            scratch/source-diagnostic/source-page.png
       - name: Install PDF page renderer
+        if: inputs.diagnostics_only != true
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y poppler-utils
       - name: Sync tender listing pages into Supabase
+        if: inputs.diagnostics_only != true
         run: node scripts/sync-to-supabase.js 1 3000
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: Process queued tender PDFs and scanned pages
+        if: inputs.diagnostics_only != true
         run: node scripts/run-typescript.cjs scripts/process-pdf-queue.ts
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           PDF_JOB_CONCURRENCY: 3
