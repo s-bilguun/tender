@@ -28,6 +28,7 @@ async function mapConcurrent<T, R>(
 }
 
 async function main() {
+  if (!supabase) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to write tender extractions.');
   console.log('=== TENDER BULK ENRICHMENT PIPELINE ===');
   console.log('1. Loading existing live-bundles.json...');
 
@@ -108,16 +109,13 @@ async function main() {
       // Sync disk bundle to Supabase
       console.log(`Syncing existing disk bundle to Supabase for ${id}...`);
       try {
-        await supabase
-          .from('tenders')
-          .update({
-            raw_data: {
-              ...(t.raw_data || {}),
-              liveBundle: diskBundle
-            },
-            updated_at: new Date().toISOString()
-          })
-          .eq('invitation_id', id);
+        const { error } = await supabase.rpc('merge_tender_live_bundle', {
+          p_invitation_id: id,
+          p_live_bundle: diskBundle,
+          p_tender_document_id: diskBundle.tenderDocumentId ?? null,
+          p_tender_id: diskBundle.tenderId ?? null,
+        });
+        if (error) throw error;
         alreadyEnrichedCount++;
       } catch (e) {
         queue.push({ id, name: t.tender_name || '', code: t.tender_code || '', hasSupabaseBundle: false });

@@ -447,7 +447,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       });
 
       const data = await res.json();
-      const rawReply = data.reply || data.text || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : 'Error generating reply.');
+      const rawReply = data.reply || data.text || data.error || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : 'Error generating reply.');
       const reply = cleanThoughtBlocks(rawReply);
 
       const assistantMsg: Message = {

@@ -258,52 +258,21 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
   const [docModalOpen, setDocModalOpen] = useState(false);
 
   const handleDownloadDocument = (doc: any) => {
-    const content = `=====================================================
-БАРИМТ БИЧИГ: ${doc.name}
-Ангилал: ${doc.category || 'Тендерийн баримт бичиг'}
-Огноо: ${doc.date || ''}
-Тендерийн код: ${tender.tenderCode || tender.invitationNumber}
-Тендерийн нэр: ${tender.tenderName}
-Захиалагч байгууллага: ${tender.budgetEntityName}
-Нийт төсөвт өртөг: ${formatCurrency(tender.totalBudget)}
-=====================================================
-
-${doc.extractedSummary || ''}
-
------------------------------------------------------
-I БҮЛЭГ. ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ) ШААРДЛАГУУД:
-• Борлуулалтын доод орлого: ${formatCurrency(bds.minAnnualTurnover)}
-• Түргэн хөрвөх чадвартай хөрөнгө: ${formatCurrency(bds.minLiquidAssets)}
-• Ижил төстэй гэрээний дүн: ${formatCurrency(bds.similarContractThreshold)}
-• Тендерийн баталгаа: ${formatCurrency(bds.bidSecurityAmount)}
-
-ШААРДЛАГАТАЙ ТУСГАЙ ЗӨВШӨӨРЛҮҮД:
-${(bds.requiredLicenses || []).map((lic: string, i: number) => `${i + 1}. ${lic}`).join('\n')}
-
-ГОЛ БОЛОВСОН ХҮЧНИЙ ШААРДЛАГА:
-${(bds.keyPersonnel || []).map((p: any) => `• ${p.role}: ${p.count} хүн (${p.qualification})`).join('\n')}
-
-ТЕХНИКИЙН ТОДОРХОЙЛОЛТ & БАРАА, АЖЛЫН ШААРДЛАГА:
-${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо хэмжээ: ${it.quantity} ${it.unit} | Үзүүлэлт: ${it.spec}`).join('\n')}
-
-Нийлүүлэлтийн байршил: ${technicalSpecs.deliveryLocation || ''}
-Хугацаа: ${technicalSpecs.deliveryPeriodDays || 30} хоног
-Баталгаат хугацаа: ${technicalSpecs.warrantyMonths || 12} сар
-=====================================================
-Эх сурвалж: Монгол Улсын Төрийн Худалдан Авах Ажиллагааны Систем (tender.gov.mn)
-`;
+    const content = `БАРИМТ БИЧИГ: ${doc.name}\n` +
+      `Тендер: ${tender.tenderName}\n` +
+      `Боловсруулалтын төлөв: ${doc.extractionStatus || 'not_extracted'}\n` +
+      `\n${doc.extractedSummary || 'Энэ баримтаас уншигдах текст одоогоор олдоогүй. Энэ нь PDF-д мэдээлэл байхгүй гэсэн үг биш.'}\n`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${doc.name.replace(/\.[a-z0-9]+$/i, '')}_боловсруулсан_өгөгдөл.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `${doc.name.replace(/\.[a-z0-9]+$/i, '')}_эх_текст.txt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
   };
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
       {/* Top Navbar */}
@@ -804,13 +773,14 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Тухайн онд санхүүжих' : 'Урьдчилгаа төлбөр'}
             </span>
             <span className="text-lg sm:text-xl font-bold font-mono text-slate-800 block">
-              {tender.yearBudget && tender.yearBudget !== tender.totalBudget 
+              {tender.yearBudget && tender.yearBudget !== tender.totalBudget
                 ? formatCurrency(tender.yearBudget)
-                : `${technicalSpecs.paymentTerms?.advancePaymentPct || 20}% (${formatCurrency(Math.round((tender.totalBudget * (technicalSpecs.paymentTerms?.advancePaymentPct || 20)) / 100))})`
-              }
+                : (technicalSpecs.paymentTerms?.advancePaymentPct != null
+                  ? `${technicalSpecs.paymentTerms.advancePaymentPct}%`
+                  : 'PDF-ээс олдоогүй')}
             </span>
             <span className="text-[10px] text-slate-400 mt-1 block">
-              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Энэ оны хуваарьт санхүүжилт' : 'Гэрээ байгуулсны дараа олгогдох'}
+              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Энэ оны хуваарьт санхүүжилт' : 'Албан ёсны эх баримтаас шалгана уу'}
             </span>
           </div>
 
@@ -819,25 +789,27 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               Тендерийн баталгаа
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-blue-950 block">
-              {bds.bidSecurityAmount === 0 || (bds.bidSecurityReq && bds.bidSecurityReq.includes('Шаардахгүй')) ? (
+              {bds.bidSecurityReq?.includes('Шаардахгүй') ? (
                 <span className="text-emerald-700">Шаардахгүй</span>
+              ) : bds.bidSecurityReq ? (
+                <span className="text-sm">{bds.bidSecurityReq}</span>
               ) : (
-                `${formatCurrency(bds.bidSecurity1Pct)} - ${formatCurrency(bds.bidSecurity2Pct)}`
+                'PDF-ээс олдоогүй'
               )}
             </span>
             <span className="text-[10px] text-blue-600 mt-1 block truncate">
-              {bds.bidSecurityReq || 'Банкны баталгаа эсвэл даатгал'}
+              {bds.bidSecurityReq ? 'PDF текстээс автоматаар илрүүлсэн; эх заалтаар баталгаажуулна уу.' : 'Энэ мэдээлэл боловсруулагдаагүй байна.'}
             </span>
           </div>
 
           <div className="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 shadow-2xs">
             <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider block mb-1">
-              Гүйцэтгэлийн баталгаа (5%)
+              Гүйцэтгэлийн баталгаа
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-emerald-950 block">
-              {formatCurrency(bds.performanceBond5Pct)}
+              {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : 'PDF-ээс олдоогүй'}
             </span>
-            <span className="text-[10px] text-emerald-600 mt-1 block">Гэрээ байгуулах үед байршуулах</span>
+            <span className="text-[10px] text-emerald-600 mt-1 block">Албан ёсны эх баримтаас шалгана уу</span>
           </div>
         </div>
 
@@ -914,10 +886,10 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                     <FileSpreadsheet className="h-5 w-5 text-blue-600" />
-                    <span>Тендер Шалгаруулалтын Өгөгдлийн Хүснэгт (ТШӨХ - Bid Data Sheet)</span>
+                    <span>Тендерийн шалгуур (PDF-ээс нягтална)</span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    Төрийн худалдан авах ажиллагааны жишиг баримт бичиг болон PDF-ээс задлан бүтцэд оруулсан шалгуурууд.
+                    Автоматаар илрүүлсэн заалтуудыг доор харуулна. Албан ёсны PDF-ийн эх заалтаар нягтална уу.
                   </p>
                 </div>
                 <button
@@ -937,7 +909,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                     <ShieldCheck className="h-4 w-4 text-blue-600" />
                     <span>1. Шаардагдах тусгай зөвшөөрөл & Эрхийн бичиг</span>
                   </h4>
-                  <span className="text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">Заавал биелүүлэх</span>
+                  <span className="text-[11px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded">PDF-ээс нягтална</span>
                 </div>
                 <div className="space-y-1.5 pt-1">
                   {bds.requiredLicenses && bds.requiredLicenses.length > 0 ? (
@@ -949,7 +921,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                     ))
                   ) : (
                     <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-md border border-slate-100 italic">
-                      Тусгайлан нэр заасан тусгай зөвшөөрөл шаардаагүй эсвэл улсын бүртгэлийн гэрчилгээний ерөнхий чиглэлийн дагуу байна.
+                      PDF-ээс тусгай зөвшөөрлийн заалт баталгаажуулаагүй байна. Энэ нь зөвшөөрөл шаардахгүй гэсэн дүгнэлт биш.
                     </div>
                   )}
                 </div>
@@ -966,39 +938,37 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 text-[11px] block">Сүүлийн 1-3 жилийн дундаж борлуулалтын доод орлого:</span>
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
-                      {formatCurrency(bds.minAnnualTurnover)}
+                      {bds.minAnnualTurnover != null ? formatCurrency(bds.minAnnualTurnover) : (bds.turnoverReq || 'PDF-ээс олдоогүй')}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      {bds.turnoverReq || `* Нийт төсөвт өртгийн ${tender.tenderTypeCode === 'JOB' ? '80%' : '50%'}-иас доошгүй`}
+                      {bds.turnoverReq ? 'PDF текстээс автоматаар илрүүлсэн; эх заалтаар шалгана уу.' : 'PDF баримтаас шалгуур олдоогүй. Энэ нь шаардлага байхгүй гэсэн үг биш.'}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 text-[11px] block">Түргэн хөрвөх чадвартай хөрөнгө / Зээлжих боломж:</span>
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
-                      {formatCurrency(bds.minLiquidAssets)}
+                      {bds.minLiquidAssets != null ? formatCurrency(bds.minLiquidAssets) : (bds.liquidAssetsReq || 'PDF-ээс олдоогүй')}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      {bds.liquidAssetsReq || '* Банкны дансны үлдэгдэл эсвэл зээл авах боломжийн тодорхойлолт'}
+                      {bds.liquidAssetsReq ? 'PDF текстээс автоматаар илрүүлсэн; эх заалтаар шалгана уу.' : 'PDF баримтаас шалгуур олдоогүй.'}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 text-[11px] block">Ижил төстэй ажил гүйцэтгэсэн гэрээний доод босго:</span>
                     <span className="text-sm font-bold font-mono text-slate-900 mt-1 block">
-                      {formatCurrency(bds.similarContractThreshold)}
+                      {bds.similarContractThreshold != null ? formatCurrency(bds.similarContractThreshold) : (bds.similarExpReq || 'PDF-ээс олдоогүй')}
                     </span>
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      {bds.similarExpReq || `* Сүүлийн ${bds.similarContractYears} жилд 1-ээс доошгүй удаа ижил төстэй ажил хийсэн байх`}
+                      {bds.similarExpReq ? 'PDF текстээс автоматаар илрүүлсэн; эх заалтаар шалгана уу.' : 'PDF баримтаас шалгуур олдоогүй.'}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
-                    <span className="text-slate-500 text-[11px] block">Татварын өрийн тодорхойлолт:</span>
-                    <span className="text-sm font-bold text-emerald-700 mt-1 block">
-                      Хугацаа хэтэрсэн өргүй байх
-                    </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">* e-Mongolia эсвэл Татварын ерөнхий газрын цахим лавлагаа</span>
+                    <span className="text-slate-500 text-[11px] block">Бүрдүүлэх материалын шалгуур:</span>
+                    <span className="text-sm font-bold text-slate-700 mt-1 block">PDF-ээс баталгаажаагүй</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">ТШББ-ийн шаардлагуудыг эх баримтаас шалгана уу.</span>
                   </div>
                 </div>
               </div>
@@ -1033,7 +1003,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                   </div>
                 ) : (
                   <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-md border border-slate-100 italic">
-                    Тендерийн баримт бичигт тусгайлан нэр заасан түлхүүр ажилтны жагсаалт заагаагүй байна.
+                    PDF-ээс түлхүүр ажилтны шаардлага баталгаажаагүй байна. Энэ нь шаардлага байхгүй гэсэн үг биш.
                   </div>
                 )}
               </div>
@@ -1055,7 +1025,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                   </div>
                 ) : (
                   <div className="text-xs text-slate-500 bg-slate-50 p-3 rounded-md border border-slate-100 italic">
-                    Энэ тендерт тусгайлан нэр заасан техник, машин механизм шаардаагүй эсвэл гүйцэтгэгчийн ерөнхий үүрэгт хамаарна.
+                    PDF-ээс техник, тоног төхөөрөмжийн шаардлага баталгаажаагүй байна. Эх баримтыг шалгана уу.
                   </div>
                 )}
               </div>
@@ -1070,19 +1040,19 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Тендер хүчинтэй байх:</span>
-                    <span className="font-bold text-slate-900 mt-1 block">{bds.validityDays} хоног</span>
+                    <span className="font-bold text-slate-900 mt-1 block">{bds.validityDays != null ? `${bds.validityDays} хоног` : 'PDF-ээс олдоогүй'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Тодруулга авах хугацаа:</span>
-                    <span className="font-bold text-slate-900 mt-1 block">Нээхээс {bds.clarificationDays} хоногийн өмнө</span>
+                    <span className="font-bold text-slate-900 mt-1 block">{bds.clarificationDays != null ? `Нээхээс ${bds.clarificationDays} хоногийн өмнө` : 'PDF-ээс олдоогүй'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Үнийн саналын жин:</span>
-                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria.priceWeight}%</span>
+                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria?.priceWeight != null ? `${bds.evaluationCriteria.priceWeight}%` : 'PDF-ээс олдоогүй'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg">
                     <span className="text-slate-500 block text-[11px]">Чанарын үнэлгээний жин:</span>
-                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria.qualityWeight}%</span>
+                    <span className="font-bold text-blue-700 mt-1 block">{bds.evaluationCriteria?.qualityWeight != null ? `${bds.evaluationCriteria.qualityWeight}%` : 'PDF-ээс олдоогүй'}</span>
                   </div>
                 </div>
               </div>
@@ -1098,7 +1068,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                   <span>Техникийн тодорхойлолт, ТЭЗҮ ба Нийлүүлэлтийн нөхцөл</span>
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
-                  Захиалагч байгууллагаас тавьсан бүтээгдэхүүн, ажлын чанар стандартын шаардлага ба PDF баримтаас задлан бүтцэд оруулсан хүснэгтүүд.
+                  Автоматаар илрүүлсэн мөр, нөхцөлийг эх PDF-тэй тулган баталгаажуулна уу.
                 </p>
               </div>
 
@@ -1287,18 +1257,18 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="text-slate-500 text-xs block mb-1">Нийлүүлэх / Гүйцэтгэх газар:</span>
-                  <span className="text-xs font-bold text-slate-900 block">{technicalSpecs.deliveryLocation}</span>
+                    <span className="text-xs font-bold text-slate-900 block">{technicalSpecs.deliveryLocation || 'PDF-ээс олдоогүй'}</span>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="text-slate-500 text-xs block mb-1">Нийлүүлэлтийн хугацаа:</span>
                   <span className="text-xs font-bold text-slate-900 block">
-                    {technicalSpecs.deliveryPeriodText || `Гэрээ байгуулснаас хойш ${technicalSpecs.deliveryPeriodDays} хоног`}
+                    {technicalSpecs.deliveryPeriodText || (technicalSpecs.deliveryPeriodDays != null ? `Гэрээ байгуулснаас хойш ${technicalSpecs.deliveryPeriodDays} хоног` : 'PDF-ээс олдоогүй')}
                   </span>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
                   <span className="text-slate-500 text-xs block mb-1">Баталгаат хугацаа:</span>
                   <span className="text-xs font-bold text-slate-900 block">
-                    {technicalSpecs.warrantyText || `${technicalSpecs.warrantyMonths} сар`}
+                    {technicalSpecs.warrantyText || (technicalSpecs.warrantyMonths != null ? `${technicalSpecs.warrantyMonths} сар` : 'PDF-ээс олдоогүй')}
                   </span>
                 </div>
               </div>
@@ -1313,23 +1283,25 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 block text-[11px]">Төлбөр төлөх нөхцөл:</span>
                     <span className="font-bold text-slate-900 mt-1 block">
-                      {technicalSpecs.paymentTerms?.progressPayment || 'Нийлүүлэлт бүрээр'}
+                      {technicalSpecs.paymentTerms?.progressPayment || 'PDF-ээс олдоогүй'}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">Захиалагчийн албан ёсны нөхцөл</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">PDF-ийн заалттай тулгана уу.</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 block text-[11px]">Чанарын барьцаа:</span>
                     <span className="font-bold text-slate-900 mt-1 block">
-                      {technicalSpecs.paymentTerms?.retentionBondPct || 5}% ({technicalSpecs.paymentTerms?.retentionPeriodMonths || 12} сар)
+                      {technicalSpecs.paymentTerms?.retentionBondPct != null
+                        ? `${technicalSpecs.paymentTerms.retentionBondPct}%${technicalSpecs.paymentTerms.retentionPeriodMonths != null ? ` (${technicalSpecs.paymentTerms.retentionPeriodMonths} сар)` : ''}`
+                        : 'PDF-ээс олдоогүй'}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">Баталгаат хугацаа дуусмагц буцаан олгоно</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">PDF-ийн заалтаар шалгана уу.</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                     <span className="text-slate-500 block text-[11px]">Алданги, хариуцлага:</span>
                     <span className="font-bold text-rose-700 mt-1 block">
-                      {technicalSpecs.penaltyText || `${technicalSpecs.penaltyClause?.dailyRate || '0.1%'} / өдөр бүр`}
+                      {technicalSpecs.penaltyText || technicalSpecs.penaltyClause?.dailyRate || 'PDF-ээс олдоогүй'}
                     </span>
-                    <span className="text-[10px] text-slate-400 mt-0.5 block">Хугацаа хэтрүүлбэл тооцох хуулийн хэмжээ</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">Албан ёсны заалтаар шалгана уу.</span>
                   </div>
                 </div>
               </div>
@@ -1481,10 +1453,22 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 <div className="space-y-3 pt-1">
                   {technicalSpecs.documents.map((doc: any, idx: number) => {
                     const isExpanded = !!expandedDocSummaries[doc.id || idx];
-                    const isDirectPdf = !!doc.fileId;
+                    const isImageAttachment = /^(?:png|jpe?g)$/i.test(doc.fileExtention || '') || /\.(?:png|jpe?g)$/i.test(doc.name || '');
                     const downloadHref = doc.fileId
-                      ? `https://user.tender.gov.mn/mn/download/${doc.fileId}`
+                      ? `/api/download?fileId=${encodeURIComponent(doc.fileId)}&name=${encodeURIComponent(doc.name || 'tender.pdf')}${isImageAttachment ? '&allowImage=1' : ''}`
                       : (doc.downloadUrl || doc.url || '#');
+                    const extractionLabel: Record<string, string> = {
+                      text_extracted: `${doc.isScannedOcr ? 'OCR уншсан' : 'Текст уншсан'}${doc.totalPageCount ? ` · ${doc.extractedPageCount || 0}/${doc.totalPageCount} хуудас` : ''}`,
+                      partial: `${doc.isScannedOcr ? 'OCR хэсэгчлэн уншсан' : 'Хэсэгчлэн уншсан'}${doc.totalPageCount ? ` · ${doc.extractedPageCount || 0}/${doc.totalPageCount} хуудас` : ''}`,
+                      ocr_partial: doc.ocrSampleCount
+                        ? `OCR-ийн түүвэр · ${doc.ocrSampleCount} зураг; эх PDF хуудас тодорхойгүй`
+                        : `OCR хэсэгчлэн уншсан${doc.totalPageCount ? ` · ${doc.extractedPageCount || 0}/${doc.totalPageCount} хуудас` : ''}`,
+                      scanned_not_processed: doc.extractedPageCount
+                        ? `Зарим текст уншсан · скан хэсгийн OCR хийгдээгүй${doc.totalPageCount ? ` · ${doc.extractedPageCount}/${doc.totalPageCount} хуудас` : ''}`
+                        : 'Скан PDF · OCR ажиллаагүй',
+                      source_error: 'Эх PDF татаж чадсангүй',
+                      not_extracted: 'Текст хараахан боловсруулаагүй',
+                    }[doc.extractionStatus || 'not_extracted'];
 
                     return (
                       <div key={idx} className="rounded-lg border border-slate-200 bg-slate-50/70 hover:bg-slate-100/80 transition-colors overflow-hidden">
@@ -1494,15 +1478,13 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
-                                {doc.isScannedOcr && (
-                                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200">
-                                    <Sparkles className="h-2.5 w-2.5 text-purple-600" />
-                                    <span>AI Vision OCR</span>
-                                  </span>
-                                )}
+                                <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                                  {doc.isScannedOcr && <Sparkles className="h-2.5 w-2.5 text-purple-600" />}
+                                  <span>{extractionLabel}</span>
+                                </span>
                               </div>
                               <span className="text-[11px] text-slate-500 block mt-0.5">
-                                {doc.category || 'Баримт бичиг'} • {doc.type} {doc.date ? `• ${doc.date}` : ''}
+                                {doc.category || 'Баримт бичиг'} • {doc.type} {doc.date ? `• ${doc.date}` : ''}{doc.ocrModel ? ` • OCR: ${doc.ocrModel}` : ''}
                               </span>
                             </div>
                           </div>
@@ -1511,7 +1493,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                             <button
                               onClick={() => setPreviewModalDoc({
                                 name: doc.name,
-                                text: doc.extractedSummary || technicalSpecs.realSpecsText || 'Энэхүү баримт бичгийн агуулга ачаалагдаж байна...'
+                                text: doc.extractedSummary || `Энэ баримтаас уншигдах текст олдоогүй. Төлөв: ${extractionLabel}. Энэ нь PDF-д шаардлага байхгүй гэсэн үг биш.`
                               })}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-blue-700 hover:bg-blue-50 transition-colors border border-blue-200 shadow-2xs cursor-pointer"
                               title="Баримтын текстийг цонхонд шууд бүтнээр нь унших"
@@ -1524,7 +1506,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                               onClick={() => toggleDocSummary(doc.id || idx)}
                               className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-white text-slate-700 hover:bg-slate-50 transition-colors border border-slate-200 shadow-2xs cursor-pointer"
                             >
-                              <span>{isExpanded ? 'Хураах' : doc.extractedSummary ? 'Задарсан агуулга' : 'Мэдээлэл'}</span>
+                              <span>{isExpanded ? 'Хураах' : doc.extractedSummary ? 'Уншсан текст' : 'Боловсруулалтын төлөв'}</span>
                             </button>
 
                             <button
@@ -1553,17 +1535,17 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                               )}
                             </button>
 
-                            {isDirectPdf ? (
+                            {doc.fileId ? (
                               <a
                                 href={downloadHref}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 download={doc.name || 'tender.pdf'}
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
-                                title="Албан ёсны эх PDF файлыг шууд татах"
+                                title="Албан ёсны эх баримтыг шууд татах"
                               >
                                 <Download className="h-3.5 w-3.5" />
-                                <span>Шууд татах (PDF)</span>
+                                <span>Эх файлыг татах</span>
                               </a>
                             ) : (
                               <a
@@ -1619,7 +1601,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                                 <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-2">
                                   <span className="flex items-center gap-1.5 font-semibold text-amber-400">
                                     <Sparkles className="h-3.5 w-3.5" />
-                                    <span>{doc.isScannedOcr ? 'Сканердсан эх баримтаас AI Vision-оор задалсан өгөгдөл' : 'Албан ёсны ТШББ-аас задалсан хууль зүй & техникийн өгөгдөл'}</span>
+                                    <span>{doc.isScannedOcr ? 'OCR-ийн үр дүн · эх PDF-тэй тулган баталгаажуулна уу' : 'PDF-ээс шууд уншсан текст · шаардлагыг эх заалтаар шалгана уу'}</span>
                                   </span>
                                   <button
                                     onClick={() => handleRunAiAnalysis(`"${doc.name}" баримтын энэхүү агуулгаас техникийн гол шаардлага болон нийлүүлэлтийн нөхцөлийг тайлбарлана уу:\n\n${doc.extractedSummary}`, `doc-${doc.id || idx}`, `Дүн шинжилгээ: ${doc.name}`)}
@@ -1636,14 +1618,14 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                               <div className="space-y-2 font-sans text-xs">
                                 <div className="text-blue-400 font-semibold flex items-center gap-1.5">
                                   <FileText className="h-4 w-4 text-blue-400" />
-                                  <span>Албан ёсны баримт бичгийн танилцуулга</span>
+                                  <span>{extractionLabel}</span>
                                 </div>
                                 <p className="text-slate-300 text-[11px] leading-relaxed font-normal">
-                                  Энэхүү баримт бичиг (<span className="text-white font-medium">{doc.name}</span>) нь tender.gov.mn төрийн худалдан авах ажиллагааны албан ёсны эх баримт болно. Хэрэв сканердсан зурган хуудас агуулсан бол доорх холбоосоор шууд татан авч бүрэн эхээр нь танилцана уу.
+                                  <span className="text-white font-medium">{doc.name}</span> баримтаас одоогоор харуулахуйц текст олдоогүй. Энэ нь PDF-д мэдээлэл байхгүй гэсэн үг биш; татаж аваад шалгана уу.
                                 </p>
                                 <div className="pt-1.5 flex items-center gap-2">
                                   <a
-                                    href={doc.downloadUrl || doc.url}
+                                    href={downloadHref}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs font-semibold transition-colors"
@@ -2198,8 +2180,8 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               <div className="flex items-center justify-between p-2.5 rounded-md bg-blue-50/70 border border-blue-100 text-blue-900 text-[11px]">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-                  <span className="font-semibold">Бүтэцжүүлсэн өгөгдөл:</span>
-                  <span>PDF баримтаас ялган боловсруулсан шаардлага</span>
+                  <span className="font-semibold">Боловсруулалтын төлөв:</span>
+                  <span>{selectedDoc.extractionStatus || 'not_extracted'}</span>
                 </div>
                 <span className="font-mono text-[10px] text-blue-700 font-semibold uppercase">{selectedDoc.type}</span>
               </div>
@@ -2207,7 +2189,7 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
               {/* Extracted Structured View */}
               <div className="space-y-1.5">
                 <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">
-                  Баримт бичгийн агуулга ба шаардлагууд
+                  Эх баримтаас уншсан текст
                 </span>
                 <div className="p-4 rounded-lg bg-slate-900 text-slate-100 font-sans text-xs leading-relaxed border border-slate-800 shadow-inner select-text">
                   {selectedDoc.extractedSummary ? (
@@ -2217,18 +2199,18 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                   ) : (
                     <div className="space-y-2">
                       <p className="text-slate-300">
-                        Энэхүү албан баримт бичгийг tender.gov.mn эх сурвалжаас шууд татан авч бүрэн эхээр нь танилцах боломжтой.
+                        Уншигдах текст хараахан гараагүй байна. Энэ нь PDF-д шаардлага байхгүй гэсэн үг биш; эх файлыг татаж шалгана уу.
                       </p>
                       {selectedDoc.fileId && (
                         <a
-                          href={`https://user.tender.gov.mn/mn/download/${selectedDoc.fileId}`}
+                          href={`/api/download?fileId=${encodeURIComponent(selectedDoc.fileId)}&name=${encodeURIComponent(selectedDoc.name || 'tender.pdf')}${/^(?:png|jpe?g)$/i.test(selectedDoc.fileExtention || '') || /\.(?:png|jpe?g)$/i.test(selectedDoc.name || '') ? '&allowImage=1' : ''}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           download={selectedDoc.name || 'tender.pdf'}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition-colors shadow-2xs"
                         >
                           <Download className="h-3.5 w-3.5" />
-                          <span>Албан ёсны эх баримтыг татах (PDF)</span>
+                          <span>Эх баримтыг татах</span>
                         </a>
                       )}
                     </div>
@@ -2269,12 +2251,12 @@ ${(technicalSpecs.sampleItems || []).map((it: any) => `• ${it.name} | Тоо �
                 </button>
                 {selectedDoc.fileId && (
                   <a
-                    href={`/api/download?fileId=${selectedDoc.fileId}&name=${encodeURIComponent(selectedDoc.name || 'tender.pdf')}`}
+                    href={`/api/download?fileId=${encodeURIComponent(selectedDoc.fileId)}&name=${encodeURIComponent(selectedDoc.name || 'tender.pdf')}${/^(?:png|jpe?g)$/i.test(selectedDoc.fileExtention || '') || /\.(?:png|jpe?g)$/i.test(selectedDoc.name || '') ? '&allowImage=1' : ''}`}
                     download={selectedDoc.name || 'tender.pdf'}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-2xs transition-colors"
                   >
                     <Download className="h-3.5 w-3.5" />
-                    <span>Эх PDF татах</span>
+                    <span>Эх файл татах</span>
                   </a>
                 )}
                 <button

@@ -1,9 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { execFile } from 'child_process';
 const pdf = require('pdf-parse/lib/pdf-parse.js');
-import { supabaseAdmin as supabase } from './supabase';
-import { SpecialConditionClause, DeliveryScheduleItem, LiveSubTender } from './types';
+import { supabase, supabaseAdmin } from './supabase';
+import { LIVE_BUNDLE_SCHEMA_VERSION, SpecialConditionClause, DeliveryScheduleItem, LiveSubTender } from './types';
+import { fetchVerifiedAttachment } from './source-attachment';
 import {
   extractJpegImagesFromPdfBuffer,
   isScannedPdf,
@@ -20,6 +22,10 @@ export interface LiveTenderDocument {
   category?: string;
   isScannedOcr?: boolean;
   ocrModel?: string;
+  extractionStatus?: 'not_extracted' | 'source_error' | 'scanned_not_processed' | 'text_extracted' | 'partial' | 'ocr_partial';
+  extractedPageCount?: number;
+  totalPageCount?: number;
+  ocrSampleCount?: number;
 }
 
 export interface LiveBidder {
@@ -69,6 +75,7 @@ export interface ParsedPdfResult extends StructuredSpecs {
 }
 
 export interface LiveExtractionResult {
+  schemaVersion?: number;
   tenderDocumentId?: number;
   tenderId?: number;
   documents: LiveTenderDocument[];
@@ -80,13 +87,91 @@ export interface LiveExtractionResult {
   subTenders?: LiveSubTender[];
   isFailed?: boolean;
   isScannedOcr?: boolean;
+  fetchedAt?: string;
+  extractionStatus?: 'complete' | 'partial' | 'unavailable';
+  stale?: boolean;
+  lastFetchAttemptAt?: string;
 }
 
 // In-memory cache for fast sub-millisecond retrieval
 const liveCache = new Map<string, { timestamp: number; data: LiveExtractionResult }>();
 const CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24 hours
 
+function hasFreshFetch(bundle?: LiveExtractionResult | null): bundle is LiveExtractionResult {
+  if (!bundle?.fetchedAt || bundle.schemaVersion !== LIVE_BUNDLE_SCHEMA_VERSION) return false;
+  const fetchedAt = Date.parse(bundle.fetchedAt);
+  const ttl = bundle.extractionStatus === 'complete'
+    ? CACHE_TTL_MS
+    : bundle.extractionStatus === 'partial'
+      ? 60 * 60 * 1000
+      : 15 * 60 * 1000;
+  return Number.isFinite(fetchedAt) && Date.now() - fetchedAt < ttl;
+}
+
+function hasPriorExtractedText(bundle?: LiveExtractionResult): bundle is LiveExtractionResult {
+  return bundle?.schemaVersion === LIVE_BUNDLE_SCHEMA_VERSION &&
+    typeof bundle.pdfText === 'string' && bundle.pdfText.trim().length > 30;
+}
+
 const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
+
+/** OCR sparse pages from scanned PDFs when Poppler is available (the daily worker installs it). */
+async function ocrSparsePdfPages(
+  pdfBuffer: Buffer,
+  pageCount: number,
+  pageNumbers: number[],
+): Promise<Array<{ page: number; text: string }> | null> {
+  const requestedPages = Array.from(new Set(pageNumbers.filter((page) => page >= 1 && page <= Math.min(pageCount, 100))));
+  if (requestedPages.length === 0) return [];
+
+  const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'tender-pdf-ocr-'));
+  let worker: any = null;
+  try {
+    const inputPath = path.join(tempDir, 'source.pdf');
+    const outputPrefix = path.join(tempDir, 'page');
+    await fs.promises.writeFile(inputPath, pdfBuffer);
+    const pdftoppm = process.platform === 'win32' ? 'pdftoppm.exe' : 'pdftoppm';
+    await new Promise<void>((resolve, reject) => {
+      execFile(pdftoppm, [
+        '-jpeg', '-jpegopt', 'quality=82', '-r', '120',
+        '-f', String(Math.min(...requestedPages)),
+        '-l', String(Math.max(...requestedPages)),
+        inputPath, outputPrefix,
+      ], { timeout: 120_000, maxBuffer: 2 * 1024 * 1024 }, (error) => {
+        if (error) reject(error);
+        else resolve();
+      });
+    });
+
+    const pageFiles = (await fs.promises.readdir(tempDir))
+      .map((fileName) => {
+        const match = fileName.match(/^page-(\d+)\.jpg$/i);
+        return match ? { fileName, page: Number(match[1]) } : null;
+      })
+      .filter((entry): entry is { fileName: string; page: number } => !!entry && requestedPages.includes(entry.page))
+      .sort((a, b) => a.page - b.page);
+    if (pageFiles.length === 0) return null;
+
+    const { createWorker } = require('tesseract.js');
+    worker = await createWorker('mon+eng');
+    const recognized: Array<{ page: number; text: string }> = [];
+    for (const pageFile of pageFiles) {
+      const image = await fs.promises.readFile(path.join(tempDir, pageFile.fileName));
+      const result = await worker.recognize(image);
+      const text = String(result?.data?.text || '').trim();
+      if (text.length > 20) recognized.push({ page: pageFile.page, text });
+    }
+    return recognized;
+  } catch (error) {
+    console.warn('Full-page PDF OCR unavailable; will try the labeled sampled fallback:', error instanceof Error ? error.message : error);
+    return null;
+  } finally {
+    if (worker) {
+      try { await worker.terminate(); } catch { /* ignore worker cleanup errors */ }
+    }
+    try { await fs.promises.rm(tempDir, { recursive: true, force: true }); } catch { /* ignore temp cleanup errors */ }
+  }
+}
 
 // Helper to run curl safely with standard browser headers
 function curlGet(url: string, asBuffer = false, referer = 'https://www.tender.gov.mn/'): Promise<string | Buffer> {
@@ -640,162 +725,12 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
     result.rawSpecText = (endPos !== -1 ? candidateSlice.substring(0, endPos) : candidateSlice).trim();
   }
 
-  const unitPattern = 'ширхэг|метр|тоо|ш|м|ком|хос|багц|тонн|тн|т|кг|г|литр|л|боодол|уут|хайрцаг|м2|м3|комплект|цаг|удаа|хүн|өдөр|хуудас|боть|систем';
-
-  // Strategy 1: Pipe / Markdown tables (| item | qty | unit | specs |)
-  if (fullText.includes('|')) {
-    const lines = fullText.split('\n');
-    for (const line of lines) {
-      if (!line.includes('|')) continue;
-      const parts = line.split('|').map(p => p.trim()).filter(Boolean);
-      if (parts.length >= 3) {
-        let name = parts[0];
-        let qtyStr = parts[1].replace(/\s+/g, '').replace(',', '.');
-        let unit = parts[2];
-        let specs = parts[3] || '';
-
-        if (/^\d+$/.test(name) && parts.length >= 4) {
-          name = parts[1];
-          qtyStr = parts[2].replace(/\s+/g, '').replace(',', '.');
-          unit = parts[3];
-          specs = parts[4] || '';
-        }
-
-        const qty = parseFloat(qtyStr);
-        if (!isNaN(qty) && qty > 0 && qty < 100000000 && !name.includes('---') && !name.includes('нэр') && name.length >= 2) {
-          result.items.push({ name, qty, unit, specs: specs || 'Техникийн тодорхойлолтын дагуу' });
-        }
-      }
-    }
-  }
-
-  // Strategy 2: Delivery schedule items (Бараа нийлүүлэлтийн хуваарь)
-  if (result.items.length === 0) {
-    const schedIdx = fullText.search(/(?:БАРАА\s*НИЙЛҮҮЛЭЛТИЙН\s*ХУВААРЬ|НИЙЛҮҮЛЭЛТИЙН\s*ХУВААРЬ)/i);
-    if (schedIdx !== -1) {
-      const schedSection = fullText.substring(schedIdx, schedIdx + 5000);
-      const rowRegex = /(?:^|\n)\s*(\d+)?\s*([А-ЯЁа-яё0-9\s\-№No]+(?:багц[^\n]*)?)  \s+([\d\s\,\.]+)\s+(Тонн|тн|ш|ширхэг|ком|багц|метр|м|комплект|удаа|хүн|боодол|кг)\s+([^\n]+)/gi;
-      let rm;
-      while ((rm = rowRegex.exec(schedSection)) !== null) {
-        const name = rm[2].replace(/\s+/g, ' ').trim();
-        if (!name.includes('Барааны нэр') && !name.includes('Тоо хэмжээ') && name.length > 2 && !name.includes('хүснэгт')) {
-          result.items.push({
-            name,
-            specs: `Нийлүүлэх газар: ${rm[5].trim()}`,
-            unit: rm[4].trim(),
-            qty: rm[3].trim()
-          });
-        }
-      }
-    }
-  }
-
-  // Strategy 3: Multi-column regex (Quantity then Unit, or Unit then Quantity)
-  if (result.items.length === 0) {
-    const textToSearch = bestSection || fullText;
-
-    // 3a. RowNum? Name Qty Unit
-    const p3a = new RegExp(`(?:^|\\n)\\s*(?:(\\d{1,3})[\\.\\)]\\s+)?([А-ЯЁа-яёA-Za-z0-9\\s\\-–\\/\\.\\(\\)]{3,60}?)\\s+([\\d\\s\\,\\.]{1,10})\\s*(${unitPattern})\\b([^\n]*)`, 'gi');
-    let m3a;
-    while ((m3a = p3a.exec(textToSearch)) !== null && result.items.length < 50) {
-      const name = m3a[2].replace(/\s+/g, ' ').trim();
-      const qtyStr = m3a[3].replace(/\s+/g, '').replace(',', '.');
-      const unit = m3a[4].trim();
-      const rest = (m3a[5] || '').trim();
-      const qty = parseFloat(qtyStr);
-
-      if (isNaN(qty) || qty <= 0 || qty > 100000000) continue;
-      if (name.includes('Бүлэг') || name.includes('Хууль') || name.includes('ТШЗ') || name.includes('Хүснэгт') || name.includes('хувь') || name.includes('Тендер') || name.length < 3) continue;
-
-      result.items.push({ name, qty, unit, specs: rest || 'Техникийн тодорхойлолтын дагуу' });
-    }
-
-    // 3b. RowNum? Name Unit Qty
-    if (result.items.length === 0) {
-      const p3b = new RegExp(`(?:^|\\n)\\s*(?:(\\d{1,3})[\\.\\)]\\s+)?([А-ЯЁа-яёA-Za-z0-9\\s\\-–\\/\\.\\(\\)]{3,60}?)\\s+(${unitPattern})\\s+([\\d\\s\\,\\.]{1,10})\\b([^\n]*)`, 'gi');
-      let m3b;
-      while ((m3b = p3b.exec(textToSearch)) !== null && result.items.length < 50) {
-        const name = m3b[2].replace(/\s+/g, ' ').trim();
-        const unit = m3b[3].trim();
-        const qtyStr = m3b[4].replace(/\s+/g, '').replace(',', '.');
-        const rest = (m3b[5] || '').trim();
-        const qty = parseFloat(qtyStr);
-
-        if (isNaN(qty) || qty <= 0 || qty > 100000000) continue;
-        if (name.includes('Бүлэг') || name.includes('Хууль') || name.includes('ТШЗ') || name.includes('Хүснэгт') || name.includes('хувь') || name.includes('Тендер') || name.length < 3) continue;
-
-        result.items.push({ name, qty, unit, specs: rest || 'Техникийн тодорхойлолтын дагуу' });
-      }
-    }
-  }
-
-  // Strategy 4: Direct Goods mention with quantity (e.g. "Хэмжээ: 64 тонн буюу 3200 боодол")
-  if (result.items.length === 0) {
-    const directQtyMatch = fullText.match(/Хэмжээ\s*:\s*(\d+[\.,]?\d*)\s*(тонн|тн|ш|боодол|кг|метр|м|ком|багц)(?:\s*буюу\s*(\d+[\.,]?\d*)\s*(боодол|ш|кг))?/i);
-    if (directQtyMatch) {
-      const qty = parseFloat(directQtyMatch[1].replace(',', '.'));
-      const unit = directQtyMatch[2];
-      const secondary = directQtyMatch[3] ? ` (буюу ${directQtyMatch[3]} ${directQtyMatch[4]})` : '';
-      const nameMatch = fullText.match(/(?:Барааны тодорхойлолт|Нэр)\s*:\s*([^\n\.]+)/i);
-      const itemName = nameMatch ? nameMatch[1].trim() : 'Нийлүүлэх бараа, бүтээгдэхүүн';
-
-      result.items.push({
-        name: itemName,
-        qty,
-        unit: `${unit}${secondary}`,
-        specs: 'Техникийн тодорхойлолт болон стандартын шаардлагын дагуу'
-      });
-    }
-  }
-
-  // 9. Framework agreement package list (ТШЗ 1.3) — fallback when no items found yet
-  if (result.items.length === 0) {
-    const pkgIdx = fullText.indexOf('ТШЗ 1.3');
-    if (pkgIdx !== -1) {
-      const pkgSection = fullText.substring(pkgIdx, pkgIdx + 15000);
-      const endPkg = pkgSection.search(/ТШЗ\s*1\.[4-9]|ТШЗ\s*2\./);
-      const relevant = endPkg !== -1 ? pkgSection.substring(0, endPkg) : pkgSection;
-
-      const rawLines = relevant.split('\n').map((l: string) => l.trim()).filter(Boolean);
-      let pendingNum: string | null = null;
-
-      for (const line of rawLines) {
-        if (line.includes('ТШЗ') || line.includes('Багцын дугаар') || line.includes('Багцын нэр')) continue;
-
-        const singleNumMatch = line.match(/^(\d{1,3})$/);
-        if (singleNumMatch) {
-          pendingNum = singleNumMatch[1];
-          continue;
-        }
-
-        const numAndTextMatch = line.match(/^(\d{1,3})\s+([\u0400-\u04FF0-9\s\-\,\/\.\(\)±]+)$/);
-        if (numAndTextMatch) {
-          result.items.push({
-            name: `Багц ${numAndTextMatch[1]}: ${numAndTextMatch[2].trim()}`,
-            specs: `Ерөнхий гэрээний багц №${numAndTextMatch[1]} (${numAndTextMatch[2].trim()})`,
-            unit: 'багц',
-            qty: 1
-          });
-          pendingNum = null;
-          continue;
-        }
-
-        if (pendingNum && /^[\u0400-\u04FF]/.test(line)) {
-          result.items.push({
-            name: `Багц ${pendingNum}: ${line.trim()}`,
-            specs: `Ерөнхий гэрээний багц №${pendingNum} (${line.trim()})`,
-            unit: 'багц',
-            qty: 1
-          });
-          pendingNum = null;
-        }
-      }
-    }
-  }
+  // Do not guess line items from arbitrary paragraphs with quantity-like numbers.
+  // Only the separately parsed, explicitly titled delivery schedule is kept.
+  return result;
 
   return result;
 }
-
 let diskBundles: Record<string, LiveExtractionResult> | null = null;
 
 export function loadDiskBundle(invId: string): LiveExtractionResult | undefined {
@@ -841,13 +776,13 @@ export async function fetchTenderLiveBundle(
   if (!forceRefresh) {
     // 1. Check in-memory cache
     const cached = liveCache.get(invIdStr);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    if (cached && hasFreshFetch(cached.data)) {
       return cached.data;
     }
 
     // 1.5. Check persistent disk bundles (fast, 0ms, works in serverless Vercel)
     const diskBundle = loadDiskBundle(invIdStr);
-    if (diskBundle && diskBundle.documents && diskBundle.documents.length > 0) {
+    if (hasFreshFetch(diskBundle) && diskBundle.documents && diskBundle.documents.length > 0) {
       liveCache.set(invIdStr, { timestamp: Date.now(), data: diskBundle });
       return diskBundle;
     }
@@ -859,7 +794,8 @@ export async function fetchTenderLiveBundle(
   let existingRawData: any = null;
 
   try {
-    const { data: dbRow } = await supabase
+    const reader = supabaseAdmin || supabase;
+    const { data: dbRow } = await reader
       .from('tenders')
       .select('raw_data')
       .eq('invitation_id', invitationId)
@@ -878,6 +814,8 @@ export async function fetchTenderLiveBundle(
       
       // If already has complete live bundle in raw_data, return directly
       if (
+        !forceRefresh &&
+        hasFreshFetch(existingRawData.liveBundle) &&
         existingRawData.liveBundle &&
         existingRawData.liveBundle.documents &&
         existingRawData.liveBundle.documents.length > 0
@@ -918,13 +856,15 @@ export async function fetchTenderLiveBundle(
   }
 
   const result: LiveExtractionResult = {
+    schemaVersion: LIVE_BUNDLE_SCHEMA_VERSION,
     tenderDocumentId,
     tenderId,
     documents: [],
     bidders: [],
     announcementHtml: '',
     subTenders,
-    isFailed
+    isFailed,
+    extractionStatus: 'unavailable',
   };
 
   // 4. Concurrently fetch:
@@ -954,7 +894,7 @@ export async function fetchTenderLiveBundle(
                   fileName: d.fileName,
                   createdDate: d.createdDate,
                   fileExtention: d.fileExtention || 'pdf',
-                  downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'tender.pdf')}`,
+                  downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'tender.pdf')}${['png', 'jpg', 'jpeg'].includes(String(d.fileExtention || '').toLowerCase()) ? '&allowImage=1' : ''}`,
                   category: 'Тендер шалгаруулалтын үндсэн баримт бичиг (ТШББ)',
                   isPrimary: idx === 0 || (d.fileName && (d.fileName.toLowerCase().includes('тшбб') || d.fileName.toLowerCase().includes('хоолой')))
                 });
@@ -982,7 +922,7 @@ export async function fetchTenderLiveBundle(
                   fileName: d.fileName,
                   createdDate: d.createdDate,
                   fileExtention: d.fileExtention || 'pdf',
-                  downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'addendum.pdf')}`,
+                  downloadUrl: `/api/download?fileId=${d.fileId}&name=${encodeURIComponent(d.fileName || 'addendum.pdf')}${['png', 'jpg', 'jpeg'].includes(String(d.fileExtention || '').toLowerCase()) ? '&allowImage=1' : ''}`,
                   category: 'ТЭЗҮ / Техникийн даалгавар (ТД)',
                   isPrimary: false
                 });
@@ -1011,7 +951,7 @@ export async function fetchTenderLiveBundle(
                     fileName: f.fileName,
                     createdDate: f.createdDate,
                     fileExtention: f.fileExtention || 'pdf',
-                    downloadUrl: `/api/download?fileId=${f.fileId}&name=${encodeURIComponent(f.fileName || 'clarification.pdf')}`,
+                    downloadUrl: `/api/download?fileId=${f.fileId}&name=${encodeURIComponent(f.fileName || 'clarification.pdf')}${['png', 'jpg', 'jpeg'].includes(String(f.fileExtention || '').toLowerCase()) ? '&allowImage=1' : ''}`,
                     category: 'Тодруулгын хариу / Нэмэлт баримт',
                     isPrimary: false
                   });
@@ -1088,148 +1028,207 @@ export async function fetchTenderLiveBundle(
 
   // 5. Download and extract text from attached dossier documents (ТШББ + ТД / Техникийн даалгавар)
   let combinedPdfText = '';
+  let verbatimPdfText = '';
   let totalPageCount = 0;
-  const docsToParse = result.documents.filter(d => {
-    if (!d.fileId) return false;
-    const ext = (d.fileExtention || '').toLowerCase();
+  const docsToParse = result.documents.filter((doc) => {
+    if (!doc.fileId) return false;
+    const ext = (doc.fileExtention || '').toLowerCase();
     return ext === 'pdf' || !ext || ['png', 'jpg', 'jpeg'].includes(ext);
-  }).slice(0, 4);
+  });
 
   for (const doc of docsToParse) {
     if (!doc.fileId) continue;
     try {
       const ext = (doc.fileExtention || '').toLowerCase();
-      const isImg = ['png', 'jpg', 'jpeg'].includes(ext);
-      const fileBuffer = (await curlGet(`https://user.tender.gov.mn/mn/download/${doc.fileId}`, true)) as Buffer;
-
-      // Handle standalone image files (PNG/JPG) using Tesseract OCR
-      if (isImg && fileBuffer && fileBuffer.length > 500) {
+      const { buffer: fileBuffer, contentType } = await fetchVerifiedAttachment(doc.fileId, true);
+      if (contentType !== 'application/pdf') {
+        const { createWorker } = require('tesseract.js');
+        const worker = await createWorker('mon+eng');
         try {
-          const { createWorker } = require('tesseract.js');
-          const worker = await createWorker('rus+eng');
           const ocrRes = await worker.recognize(fileBuffer);
-          await worker.terminate();
-          if (ocrRes?.data?.text && ocrRes.data.text.trim().length > 20) {
-            const extractedDocText = ocrRes.data.text.trim();
+          const ocrText = String(ocrRes?.data?.text || '').trim();
+          if (ocrText.length > 20) {
             doc.isScannedOcr = true;
             doc.ocrModel = 'Tesseract OCR';
+            doc.extractionStatus = 'text_extracted';
+            doc.extractedPageCount = 1;
+            doc.totalPageCount = 1;
             result.isScannedOcr = true;
             totalPageCount += 1;
-            combinedPdfText += `\n\n--- БАРИМТ БИЧИГ: ${doc.fileName} ---\n` + extractedDocText;
+            const marker = `--- DOCUMENT ${doc.fileId}: ${doc.fileName} ---`;
+            verbatimPdfText += `\n\n${marker}\n[Image OCR; page 1]\n${ocrText}`;
+            combinedPdfText += `\n\n${marker}\n[Image OCR; page 1]\n${ocrText}`;
+          } else {
+            doc.extractionStatus = 'partial';
+            doc.extractedPageCount = 0;
+            doc.totalPageCount = 1;
           }
-        } catch (ocrErr) {
-          console.warn(`Image OCR error for ${doc.fileName}:`, ocrErr);
+        } finally {
+          await worker.terminate();
         }
         continue;
       }
 
-      if (fileBuffer && fileBuffer.length > 500 && fileBuffer.slice(0, 5).toString().includes('%PDF')) {
-        let extractedDocText = '';
+      const pageTexts: string[] = [];
+      const parsedPdf = await pdf(fileBuffer, {
+        pagerender: async (page: any) => {
+          const pageData = await page.getTextContent();
+          const pageText = (pageData.items || [])
+            .map((item: any) => typeof item?.str === 'string' ? item.str : '')
+            .filter(Boolean)
+            .join(' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          pageTexts.push(pageText);
+          return pageText;
+        },
+      });
+      const pageCount = Number(parsedPdf.numpages) || pageTexts.length || 0;
+      totalPageCount += pageCount;
+      doc.totalPageCount = pageCount;
+      const extractedPages = pageTexts.map((text, index) => ({ text, page: index + 1 }));
+      const makePageText = () => extractedPages
+        .filter((page) => page.text.length > 0)
+        .map((page) => `[Page ${page.page}]\n${page.text}`)
+        .join('\n\n');
+      let extractedDocText = makePageText();
+      let textPageCount = extractedPages.filter((page) => page.text.length > 20).length;
+      doc.extractedPageCount = textPageCount;
+
+      if (extractedDocText.length > 30) {
+        doc.extractionStatus = textPageCount >= pageCount ? 'text_extracted' : 'partial';
+      }
+
+      const sparsePageNumbers = extractedPages
+        .filter((page) => page.text.length < 200)
+        .map((page) => page.page);
+      const hasEmbeddedImages = [
+        '/Subtype /Image', '/Subtype/Image', 'DCTDecode', 'CCITTFaxDecode',
+      ].some((marker) => fileBuffer.includes(Buffer.from(marker, 'latin1')));
+      const mayContainScannedPages = isScannedPdf(fileBuffer, extractedDocText.length) || (hasEmbeddedImages && sparsePageNumbers.length > 0);
+
+      if (mayContainScannedPages) {
+        doc.extractionStatus = 'scanned_not_processed';
         try {
-          const parsedPdf = await pdf(fileBuffer);
-          totalPageCount += parsedPdf.numpages || 0;
-          if (parsedPdf.text && parsedPdf.text.trim().length > 30) {
-            extractedDocText = parsedPdf.text.trim();
-          }
-        } catch (pdfErr) {
-          console.warn(`PDF text parse library error for ${doc.fileName}:`, pdfErr);
-        }
-
-        // If standard text extraction yielded nothing/little and buffer has scanned images, run Vision OCR
-        if (extractedDocText.length < 50 && isScannedPdf(fileBuffer, extractedDocText.length)) {
-          try {
-            const pageImages = extractJpegImagesFromPdfBuffer(fileBuffer, 3);
-            if (pageImages.length > 0) {
-              totalPageCount = Math.max(totalPageCount, pageImages.length);
-              console.log(`[OCR] Detected ${pageImages.length} scanned pages in ${doc.fileName} (${doc.fileId}). Running vision extraction...`);
-              const visionResult = await extractScannedPdfWithVision(pageImages, doc.fileName);
-              if (visionResult?.text) {
-                extractedDocText = visionResult.text;
-                doc.isScannedOcr = true;
-                doc.ocrModel = visionResult.modelUsed;
-                result.isScannedOcr = true;
-
-                // Pre-populate structuredSpecs if vision identified items or delivery schedule
-                if (!result.structuredSpecs) {
-                  result.structuredSpecs = {
-                    rawSpecText: visionResult.text,
-                    items: visionResult.items || [],
-                    deliverySchedule: visionResult.deliverySchedule || [],
-                    specialConditions: visionResult.specialConditions || []
-                  };
-                } else {
-                  if (visionResult.items && (!result.structuredSpecs.items || result.structuredSpecs.items.length === 0)) {
-                    result.structuredSpecs.items = visionResult.items;
-                  }
-                  if (visionResult.deliverySchedule && (!result.structuredSpecs.deliverySchedule || result.structuredSpecs.deliverySchedule.length === 0)) {
-                    result.structuredSpecs.deliverySchedule = visionResult.deliverySchedule;
-                  }
-                }
+          const renderedOcr = await ocrSparsePdfPages(fileBuffer, pageCount, sparsePageNumbers);
+          if (renderedOcr && renderedOcr.length > 0) {
+            for (const pageResult of renderedOcr) {
+              const page = extractedPages[pageResult.page - 1];
+              if (page && pageResult.text) {
+                page.text = [page.text, `[OCR: Tesseract.js]\n${pageResult.text}`].filter(Boolean).join('\n');
               }
             }
-          } catch (visionErr) {
-            console.warn(`Vision OCR extraction error for ${doc.fileName}:`, visionErr);
-          }
-        }
 
-        if (extractedDocText.length > 30) {
-          combinedPdfText += `\n\n--- БАРИМТ БИЧИГ: ${doc.fileName} ---\n` + extractedDocText;
+            textPageCount = extractedPages.filter((page) => page.text.length > 20).length;
+            doc.extractedPageCount = textPageCount;
+            doc.isScannedOcr = true;
+            doc.ocrModel = 'Tesseract.js + Poppler page rendering';
+            doc.extractionStatus = textPageCount >= pageCount ? 'text_extracted' : 'ocr_partial';
+            result.isScannedOcr = true;
+            extractedDocText = makePageText();
+          }
+
+          // If native page rendering is unavailable, retain the explicitly labeled
+          // sampled vision fallback; never describe those image indexes as PDF pages.
+          if (!renderedOcr || renderedOcr.length === 0) {
+            const pageImages = extractJpegImagesFromPdfBuffer(fileBuffer, 3);
+            if (pageImages.length > 0) {
+              const visionResult = await extractScannedPdfWithVision(pageImages, doc.fileName);
+              if (visionResult?.text) {
+                const ocrText = `[AI OCR excerpt; sampled ${pageImages.length} embedded image(s); physical PDF page mapping unavailable]\n${visionResult.text}`;
+                extractedDocText = extractedDocText
+                  ? `${extractedDocText}\n\n${ocrText}`
+                  : ocrText;
+                doc.isScannedOcr = true;
+                doc.ocrModel = visionResult.modelUsed;
+                doc.extractionStatus = 'ocr_partial';
+                doc.ocrSampleCount = pageImages.length;
+                result.isScannedOcr = true;
+              }
+            }
+          }
+        } catch (visionErr) {
+          console.warn(`Vision OCR extraction error for ${doc.fileName}:`, visionErr);
         }
       }
+
+      if (extractedDocText.length > 30) {
+        const marker = `--- DOCUMENT ${doc.fileId}: ${doc.fileName} ---`;
+        const section = `\n\n${marker}\n${extractedDocText}`;
+        combinedPdfText += section;
+        // Page-labeled source text and page-rendered OCR are safe for extraction;
+        // sampled vision OCR stays in the raw evidence only because its pages are unmapped.
+        const directText = extractedPages
+          .filter((page) => page.text.length > 0)
+          .map((page) => `[Page ${page.page}]\n${page.text}`)
+          .join('\n\n');
+        if (directText.length > 30) verbatimPdfText += `\n\n${marker}\n${directText}`;
+      } else if (!doc.extractionStatus) {
+        doc.extractionStatus = 'not_extracted';
+      }
     } catch (pdfErr) {
+      doc.extractionStatus = 'source_error';
       console.warn(`File parsing error for ${doc.fileName} (${doc.fileId}):`, pdfErr);
     }
   }
 
-  if (totalPageCount > 0) {
-    result.pdfPageCount = totalPageCount;
-  }
+  if (totalPageCount > 0) result.pdfPageCount = totalPageCount;
   if (combinedPdfText.trim().length > 30) {
     result.pdfText = combinedPdfText.trim();
-    const parsedFromText = parsePdfContent(result.pdfText);
-    
-    // Preserve existing items or delivery schedules if vision OCR already extracted them
-    if (result.structuredSpecs) {
-      result.structuredSpecs = {
-        ...parsedFromText,
-        items: (result.structuredSpecs.items && result.structuredSpecs.items.length > 0)
-          ? result.structuredSpecs.items
-          : parsedFromText.items,
-        deliverySchedule: (result.structuredSpecs.deliverySchedule && result.structuredSpecs.deliverySchedule.length > 0)
-          ? result.structuredSpecs.deliverySchedule
-          : parsedFromText.deliverySchedule,
-        rawSpecText: result.structuredSpecs.rawSpecText || parsedFromText.rawSpecText
-      };
-    } else {
-      result.structuredSpecs = parsedFromText;
-    }
+    const parsedFromText = parsePdfContent(verbatimPdfText.trim());
+    result.structuredSpecs = parsedFromText;
   }
 
-  // 6. Cache into memory and persistent disk
-  liveCache.set(invIdStr, { timestamp: Date.now(), data: result });
-  if (result.documents && result.documents.length > 0) {
-    saveDiskBundle(invIdStr, result);
+  const processedDocs = result.documents.filter((doc) => ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus || ''));
+  result.extractionStatus = result.documents.length === 0
+    ? 'unavailable'
+    : processedDocs.length === result.documents.length && result.documents.every((doc) => doc.extractionStatus === 'text_extracted')
+      ? 'complete'
+      : processedDocs.length > 0
+        ? 'partial'
+        : 'unavailable';
+  result.fetchedAt = new Date().toISOString();
+  // Keep the last good extraction visible if the source portal temporarily denies a refresh.
+  const priorBundle = existingRawData?.liveBundle as LiveExtractionResult | undefined;
+  const readableDocumentCount = result.documents.filter((doc) =>
+    ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus || '')
+  ).length;
+  const priorReadableDocumentCount = priorBundle?.documents?.filter((doc) =>
+    ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus || '')
+  ).length || (hasPriorExtractedText(priorBundle) ? 1 : 0);
+  const priorHasBetterCoverage = hasPriorExtractedText(priorBundle) && (
+    result.documents.length === 0 ||
+    readableDocumentCount === 0 ||
+    (priorBundle.extractionStatus === 'complete' && result.extractionStatus !== 'complete') ||
+    (priorReadableDocumentCount > readableDocumentCount &&
+      (result.pdfText?.length || 0) < (priorBundle.pdfText?.length || 0) * 0.75)
+  );
+  if (priorHasBetterCoverage && priorBundle) {
+    return { ...priorBundle, stale: true, lastFetchAttemptAt: result.fetchedAt };
   }
+
+  // Vercel filesystems are ephemeral/read-only at runtime; Supabase is the durable bundle store.
+  liveCache.set(invIdStr, { timestamp: Date.now(), data: result });
 
   // 7. Persist to Supabase raw_data (store structured text, not heavy binary)
   try {
-    // Truncate raw full pdf text to safe limit (~50KB) for DB storage while keeping structured specs
+    if (!supabaseAdmin) {
+      console.warn('Live bundle was extracted but not persisted: SUPABASE_SERVICE_ROLE_KEY is not configured.');
+      return result;
+    }
+    // Retain page-labelled text for source-aware detail and AI retrieval.
     const dbSafeResult = {
       ...result,
-      pdfText: result.pdfText ? result.pdfText.substring(0, 50000) : ''
+      pdfText: result.pdfText ? result.pdfText.substring(0, 300000) : ''
     };
-    await supabase
-      .from('tenders')
-      .update({
-        raw_data: {
-          ...(existingRawData || {}),
-          tenderDocumentId: result.tenderDocumentId || existingRawData?.tenderDocumentId,
-          tenderId: result.tenderId || existingRawData?.tenderId,
-          liveBundle: dbSafeResult
-        },
-        updated_at: new Date().toISOString()
-      })
-      .eq('invitation_id', invitationId);
+    const { data: updatedRows, error } = await supabaseAdmin.rpc('merge_tender_live_bundle', {
+      p_invitation_id: String(invitationId),
+      p_live_bundle: dbSafeResult,
+      p_tender_document_id: result.tenderDocumentId ?? null,
+      p_tender_id: result.tenderId ?? null,
+    });
+    if (error) console.warn('Could not persist liveBundle to Supabase:', error.message);
+    else if (updatedRows === 0) console.warn(`Could not persist liveBundle: tender ${invitationId} was not found in Supabase.`);
   } catch (dbErr) {
     console.warn('Could not persist liveBundle to Supabase:', dbErr);
   }

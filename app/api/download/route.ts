@@ -1,33 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { execFile } from 'child_process';
+import { fetchVerifiedAttachment } from '@/lib/source-attachment';
 
 export const dynamic = 'force-dynamic';
-
-const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
-
-function curlDownloadPdf(fileId: string): Promise<Buffer | null> {
-  return new Promise((resolve) => {
-    const args = [
-      '-s', '-L',
-      `https://user.tender.gov.mn/mn/download/${fileId}`,
-      '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      '-H', 'Referer: https://www.tender.gov.mn/',
-      '-H', 'Accept: application/pdf,application/octet-stream,*/*',
-    ];
-
-    execFile(curlCmd, args, {
-      encoding: 'buffer',
-      maxBuffer: 50 * 1024 * 1024,
-      timeout: 30000,
-    }, (err, stdout) => {
-      if (err || !stdout || stdout.length === 0) {
-        resolve(null);
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
-}
+export const runtime = 'nodejs';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -35,31 +10,37 @@ export async function GET(req: NextRequest) {
   const nameParam = searchParams.get('name') || 'tender_document.pdf';
 
   if (!fileId || !/^\d+$/.test(fileId)) {
-    return NextResponse.json({ error: 'Valid numeric fileId is required' }, { status: 400 });
+    return NextResponse.json({ error: 'A numeric fileId is required.' }, { status: 400 });
   }
 
-  const pdfBuffer = await curlDownloadPdf(fileId);
-  if (!pdfBuffer || pdfBuffer.length < 50) {
-    // If serverless environment is IP-blocked or times out, redirect user browser to download directly
-    return NextResponse.redirect(`https://user.tender.gov.mn/mn/download/${fileId}`, 307);
+  try {
+    // The portal sometimes supplies an extension separately from the displayed
+    // filename. The source host and returned file signature are still verified.
+    const allowImage = searchParams.get('allowImage') === '1' || /\.(?:png|jpe?g)$/i.test(nameParam);
+    const { buffer, contentType } = await fetchVerifiedAttachment(fileId, allowImage);
+    let safeFileName = nameParam.replace(/[^\w\s.\-\u0400-\u04FF]/g, '_').trim().slice(0, 180);
+    if (!safeFileName) safeFileName = 'tender_document.pdf';
+    const expectedExtension = contentType === 'application/pdf' ? '.pdf' : contentType === 'image/png' ? '.png' : '.jpg';
+    if (!safeFileName.toLowerCase().endsWith(expectedExtension)) {
+      safeFileName = `${safeFileName.replace(/\.[^.]*$/, '')}${expectedExtension}`;
+    }
+
+    const asciiFallback = safeFileName.replace(/[^\x20-\x7E]/g, '_').replace(/"/g, '_');
+    return new NextResponse(new Uint8Array(buffer), {
+      status: 200,
+      headers: {
+        'Content-Type': contentType,
+        'Content-Length': String(buffer.length),
+        'Content-Disposition': `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodeURIComponent(safeFileName)}`,
+        'Cache-Control': 'private, no-store, max-age=0',
+        'X-Content-Type-Options': 'nosniff',
+      },
+    });
+  } catch (error) {
+    console.warn('Tender attachment download failed:', error instanceof Error ? error.message : 'unknown error');
+    return NextResponse.json(
+      { error: 'The official source did not return a valid PDF. Please try the official tender page.' },
+      { status: 502, headers: { 'Cache-Control': 'no-store' } },
+    );
   }
-
-  // Ensure safe clean filename
-  let safeFileName = nameParam.replace(/[^\w\s\.\-\u0400-\u04FF]/gi, '_').trim();
-  if (!safeFileName.toLowerCase().endsWith('.pdf') && !safeFileName.includes('.')) {
-    safeFileName += '.pdf';
-  }
-
-  const asciiFallback = safeFileName.replace(/[^\x20-\x7E]/g, '_');
-  const encodedName = encodeURIComponent(safeFileName);
-
-  return new NextResponse(new Uint8Array(pdfBuffer), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/pdf',
-      'Content-Length': String(pdfBuffer.length),
-      'Content-Disposition': `attachment; filename="${asciiFallback}"; filename*=UTF-8''${encodedName}`,
-      'Cache-Control': 'public, max-age=86400, s-maxage=86400',
-    },
-  });
 }

@@ -14,12 +14,20 @@ import { CommandPalette } from '@/components/CommandPalette';
 import { TenderSkeleton } from '@/components/TenderSkeleton';
 import { ToastContainer, ToastMessage } from '@/components/Toast';
 import { exportTendersToCSV } from '@/lib/export';
-import { 
+import {
   AlertCircle, ChevronLeft, ChevronRight, 
   FileSpreadsheet, Star, Sparkles, TrendingUp, 
   ShieldCheck, Clock, Layers, Coins, CheckCircle2,
   ArrowRight
 } from 'lucide-react';
+
+function formatCompactMnt(amount?: number | null): string {
+  if (amount == null) return '—';
+  if (amount >= 1_000_000_000_000) return `${(amount / 1_000_000_000_000).toFixed(1)} их наяд ₮`;
+  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)} тэрбум ₮`;
+  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} сая ₮`;
+  return `${amount.toLocaleString()} ₮`;
+}
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>('mn');
@@ -29,8 +37,9 @@ export default function Home() {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [stats, setStats] = useState<TenderStats | undefined>(undefined);
+  const [statsSource, setStatsSource] = useState<string | undefined>(undefined);
+  const [listSource, setListSource] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   // Command Palette & Toasts
@@ -193,7 +202,7 @@ export default function Home() {
         setTenders(data.items);
         setTotalCount(data.totalCount);
         setTotalPages(data.totalPages || 1);
-        if (data.stats) setStats(data.stats);
+        setListSource(data.source || 'unknown');
       }
     } catch (err) {
       console.error('Failed to load tenders:', err);
@@ -206,6 +215,26 @@ export default function Home() {
     loadTenders(filters);
   }, [filters, loadTenders]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const loadAnalytics = async () => {
+      try {
+        const response = await fetch('/api/analytics');
+        const data = await response.json();
+        if (!cancelled && data.success && data.stats) {
+          setStats(data.stats);
+          setStatsSource(data.source || 'unknown');
+        } else if (!cancelled) {
+          setStatsSource('unavailable');
+        }
+      } catch {
+        if (!cancelled) setStatsSource('unavailable');
+      }
+    };
+    loadAnalytics();
+    return () => { cancelled = true; };
+  }, []);
+
   const handleFilterChange = (newFilters: Partial<TenderFilterParams>) => {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
@@ -217,25 +246,6 @@ export default function Home() {
     }
     return tenders;
   }, [tenders, filters.tabMode, savedIds]);
-
-  const handleSync = async () => {
-    setIsSyncing(true);
-    try {
-      const res = await fetch('/api/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ search: filters.search || undefined, page: 1 }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        await loadTenders(filters);
-      }
-    } catch (err) {
-      console.error('Sync failed:', err);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const handleAskAI = (tender: TenderItem) => {
     setAiTenderContext(tender);
@@ -259,8 +269,6 @@ export default function Home() {
         locale={locale}
         setLocale={setLocale}
         stats={stats}
-        isSyncing={isSyncing}
-        onSync={handleSync}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         onOpenAI={() => {
           setAiTenderContext(null);
@@ -270,6 +278,17 @@ export default function Home() {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 space-y-3">
+        {(statsSource === 'local_cache' || statsSource === 'unavailable' || listSource === 'local_cache' || listSource === 'live_fetch_partial') && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">
+            {listSource === 'live_fetch_partial'
+              ? (locale === 'mn'
+                ? 'Энэ хайлт эх сайтаас зөвхөн нэг хуудсыг шууд татсан. Бүрэн жагсаалт болон статистикийг өдөр тутмын синкээр шинэчилнэ.'
+                : 'This search is a live-source fallback for one page only. The daily sync provides the complete stored archive.')
+              : (locale === 'mn'
+                ? 'Бүрэн өгөгдлийн сангийн мэдээлэл боломжгүй байна. Жагсаалт эсвэл статистик кэшийн хэсэгчилсэн өгөгдөл байж болно.'
+                : 'Complete database data is temporarily unavailable. The list or metrics may reflect only a partial cache.')}
+          </div>
+        )}
         {/* Executive Market Pulse: 4 High-Density Key Metrics */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
           {/* Card 1: Active Live Bids */}
@@ -287,7 +306,7 @@ export default function Home() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {(stats?.activeTendersCount || 736).toLocaleString()}
+                {stats?.activeTendersCount.toLocaleString() ?? '—'}
               </span>
               <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded">
                 {locale === 'mn' ? 'Санал авч буй' : 'Receiving'}
@@ -303,18 +322,14 @@ export default function Home() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {(stats?.activeBudgetSum || stats?.totalActiveBudget)
-                  ? ((stats.activeBudgetSum || stats.totalActiveBudget)! >= 1e12 
-                      ? `${(((stats.activeBudgetSum || stats.totalActiveBudget)!) / 1e12).toFixed(1)} их наяд ₮` 
-                      : `${(((stats.activeBudgetSum || stats.totalActiveBudget)!) / 1e9).toFixed(1)} тэрбум ₮`)
-                  : '540.2 тэрбум ₮'}
+                {formatCompactMnt(stats?.activeBudgetSum ?? stats?.totalActiveBudget)}
               </span>
             </div>
           </div>
 
           {/* Card 3: Urgent Closing <48h */}
           <button
-            onClick={() => handleFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_3d', sortBy: 'deadline_asc', page: 1 })}
+            onClick={() => handleFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_48h', sortBy: 'deadline_asc', page: 1 })}
             className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer bg-white ${
               filters.tabMode === 'closing_soon'
                 ? 'border-rose-500 ring-1 ring-rose-500/20 shadow-xs'
@@ -327,7 +342,7 @@ export default function Home() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {(stats?.closingSoonCount || 42).toLocaleString()}
+                {stats?.closingSoonCount?.toLocaleString() ?? '—'}
               </span>
               <span className="text-[11px] text-rose-700 font-medium">
                 {locale === 'mn' ? 'боломж' : 'bids'}
@@ -345,15 +360,15 @@ export default function Home() {
             }`}
           >
             <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-              <span className="font-semibold text-teal-800">{locale === 'mn' ? 'Баталгаа шаардахгүй' : 'No Bid Bond'}</span>
+              <span className="font-semibold text-teal-800">{locale === 'mn' ? 'PDF-д баталгаа шаардаагүй' : 'PDF says no bid security'}</span>
               <ShieldCheck className="h-3.5 w-3.5 text-teal-600 shrink-0" />
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {(stats?.noGuaranteeCount || 189).toLocaleString()}
+                {stats?.noGuaranteeCount?.toLocaleString() ?? '—'}
               </span>
               <span className="text-[11px] text-teal-700 font-medium">
-                {locale === 'mn' ? '0₮ барьцаа' : '0₮ collateral'}
+                {locale === 'mn' ? 'боловсруулсан баримтаас' : 'in processed PDFs'}
               </span>
             </div>
           </button>

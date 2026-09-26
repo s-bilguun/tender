@@ -3,15 +3,34 @@ import { tenderStore } from '@/lib/tender-client';
 import { supabaseAdmin } from '@/lib/supabase';
 import { fetchTenderLiveBundle } from '@/lib/live-fetcher';
 
+function isAuthorized(request: NextRequest): boolean {
+  const secret = process.env.TENDER_SYNC_SECRET;
+  const authorization = request.headers.get('authorization') || '';
+  return Boolean(secret && authorization === `Bearer ${secret}`);
+}
+
 async function performSync(search?: string, page = 1) {
+  if (!supabaseAdmin) throw new Error('SUPABASE_SERVICE_ROLE_KEY must be configured before the sync API can write tenders.');
+
   // 1. Fetch live tenders from tender.gov.mn portal
   const result = await tenderStore.fetchLiveTenders(search, page);
+  if (result.source !== 'live') {
+    throw new Error(`Tender source refresh failed: ${result.error || 'source response was invalid'}`);
+  }
 
   const newlyEnriched: (string | number)[] = [];
 
   // 2. Persist live items to Supabase
   if (result.items && result.items.length > 0) {
     try {
+      const invIds = result.items.map((item) => item.invitationId);
+      const { data: existingRows, error: readError } = await supabaseAdmin
+        .from('tenders')
+        .select('invitation_id, raw_data')
+        .in('invitation_id', invIds);
+      if (readError) throw new Error(`Could not read existing tender metadata before sync: ${readError.message}`);
+      const existingById = new Map((existingRows || []).map((row) => [String(row.invitation_id), row.raw_data || {}]));
+
       const records = result.items.map((item) => ({
         invitation_id: item.invitationId,
         invitation_number: item.invitationNumber || '',
@@ -30,27 +49,36 @@ async function performSync(search?: string, page = 1) {
         receive_date: item.receiveDate ? new Date(item.receiveDate).toISOString() : null,
         doc_status_code: item.docStatusCode || '',
         doc_status_name: item.docStatusName || '',
-        is_receiving: item.docStatusName?.includes('хүлээн') ? 1 : 0,
-        raw_data: item,
+        is_receiving: (item as any).isReceiving ?? (item.docStatusName?.toLowerCase().includes('хүлээн авч') ? 1 : 0),
+        raw_data: {
+          ...(existingById.get(String(item.invitationId)) || {}),
+          ...(item as any).rawData,
+          ...(existingById.get(String(item.invitationId))?.liveBundle
+            ? { liveBundle: existingById.get(String(item.invitationId))?.liveBundle }
+            : {}),
+          tenderDocumentId: (item as any).rawData?.tenderDocumentId ?? existingById.get(String(item.invitationId))?.tenderDocumentId,
+          tenderId: (item as any).tenderId ?? (item as any).rawData?.tenderId ?? existingById.get(String(item.invitationId))?.tenderId,
+        },
         updated_at: new Date().toISOString()
       }));
 
-      await supabaseAdmin
+      const { error: upsertError } = await supabaseAdmin
         .from('tenders')
         .upsert(records, { onConflict: 'invitation_id' });
+      if (upsertError) throw new Error(`Could not sync tender listing rows: ${upsertError.message}`);
 
       // 3. Immediately auto-enrich tenders that don't have full PDF / liveBundle yet!
-      const invIds = result.items.map((i) => i.invitationId);
-      const { data: existingRows } = await supabaseAdmin
+      const { data: syncedRows, error: syncedRowsError } = await supabaseAdmin
         .from('tenders')
         .select('invitation_id, raw_data')
         .in('invitation_id', invIds);
+      if (syncedRowsError) throw new Error(`Could not read tender rows after sync: ${syncedRowsError.message}`);
 
-      const rowMap = new Map(existingRows?.map((r) => [r.invitation_id, r]) || []);
+      const rowMap = new Map(syncedRows?.map((r) => [String(r.invitation_id), r]) || []);
       const toEnrich: (string | number)[] = [];
 
       for (const item of result.items) {
-        const row = rowMap.get(item.invitationId);
+        const row = rowMap.get(String(item.invitationId));
         const hasLiveBundle = !!row?.raw_data?.liveBundle?.documents?.length;
         if (!hasLiveBundle) {
           toEnrich.push(item.invitationId);
@@ -71,7 +99,7 @@ async function performSync(search?: string, page = 1) {
         }
       }
     } catch (sbErr) {
-      console.warn('Sync to Supabase warning:', sbErr);
+      throw sbErr;
     }
   }
 
@@ -87,6 +115,12 @@ async function performSync(search?: string, page = 1) {
 }
 
 export async function GET(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json(
+      { success: false, error: process.env.TENDER_SYNC_SECRET ? 'Unauthorized' : 'TENDER_SYNC_SECRET is not configured.' },
+      { status: process.env.TENDER_SYNC_SECRET ? 401 : 503 },
+    );
+  }
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || undefined;
@@ -99,6 +133,12 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isAuthorized(request)) {
+    return NextResponse.json(
+      { success: false, error: process.env.TENDER_SYNC_SECRET ? 'Unauthorized' : 'TENDER_SYNC_SECRET is not configured.' },
+      { status: process.env.TENDER_SYNC_SECRET ? 401 : 503 },
+    );
+  }
   try {
     const body = await request.json().catch(() => ({}));
     const search = body.search || undefined;

@@ -3,132 +3,34 @@ import { tenderStore } from './tender-client';
 import { TenderItem } from './types';
 import { fetchTenderLiveBundle } from './live-fetcher';
 
-function generateBDS(tender: any) {
-  const budget = Number(tender.total_budget || tender.totalBudget) || 0;
-  const fullName = tender.tender_name || tender.tenderName || 'Тендер';
-  const name = fullName.toLowerCase();
-  const typeCode = tender.tender_type_code || tender.tenderTypeCode || 'OTHER';
-
-  // Statutory Financial Thresholds calculated per Mongolian Procurement Law
-  const turnoverRatio = typeCode === 'JOB' ? 0.8 : typeCode === 'PRODUCT' ? 0.5 : 0.6;
-  const minTurnover = Math.round(budget * turnoverRatio);
-  const liquidRatio = typeCode === 'JOB' ? 0.15 : 0.1;
-  const minLiquid = Math.round(budget * liquidRatio);
-  const similarRatio = typeCode === 'JOB' ? 0.7 : 0.5;
-  const minSimilar = Math.round(budget * similarRatio);
-
-  // Required Licenses: only populated from official tender documentation / PDF
-  const requiredLicenses: string[] = [];
-
-  // Key Personnel: only populated from official tender documentation / PDF
-  const keyPersonnel: any[] = [];
-
-  // Machinery & Equipment: only populated from official tender documentation / PDF
-  const machinery: string[] = [];
-
+function generateBDS(_tender: any) {
   return {
-    isStatutoryEstimate: true,
-    legalBasis: 'Монгол Улсын Төрийн болон орон нутгийн өмчийн хөрөнгөөр бараа, ажил, үйлчилгээ худалдан авах тухай хууль (11, 12, 20, 43-р зүйл)',
-    validityDays: budget > 500000000 ? 60 : 45,
-    clarificationDays: 5,
-    bidSecurity1Pct: Math.round(budget * 0.01),
-    bidSecurity2Pct: Math.round(budget * 0.02),
-    bidSecurityAmount: Math.round(budget * 0.015),
-    performanceBond5Pct: Math.round(budget * 0.05),
-    minAnnualTurnover: minTurnover,
-    minLiquidAssets: minLiquid,
-    similarContractThreshold: minSimilar,
-    similarContractYears: 2,
-    requiredLicenses,
-    keyPersonnel,
-    machinery,
-    generalRequirements: [
-      'Улсын бүртгэлийн хүчин төгөлдөр гэрчилгээ (үйл ажиллагааны чиглэл тохирсон байх)',
-      'Татварын өргүй тухай цахим лавлагаа (e-Mongolia / E-Tax)',
-      'Шүүхийн шийдвэр гүйцэтгэх газрын хугацаа хэтэрсэн өргүй тухай тодорхойлолт',
-      'Нийгмийн даатгалын шимтгэл төлөлтийн цахим лавлагаа',
-      'Тендерийн баталгаа (Арилжааны банкны баталгаа эсвэл даатгалын батлан даалт)'
-    ],
-    evaluationCriteria: {
-      priceWeight: 70,
-      qualityWeight: 30
-    }
+    evidenceStatus: 'not_processed' as 'not_processed' | 'partial' | 'complete',
+    requiredLicenses: [] as string[],
+    keyPersonnel: [] as any[],
+    machinery: [] as string[],
+    generalRequirements: [] as string[],
+    evaluationCriteria: null,
+    bidSecurityAmount: null as number | null,
+    bidSecurity1Pct: null as number | null,
+    bidSecurity2Pct: null as number | null,
   };
 }
 
-function generateTechnicalSpecs(tender: any) {
-  const budget = Number(tender.total_budget || tender.totalBudget) || 0;
-  const fullName = tender.tender_name || tender.tenderName || 'Тендер';
-  const shortName = fullName.split(/[,–\-\/]/)[0].trim().slice(0, 30);
-  const year = tender.tenderYear || (tender.publish_date ? new Date(tender.publish_date).getFullYear() : 2026);
-  const isConcluded = (tender.doc_status_name || tender.docStatusName || '').includes('Үр дүн') ||
-    (tender.doc_status_name || tender.docStatusName || '').includes('Дууссан');
-  const typeCode = tender.tender_type_code || tender.tenderTypeCode || 'PRODUCT';
-  const invitationId = tender.invitation_id || tender.invitationId;
-  const detailUrl = `https://www.tender.gov.mn/mn/invitation/detail/${invitationId}`;
-
-  // Specific item breakdown: honest procurement title (real items are loaded from official PDF)
-  const defaultUnit = typeCode === 'JOB' ? 'ажил' : (typeCode === 'SERVICE' ? 'үйлчилгээ' : 'багц');
-  const sampleItems: any[] = [
-    {
-      name: fullName,
-      quantity: 1,
-      unit: defaultUnit,
-      spec: 'Захиалагчийн зарласан албан ёсны тендерийн баримт бичгийн дагуу',
-      isRealExtracted: false
-    }
-  ];
-
-  // Default documents: link directly to official portal page until live bundle attaches the actual PDF files
-  const documents: any[] = [
-    {
-      id: `doc-${invitationId}`,
-      fileId: null,
-      name: `${fullName} - Албан ёсны баримт бичиг`,
-      category: 'tender.gov.mn эх сурвалж',
-      type: 'Албан ёсны эх баримт (PDF / Вэб)',
-      date: tender.publish_date ? tender.publish_date.substring(0, 10) : `${year}`,
-      url: detailUrl,
-      downloadUrl: detailUrl,
-      officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-      isPrimary: true
-    }
-  ];
-
+function generateTechnicalSpecs(_tender: any) {
   return {
-    deliveryLocation: tender.budget_entity_name || 'Захиалагчийн заасан байршил',
-    deliveryPeriodDays: budget > 1000000000 ? 90 : 30,
-    warrantyMonths: 12,
-    advancePaymentPct: budget > 500000000 ? 20 : 30,
-    standards: [
-      'Монгол Улсын холбогдох MNS үндэсний стандартын шаардлага хангасан байх',
-      'Үйлдвэрлэгчийн чанарын гэрчилгээ эсвэл тохирлын гэрчилгээтэй байх',
-      'Шинэ, үйлдвэрийн лацтай, баталгаат хугацаатай байх'
-    ],
-    sampleItems,
-    paymentTerms: {
-      advancePaymentPct: budget > 500000000 ? 20 : 30,
-      progressPayment: 'Ажил гүйцэтгэлийн явцын акт, хүлээлцсэн баримт, нэхэмжлэхийг үндэслэн санхүүжүүлнэ',
-      retentionBondPct: 5,
-      retentionPeriodMonths: 12
-    },
-    penaltyClause: {
-      dailyRate: '0.1%',
-      maxLimit: '10%',
-      description: 'Гэрээний үүргийг хугацаандаа биелүүлээгүй хоног тутамд гүйцэтгээгүй үүргийн үнийн дүнгийн 0.1%-ийн алданги тооцох ба дээд хэмжээ нь гэрээний үнийн дүнгийн 10%-иас хэтрэхгүй байна.'
-    },
-    submissionChecklist: [
-      { id: 'lic', title: 'Улсын бүртгэлийн гэрчилгээ & Тусгай зөвшөөрөл', desc: 'Улсын бүртгэлийн гэрчилгээ болон тухайн ажил үйлчилгээнд шаардлагатай тусгай зөвшөөрөл (хэрэв шаардлагатай бол)', required: true },
-      { id: 'tax', title: 'Татварын өрийн цахим лавлагаа', desc: 'Татварын ерөнхий газрын хугацаа хэтэрсэн өргүй цахим лавлагаа (e-Mongolia / E-Tax)', required: true },
-      { id: 'fin', title: 'Санхүүгийн тайлан & Аудитын дүгнэлт', desc: `Сүүлийн жилүүдийн борлуулалтын доод орлого (${Math.round(budget * (typeCode === 'JOB' ? 0.8 : 0.5)).toLocaleString()} ₮) хангах тайлан`, required: true },
-      { id: 'sec', title: `Тендерийн баталгаа (${Math.round(budget * 0.01).toLocaleString()} ₮ - ${Math.round(budget * 0.02).toLocaleString()} ₮)`, desc: 'Арилжааны банкны баталгаа эсвэл даатгалын батлан даалт', required: true },
-      { id: 'price', title: 'Үнийн санал & Өртгийн задаргаа', desc: 'Тендерийн маягтын дагуу боловсруулсан үнийн хүснэгт (НӨАТ тооцсон)', required: true },
-      { id: 'spec', title: 'Техникийн тодорхойлолтын тохирлын хүснэгт', desc: 'Захиалагчийн шаардсан техникийн үзүүлэлтийг хангаж буйг нотлох баримт', required: true }
-    ],
-    documents
+    evidenceStatus: 'not_processed' as 'not_processed' | 'partial' | 'complete',
+    deliveryLocation: null as string | null,
+    deliveryPeriodDays: null as number | null,
+    warrantyMonths: null as number | null,
+    standards: [] as string[],
+    sampleItems: [] as any[],
+    paymentTerms: null as any,
+    penaltyClause: null as any,
+    submissionChecklist: [] as any[],
+    documents: [] as any[],
   };
 }
-
 export function generateResults(tender: any) {
   const isConcluded = (tender.doc_status_name || tender.docStatusName || '').includes('Үр дүн') ||
     (tender.doc_status_name || tender.docStatusName || '').includes('Дууссан');
@@ -422,7 +324,7 @@ export async function getTenderDetailData(id: string | number) {
       rawData?.tenderId
     );
   } catch (liveErr) {
-    console.warn('Live bundle fetch failed, using statutory calculations:', liveErr);
+    console.warn('Live bundle fetch failed:', liveErr);
   }
 
   // 5. Generate structured BDS & Specs & Results
@@ -436,26 +338,28 @@ export async function getTenderDetailData(id: string | number) {
     if (liveBundle.documents && liveBundle.documents.length > 0) {
       technicalSpecs.documents = liveBundle.documents.map((d: any) => {
         let extractedSummary: string | undefined = undefined;
-        const docMarker = `--- БАРИМТ БИЧИГ: ${d.fileName} ---`;
+        const idMarker = `--- DOCUMENT ${d.fileId}:`;
+        const legacyMarker = `--- БАРИМТ БИЧИГ: ${d.fileName} ---`;
+        const docMarker = liveBundle.pdfText?.includes(idMarker) ? idMarker : legacyMarker;
         if (liveBundle.pdfText && liveBundle.pdfText.includes(docMarker)) {
           const start = liveBundle.pdfText.indexOf(docMarker) + docMarker.length;
-          const nextMarker = liveBundle.pdfText.indexOf('--- БАРИМТ БИЧИГ:', start);
+          const nextIdMarker = liveBundle.pdfText.indexOf('--- DOCUMENT ', start);
+          const nextLegacyMarker = liveBundle.pdfText.indexOf('--- БАРИМТ БИЧИГ:', start);
+          const candidates = [nextIdMarker, nextLegacyMarker].filter((marker) => marker !== -1);
+          const nextMarker = candidates.length ? Math.min(...candidates) : -1;
           const rawSection = nextMarker !== -1
             ? liveBundle.pdfText.substring(start, nextMarker).trim()
             : liveBundle.pdfText.substring(start).trim();
           if (rawSection.length > 20) {
-            extractedSummary = rawSection.substring(0, 2500);
+            extractedSummary = rawSection.substring(0, 40000);
           }
-        } else if (liveBundle.structuredSpecs?.rawSpecText) {
-          extractedSummary = `ХУУЛЬ ЗҮЙН БА ТЕХНИКИЙН ШААРДЛАГА:\n${liveBundle.structuredSpecs.rawSpecText.substring(0, 2500)}`;
-        } else if (liveBundle.pdfText && liveBundle.pdfText.length > 50) {
-          extractedSummary = liveBundle.pdfText.substring(0, 2500);
         }
 
         return {
           id: String(d.fileId),
           fileId: d.fileId,
           name: d.fileName,
+          fileExtention: d.fileExtention || 'pdf',
           category: d.category || (d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг'),
           type: `${(d.fileExtention || 'pdf').toUpperCase()} Баримт`,
           date: d.createdDate ? d.createdDate.substring(0, 16) : (tenderItem.publishDate || '').substring(0, 10),
@@ -464,6 +368,10 @@ export async function getTenderDetailData(id: string | number) {
           officialNotice: 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
           isScannedOcr: !!d.isScannedOcr,
           ocrModel: d.ocrModel,
+          extractionStatus: d.extractionStatus || (extractedSummary ? 'text_extracted' : 'not_extracted'),
+          extractedPageCount: d.extractedPageCount,
+          totalPageCount: d.totalPageCount,
+          ocrSampleCount: d.ocrSampleCount,
           extractedSummary
         };
       });
@@ -537,7 +445,12 @@ export async function getTenderDetailData(id: string | number) {
           const payClause = validScc.find((c: any) => c.clause.includes('3.9') || c.title.includes('Төлбөр'));
           if (payClause) {
             const cleanedPay = payClause.content.replace(/^Төлбөр төлөх хугацаа\s*:\s*/i, '').trim();
-            if (cleanedPay) technicalSpecs.paymentTerms.progressPayment = cleanedPay;
+            if (cleanedPay) {
+              technicalSpecs.paymentTerms = {
+                ...(technicalSpecs.paymentTerms || {}),
+                progressPayment: cleanedPay,
+              };
+            }
           }
 
           const warClause = validScc.find((c: any) => c.clause.includes('4.10') || c.title.includes('Баталгаат'));
@@ -550,7 +463,10 @@ export async function getTenderDetailData(id: string | number) {
             (technicalSpecs as any).penaltyText = penClause.content;
             const rateMatch = penClause.content.match(/(\d+(?:\.\d+)?)\s*хүртэл\s*хувь|(\d+(?:\.\d+)?)\s*хувь/);
             if (rateMatch) {
-              technicalSpecs.penaltyClause.dailyRate = `${rateMatch[1] || rateMatch[2]}% / хоног тутамд`;
+              technicalSpecs.penaltyClause = {
+                ...(technicalSpecs.penaltyClause || {}),
+                dailyRate: `${rateMatch[1] || rateMatch[2]}% / хоног тутамд`,
+              };
             }
           }
         } else {
@@ -615,6 +531,15 @@ export async function getTenderDetailData(id: string | number) {
     if (liveBundle.announcementHtml) {
       (tenderItem as any).announcementHtml = liveBundle.announcementHtml;
     }
+
+    const hasDocumentText = typeof liveBundle.pdfText === 'string' && liveBundle.pdfText.trim().length > 0;
+    const evidenceStatus = !hasDocumentText
+      ? 'not_processed'
+      : liveBundle.extractionStatus === 'complete' && !liveBundle.stale
+        ? 'complete'
+        : 'partial';
+    bds.evidenceStatus = evidenceStatus;
+    technicalSpecs.evidenceStatus = evidenceStatus;
   }
 
   return {

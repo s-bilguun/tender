@@ -3,15 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Locale, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { RefreshCw, Sparkles, Globe, Building, Clock } from 'lucide-react';
+import { Sparkles, Globe, Clock } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 interface HeaderProps {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   stats?: TenderStats;
-  isSyncing: boolean;
-  onSync: () => void;
   onOpenAI: () => void;
   onOpenCommandPalette?: () => void;
   onToggleAnalytics?: () => void;
@@ -22,8 +20,6 @@ export const Header: React.FC<HeaderProps> = ({
   locale,
   setLocale,
   stats,
-  isSyncing,
-  onSync,
   onOpenAI,
   onOpenCommandPalette,
 }) => {
@@ -32,8 +28,12 @@ export const Header: React.FC<HeaderProps> = ({
   const [formattedTime, setFormattedTime] = useState<string>('');
 
   useEffect(() => {
+    if (!stats?.lastUpdatedAt) {
+      setFormattedTime('');
+      return;
+    }
     try {
-      const d = stats?.lastUpdatedAt ? new Date(stats.lastUpdatedAt) : new Date();
+      const d = new Date(stats.lastUpdatedAt);
       const parts = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Asia/Ulaanbaatar',
         year: 'numeric',
@@ -46,23 +46,9 @@ export const Header: React.FC<HeaderProps> = ({
       const getVal = (type: string) => parts.find((p) => p.type === type)?.value || '';
       setFormattedTime(`${getVal('year')}.${getVal('month')}.${getVal('day')} ${getVal('hour')}:${getVal('minute')}`);
     } catch {
-      const now = new Date();
-      setFormattedTime(
-        `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(2, '0')}.${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
-      );
+      setFormattedTime('');
     }
   }, [stats?.lastUpdatedAt]);
-
-  const formatBudgetShort = (amount?: number) => {
-    if (!amount) return '0 ₮';
-    if (amount >= 1_000_000_000_000) {
-      return locale === 'mn' ? `${(amount / 1_000_000_000_000).toFixed(1)} их наяд ₮` : `₮${(amount / 1_000_000_000_000).toFixed(1)}T`;
-    }
-    if (amount >= 1_000_000_000) {
-      return locale === 'mn' ? `${(amount / 1_000_000_000).toFixed(1)} тэрбум ₮` : `₮${(amount / 1_000_000_000).toFixed(1)}B`;
-    }
-    return locale === 'mn' ? `${(amount / 1_000_000).toFixed(0)} сая ₮` : `₮${(amount / 1_000_000).toFixed(0)}M`;
-  };
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
@@ -99,14 +85,14 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="text-slate-500">{locale === 'mn' ? 'Идэвхтэй:' : 'Active:'}</span>{' '}
               <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 tabular-nums text-[11px]">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {stats.activeTendersCount || 736}
+                {stats.activeTendersCount.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-slate-500">{locale === 'mn' ? 'Сүүлийн шинэчлэл:' : 'Last updated:'}</span>{' '}
               <span className="inline-flex items-center gap-1 font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-mono text-[11px] tabular-nums">
                 <Clock className="h-3 w-3 text-slate-500 shrink-0" />
-                {formattedTime || 'Уншиж байна...'}
+                {formattedTime || '—'}
               </span>
             </div>
           </div>

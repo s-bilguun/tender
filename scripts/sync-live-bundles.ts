@@ -4,6 +4,7 @@ import { supabaseAdmin as supabase } from '../lib/supabase';
 import { fetchTenderLiveBundle } from '../lib/live-fetcher';
 
 async function main() {
+  if (!supabase) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to read tender records.');
   const bundlesPath = path.join(process.cwd(), 'lib', 'live-bundles.json');
   let currentBundles: Record<string, any> = {};
   if (fs.existsSync(bundlesPath)) {

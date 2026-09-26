@@ -49,7 +49,7 @@ export const IndustryDiscoveryBar: React.FC<IndustryDiscoveryBarProps> = ({
         {INDUSTRIES.map((ind) => {
           const isSelected = currentIndustry === ind.id;
           const indStat = statsByIndustry[ind.id];
-          const activeCount = indStat?.activeCount || industryCounts[ind.id] || ind.activeCount || 0;
+          const activeCount = indStat?.activeCount ?? industryCounts[ind.id] ?? 0;
 
           return (
             <button

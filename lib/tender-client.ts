@@ -1,5 +1,4 @@
 import { TenderItem, TenderFilterParams, TenderStats } from './types';
-import { SEED_TENDERS } from './seed-data';
 import { classifyIndustry } from './taxonomy';
 import { generateBidRequirements } from './bid-requirements';
 import { execFile } from 'child_process';
@@ -47,13 +46,8 @@ class TenderStore {
         }
       }
     } catch (e) {
-      console.warn('Could not read live-tenders.json, using seed tenders');
+      console.warn('Could not read live-tenders.json; no local snapshot is available.');
     }
-
-    SEED_TENDERS.forEach(item => {
-      this.tenders.set(String(item.invitationId), this.enrichItem(item));
-    });
-    this.lastSyncedAt = new Date();
   }
 
   public getLastSyncTime(): Date | null {
@@ -69,7 +63,12 @@ class TenderStore {
     return this.tenders.get(String(id));
   }
 
-  public async fetchLiveTenders(searchQuery?: string, page = 1, year?: string | number): Promise<{ items: TenderItem[]; totalCount: number }> {
+  public async fetchLiveTenders(searchQuery?: string, page = 1, year?: string | number): Promise<{
+    items: TenderItem[];
+    totalCount: number;
+    source: 'live' | 'source_error';
+    error?: string;
+  }> {
     return new Promise((resolve) => {
       const yearParam = year && year !== 'all' ? `&year=${year}` : '';
       const url = `https://www.tender.gov.mn/mn/invitation?${searchQuery ? `search=${encodeURIComponent(searchQuery)}&` : ''}page=${page}${yearParam}`;
@@ -83,8 +82,9 @@ class TenderStore {
         url
       ], { maxBuffer: 30 * 1024 * 1024, timeout: 10000 }, (err, stdout) => {
         if (err || !stdout) {
-          console.warn('Direct live fetch timed out or failed, using cached tenders', err?.message);
-          return resolve({ items: this.getAllTenders().slice(0, 20), totalCount: this.tenders.size });
+          const error = err?.message || 'The source returned an empty response.';
+          console.warn('Direct live tender fetch failed:', error);
+          return resolve({ items: [], totalCount: 0, source: 'source_error', error });
         }
 
         try {
@@ -138,22 +138,23 @@ class TenderStore {
                   raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
                 }
                 const parsed: TenderItem[] = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length > 0) {
+                if (Array.isArray(parsed) && parsed.every((item) => item && item.invitationId != null)) {
                   // Upsert into memory store with enrichment
                   parsed.forEach(item => {
                     this.tenders.set(String(item.invitationId), this.enrichItem(item));
                   });
                   this.lastSyncedAt = new Date();
-                  return resolve({ items: parsed.map(p => this.enrichItem(p)), totalCount: parsed.length });
+                  return resolve({ items: parsed.map(p => this.enrichItem(p)), totalCount: parsed.length, source: 'live' });
                 }
               }
             }
           }
         } catch (parseErr) {
           console.error('Failed to parse Next.js payload from live tender.gov.mn', parseErr);
+          return resolve({ items: [], totalCount: 0, source: 'source_error', error: 'The source response could not be parsed.' });
         }
 
-        resolve({ items: this.getAllTenders().slice(0, 20), totalCount: this.tenders.size });
+        resolve({ items: [], totalCount: 0, source: 'source_error', error: 'The source page did not contain a valid tender list.' });
       });
     });
   }
@@ -205,7 +206,7 @@ class TenderStore {
         const deadlineTs = parseSafeTimestamp(item.receiveDate || item.openDate);
         if (!deadlineTs) return false;
         const diffHours = (deadlineTs - nowTs) / (1000 * 60 * 60);
-        return diffHours > 0 && diffHours <= 72; // Exactly matches ≤ 72 hours / 3 days
+      return diffHours > 0 && diffHours <= 48;
       });
     } else if (params.tabMode === 'result') {
       result = result.filter(item => {
@@ -216,6 +217,11 @@ class TenderStore {
       result = result.filter(item => {
         return item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1;
       });
+    } else if (params.tabMode === 'no_guarantee') {
+      result = result.filter(item =>
+        item.liveBundleSummary?.isBidSecurityExempt === true &&
+        (item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1),
+      );
     } else if (params.status && params.status !== 'all') {
       if (params.status === 'receiving') {
         result = result.filter(item => item.docStatusCode === 'RECEIVE_TENDER' || item.docStatusName?.includes('хүлээн') || (item as any).isReceiving === 1);
@@ -228,19 +234,19 @@ class TenderStore {
 
     // Urgency Presets
     if (params.urgency && params.urgency !== 'all') {
-      if (params.urgency === 'urgent_3d') {
+    if (params.urgency === 'urgent_48h') {
         result = result.filter(item => {
           const deadlineTs = parseSafeTimestamp(item.receiveDate || item.openDate);
           if (!deadlineTs) return false;
           const diffHours = (deadlineTs - nowTs) / (1000 * 60 * 60);
-          return diffHours > 0 && diffHours <= 72;
+        return diffHours > 0 && diffHours <= 48;
         });
       } else if (params.urgency === 'new_48h') {
         result = result.filter(item => {
           const pubTs = parseSafeTimestamp(item.publishDate || item.actionDate);
           if (!pubTs) return false;
           const diffHours = (nowTs - pubTs) / (1000 * 60 * 60);
-          return diffHours >= 0 && diffHours <= 96; // within last 4 days / 96h
+        return diffHours >= 0 && diffHours <= 48;
         });
       } else if (params.urgency === 'high_budget') {
         result = result.filter(item => (Number(item.totalBudget) || 0) >= 500_000_000);
@@ -316,7 +322,11 @@ class TenderStore {
     let productCount = 0;
     let jobCount = 0;
     let serviceCount = 0;
-    const ministryMap: Record<string, { count: number; budget: number }> = {};
+    let hasUnknownBudget = false;
+    let hasUnknownActiveBudget = false;
+    const unknownIndustryBudget = new Set<string>();
+    const unknownActiveIndustryBudget = new Set<string>();
+    const ministryMap: Record<string, { count: number; budget: number; budgetKnown: boolean }> = {};
     const industryCounts: Record<string, number> = {};
 
     let activeCount = 0;
@@ -339,7 +349,9 @@ class TenderStore {
     };
 
     all.forEach(t => {
-      totalBudgetSum += t.totalBudget || 0;
+      const budget = Number.isFinite(t.totalBudget) && t.totalBudget > 0 ? t.totalBudget : null;
+      if (budget == null) hasUnknownBudget = true;
+      else totalBudgetSum += budget;
       if (t.tenderTypeCode === 'PRODUCT') productCount++;
       else if (t.tenderTypeCode === 'JOB') jobCount++;
       else if (t.tenderTypeCode === 'SERVICE') serviceCount++;
@@ -352,7 +364,8 @@ class TenderStore {
       const isActive = t.docStatusCode === 'RECEIVE_TENDER' || t.docStatusName?.includes('хүлээн') || (t as any).isReceiving === 1;
       if (isActive) {
         activeCount++;
-        activeBudgetSum += t.totalBudget || 0;
+        if (budget == null) hasUnknownActiveBudget = true;
+        else activeBudgetSum += budget;
 
         if (t.industry) {
           industryCounts[t.industry] = (industryCounts[t.industry] || 0) + 1;
@@ -361,7 +374,7 @@ class TenderStore {
         const deadline = t.receiveDate || t.openDate;
         if (deadline) {
           const diffHours = (new Date(deadline).getTime() - now) / (1000 * 60 * 60);
-          if (diffHours > 0 && diffHours <= 72) {
+          if (diffHours > 0 && diffHours <= 48) {
             closingSoonCount++;
           }
         }
@@ -378,14 +391,16 @@ class TenderStore {
       if (t.industry && statsByIndustry[t.industry]) {
         const indStat = statsByIndustry[t.industry];
         indStat.totalCount++;
-        indStat.totalBudgetSum += t.totalBudget || 0;
+        if (budget == null) unknownIndustryBudget.add(t.industry);
+        else indStat.totalBudgetSum += budget;
         if (isActive) {
           indStat.activeCount++;
-          indStat.activeBudgetSum += t.totalBudget || 0;
+          if (budget == null) unknownActiveIndustryBudget.add(t.industry);
+          else indStat.activeBudgetSum += budget;
           const deadline = t.receiveDate || t.openDate;
           if (deadline) {
             const diffHours = (new Date(deadline).getTime() - now) / (1000 * 60 * 60);
-            if (diffHours > 0 && diffHours <= 72) {
+              if (diffHours > 0 && diffHours <= 48) {
               indStat.closingSoonCount++;
             }
           }
@@ -397,67 +412,40 @@ class TenderStore {
 
       const ministry = t.positionName || 'Бусад захиалагч';
       if (!ministryMap[ministry]) {
-        ministryMap[ministry] = { count: 0, budget: 0 };
+        ministryMap[ministry] = { count: 0, budget: 0, budgetKnown: true };
       }
       ministryMap[ministry].count++;
-      ministryMap[ministry].budget += t.totalBudget || 0;
-    });
-
-    // Baseline multi-year archive statistics (22,785+ tenders from 2019 to 2026)
-    const baselineHistoricalTotals: Record<string, { totalCount: number; totalBudgetSum: number; fallbackActive: number }> = {
-      mining: { totalCount: 4350, totalBudgetSum: 6_850_000_000_000, fallbackActive: 37 },
-      construction: { totalCount: 6420, totalBudgetSum: 8_920_000_000_000, fallbackActive: 58 },
-      medical: { totalCount: 3120, totalBudgetSum: 2_450_000_000_000, fallbackActive: 31 },
-      food: { totalCount: 2890, totalBudgetSum: 1_180_000_000_000, fallbackActive: 45 },
-      it: { totalCount: 1840, totalBudgetSum: 1_240_000_000_000, fallbackActive: 9 },
-      transport: { totalCount: 2150, totalBudgetSum: 1_870_000_000_000, fallbackActive: 38 },
-      facility: { totalCount: 1450, totalBudgetSum: 890_000_000_000, fallbackActive: 4 },
-      stationery: { totalCount: 2780, totalBudgetSum: 940_000_000_000, fallbackActive: 64 },
-      consulting: { totalCount: 2135, totalBudgetSum: 4_229_589_562_397, fallbackActive: 12 },
-    };
-
-    Object.keys(baselineHistoricalTotals).forEach(ind => {
-      if (statsByIndustry[ind]) {
-        // Historical archive volume reflects the full 22,785+ multi-year repository
-        statsByIndustry[ind].totalCount = Math.max(statsByIndustry[ind].totalCount, baselineHistoricalTotals[ind].totalCount);
-        statsByIndustry[ind].totalBudgetSum = Math.max(statsByIndustry[ind].totalBudgetSum, baselineHistoricalTotals[ind].totalBudgetSum);
-        
-        // Active count reflects the live bidding count
-        if (statsByIndustry[ind].activeCount === 0) {
-          statsByIndustry[ind].activeCount = baselineHistoricalTotals[ind].fallbackActive;
-        }
-        industryCounts[ind] = statsByIndustry[ind].activeCount;
-      }
+      if (budget == null) ministryMap[ministry].budgetKnown = false;
+      else ministryMap[ministry].budget += budget;
     });
 
     const topMinistries = Object.entries(ministryMap)
-      .map(([name, val]) => ({ name, count: val.count, budget: val.budget }))
-      .sort((a, b) => b.budget - a.budget)
+      .map(([name, val]) => ({ name, count: val.count, budget: val.budgetKnown ? val.budget : null }))
+      .sort((a, b) => (b.budget || 0) - (a.budget || 0))
       .slice(0, 5);
+    const safeIndustryStats = Object.fromEntries(Object.entries(statsByIndustry).map(([industry, stat]) => [industry, {
+      ...stat,
+      totalBudgetSum: unknownIndustryBudget.has(industry) ? null : stat.totalBudgetSum,
+      activeBudgetSum: unknownActiveIndustryBudget.has(industry) ? null : stat.activeBudgetSum,
+    }]));
 
     return {
-      totalCount: Math.max(all.length, 22785),
-      totalBudgetSum: totalBudgetSum > 0 ? totalBudgetSum : 21719589562397,
-      activeTendersCount: activeCount || 736,
-      activeBudgetSum: activeBudgetSum || 482_900_000_000,
-      closingSoonCount: closingSoonCount || 42,
-      resultCount: totalResultCount || 21320,
-      newCount: newCount || 18,
+      totalCount: all.length,
+      totalBudgetSum: hasUnknownBudget ? null : totalBudgetSum,
+      activeTendersCount: activeCount,
+      activeBudgetSum: hasUnknownActiveBudget ? null : activeBudgetSum,
+      closingSoonCount,
+      resultCount: totalResultCount,
+      newCount,
       categoryCounts: {
-        product: productCount || 13734,
-        job: jobCount || 6373,
-        service: serviceCount || 2667,
+        product: productCount,
+        job: jobCount,
+        service: serviceCount,
       },
       industryCounts,
-      statsByIndustry,
-      topMinistries: topMinistries.length > 0 ? topMinistries : [
-        { name: 'Эрдэнэт үйлдвэр ТӨҮГ', count: 1420, budget: 1890000000000 },
-        { name: 'Эрүүл мэндийн сайд', count: 980, budget: 640000000000 },
-        { name: 'Боловсролын сайд', count: 1250, budget: 520000000000 },
-        { name: 'Дарханы төмөрлөгийн үйлдвэр', count: 410, budget: 380000000000 },
-        { name: 'Улаанбаатар хотын Захирагчийн ажлын алба', count: 680, budget: 310000000000 },
-      ],
-      lastUpdatedAt: (this.lastSyncedAt || new Date()).toISOString(),
+      statsByIndustry: safeIndustryStats,
+      topMinistries,
+      lastUpdatedAt: this.lastSyncedAt?.toISOString(),
     };
   }
 }

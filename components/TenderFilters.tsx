@@ -155,7 +155,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     if (tab === 'active') {
       onFilterChange({ tabMode: 'active', status: 'receiving', urgency: 'all', page: 1 });
     } else if (tab === 'closing_soon') {
-      onFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_3d', sortBy: 'deadline_asc', page: 1 });
+      onFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_48h', sortBy: 'deadline_asc', page: 1 });
     } else if (tab === 'no_guarantee') {
       onFilterChange({ tabMode: 'no_guarantee', status: 'receiving', urgency: 'all', page: 1 });
     } else if (tab === 'result') {
@@ -208,43 +208,30 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
   const tabMetrics = useMemo(() => {
     if (hasSubFilters) {
-      const allCount = totalFound;
-      const activeCount = filters.status === 'receiving' || filters.tabMode === 'active' 
-        ? totalFound 
-        : Math.min(totalFound, stats?.activeTendersCount || totalFound);
-      const resultCount = filters.status === 'result' || filters.tabMode === 'result'
-        ? totalFound
-        : Math.max(0, totalFound - activeCount);
-      const closingCount = Math.max(0, Math.min(activeCount, Math.round(activeCount * 0.2)));
-
       return {
-        all: allCount,
-        active: activeCount,
-        result: resultCount,
-        closing: closingCount,
+        all: totalFound,
+        active: filters.status === 'receiving' || filters.tabMode === 'active' ? totalFound : undefined,
+        result: filters.status === 'result' || filters.tabMode === 'result' ? totalFound : undefined,
+        closing: filters.urgency === 'urgent_48h' ? totalFound : undefined,
       };
     }
 
     if (activeIndustryInfo || activeIndustryStats) {
-      const total = activeIndustryStats?.totalCount || activeIndustryInfo?.totalCount || 3120;
-      const active = activeIndustryStats?.activeCount || (stats?.industryCounts ? stats.industryCounts[filters.industry!] : undefined) || activeIndustryInfo?.activeCount || 28;
-      const result = activeIndustryStats?.resultCount || Math.max(0, total - active);
-      const closing = activeIndustryStats?.closingSoonCount || Math.max(1, Math.round(active * 0.15));
       return {
-        all: total,
-        active,
-        result,
-        closing,
+        all: activeIndustryStats?.totalCount ?? totalFound,
+        active: activeIndustryStats?.activeCount,
+        result: activeIndustryStats?.resultCount,
+        closing: activeIndustryStats?.closingSoonCount,
       };
     }
 
     return {
-      all: stats?.totalCount || totalFound || 22785,
-      active: stats?.activeTendersCount || 301,
-      result: stats?.resultCount || 21320,
-      closing: stats?.closingSoonCount || 42,
+      all: stats?.totalCount ?? totalFound,
+      active: stats?.activeTendersCount,
+      result: stats?.resultCount,
+      closing: stats?.closingSoonCount,
     };
-  }, [hasSubFilters, filters.industry, filters.status, filters.tabMode, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
+  }, [hasSubFilters, filters.industry, filters.status, filters.tabMode, filters.urgency, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
 
   const hasActiveFilters = 
     Boolean(filters.search) || 
@@ -275,7 +262,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums font-mono ml-0.5 ${
               currentTab === 'active' ? 'bg-slate-800 text-white' : 'bg-slate-200/80 text-slate-700'
             }`}>
-              {tabMetrics.active.toLocaleString()}
+              {tabMetrics.active?.toLocaleString() ?? '—'}
             </span>
           </button>
 
@@ -293,7 +280,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums font-mono ml-0.5 ${
               currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
             }`}>
-              {tabMetrics.closing.toLocaleString()}
+              {tabMetrics.closing?.toLocaleString() ?? '—'}
             </span>
           </button>
 
@@ -324,7 +311,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums font-mono ml-0.5 ${
               currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
             }`}>
-              {tabMetrics.result.toLocaleString()}
+              {tabMetrics.result?.toLocaleString() ?? '—'}
             </span>
           </button>
 

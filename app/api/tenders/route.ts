@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin as supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { tenderStore } from '@/lib/tender-client';
 import { KEYWORDS_MAP, classifyIndustry } from '@/lib/taxonomy';
-import { TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
+import { LIVE_BUNDLE_SCHEMA_VERSION, TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
 
     // Try querying Supabase first
     try {
-      let query = supabase.from('tenders').select('*', { count: 'exact' });
+      const tenderReader = supabaseAdmin || supabase;
+      let query = tenderReader.from('tenders').select('*', { count: 'exact' });
 
       if (category && category !== 'ALL' && category !== 'all') {
         query = query.eq('tender_type_code', category);
@@ -92,11 +93,20 @@ export async function GET(request: NextRequest) {
       // Status & TabMode handling
       if (tabMode === 'result' || status === 'result') {
         query = query.or('doc_status_name.ilike.%үр дүн%,doc_status_name.ilike.%Үр дүн%,doc_status_name.ilike.%дууссан%,doc_status_code.ilike.%CLOSED%');
-      } else if (tabMode === 'active' || status === 'receiving') {
-        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
-      } else if (tabMode === 'closing_soon') {
-        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
       } else if (tabMode === 'no_guarantee') {
+        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+        query = query.filter(
+          'raw_data->liveBundle->structuredSpecs->>bidSecurityReq',
+          'ilike',
+          '%Шаардахгүй%',
+        );
+        query = query.eq('raw_data->liveBundle->>schemaVersion', String(LIVE_BUNDLE_SCHEMA_VERSION));
+      } else if (tabMode === 'closing_soon' || urgency === 'urgent_48h') {
+        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+        const startsAt = new Date();
+        const endsAt = new Date(startsAt.getTime() + 48 * 60 * 60 * 1000);
+        query = query.gte('receive_date', startsAt.toISOString()).lte('receive_date', endsAt.toISOString());
+      } else if (tabMode === 'active' || status === 'receiving') {
         query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
       } else if (status && status !== 'all') {
         if (status === 'opened') {
@@ -106,6 +116,12 @@ export async function GET(request: NextRequest) {
         } else if (status === 'requested') {
           query = query.ilike('doc_status_name', '%өөрчлөх%');
         }
+      }
+
+      if (urgency === 'new_48h') {
+        const now = new Date();
+        query = query.gte('publish_date', new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString())
+          .lte('publish_date', now.toISOString());
       }
 
       // Sorting
@@ -132,12 +148,27 @@ export async function GET(request: NextRequest) {
       const { data, count, error } = await query;
       const dynamicStats = tenderStore.getStats();
 
+      // An exact successful empty query is still a real result. Do not replace it
+      // with unrelated in-memory rows simply because the requested filters found nothing.
+      if (!error && data && data.length === 0 && !year && !search && (!count || count === 0)) {
+        return NextResponse.json({
+          success: true,
+          items: [],
+          totalCount: 0,
+          page,
+          perPage,
+          totalPages: 1,
+          source: 'supabase',
+          stats: dynamicStats,
+        });
+      }
+
       if (!error && data && data.length > 0) {
         let mappedItems: TenderItem[] = data.map((row) => {
           const classification = classifyIndustry(row.tender_name, row.tender_type_code, row.budget_entity_name || row.position_name);
           const liveBundle = row.raw_data?.liveBundle;
           let liveBundleSummary = undefined;
-          if (liveBundle) {
+          if (liveBundle?.schemaVersion === LIVE_BUNDLE_SCHEMA_VERSION) {
             const specs = liveBundle.structuredSpecs;
             const items = specs?.deliverySchedule || specs?.items || [];
             const bidSecReq = specs?.bidSecurityReq;
@@ -218,56 +249,20 @@ export async function GET(request: NextRequest) {
       if (!error && (!data || data.length === 0) && (year || search)) {
         try {
           const liveResult = await tenderStore.fetchLiveTenders(search, page, year);
-          if (liveResult.items && liveResult.items.length > 0) {
-            // Asynchronously upsert to Supabase
-            const records = liveResult.items.map((item) => ({
-              invitation_id: item.invitationId,
-              invitation_number: item.invitationNumber || '',
-              tender_name: item.tenderName || 'Гарчиггүй тендер',
-              tender_code: item.tenderCode || '',
-              tender_type_code: item.tenderTypeCode || 'OTHER',
-              tender_type_name: item.tenderTypeName || 'Бусад',
-              total_budget: Number(item.totalBudget) || 0,
-              budget_entity_name: item.budgetEntityName || (item as any).uusgesenEntityName || '',
-              client_code: item.clientCode || '',
-              position_name: item.positionName || '',
-              fund_name: item.fundName || '',
-              rule_name: item.ruleName || '',
-              publish_date: item.publishDate ? new Date(item.publishDate).toISOString() : null,
-              open_date: item.openDate ? new Date(item.openDate).toISOString() : null,
-              receive_date: item.receiveDate ? new Date(item.receiveDate).toISOString() : null,
-              doc_status_code: item.docStatusCode || '',
-              doc_status_name: item.docStatusName || '',
-              is_receiving: (item.docStatusName || '').includes('хүлээн') ? 1 : 0,
-              raw_data: item,
-              updated_at: new Date().toISOString(),
-            }));
-
-            const uniqueRecords: any[] = [];
-            const seen = new Set<string>();
-            for (const r of records) {
-              const idStr = String(r.invitation_id);
-              if (r.invitation_id && !seen.has(idStr)) {
-                seen.add(idStr);
-                uniqueRecords.push(r);
-              }
-            }
-
-            // Fire and forget upsert
-            supabase.from('tenders').upsert(uniqueRecords, { onConflict: 'invitation_id' }).then(({ error: upErr }) => {
-              if (upErr) console.warn('Background live upsert error:', upErr.message);
-            });
-
+          if (liveResult.source === 'live' && liveResult.items.length > 0) {
             return NextResponse.json({
               success: true,
               items: liveResult.items,
-              totalCount: Math.max(liveResult.totalCount, page * perPage),
+              totalCount: liveResult.totalCount,
               page,
               perPage,
-              totalPages: Math.max(1, Math.ceil(Math.max(liveResult.totalCount, page * perPage) / perPage)),
-              source: 'live_fetch',
+              totalPages: 1,
+              source: 'live_fetch_partial',
               stats: dynamicStats,
             });
+          }
+          if (liveResult.source !== 'live') {
+            console.warn('Live search source failed; returning explicitly labeled local cache results:', liveResult.error);
           }
         } catch (liveErr) {
           console.warn('Live fetch fallback failed:', liveErr);

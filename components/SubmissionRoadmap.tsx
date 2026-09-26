@@ -31,6 +31,13 @@ export const SubmissionRoadmap: React.FC<SubmissionRoadmapProps> = ({
         <span className="text-[11px] font-mono text-slate-400">tender.gov.mn</span>
       </div>
 
+      {steps.length === 0 ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950">
+          {locale === 'mn'
+            ? 'Тендерийн PDF-ээс шалгасан үе шат, бүрдүүлэлтийн алхам одоогоор алга. Эх PDF болон албан ёсны тендерийн хуудсыг нягтална уу.'
+            : 'No submission steps have been verified from this tender’s PDFs yet. Check the official dossier and tender page.'}
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
         {steps.map((s, idx) => (
           <div
@@ -67,6 +74,7 @@ export const SubmissionRoadmap: React.FC<SubmissionRoadmapProps> = ({
           </div>
         ))}
       </div>
+      )}
     </div>
   );
 };

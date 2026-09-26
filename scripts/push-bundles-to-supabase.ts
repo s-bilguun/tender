@@ -3,6 +3,7 @@ import path from 'path';
 import { supabaseAdmin as supabase } from '../lib/supabase';
 
 async function main() {
+  if (!supabase) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to write tender bundles.');
   console.log('=== PUSHING LOCAL BUNDLES TO SUPABASE ===');
   const bundlesPath = path.join(process.cwd(), 'lib', 'live-bundles.json');
   if (!fs.existsSync(bundlesPath)) {
@@ -23,19 +24,6 @@ async function main() {
   for (let i = 0; i < ids.length; i += batchSize) {
     const chunk = ids.slice(i, i + batchSize);
 
-    // Fetch existing raw_data for this batch
-    const { data: rows, error: selectErr } = await supabase
-      .from('tenders')
-      .select('invitation_id, raw_data')
-      .in('invitation_id', chunk.map(id => Number(id) || id));
-
-    if (selectErr) {
-      console.warn('Batch select error:', selectErr.message);
-    }
-
-    const rowMap = new Map();
-    rows?.forEach(r => rowMap.set(String(r.invitation_id), r));
-
     await Promise.all(
       chunk.map(async (id) => {
         const bundle = bundles[id];
@@ -44,30 +32,21 @@ async function main() {
           return;
         }
 
-        const existingRow = rowMap.get(id);
-        const existingRaw = existingRow?.raw_data || {};
-
         // DB-safe bundle (cap raw text to 40KB)
         const dbSafeBundle = {
           ...bundle,
           pdfText: bundle.pdfText ? bundle.pdfText.substring(0, 40000) : ''
         };
 
-        const { error: updErr, count } = await supabase
-          .from('tenders')
-          .update({
-            raw_data: {
-              ...existingRaw,
-              tenderDocumentId: bundle.tenderDocumentId || existingRaw.tenderDocumentId,
-              tenderId: bundle.tenderId || existingRaw.tenderId,
-              liveBundle: dbSafeBundle
-            },
-            updated_at: new Date().toISOString()
-          })
-          .eq('invitation_id', Number(id) || id);
+        const { data: updatedRows, error: updErr } = await supabase.rpc('merge_tender_live_bundle', {
+          p_invitation_id: id,
+          p_live_bundle: dbSafeBundle,
+          p_tender_document_id: bundle.tenderDocumentId ?? null,
+          p_tender_id: bundle.tenderId ?? null,
+        });
 
-        if (updErr) {
-          console.warn(`Failed to update ${id}:`, updErr.message);
+        if (updErr || updatedRows === 0) {
+          console.warn(`Failed to update ${id}:`, updErr?.message || 'Tender row was not found.');
           errors++;
         } else {
           updated++;

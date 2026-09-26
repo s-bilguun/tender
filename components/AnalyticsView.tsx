@@ -4,7 +4,6 @@ import React from 'react';
 import { TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { BarChart2, PieChart, Landmark, TrendingUp, Building } from 'lucide-react';
-import { INDUSTRIES } from '@/lib/taxonomy';
 
 interface AnalyticsViewProps {
   stats: TenderStats;
@@ -21,8 +20,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 }) => {
   const t = getTranslation(locale);
 
-  const formatBudget = (amount?: number) => {
-    if (!amount) return '0 ₮';
+  const formatBudget = (amount?: number | null) => {
+    if (amount == null) return '—';
+    if (amount === 0) return '0 ₮';
     if (amount >= 1_000_000_000_000) {
       return locale === 'mn'
         ? `${(amount / 1_000_000_000_000).toFixed(2)} их наяд ₮`
@@ -39,21 +39,21 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   };
 
   const totalCategories =
-    (stats.categoryCounts?.product || 13734) +
-    (stats.categoryCounts?.job || 6373) +
-    (stats.categoryCounts?.service || 2667);
+    (stats.categoryCounts?.product ?? 0) +
+    (stats.categoryCounts?.job ?? 0) +
+    (stats.categoryCounts?.service ?? 0);
 
-  const prodCount = stats.categoryCounts?.product || 13734;
-  const jobCount = stats.categoryCounts?.job || 6373;
-  const servCount = stats.categoryCounts?.service || 2667;
+  const prodCount = stats.categoryCounts?.product ?? 0;
+  const jobCount = stats.categoryCounts?.job ?? 0;
+  const servCount = stats.categoryCounts?.service ?? 0;
 
-  const productPct = Math.round((prodCount / totalCategories) * 100);
-  const jobPct = Math.round((jobCount / totalCategories) * 100);
-  const servicePct = Math.max(1, 100 - productPct - jobPct);
+  const productPct = totalCategories ? Math.round((prodCount / totalCategories) * 100) : 0;
+  const jobPct = totalCategories ? Math.round((jobCount / totalCategories) * 100) : 0;
+  const servicePct = totalCategories ? Math.max(0, 100 - productPct - jobPct) : 0;
 
-  const maxMinistryBudget = stats.topMinistries && stats.topMinistries.length > 0
-    ? Math.max(...stats.topMinistries.map(m => m.budget))
-    : 1_890_000_000_000;
+  const maxMinistryBudget = stats.topMinistries.length > 0
+    ? Math.max(...stats.topMinistries.map(m => m.budget ?? 0))
+    : 1;
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4 shadow-2xs space-y-5">
@@ -74,9 +74,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {locale === 'mn' ? 'Нийт бүртгэгдсэн төсөв' : 'Total Tracked Budget'}
           </span>
           <div className="text-xl font-bold text-slate-900 font-mono tabular-nums">
-            {formatBudget(stats.totalBudgetSum || 21_719_589_562_397)}
+            {formatBudget(stats.totalBudgetSum)}
           </div>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">2019-2026 оны нэгдсэн сан</span>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">
+            {stats.totalBudgetSum == null
+              ? (locale === 'mn' ? 'Зарим төсөв тодорхойгүй тул нийлбэрийг харуулахгүй.' : 'Some budgets are unknown, so the total is hidden.')
+              : (locale === 'mn' ? 'Өгөгдлийн сангийн хадгалсан мөрүүд' : 'Stored tender records')}
+          </span>
         </div>
 
         <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
@@ -84,7 +88,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {locale === 'mn' ? 'Идэвхтэй нээлттэй тендер' : 'Active Live Bids'}
           </span>
           <div className="text-xl font-bold text-emerald-600 font-mono tabular-nums">
-            {(stats.activeTendersCount || 736).toLocaleString()}{' '}
+            {stats.activeTendersCount.toLocaleString()}{' '}
             <span className="text-xs text-slate-500 font-normal">тендер</span>
           </div>
           <span className="text-[11px] text-emerald-700 mt-0.5 block font-medium">
@@ -97,13 +101,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             {locale === 'mn' ? 'Дундаж төсөвт өртөг' : 'Average Tender Budget'}
           </span>
           <div className="text-xl font-bold text-slate-900 font-mono tabular-nums">
-            {formatBudget(
-              stats.totalCount > 0
-                ? (stats.totalBudgetSum || 21_719_589_562_397) / stats.totalCount
-                : 953_000_000
-            )}
+            {formatBudget(stats.totalBudgetSum != null && stats.totalCount > 0 ? stats.totalBudgetSum / stats.totalCount : null)}
           </div>
-          <span className="text-[11px] text-slate-400 mt-0.5 block">Нэг тендерт ногдох хэмжээ</span>
+          <span className="text-[11px] text-slate-400 mt-0.5 block">
+            {stats.totalBudgetSum == null
+              ? (locale === 'mn' ? 'Төсөв бүрэн тодорхой үед дундажийг харуулна.' : 'Average shown when all budgets are known.')
+              : (locale === 'mn' ? 'Нэг тендерт ногдох хэмжээ' : 'Average per tender')}
+          </span>
         </div>
       </div>
 
@@ -116,7 +120,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <span>{locale === 'mn' ? 'Тендерийн ангилал' : 'Category Breakdown'}</span>
             </span>
             <span className="text-slate-500 font-mono text-[11px]">
-              {(stats.totalCount || totalCategories).toLocaleString()} нийт
+              {stats.totalCount.toLocaleString()} нийт
             </span>
           </div>
 
@@ -187,7 +191,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
           <div className="space-y-2 text-xs">
             {stats.topMinistries.map((m, idx) => {
-              const pct = Math.min(100, Math.round((m.budget / maxMinistryBudget) * 100));
+              const pct = m.budget == null || maxMinistryBudget <= 0
+                ? 0
+                : Math.min(100, Math.round((m.budget / maxMinistryBudget) * 100));
               return (
                 <div
                   key={idx}
@@ -211,6 +217,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 </div>
               );
             })}
+            {stats.topMinistries.length === 0 && (
+              <p className="py-3 text-xs text-slate-500">Захиалагчийн төсвийн нэгтгэл хараахан байхгүй.</p>
+            )}
           </div>
         </div>
       </div>

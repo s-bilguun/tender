@@ -130,7 +130,7 @@ export function CommandPalette({
       icon: <Clock className="h-4 w-4 text-rose-600" />,
       onSelect: () => {
         onClose();
-        onFilterChange({ urgency: 'urgent_3d', status: 'receiving', page: 1 });
+          onFilterChange({ urgency: 'urgent_48h', status: 'receiving', page: 1 });
       },
     });
 

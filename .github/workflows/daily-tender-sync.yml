@@ -1,0 +1,39 @@
+name: Daily tender listing sync
+
+on:
+  schedule:
+    # 00:00 in Mongolia (UTC+8), once per day.
+    - cron: '0 16 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-tender-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci --include=dev
+      - name: Install PDF page renderer
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y poppler-utils
+      - name: Sync tender listing pages into Supabase
+        run: node scripts/sync-to-supabase.js 1 3000
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Process queued tender PDFs and scanned pages
+        run: node scripts/run-typescript.cjs scripts/process-pdf-queue.ts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          PDF_JOB_CONCURRENCY: 3

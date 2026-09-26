@@ -1,56 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
 
-function getValidSupabaseUrl(url?: string): string {
-  const fallback = 'https://rufnrfwghtgicecnzljj.supabase.co';
-  if (!url || typeof url !== 'string') return fallback;
-  const trimmed = url.trim().replace(/^["']|["']$/g, '');
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return fallback;
-  
-  // If user entered without protocol, prepend https://
-  const withProtocol = trimmed.startsWith('http://') || trimmed.startsWith('https://') 
-    ? trimmed 
-    : `https://${trimmed}`;
+const supabaseUrl = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (
+  process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+).trim();
+const hasValidSupabaseUrl = Boolean(
+  supabaseUrl && !/^your[-_ ]/i.test(supabaseUrl),
+);
+const hasPublicConfig = Boolean(
+  hasValidSupabaseUrl && supabaseAnonKey && !/^your[-_ ]/i.test(supabaseAnonKey),
+);
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 
-  try {
-    const parsed = new URL(withProtocol);
-    if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
-      return withProtocol;
-    }
-  } catch {
-    // ignore
-  }
-  return fallback;
+if (serviceRoleKey && serviceRoleKey === supabaseAnonKey) {
+  throw new Error('The Supabase service-role key must be a private service credential, not the public anon key.');
 }
 
-function getValidKey(key: string | undefined, fallback: string): string {
-  if (!key || typeof key !== 'string') return fallback;
-  const trimmed = key.trim().replace(/^["']|["']$/g, '');
-  if (!trimmed || trimmed === 'undefined' || trimmed === 'null') return fallback;
-  return trimmed;
-}
+// Public client: subject to Supabase RLS policies. Keeping an unavailable proxy
+// at build time lets Next compile before deploy secrets are injected; any actual
+// query fails loudly and is handled by the calling route's normal error path.
+export const supabase = hasPublicConfig
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : new Proxy({} as ReturnType<typeof createClient>, {
+      get() {
+        throw new Error('Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      },
+    });
 
-const rawUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseUrl = getValidSupabaseUrl(rawUrl);
-
-const rawAnonKey =
-  process.env.SUPABASE_ANON_KEY ||
-  process.env.SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const supabaseAnonKey = getValidKey(rawAnonKey, 'sb_publishable_6eN_ZLbhV0u9zjm2Vy7w1Q_Fanjk_Jq');
-
-const rawServiceKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SECRET_KEY;
-// The fallback sb_secret_ key is unregistered on Supabase; fall back to the valid working publishable key
-const defaultServiceKey = (rawServiceKey && !rawServiceKey.includes('sb_secret_EhqjXHXl6q60WG0V8rYWyg_0XTO-AHa')) 
-  ? rawServiceKey 
-  : supabaseAnonKey;
-const supabaseServiceKey = getValidKey(defaultServiceKey, supabaseAnonKey);
-
-// Public/Reader client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Admin/Writer client for server tasks bypassing RLS
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-
+// Server-only writer. Missing private credentials disable persistence instead of
+// silently falling back to a public key and pretending privileged writes work.
+export const supabaseAdmin = hasValidSupabaseUrl && serviceRoleKey
+  ? createClient(supabaseUrl, serviceRoleKey)
+  : null;

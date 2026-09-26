@@ -1,90 +1,78 @@
-const fs = require('fs');
 const { execFile } = require('child_process');
 const { createClient } = require('@supabase/supabase-js');
 
-// Read .env.local
-const env = fs.readFileSync('.env.local', 'utf8');
-env.split('\n').forEach(line => {
-  const [k, ...v] = line.split('=');
-  if (k && v) process.env[k.trim()] = v.join('=').trim();
-});
-
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://rufnrfwghtgicecnzljj.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_URL || !SUPABASE_KEY) {
+  throw new Error('Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY before syncing.');
+}
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
+
+function findBalancedArrayEnd(source, start) {
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = start; index < source.length; index += 1) {
+    const character = source[index];
+    if (escaped) { escaped = false; continue; }
+    if (character === '\\') { escaped = true; continue; }
+    if (character === '"') { inString = !inString; continue; }
+    if (!inString) {
+      if (character === '[') depth += 1;
+      if (character === ']' && --depth === 0) return index;
+    }
+  }
+  return -1;
+}
 
 function fetchLiveYear(year, page = 1) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const url = `https://www.tender.gov.mn/mn/invitation?years=${year}&page=${page}`;
-    execFile('curl.exe', [
-      '-s', '-L', url,
+    execFile(curlCmd, [
+      '-s', '-L',
       '-A', UA,
-      '-H', 'Accept: text/html,application/xhtml+xml'
+      '-H', 'Accept: text/html,application/xhtml+xml',
+      '-w', '\n__HTTP_STATUS__:%{http_code}',
+      url,
     ], { maxBuffer: 50 * 1024 * 1024, timeout: 25000 }, (err, stdout) => {
-      if (err || !stdout) return resolve([]);
-      
-      let idx = stdout.indexOf('invitationId');
-      if (idx === -1) idx = stdout.indexOf('uusgesenClientId');
-      if (idx === -1) return resolve([]);
-
-      let start = -1;
-      for (let i = idx; i >= 0; i--) {
-        if (stdout[i] === '[') {
-          start = i;
-          break;
-        }
+      const statusMatch = String(stdout || '').match(/\n__HTTP_STATUS__:(\d{3})\s*$/);
+      const body = statusMatch ? String(stdout).replace(/\n__HTTP_STATUS__:\d{3}\s*$/, '') : '';
+      if (err || !body || statusMatch?.[1] !== '200') {
+        return reject(new Error(`Tender source year ${year} page ${page} fetch failed (HTTP ${statusMatch?.[1] || 'unknown'}).`));
       }
-      if (start === -1) return resolve([]);
-
-      let depth = 0;
-      let end = -1;
-      let inString = false;
-      let escape = false;
-      for (let i = start; i < stdout.length; i++) {
-        const char = stdout[i];
-        if (escape) {
-          escape = false;
-          continue;
-        }
-        if (char === '\\') {
-          escape = true;
-          continue;
-        }
-        if (char === '"') {
-          inString = !inString;
-          continue;
-        }
-        if (!inString) {
-          if (char === '[') depth++;
-          else if (char === ']') {
-            depth--;
-            if (depth === 0) {
-              end = i;
-              break;
-            }
-          }
-        }
+      if (/captcha|cloudflare|access denied|too many requests/i.test(body)) {
+        return reject(new Error(`Tender source blocked the sync request for year ${year}, page ${page}.`));
       }
 
-      if (end === -1) return resolve([]);
+      let idx = body.indexOf('invitationId');
+      if (idx === -1) idx = body.indexOf('uusgesenClientId');
+      if (idx === -1) return reject(new Error(`Could not locate tender records for year ${year}, page ${page}.`));
+      const start = body.lastIndexOf('[', idx);
+      const end = start === -1 ? -1 : findBalancedArrayEnd(body, start);
+      if (start === -1 || end === -1) return reject(new Error(`Could not parse tender source year ${year}, page ${page}.`));
 
       try {
-        let raw = stdout.substring(start, end + 1);
+        let raw = body.substring(start, end + 1);
         if (raw.includes('\\"')) {
           raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
         }
         const parsed = JSON.parse(raw);
         resolve(Array.isArray(parsed) ? parsed : []);
       } catch (e) {
-        resolve([]);
+        reject(new Error(`Could not decode tender source year ${year}, page ${page}: ${e.message || e}`));
       }
     });
   });
 }
 
-function mapToRecord(item) {
+function mapToRecord(item, existingRawData = {}) {
+  const rawData = { ...existingRawData, ...item };
+  if (existingRawData.liveBundle) rawData.liveBundle = existingRawData.liveBundle;
+  rawData.tenderDocumentId = item.tenderDocumentId ?? existingRawData.tenderDocumentId;
+  rawData.tenderId = item.tenderId ?? existingRawData.tenderId;
   return {
     invitation_id: item.invitationId,
     invitation_number: item.invitationNumber || '',
@@ -103,8 +91,8 @@ function mapToRecord(item) {
     receive_date: item.receiveDate ? new Date(item.receiveDate).toISOString() : null,
     doc_status_code: item.docStatusCode || '',
     doc_status_name: item.docStatusName || '',
-    is_receiving: (item.docStatusName || '').includes('хүлээн') ? 1 : 0,
-    raw_data: item,
+    is_receiving: item.isReceiving ?? (String(item.docStatusName || '').toLowerCase().includes('хүлээн авч') ? 1 : 0),
+    raw_data: rawData,
     updated_at: new Date().toISOString()
   };
 }
@@ -115,12 +103,20 @@ async function syncYear(year, maxPages = 15) {
   for (let page = 1; page <= maxPages; page++) {
     const rawItems = await fetchLiveYear(year, page);
     if (!rawItems || rawItems.length === 0) {
+      if (page === 1) throw new Error(`Tender source returned no records for year ${year} on the first page.`);
       console.log(`Page ${page}: No more items for year ${year}.`);
       break;
     }
 
-    const records = rawItems.map(mapToRecord);
-    
+    const invitationIds = rawItems.map((item) => item.invitationId).filter(Boolean);
+    const { data: existingRows, error: readError } = await supabase
+      .from('tenders')
+      .select('invitation_id, raw_data')
+      .in('invitation_id', invitationIds);
+    if (readError) throw new Error(`Could not read existing PDF data for year ${year} page ${page}: ${readError.message}`);
+    const existingRawById = new Map((existingRows || []).map((row) => [String(row.invitation_id), row.raw_data || {}]));
+    const records = rawItems.map((item) => mapToRecord(item, existingRawById.get(String(item.invitationId)) || {}));
+
     // Deduplicate by invitation_id within the batch
     const uniqueRecords = [];
     const seenIds = new Set();
@@ -136,12 +132,9 @@ async function syncYear(year, maxPages = 15) {
       .from('tenders')
       .upsert(uniqueRecords, { onConflict: 'invitation_id' });
 
-    if (error) {
-      console.error(`Page ${page} DB error:`, error.message);
-    } else {
-      totalSaved += records.length;
-      console.log(`Page ${page}: Saved ${records.length} tenders for year ${year} (Total: ${totalSaved})`);
-    }
+    if (error) throw new Error(`Page ${page} database write failed for year ${year}: ${error.message}`);
+    totalSaved += uniqueRecords.length;
+    console.log(`Page ${page}: Saved ${uniqueRecords.length} tenders for year ${year} (Total: ${totalSaved})`);
   }
   return totalSaved;
 }
@@ -154,4 +147,7 @@ async function main() {
   console.log('\nSync finished successfully!');
 }
 
-main();
+main().catch((error) => {
+  console.error('Historical tender sync failed:', error);
+  process.exitCode = 1;
+});

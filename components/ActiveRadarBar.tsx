@@ -15,8 +15,9 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
   filters,
   onFilterChange,
 }) => {
-  const formatMoney = (amount?: number) => {
-    if (!amount) return '0 ₮';
+  const formatMoney = (amount?: number | null) => {
+    if (amount == null) return '—';
+    if (amount === 0) return '0 ₮';
     if (amount >= 1_000_000_000_000) {
       return locale === 'mn'
         ? `${(amount / 1_000_000_000_000).toFixed(1)} их наяд ₮`
@@ -34,12 +35,11 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
 
   const selectedIndustry = filters.industry && filters.industry !== 'all' ? stats?.statsByIndustry?.[filters.industry] : null;
 
-  const totalCount = selectedIndustry ? selectedIndustry.totalCount : (stats?.totalCount || 22785);
-  const totalBudget = selectedIndustry ? selectedIndustry.totalBudgetSum : (stats?.totalBudgetSum || 21_719_589_562_397);
-  const activeCount = selectedIndustry ? selectedIndustry.activeCount : (stats?.activeTendersCount || 736);
-  const activeBudget = selectedIndustry ? selectedIndustry.activeBudgetSum : (stats?.activeBudgetSum || 482_900_000_000);
-  const closingSoon = selectedIndustry ? selectedIndustry.closingSoonCount : (stats?.closingSoonCount || 42);
-  const resultCount = selectedIndustry ? selectedIndustry.resultCount : (stats?.resultCount || 21320);
+  const totalCount = selectedIndustry?.totalCount ?? stats?.totalCount ?? 0;
+  const totalBudget = selectedIndustry?.totalBudgetSum ?? stats?.totalBudgetSum;
+  const activeCount = selectedIndustry?.activeCount ?? stats?.activeTendersCount;
+  const closingSoon = selectedIndustry?.closingSoonCount ?? stats?.closingSoonCount;
+  const resultCount = selectedIndustry?.resultCount ?? stats?.resultCount;
 
   const currentTab = filters.tabMode || 'all';
 
@@ -80,7 +80,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
         <p className={`mt-0.5 sm:mt-1 text-[10px] sm:text-[11px] line-clamp-1 ${
           currentTab === 'all' ? 'text-slate-300' : 'text-slate-500'
         }`}>
-          {locale === 'mn' ? `2019-2026 • ${formatMoney(totalBudget)}` : `2019-2026 • ${formatMoney(totalBudget)}`}
+          {locale === 'mn' ? `Нийт төсөв: ${formatMoney(totalBudget)}` : `Total budget: ${formatMoney(totalBudget)}`}
         </p>
       </div>
 
@@ -102,7 +102,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
         </div>
         <div className="mt-1.5 sm:mt-2 flex items-baseline gap-1.5 sm:gap-2">
           <span className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 tabular-nums">
-            {activeCount.toLocaleString()}
+            {activeCount?.toLocaleString() ?? '—'}
           </span>
           <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
             {locale === 'mn' ? 'идэвхтэй' : 'open'}
@@ -131,7 +131,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
         </div>
         <div className="mt-1.5 sm:mt-2 flex items-baseline gap-1.5 sm:gap-2">
           <span className="text-xl sm:text-2xl font-bold tracking-tight text-blue-700 tabular-nums">
-            {selectedIndustry ? selectedIndustry.resultCount.toLocaleString() : (locale === 'mn' ? 'Үр дүн' : 'Winners')}
+            {resultCount?.toLocaleString() ?? '—'}
           </span>
           <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
             {selectedIndustry ? (locale === 'mn' ? 'үр дүн' : 'concluded') : (locale === 'mn' ? 'гарсан' : 'concluded')}
@@ -144,7 +144,7 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
 
       {/* 4. Urgent / Closing Soon Card */}
       <div
-        onClick={() => onFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_3d', sortBy: 'deadline_asc', page: 1 })}
+        onClick={() => onFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_48h', sortBy: 'deadline_asc', page: 1 })}
         className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group ${
           currentTab === 'closing_soon'
             ? 'bg-gradient-to-br from-rose-500/10 via-white to-white border-rose-500 ring-2 ring-rose-500/20 shadow-xs'
@@ -157,19 +157,19 @@ export const ActiveRadarBar: React.FC<ActiveRadarBarProps> = ({
             <span className="truncate">{locale === 'mn' ? 'Яаралтай' : 'Closing'}</span>
           </span>
           <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded bg-rose-100 text-rose-700 shrink-0">
-            ≤ 72ц
+            ≤ 48ц
           </span>
         </div>
         <div className="mt-1.5 sm:mt-2 flex items-baseline gap-1.5 sm:gap-2">
           <span className="text-xl sm:text-2xl font-bold tracking-tight text-rose-600 tabular-nums">
-            {closingSoon}
+            {closingSoon?.toLocaleString() ?? '—'}
           </span>
           <span className="text-[10px] sm:text-xs text-slate-500 font-medium">
             {locale === 'mn' ? 'тендер' : 'bids'}
           </span>
         </div>
         <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-[11px] text-slate-500 line-clamp-1">
-          {locale === 'mn' ? '3 хоногт хаагдах' : 'Within 3 days'}
+          {locale === 'mn' ? '2 хоногт хаагдах' : 'Within 48 hours'}
         </p>
       </div>
     </div>

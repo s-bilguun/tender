@@ -9,8 +9,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'mining',
     descriptionMn: 'Уул уурхайн тоног төхөөрөмж, баяжуулах, өрөмдлөг, хүнд машин механизм, геологи, эрдэс баялаг',
     descriptionEn: 'Mining equipment, heavy machinery, mineral processing, drilling, geological services',
-    totalCount: 4350,
-    activeCount: 146,
   },
   {
     id: 'construction',
@@ -20,8 +18,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'construction',
     descriptionMn: 'Барилга угсралт, их болон урсгал засвар, зам гүүр, инженерийн шугам сүлжээ',
     descriptionEn: 'Building construction, major renovation, civil works, utilities',
-    totalCount: 6420,
-    activeCount: 184,
   },
   {
     id: 'medical',
@@ -31,8 +27,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'medical',
     descriptionMn: 'Эм, эмнэлгийн хэрэгсэл, лабораторийн оношлуур, урвалж, тоног төхөөрөмж',
     descriptionEn: 'Pharmaceuticals, medical devices, laboratory reagents, hospital equipment',
-    totalCount: 3120,
-    activeCount: 112,
   },
   {
     id: 'food',
@@ -42,8 +36,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'food',
     descriptionMn: 'Сургууль цэцэрлэгийн үдийн хоол, мах, сүү, хүнсний түүхий эд, бэлтгэл',
     descriptionEn: 'School meal catering, raw food supplies, dairy, meat products',
-    totalCount: 2890,
-    activeCount: 94,
   },
   {
     id: 'it',
@@ -53,8 +45,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'it',
     descriptionMn: 'Програм хангамж, сервер, сүлжээ, компьютерийн тоног төхөөрөмж, цахим систем',
     descriptionEn: 'Software, servers, network equipment, computers, digital platforms',
-    totalCount: 1840,
-    activeCount: 68,
   },
   {
     id: 'transport',
@@ -64,8 +54,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'transport',
     descriptionMn: 'Бензин, дизель түлш, автомашин, сэлбэг хэрэгсэл, тээврийн үйлчилгээ',
     descriptionEn: 'Fuel supply, vehicles, auto spare parts, transportation services',
-    totalCount: 2150,
-    activeCount: 76,
   },
   {
     id: 'facility',
@@ -75,8 +63,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'facility',
     descriptionMn: 'Харуул хамгаалалт, байрны цэвэрлэгээ, ариутгал, хог хаягдал, ашиглалт',
     descriptionEn: 'Security services, janitorial cleaning, disinfection, facility management',
-    totalCount: 1450,
-    activeCount: 52,
   },
   {
     id: 'stationery',
@@ -86,8 +72,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'stationery',
     descriptionMn: 'Албан тасалгааны бичиг хэрэг, хэвлэл, дүрэмт хувцас, оффисын тавилга',
     descriptionEn: 'Office stationery, book printing, uniforms, office furniture',
-    totalCount: 2780,
-    activeCount: 88,
   },
   {
     id: 'consulting',
@@ -97,8 +81,6 @@ export const INDUSTRIES: IndustryInfo[] = [
     icon: 'consulting',
     descriptionMn: 'Зөвлөх үйлчилгээ, зураг төсөл боловсруулах, аудит, сургалт судалгаа',
     descriptionEn: 'Consulting services, engineering blueprints, financial audit, training',
-    totalCount: 2135,
-    activeCount: 62,
   },
 ];
 

@@ -1,5 +1,8 @@
 export type TenderType = 'PRODUCT' | 'JOB' | 'SERVICE' | 'ALL';
 
+// Increment when an extraction pipeline change makes previously stored bundles untrustworthy.
+export const LIVE_BUNDLE_SCHEMA_VERSION = 2;
+
 export type IndustryVertical =
   | 'all'
   | 'mining'       // Уул уурхай, хүнд үйлдвэр, эрдэс баялаг
@@ -26,9 +29,10 @@ export interface IndustryInfo {
 }
 
 export interface BidRequirementSummary {
-  estimatedGuaranteeMin: number; // 1%
-  estimatedGuaranteeMax: number; // 2%
-  isElectronic: boolean;
+  estimatedGuaranteeMin: number | null;
+  estimatedGuaranteeMax: number | null;
+  isElectronic: boolean | null;
+  evidenceStatus?: 'not_processed' | 'partial' | 'complete';
   requiredClearances: {
     id: string;
     nameMn: string;
@@ -132,7 +136,7 @@ export interface TenderFilterParams {
   status?: string;         // all, receiving, opened, result, cancelled, requested
   tabMode?: ActiveTabMode;
   noBidSecurityOnly?: boolean;
-  urgency?: 'all' | 'urgent_3d' | 'new_48h' | 'high_budget';
+  urgency?: 'all' | 'urgent_48h' | 'new_48h' | 'high_budget';
   sortBy?: 'date_desc' | 'budget_desc' | 'budget_asc' | 'deadline_asc';
   year?: string;           // 'all', '2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019'
   dateFrom?: string;       // YYYY-MM-DD
@@ -146,18 +150,18 @@ export interface TenderFilterParams {
 
 export interface IndustryStatSummary {
   totalCount: number;
-  totalBudgetSum: number;
+  totalBudgetSum: number | null;
   activeCount: number;
-  activeBudgetSum: number;
+  activeBudgetSum: number | null;
   resultCount: number;
   closingSoonCount: number;
 }
 
 export interface TenderStats {
   totalCount: number;
-  totalBudgetSum: number;
+  totalBudgetSum: number | null;
   activeTendersCount: number;
-  activeBudgetSum?: number;
+  activeBudgetSum?: number | null;
   totalActiveBudget?: number;
   closingSoonCount?: number;
   noGuaranteeCount?: number;
@@ -173,7 +177,7 @@ export interface TenderStats {
   topMinistries: {
     name: string;
     count: number;
-    budget: number;
+    budget: number | null;
   }[];
   lastUpdatedAt?: string;
 }
