@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const net = require('net');
 const { spawn } = require('child_process');
 const { chromium } = require('playwright');
 const { classifySourceResponse, visibleText } = require('./source-response.cjs');
@@ -53,11 +54,18 @@ function findEdgeExecutable() {
 }
 
 async function launchEdgeForWorker(profileDir) {
-  const activePortPath = path.join(profileDir, 'DevToolsActivePort');
-  await fs.promises.unlink(activePortPath).catch(() => {});
+  const debugPort = await new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', () => {
+      const address = server.address();
+      server.close((error) => error ? reject(error) : resolve(address.port));
+    });
+  });
   const edgeProcess = spawn(findEdgeExecutable(), [
     `--user-data-dir=${profileDir}`,
-    '--remote-debugging-port=0',
+    `--remote-debugging-port=${debugPort}`,
+    '--remote-debugging-address=127.0.0.1',
     '--no-first-run',
     '--no-default-browser-check',
     'about:blank',
@@ -67,26 +75,30 @@ async function launchEdgeForWorker(profileDir) {
 
   try {
     const deadline = Date.now() + 30_000;
-    let port;
+    let browser;
     while (Date.now() < deadline) {
       if (launchError) throw launchError;
       if (edgeProcess.exitCode !== null) throw new Error(`Microsoft Edge exited before enabling its local debugging endpoint (code ${edgeProcess.exitCode}).`);
+      let version;
       try {
-        const activePort = await fs.promises.readFile(activePortPath, 'utf8');
-        const parsedPort = activePort.split(/\r?\n/)[0].trim();
-        if (/^\d{1,5}$/.test(parsedPort) && Number(parsedPort) > 0 && Number(parsedPort) <= 65535) {
-          port = Number(parsedPort);
-          break;
-        }
+        const response = await fetch(`http://127.0.0.1:${debugPort}/json/version`, { signal: AbortSignal.timeout(500) });
+        if (response.ok) version = await response.json();
       } catch {}
+      if (version && !String(version.Browser || '').startsWith('Edg/')) {
+        throw new Error(`The loopback debugging port ${debugPort} belongs to ${version.Browser || 'an unknown browser'}, not this Edge worker.`);
+      }
+      if (version) {
+        try {
+          browser = await chromium.connectOverCDP(`http://127.0.0.1:${debugPort}`, { timeout: 5_000 });
+          break;
+        } catch {}
+      }
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
-    if (!port) throw new Error('Microsoft Edge did not expose its local debugging endpoint within 30 seconds.');
-
-    const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 30_000 });
+    if (!browser) throw new Error('Microsoft Edge did not expose its local debugging endpoint within 30 seconds.');
     const context = browser.contexts()[0];
     if (!context) throw new Error('Microsoft Edge started without a browser context.');
-    return { browser, context, edgeProcess, activePortPath };
+    return { browser, context, edgeProcess };
   } catch (error) {
     edgeProcess.kill();
     throw error;
@@ -114,7 +126,7 @@ async function run() {
 
   console.log('Starting visible Microsoft Edge without Playwright launch flags; attaching over a loopback-only debugging port.');
   console.log('The worker uses this separate Edge profile; it does not read your everyday Edge profile or saved passwords.');
-  const { browser, context, edgeProcess, activePortPath } = await launchEdgeForWorker(profileDir);
+  const { browser, context, edgeProcess } = await launchEdgeForWorker(profileDir);
 
   const pagesByOrigin = new Map();
   const pendingPagesByOrigin = new Map();
@@ -319,7 +331,7 @@ async function run() {
 
   try {
     report.edgeVersion = browser.version();
-    report.edgeLaunchMode = 'normal-edge-with-loopback-cdp';
+    report.edgeLaunchMode = 'normal-edge-with-loopback-cdp-nonzero-port';
     report.webdriverFlag = await context.pages()[0]?.evaluate(() => navigator.webdriver).catch(() => undefined);
     if (process.env.TENDER_WORKER_DIAGNOSTICS_ONLY === 'true') {
       const invitationId = process.env.TENDER_WORKER_DIAGNOSTIC_TENDER_ID || '1789954037772';
@@ -410,7 +422,6 @@ async function run() {
       delete globalThis.__TENDER_SOURCE_BROWSER__;
       await browser.close().catch(() => {});
       edgeProcess.kill();
-      await fs.promises.unlink(activePortPath).catch(() => {});
     }
   }
 }
