@@ -1,9 +1,9 @@
-name: Daily tender listing sync
+name: Tender source diagnostics and cloud sync
 
 on:
-  schedule:
-    # 00:00 in Mongolia (UTC+8), once per day.
-    - cron: '0 16 * * *'
+  # Cloud runners receive HTTP 403 from tender.gov.mn. Run the scheduled
+  # browser worker on the user's Windows PC instead; keep this workflow manual
+  # for read-only diagnostics and explicit cloud retries.
   workflow_dispatch:
     inputs:
       diagnostics_only:

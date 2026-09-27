@@ -110,8 +110,27 @@ async function processTender(invitationId: string): Promise<boolean> {
   if (!supabaseAdmin) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to process the PDF job queue.');
 
   try {
-    const bundle = await fetchTenderLiveBundle(invitationId, undefined, true);
+    const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
+    const sourceFailuresBefore = Number(browserTransport?.failureCount) || 0;
+    let bundle: LiveExtractionResult;
+    try {
+      bundle = await fetchTenderLiveBundle(invitationId, undefined, true);
+    } catch (sourceError) {
+      const { data: tenderRow, error: readError } = await supabaseAdmin
+        .from('tenders')
+        .select('raw_data')
+        .eq('invitation_id', invitationId)
+        .maybeSingle();
+      const storedBundle = tenderRow?.raw_data?.liveBundle as LiveExtractionResult | undefined;
+      const storedManualPdf = storedBundle?.documents?.some((doc) => doc.source === 'manual_upload' && doc.storagePath);
+      if (readError || !storedBundle || !storedManualPdf) throw sourceError;
+      bundle = JSON.parse(JSON.stringify(storedBundle)) as LiveExtractionResult;
+      console.warn(`${invitationId}: source refresh failed; continuing to OCR its previously uploaded PDF only.`);
+    }
     const hasUploadedPdf = bundle.documents?.some((doc) => doc.source === 'manual_upload' && doc.storagePath);
+    if (browserTransport && Number(browserTransport.failureCount || 0) > sourceFailuresBefore && !hasUploadedPdf) {
+      throw new Error('At least one official source request failed in the browser. The previous extraction was kept for retry.');
+    }
     if (bundle.stale && !hasUploadedPdf) throw new Error('Tender source refresh failed; the previous extraction was retained as stale.');
     await processManualScannedDocuments(invitationId, bundle);
 
@@ -138,7 +157,7 @@ async function processTender(invitationId: string): Promise<boolean> {
   }
 }
 
-async function main() {
+export async function processPdfQueue() {
   const admin = supabaseAdmin;
   if (!admin) throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to process the PDF job queue.');
 
@@ -173,7 +192,9 @@ async function main() {
   if (failed > 0) process.exitCode = 1;
 }
 
-main().catch((error) => {
-  console.error('PDF queue worker failed:', error);
-  process.exitCode = 1;
-});
+if (process.env.TENDER_PDF_QUEUE_LIBRARY !== 'true') {
+  processPdfQueue().catch((error) => {
+    console.error('PDF queue worker failed:', error);
+    process.exitCode = 1;
+  });
+}

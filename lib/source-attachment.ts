@@ -30,6 +30,11 @@ export async function fetchVerifiedAttachment(
 ): Promise<{ buffer: Buffer; contentType: string }> {
   if (!/^\d+$/.test(String(fileId))) throw new AttachmentFetchError('Invalid attachment id');
 
+  const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
+  if (browserTransport?.getBuffer) {
+    return browserTransport.getBuffer(new URL(`/mn/download/${fileId}`, SOURCE_ORIGIN).toString(), allowImage);
+  }
+
   let url = new URL(`/mn/download/${fileId}`, SOURCE_ORIGIN);
   for (let redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
     if (!isAllowedSourceUrl(url.toString())) throw new AttachmentFetchError('Unexpected attachment host');

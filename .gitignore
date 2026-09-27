@@ -40,3 +40,5 @@ next-env.d.ts
 # Local and cloud source-access diagnostic outputs
 /scratch/source-diagnostic/
 /scratch/cloud-pdf-diagnostic/
+/scratch/browser-worker/
+/.env.tender-worker

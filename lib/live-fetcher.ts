@@ -197,6 +197,11 @@ export async function ocrSparsePdfPages(
 
 // Helper to run curl safely with standard browser headers
 function curlGet(url: string, asBuffer = false, referer = 'https://www.tender.gov.mn/'): Promise<string | Buffer> {
+  const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
+  if (browserTransport?.getText) {
+    return browserTransport.getText(url, 'GET');
+  }
+
   return new Promise((resolve) => {
     const args = [
       '-s', '-L',
@@ -244,6 +249,11 @@ function curlGet(url: string, asBuffer = false, referer = 'https://www.tender.go
 }
 
 function curlPostJson(url: string, body: any): Promise<string> {
+  const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
+  if (browserTransport?.getText) {
+    return browserTransport.getText(url, 'POST', body);
+  }
+
   return new Promise((resolve) => {
     const args = [
       '-s', '-L',

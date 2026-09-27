@@ -42,6 +42,17 @@ function findBalancedArrayEnd(source, start) {
 }
 
 function fetchPage(page, retries = 2) {
+  const browserTransport = globalThis.__TENDER_SOURCE_BROWSER__;
+  if (browserTransport?.getText) {
+    const url = `https://www.tender.gov.mn/mn/invitation?page=${page}`;
+    return browserTransport.getText(url).then((responseBody) => parsePageBody(responseBody, page)).catch((error) => {
+      if (retries > 0) return new Promise((resolve, reject) => {
+        setTimeout(() => fetchPage(page, retries - 1).then(resolve, reject), 1000);
+      });
+      throw error;
+    });
+  }
+
   return new Promise((resolve, reject) => {
     const url = `https://www.tender.gov.mn/mn/invitation?page=${page}`;
     const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
@@ -63,24 +74,33 @@ function fetchPage(page, retries = 2) {
       if (/captcha|cloudflare|access denied|too many requests/i.test(responseBody)) {
         return reject(new Error(`Tender source blocked the sync request on page ${page}.`));
       }
-      let idx = responseBody.indexOf('uusgesenClientId');
-      if (idx === -1) idx = responseBody.indexOf('invitationId');
-      if (idx === -1) return resolve([]);
-      const start = responseBody.lastIndexOf('[', idx);
-      const end = start === -1 ? -1 : findBalancedArrayEnd(responseBody, start);
-      if (start === -1 || end === -1) return reject(new Error(`Could not parse tender source page ${page}.`));
       try {
-        let raw = responseBody.substring(start, end + 1);
-        if (raw.includes('\\"')) {
-          raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-        }
-        const parsed = JSON.parse(raw);
-        resolve(Array.isArray(parsed) ? parsed : []);
+        resolve(parsePageBody(responseBody, page));
       } catch (e) {
-        reject(new Error(`Could not decode tender source page ${page}: ${e.message || e}`));
+        reject(e);
       }
     });
   });
+}
+
+function parsePageBody(responseBody, page) {
+  if (!responseBody || /captcha|cloudflare|access denied|too many requests/i.test(responseBody)) {
+    throw new Error(`Tender source blocked the sync request on page ${page}.`);
+  }
+  let idx = responseBody.indexOf('uusgesenClientId');
+  if (idx === -1) idx = responseBody.indexOf('invitationId');
+  if (idx === -1) return [];
+  const start = responseBody.lastIndexOf('[', idx);
+  const end = start === -1 ? -1 : findBalancedArrayEnd(responseBody, start);
+  if (start === -1 || end === -1) throw new Error(`Could not parse tender source page ${page}.`);
+  try {
+    let raw = responseBody.substring(start, end + 1);
+    if (raw.includes('\\"')) raw = raw.replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    throw new Error(`Could not decode tender source page ${page}: ${error.message || error}`);
+  }
 }
 
 function mapToRecord(item, existingRawData = {}) {
@@ -185,7 +205,11 @@ const args = process.argv.slice(2);
 const startPage = parseInt(args[0]) || 1;
 const maxPages = parseInt(args[1]) || 3000;
 
-syncPages(startPage, maxPages).catch((error) => {
-  console.error('Tender sync failed:', error);
-  process.exitCode = 1;
-});
+module.exports = { syncPages };
+
+if (require.main === module) {
+  syncPages(startPage, maxPages).catch((error) => {
+    console.error('Tender sync failed:', error);
+    process.exitCode = 1;
+  });
+}
