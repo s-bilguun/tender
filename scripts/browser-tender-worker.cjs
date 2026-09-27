@@ -2,11 +2,11 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { chromium } = require('playwright');
+const { classifySourceResponse, visibleText } = require('./source-response.cjs');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const ENV_FILE = process.env.TENDER_WORKER_ENV_FILE || path.join(REPO_ROOT, '.env.tender-worker');
 const ALLOWED_HOSTS = new Set(['www.tender.gov.mn', 'user.tender.gov.mn']);
-const CHALLENGE_PATTERN = /attention required|cloudflare|verify you are human|captcha|access denied|just a moment|checking your browser/i;
 
 function loadWorkerEnv() {
   if (!fs.existsSync(ENV_FILE)) return;
@@ -30,10 +30,6 @@ function validateSourceUrl(rawUrl) {
   return url;
 }
 
-function looksLikeChallenge(status, body, title = '') {
-  return status === 403 || CHALLENGE_PATTERN.test(`${title}\n${String(body || '').slice(0, 3000)}`);
-}
-
 async function pageText(page) {
   try {
     return {
@@ -45,13 +41,20 @@ async function pageText(page) {
   }
 }
 
-async function waitForHumanBrowserCheck(page, targetUrl) {
+async function waitForHumanBrowserCheck(page, targetUrl, navigationResponses) {
   console.warn(`\nEdge needs a human source-site check for ${new URL(targetUrl).hostname}. Complete it in the visible Edge window; waiting up to 90 seconds.`);
   const deadline = Date.now() + 90_000;
   while (Date.now() < deadline) {
     await page.waitForTimeout(3000);
     const current = await pageText(page);
-    if (!looksLikeChallenge(200, current.body, current.title)) return true;
+    const response = navigationResponses.get(page);
+    const kind = classifySourceResponse({
+      body: current.body, title: current.title,
+      status: response?.status() || 200,
+      mitigated: response?.headers()['cf-mitigated'],
+    });
+    if (kind === 'blocked') return false;
+    if (kind === 'ok' && current.body.trim()) return true;
   }
   return false;
 }
@@ -66,6 +69,14 @@ async function run() {
   const localData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local');
   const profileDir = process.env.TENDER_EDGE_PROFILE || path.join(localData, 'TenderMN', 'EdgeSourceProfile');
   fs.mkdirSync(profileDir, { recursive: true });
+  const outputDir = path.join(REPO_ROOT, 'scratch', 'browser-worker');
+  fs.mkdirSync(outputDir, { recursive: true });
+  const report = {
+    checkedAt: new Date().toISOString(),
+    diagnosticsOnly: process.env.TENDER_WORKER_DIAGNOSTICS_ONLY === 'true',
+    sourceAttempts: [],
+    result: 'running',
+  };
 
   console.log('Starting a visible Microsoft Edge session for the official source.');
   console.log('The worker uses this separate Edge profile; it does not read your everyday Edge profile or saved passwords.');
@@ -79,21 +90,72 @@ async function run() {
 
   const pagesByOrigin = new Map();
   const pendingPagesByOrigin = new Map();
+  const navigationResponses = new WeakMap();
+  let lastFailurePage = null;
   let failureCount = 0;
 
-  async function ensureOriginPage(origin) {
+  async function newSourcePage() {
+    const page = await context.newPage();
+    page.on('response', (response) => {
+      if (response.request().isNavigationRequest() && response.frame() === page.mainFrame()) {
+        navigationResponses.set(page, response);
+      }
+    });
+    return page;
+  }
+
+  function recordResponse(url, response, stage, title = '') {
+    const kind = classifySourceResponse({ ...response, title });
+    report.sourceAttempts.push({
+      stage, url, status: response.status, title,
+      kind, rayId: response.rayId || '', mitigated: response.mitigated || '',
+      ...(kind !== 'ok' ? { visibleText: visibleText(response.body || '').slice(0, 1500) } : {}),
+    });
+    if (report.sourceAttempts.length > 50) report.sourceAttempts.shift();
+    return kind;
+  }
+
+  async function inspectNavigation(page, targetUrl, response, stage) {
+    const current = await pageText(page);
+    const navigation = response || navigationResponses.get(page);
+    const headers = navigation?.headers() || {};
+    const state = {
+      status: navigation?.status() || 200, body: current.body,
+      mitigated: headers['cf-mitigated'], rayId: headers['cf-ray'],
+    };
+    const kind = recordResponse(targetUrl, state, stage, current.title);
+    if (kind !== 'ok') {
+      lastFailurePage = page;
+      console.warn(`Source ${kind}: HTTP ${state.status}, title ${JSON.stringify(current.title)}, Ray ID ${state.rayId || 'not supplied'}.`);
+    }
+    return kind;
+  }
+
+  async function checkNavigation(page, targetUrl, response, stage) {
+    let kind = await inspectNavigation(page, targetUrl, response, stage);
+    if (kind === 'challenge') {
+      await waitForHumanBrowserCheck(page, targetUrl, navigationResponses);
+      kind = await inspectNavigation(page, targetUrl, null, `${stage}-after-wait`);
+    }
+    if (kind !== 'ok') {
+      throw new Error(`Edge received a ${kind} response for ${targetUrl}. A 403 block may have no human-verification control. See scratch/browser-worker/report.json and source-page.png.`);
+    }
+  }
+
+  async function ensureOriginPage(url) {
+    const origin = url.origin;
     let page = pagesByOrigin.get(origin);
     if (page && !page.isClosed()) return page;
     if (pendingPagesByOrigin.has(origin)) return pendingPagesByOrigin.get(origin);
 
     const pendingPage = (async () => {
-      page = await context.newPage();
-      const response = await page.goto(`${origin}/`, { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(() => null);
-      const current = await pageText(page);
-      if (looksLikeChallenge(response?.status() || 200, current.body, current.title)) {
-        const cleared = await waitForHumanBrowserCheck(page, `${origin}/`);
-        if (!cleared) throw new Error(`Edge could not pass the source access check for ${origin}. No data was changed by this worker run.`);
-      }
+      page = await newSourcePage();
+      // Test the page the user actually needs, rather than assuming the root
+      // homepage has the same access rules. API calls bootstrap the listing UI.
+      const targetUrl = url.pathname.startsWith('/api/') ? `${origin}/mn/invitation` : url.toString();
+      lastFailurePage = page;
+      const response = await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+      await checkNavigation(page, targetUrl, response, 'initial-navigation');
       pagesByOrigin.set(origin, page);
       return page;
     })();
@@ -107,27 +169,34 @@ async function run() {
 
   async function browserRequestText(rawUrl, method = 'GET', body = undefined) {
     const url = validateSourceUrl(rawUrl);
-    const page = await ensureOriginPage(url.origin);
-    const send = () => page.evaluate(async ({ requestUrl, requestMethod, requestBody }) => {
-      const response = await fetch(requestUrl, {
-        method: requestMethod,
-        credentials: 'include',
-        cache: 'no-store',
-        headers: requestBody === undefined ? { Accept: '*/*' } : { Accept: '*/*', 'Content-Type': 'application/json' },
-        body: requestBody === undefined ? undefined : JSON.stringify(requestBody),
-      });
-      return { status: response.status, text: await response.text() };
-    }, { requestUrl: url.toString(), requestMethod: method, requestBody: body });
-
+    let page;
     try {
+      page = await ensureOriginPage(url);
+      const send = () => page.evaluate(async ({ requestUrl, requestMethod, requestBody }) => {
+        const response = await fetch(requestUrl, {
+          method: requestMethod,
+          credentials: 'include',
+          cache: 'no-store',
+          headers: requestBody === undefined ? { Accept: '*/*' } : { Accept: '*/*', 'Content-Type': 'application/json' },
+          body: requestBody === undefined ? undefined : JSON.stringify(requestBody),
+        });
+        return {
+          status: response.status, text: await response.text(),
+          mitigated: response.headers.get('cf-mitigated'), rayId: response.headers.get('cf-ray'),
+        };
+      }, { requestUrl: url.toString(), requestMethod: method, requestBody: body });
+
       let response = await send();
-      if (looksLikeChallenge(response.status, response.text)) {
-        await page.goto(url.toString(), { waitUntil: 'domcontentloaded', timeout: 60_000 }).catch(() => null);
-        const cleared = await waitForHumanBrowserCheck(page, url.toString());
-        if (cleared) response = await send();
+      let kind = recordResponse(url.toString(), { ...response, body: response.text }, 'browser-fetch');
+      if (kind === 'challenge') {
+        const navigation = await page.goto(url.toString(), { waitUntil: 'domcontentloaded', timeout: 60_000 });
+        await checkNavigation(page, url.toString(), navigation, 'fetch-challenge-navigation');
+        response = await send();
+        kind = recordResponse(url.toString(), { ...response, body: response.text }, 'browser-fetch-retry');
       }
-      if (response.status < 200 || response.status >= 300 || looksLikeChallenge(response.status, response.text)) {
-        throw new Error(`Official source returned HTTP ${response.status} to Edge for ${url.pathname}.`);
+      if (kind !== 'ok') {
+        lastFailurePage = page;
+        throw new Error(`Official source returned HTTP ${response.status} (${kind}) to Edge for ${url.pathname}.`);
       }
       if (url.pathname.startsWith('/api/') && !/^\s*[\[{]/.test(response.text)) {
         throw new Error(`Official API returned a non-JSON response to Edge for ${url.pathname}.`);
@@ -147,17 +216,18 @@ async function run() {
       throw new Error('Refusing an unexpected attachment URL.');
     }
 
-    const page = await context.newPage();
+    const page = await newSourcePage();
     const tempDir = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'tender-edge-download-'));
     try {
       const tryDownload = async () => {
         let download = null;
         let resolveDownload;
         const downloadEvent = new Promise((resolve) => { resolveDownload = resolve; });
-        page.once('download', (event) => {
+        const onDownload = (event) => {
           download = event;
           resolveDownload(event);
-        });
+        };
+        page.once('download', onDownload);
         let response = null;
         let navigationError = null;
         await page.setExtraHTTPHeaders({ Referer: 'https://www.tender.gov.mn/' });
@@ -167,8 +237,9 @@ async function run() {
           navigationError = error;
         }
         if (!download) download = await Promise.race([downloadEvent, page.waitForTimeout(750).then(() => null)]);
+        page.removeListener('download', onDownload);
         if (download) {
-          const filePath = path.join(tempDir, download.suggestedFilename() || 'attachment.pdf');
+          const filePath = path.join(tempDir, 'attachment.bin');
           await download.saveAs(filePath);
           return { status: 200, contentType: '', buffer: await fs.promises.readFile(filePath) };
         }
@@ -177,16 +248,28 @@ async function run() {
         return {
           status: response.status(),
           contentType: response.headers()['content-type'] || '',
+          mitigated: response.headers()['cf-mitigated'],
+          rayId: response.headers()['cf-ray'],
           buffer: await response.body(),
         };
       };
 
       let result = await tryDownload();
-      if (looksLikeChallenge(result.status, result.buffer.toString('utf8', 0, 3000))) {
-        const cleared = await waitForHumanBrowserCheck(page, url.toString());
-        if (cleared) result = await tryDownload();
+      let kind = recordResponse(url.toString(), {
+        ...result,
+        body: /text\/html/i.test(result.contentType) ? result.buffer.toString('utf8') : '',
+      }, 'attachment-navigation');
+      if (kind === 'challenge') {
+        await checkNavigation(page, url.toString(), null, 'attachment-challenge');
+        result = await tryDownload();
+        kind = recordResponse(url.toString(), {
+          ...result,
+          body: /text\/html/i.test(result.contentType) ? result.buffer.toString('utf8') : '',
+        }, 'attachment-retry');
       }
+      if (kind !== 'ok') throw new Error(`Attachment access failed: HTTP ${result.status} (${kind}).`);
       const buffer = Buffer.from(result.buffer);
+      if (buffer.length > 40 * 1024 * 1024) throw new Error('Attachment exceeds the 40 MB limit.');
       const isPdf = buffer.subarray(0, 1024).includes(Buffer.from('%PDF-'));
       const isPng = buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
       const isJpeg = buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
@@ -196,10 +279,14 @@ async function run() {
       return { buffer, contentType: isPdf ? 'application/pdf' : isJpeg ? 'image/jpeg' : 'image/png' };
     } catch (error) {
       failureCount += 1;
+      await page.screenshot({ path: path.join(outputDir, 'source-page.png') }).catch(() => {});
+      report.failureScreenshot = 'source-page.png';
       throw error;
     } finally {
       await page.close().catch(() => {});
-      await fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+      if (path.dirname(path.resolve(tempDir)) === path.resolve(os.tmpdir()) && path.basename(tempDir).startsWith('tender-edge-download-')) {
+        await fs.promises.rm(tempDir, { recursive: true, force: true }).catch(() => {});
+      }
     }
   }
 
@@ -210,8 +297,10 @@ async function run() {
   };
 
   try {
+    report.edgeVersion = context.browser()?.version();
     if (process.env.TENDER_WORKER_DIAGNOSTICS_ONLY === 'true') {
       const invitationId = process.env.TENDER_WORKER_DIAGNOSTIC_TENDER_ID || '1789954037772';
+      if (!/^\d{1,24}$/.test(invitationId)) throw new Error('Invalid diagnostic tender ID.');
       console.log(`Read-only Edge diagnostic for tender ${invitationId}. No Supabase rows are modified.`);
       const detailUrl = `https://www.tender.gov.mn/mn/invitation/detail/${encodeURIComponent(invitationId)}`;
       const detailHtml = await browserRequestText(detailUrl);
@@ -223,18 +312,32 @@ async function run() {
         .eq('invitation_id', invitationId)
         .maybeSingle();
       if (storedTender.error) throw new Error(`Could not read the diagnostic tender from Supabase: ${storedTender.error.message}`);
-      const tenderDocumentId = Number(documentMatch?.[1] || storedTender.data?.raw_data?.tenderDocumentId);
-      if (!Number.isSafeInteger(tenderDocumentId) || tenderDocumentId <= 0) {
-        throw new Error('Edge opened the tender page, but no tenderDocumentId was found in the page or Supabase row.');
+      const sourcePage = await ensureOriginPage(new URL(detailUrl));
+      await sourcePage.locator('a[href*="user.tender.gov.mn/mn/download/"]').first().waitFor({ timeout: 15_000 }).catch(() => {});
+      const links = await sourcePage.locator('a[href]').evaluateAll((anchors) => anchors.map((anchor) => ({
+        fileName: anchor.textContent.trim(), url: anchor.href,
+      })).filter((link) => /^https:\/\/user\.tender\.gov\.mn\/mn\/download\/\d+$/.test(link.url)));
+      let selectedPdf = links.find((link) => /\.pdf\b/i.test(link.fileName)) || links[0];
+      report.publicAttachmentLinkCount = links.length;
+      if (!selectedPdf) {
+        const tenderDocumentId = Number(documentMatch?.[1] || storedTender.data?.raw_data?.tenderDocumentId);
+        if (!Number.isSafeInteger(tenderDocumentId) || tenderDocumentId <= 0) {
+          throw new Error('No public attachment links or tenderDocumentId were found in the tender page.');
+        }
+        const docsText = await browserRequestText(`https://www.tender.gov.mn/api/gw/153/list?tenderDocumentId=${tenderDocumentId}&offset=1&limit=9999`);
+        const docs = JSON.parse(docsText);
+        if (!Array.isArray(docs)) throw new Error('The official document list did not return an array.');
+        const pdfDoc = docs.find((doc) => String(doc.fileExtention || doc.fileExtension || 'pdf').toLowerCase() === 'pdf');
+        if (!pdfDoc?.fileId) throw new Error(`No PDF was listed in the primary document list (${docs.length} files).`);
+        selectedPdf = { fileName: pdfDoc.fileName, url: `https://user.tender.gov.mn/mn/download/${pdfDoc.fileId}` };
       }
-      const docsText = await browserRequestText(`https://www.tender.gov.mn/api/gw/153/list?tenderDocumentId=${tenderDocumentId}&offset=1&limit=9999`);
-      const docs = JSON.parse(docsText);
-      if (!Array.isArray(docs)) throw new Error('The official document list did not return an array.');
-      const pdfDoc = docs.find((doc) => String(doc.fileExtention || doc.fileExtension || 'pdf').toLowerCase() === 'pdf');
-      if (!pdfDoc?.fileId) throw new Error(`The tender page loaded, but no PDF was listed in the primary document list (${docs.length} files).`);
-      const attachment = await browserDownload(`https://user.tender.gov.mn/mn/download/${pdfDoc.fileId}`);
-      console.log(`PASS: Edge downloaded ${pdfDoc.fileName || `file ${pdfDoc.fileId}`} (${attachment.buffer.length} bytes, ${attachment.contentType}).`);
+      const attachment = await browserDownload(selectedPdf.url);
+      const parsedPdf = await require('pdf-parse/lib/pdf-parse.js')(attachment.buffer);
+      report.pdf = { fileName: selectedPdf.fileName, bytes: attachment.buffer.length, pages: parsedPdf.numpages, nativeTextCharacters: parsedPdf.text.length };
+      report.result = 'pass';
+      console.log(`PASS: Edge downloaded ${selectedPdf.fileName} (${attachment.buffer.length} bytes, ${parsedPdf.numpages} pages, ${parsedPdf.text.length} text characters).`);
       console.log('The read-only diagnostic completed; no tender, queue, or PDF data was written to Supabase.');
+      console.log('This verifies one PDF download only. Listing sync and the full PDF queue still need a separate run.');
       return;
     }
 
@@ -266,8 +369,19 @@ async function run() {
     };
     const { processPdfQueue } = require('./process-pdf-queue.ts');
     await processPdfQueue();
-    console.log('Browser-based tender sync and PDF extraction completed.');
+    report.result = process.exitCode ? 'failed' : 'completed';
+    console.log(process.exitCode ? 'Browser worker finished with failed PDF jobs; see logs.' : 'Browser-based tender sync and PDF extraction completed.');
+  } catch (error) {
+    report.result = 'failed';
+    report.error = error instanceof Error ? error.message : String(error);
+    if (lastFailurePage && !lastFailurePage.isClosed()) {
+      await lastFailurePage.screenshot({ path: path.join(outputDir, 'source-page.png') }).catch(() => {});
+      report.failureScreenshot = 'source-page.png';
+    }
+    throw error;
   } finally {
+    await fs.promises.writeFile(path.join(outputDir, 'report.json'), JSON.stringify(report, null, 2));
+    console.log('Report saved to scratch/browser-worker/report.json (no keys or cookies).');
     delete globalThis.__TENDER_SOURCE_BROWSER__;
     await context.close().catch(() => {});
   }

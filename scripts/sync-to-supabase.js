@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const { execFile } = require('child_process');
+const { classifySourceResponse } = require('./source-response.cjs');
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL ||
@@ -71,9 +72,6 @@ function fetchPage(page, retries = 2) {
         }
         return reject(new Error(`Tender source page ${page} fetch failed (HTTP ${statusMatch?.[1] || 'unknown'}).`));
       }
-      if (/captcha|cloudflare|access denied|too many requests/i.test(responseBody)) {
-        return reject(new Error(`Tender source blocked the sync request on page ${page}.`));
-      }
       try {
         resolve(parsePageBody(responseBody, page));
       } catch (e) {
@@ -84,7 +82,7 @@ function fetchPage(page, retries = 2) {
 }
 
 function parsePageBody(responseBody, page) {
-  if (!responseBody || /captcha|cloudflare|access denied|too many requests/i.test(responseBody)) {
+  if (!responseBody || classifySourceResponse({ body: responseBody }) !== 'ok') {
     throw new Error(`Tender source blocked the sync request on page ${page}.`);
   }
   let idx = responseBody.indexOf('uusgesenClientId');

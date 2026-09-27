@@ -85,7 +85,7 @@ The GitHub-hosted runner currently receives HTTP 403 from the source. Use the br
    node .\scripts\browser-tender-worker.cjs
    Remove-Item Env:TENDER_WORKER_DIAGNOSTICS_ONLY
    ```
-   Edge opens visibly with a separate persistent profile. The check opens tender `1789954037772`, reads its official PDF list, and downloads one PDF without changing Supabase. If Edge displays a human verification page, complete it in the browser window. If the worker still receives 403, it stops and does not attempt to evade the source restriction.
+   Edge opens visibly with a separate persistent profile. The check opens tender `1789954037772`, tries the rendered public download links first (then the document-list endpoint if no links are found), and downloads one PDF without changing Supabase. It saves HTTP status, page title, and any Cloudflare Ray ID to `scratch/browser-worker/report.json`, plus `source-page.png` on source failure. A Cloudflare script on an otherwise normal page is not treated as a block. If Edge displays a human verification challenge, complete it in the browser window. A hard 403 block may have no verification control; the worker reports that separately and stops.
 4. Continue only after the check prints `PASS`. Run `node .\scripts\browser-tender-worker.cjs` once to sync listing pages and process the PDF queue. It uses Edge for the official pages and files, then the existing parser and Tesseract OCR for extraction.
 5. Install Poppler on Windows and add its `Library\bin` folder to `PATH` for OCR of scanned PDF pages. The worker logs its run to `scratch\browser-worker`. Then install the daily task:
    ```powershell
@@ -93,7 +93,9 @@ The GitHub-hosted runner currently receives HTTP 403 from the source. Use the br
    ```
    By default it runs at 12:15 AM in that PC's local time. It runs only while your Windows user is signed in, so that Edge can run visibly. Keep the PC awake or allow the task to wake it. Task Scheduler logs are saved under `scratch\browser-worker`.
 
-The worker's Edge profile is stored under `%LOCALAPPDATA%\TenderMN\EdgeSourceProfile`; it does not reuse your everyday Edge profile or saved passwords. The first automated run is a test: Edge automation may still be denied even though a normal Edge window works. Only the read-only diagnostic's `PASS` confirms that this route is usable from that PC.
+The worker's Edge profile is stored under `%LOCALAPPDATA%\TenderMN\EdgeSourceProfile`; it does not reuse your everyday Edge profile or saved passwords. The first automated run is a test: Edge automation may still be denied even though a normal Edge window works. The read-only diagnostic's `PASS` confirms one PDF download from that PC, not complete coverage or future unattended access. The listing sync and full queue must also succeed before relying on the daily task.
+
+For comparison, you can open the same dedicated profile manually in Edge and visit the exact tender URL. Close that profile's Edge windows before restarting the worker, because two processes cannot safely share it. A successful manual visit does not guarantee automated access: challenge clearance can expire or be rejected by the source. Stealth flags and challenge-solving proxies are not a guaranteed fix. Poppler enables scanned-page OCR after download; it cannot resolve HTTP 403.
 
 For scanned-page OCR, install Poppler from the [Windows Poppler releases](https://github.com/oschwartz10612/poppler-windows/releases), extract it, and add the folder containing `pdftoppm.exe` to the user's `PATH`. Open a new PowerShell window and confirm `pdftoppm -h` works before running the worker. Text-based PDFs do not need Poppler.
 
