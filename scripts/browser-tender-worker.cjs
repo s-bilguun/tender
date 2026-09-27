@@ -1,6 +1,7 @@
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { spawn } = require('child_process');
 const { chromium } = require('playwright');
 const { classifySourceResponse, visibleText } = require('./source-response.cjs');
 
@@ -41,22 +42,55 @@ async function pageText(page) {
   }
 }
 
-async function waitForHumanBrowserCheck(page, targetUrl, navigationResponses) {
-  console.warn(`\nEdge needs a human source-site check for ${new URL(targetUrl).hostname}. Complete it in the visible Edge window; waiting up to 90 seconds.`);
-  const deadline = Date.now() + 90_000;
-  while (Date.now() < deadline) {
-    await page.waitForTimeout(3000);
-    const current = await pageText(page);
-    const response = navigationResponses.get(page);
-    const kind = classifySourceResponse({
-      body: current.body, title: current.title,
-      status: response?.status() || 200,
-      mitigated: response?.headers()['cf-mitigated'],
-    });
-    if (kind === 'blocked') return false;
-    if (kind === 'ok' && current.body.trim()) return true;
+function findEdgeExecutable() {
+  const candidates = [
+    process.env.TENDER_EDGE_EXECUTABLE,
+    process.env['PROGRAMFILES(X86)'] && path.join(process.env['PROGRAMFILES(X86)'], 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    process.env.ProgramFiles && path.join(process.env.ProgramFiles, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    process.env.LOCALAPPDATA && path.join(process.env.LOCALAPPDATA, 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+  ].filter(Boolean);
+  return candidates.find((candidate) => fs.existsSync(candidate)) || 'msedge.exe';
+}
+
+async function launchEdgeForWorker(profileDir) {
+  const activePortPath = path.join(profileDir, 'DevToolsActivePort');
+  await fs.promises.unlink(activePortPath).catch(() => {});
+  const edgeProcess = spawn(findEdgeExecutable(), [
+    `--user-data-dir=${profileDir}`,
+    '--remote-debugging-port=0',
+    '--no-first-run',
+    '--no-default-browser-check',
+    'about:blank',
+  ], { stdio: 'ignore', windowsHide: false });
+  let launchError;
+  edgeProcess.once('error', (error) => { launchError = error; });
+
+  try {
+    const deadline = Date.now() + 30_000;
+    let port;
+    while (Date.now() < deadline) {
+      if (launchError) throw launchError;
+      if (edgeProcess.exitCode !== null) throw new Error(`Microsoft Edge exited before enabling its local debugging endpoint (code ${edgeProcess.exitCode}).`);
+      try {
+        const activePort = await fs.promises.readFile(activePortPath, 'utf8');
+        const parsedPort = activePort.split(/\r?\n/)[0].trim();
+        if (/^\d{1,5}$/.test(parsedPort) && Number(parsedPort) > 0 && Number(parsedPort) <= 65535) {
+          port = Number(parsedPort);
+          break;
+        }
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    if (!port) throw new Error('Microsoft Edge did not expose its local debugging endpoint within 30 seconds.');
+
+    const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`, { timeout: 30_000 });
+    const context = browser.contexts()[0];
+    if (!context) throw new Error('Microsoft Edge started without a browser context.');
+    return { browser, context, edgeProcess, activePortPath };
+  } catch (error) {
+    edgeProcess.kill();
+    throw error;
   }
-  return false;
 }
 
 async function run() {
@@ -78,15 +112,9 @@ async function run() {
     result: 'running',
   };
 
-  console.log('Starting a visible Microsoft Edge session for the official source.');
+  console.log('Starting visible Microsoft Edge without Playwright launch flags; attaching over a loopback-only debugging port.');
   console.log('The worker uses this separate Edge profile; it does not read your everyday Edge profile or saved passwords.');
-  const context = await chromium.launchPersistentContext(profileDir, {
-    channel: 'msedge',
-    headless: false,
-    acceptDownloads: true,
-    timeout: 60_000,
-    viewport: { width: 1440, height: 1000 },
-  });
+  const { browser, context, edgeProcess, activePortPath } = await launchEdgeForWorker(profileDir);
 
   const pagesByOrigin = new Map();
   const pendingPagesByOrigin = new Map();
@@ -134,8 +162,7 @@ async function run() {
   async function checkNavigation(page, targetUrl, response, stage) {
     let kind = await inspectNavigation(page, targetUrl, response, stage);
     if (kind === 'challenge') {
-      await waitForHumanBrowserCheck(page, targetUrl, navigationResponses);
-      kind = await inspectNavigation(page, targetUrl, null, `${stage}-after-wait`);
+      throw new Error(`Microsoft Edge received a Cloudflare challenge for ${targetUrl}. No manual verification was attempted. See scratch/browser-worker/report.json and source-page.png.`);
     }
     if (kind !== 'ok') {
       throw new Error(`Edge received a ${kind} response for ${targetUrl}. A 403 block may have no human-verification control. See scratch/browser-worker/report.json and source-page.png.`);
@@ -189,10 +216,8 @@ async function run() {
       let response = await send();
       let kind = recordResponse(url.toString(), { ...response, body: response.text }, 'browser-fetch');
       if (kind === 'challenge') {
-        const navigation = await page.goto(url.toString(), { waitUntil: 'domcontentloaded', timeout: 60_000 });
-        await checkNavigation(page, url.toString(), navigation, 'fetch-challenge-navigation');
-        response = await send();
-        kind = recordResponse(url.toString(), { ...response, body: response.text }, 'browser-fetch-retry');
+        lastFailurePage = page;
+        throw new Error(`Microsoft Edge received a Cloudflare challenge for ${url.pathname}. No manual verification was attempted.`);
       }
       if (kind !== 'ok') {
         lastFailurePage = page;
@@ -260,12 +285,8 @@ async function run() {
         body: /text\/html/i.test(result.contentType) ? result.buffer.toString('utf8') : '',
       }, 'attachment-navigation');
       if (kind === 'challenge') {
-        await checkNavigation(page, url.toString(), null, 'attachment-challenge');
-        result = await tryDownload();
-        kind = recordResponse(url.toString(), {
-          ...result,
-          body: /text\/html/i.test(result.contentType) ? result.buffer.toString('utf8') : '',
-        }, 'attachment-retry');
+        lastFailurePage = page;
+        throw new Error(`Microsoft Edge received a Cloudflare challenge for ${url.pathname}. No manual verification was attempted.`);
       }
       if (kind !== 'ok') throw new Error(`Attachment access failed: HTTP ${result.status} (${kind}).`);
       const buffer = Buffer.from(result.buffer);
@@ -297,7 +318,9 @@ async function run() {
   };
 
   try {
-    report.edgeVersion = context.browser()?.version();
+    report.edgeVersion = browser.version();
+    report.edgeLaunchMode = 'normal-edge-with-loopback-cdp';
+    report.webdriverFlag = await context.pages()[0]?.evaluate(() => navigator.webdriver).catch(() => undefined);
     if (process.env.TENDER_WORKER_DIAGNOSTICS_ONLY === 'true') {
       const invitationId = process.env.TENDER_WORKER_DIAGNOSTIC_TENDER_ID || '1789954037772';
       if (!/^\d{1,24}$/.test(invitationId)) throw new Error('Invalid diagnostic tender ID.');
@@ -380,10 +403,15 @@ async function run() {
     }
     throw error;
   } finally {
-    await fs.promises.writeFile(path.join(outputDir, 'report.json'), JSON.stringify(report, null, 2));
-    console.log('Report saved to scratch/browser-worker/report.json (no keys or cookies).');
-    delete globalThis.__TENDER_SOURCE_BROWSER__;
-    await context.close().catch(() => {});
+    try {
+      await fs.promises.writeFile(path.join(outputDir, 'report.json'), JSON.stringify(report, null, 2));
+      console.log('Report saved to scratch/browser-worker/report.json (no keys or cookies).');
+    } finally {
+      delete globalThis.__TENDER_SOURCE_BROWSER__;
+      await browser.close().catch(() => {});
+      edgeProcess.kill();
+      await fs.promises.unlink(activePortPath).catch(() => {});
+    }
   }
 }
 
