@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Locale, TenderFilterParams, ActiveTabMode, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { INDUSTRIES } from '@/lib/taxonomy';
+import { IndustryIcon } from '@/components/IndustryIcon';
 import { TOP_COMPANIES, COMPANIES_BY_INDUSTRY, CompanyEntity } from '@/components/CompanyDiscoveryBar';
 import { 
   Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, 
@@ -518,12 +519,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         >
           <button
             onClick={() => onFilterChange({ industry: 'all', sortBy: 'date_desc', page: 1 })}
-            className={`h-7 px-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1 cursor-pointer select-none ${
+            className={`h-7 px-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 cursor-pointer select-none ${
               currentIndustry === 'all'
                 ? 'bg-slate-900 text-white font-semibold shadow-2xs'
                 : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
             }`}
           >
+            <IndustryIcon id="all" className={currentIndustry === 'all' ? 'h-3.5 w-3.5 text-white' : 'h-3.5 w-3.5 text-slate-500'} />
             <span>{locale === 'mn' ? 'Бүх салбар' : 'All Sectors'}</span>
           </button>
 
@@ -544,7 +546,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90'
                 }`}
               >
-                <span className="text-xs">{ind.icon}</span>
+                <IndustryIcon id={ind.id} className={isSelected ? 'h-3.5 w-3.5 text-white' : 'h-3.5 w-3.5 text-slate-500'} />
                 <span>{shortLabel}</span>
                 {activeCount > 0 && (
                   <span
