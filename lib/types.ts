@@ -172,7 +172,7 @@ export interface TenderFilterParams {
   tabMode?: ActiveTabMode;
   noBidSecurityOnly?: boolean;
   chinaEligibility?: 'all' | 'direct' | 'joint_venture' | 'domestic_only'; // Filter for Chinese/foreign bidders
-  urgency?: 'all' | 'urgent_48h' | 'new_48h' | 'high_budget';
+  urgency?: 'all' | 'urgent_48h' | 'new_48h' | 'high_budget' | 'urgent' | 'critical' | 'closed' | 'active';
   sortBy?: 'date_desc' | 'budget_desc' | 'budget_asc' | 'deadline_asc';
   year?: string;           // 'all', '2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019'
   dateFrom?: string;       // YYYY-MM-DD
