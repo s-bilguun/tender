@@ -4,11 +4,15 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
+import { EcosystemStatsBanner } from '@/components/EcosystemStatsBanner';
 import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
 import { TenderSlideOver } from '@/components/TenderSlideOver';
+import { TenderDocAuditModal } from '@/components/TenderDocAuditModal';
+import { TenderFinanceModal } from '@/components/TenderFinanceModal';
+import { ChinaSupplierModal } from '@/components/ChinaSupplierModal';
 import { EmptyState } from '@/components/EmptyState';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
@@ -67,6 +71,12 @@ export default function Home() {
 
   // Selected Tender for Slide-over Detailed View
   const [selectedTenderForSlideOver, setSelectedTenderForSlideOver] = useState<TenderItem | null>(null);
+
+  // New Ecosystem Modals (Stolen/Adapted from TenderHub.mn)
+  const [isDocAuditOpen, setIsDocAuditOpen] = useState<boolean>(false);
+  const [isFinanceOpen, setIsFinanceOpen] = useState<boolean>(false);
+  const [isChinaSupplierOpen, setIsChinaSupplierOpen] = useState<boolean>(false);
+  const [modalTenderContext, setModalTenderContext] = useState<TenderItem | null>(null);
 
   // Command Palette & Toasts
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -267,6 +277,21 @@ export default function Home() {
     setIsAIDrawerOpen(true);
   };
 
+  const handleOpenDocAudit = (tender?: TenderItem) => {
+    setModalTenderContext(tender || null);
+    setIsDocAuditOpen(true);
+  };
+
+  const handleOpenFinance = (tender?: TenderItem) => {
+    setModalTenderContext(tender || null);
+    setIsFinanceOpen(true);
+  };
+
+  const handleOpenChinaSupplier = (tender?: TenderItem) => {
+    setModalTenderContext(tender || null);
+    setIsChinaSupplierOpen(true);
+  };
+
   const handleExportCSV = () => {
     if (!displayedTenders || displayedTenders.length === 0) return;
     exportTendersToCSV(displayedTenders, `tender_export_${new Date().toISOString().substring(0, 10)}.csv`);
@@ -316,7 +341,15 @@ export default function Home() {
       {/* Main Content Area */}
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4">
         
-        {/* 1. Prominent Global Keyword Search Bar */}
+        {/* 1. Ecosystem Live Market Pulse & Hero Banner (Adapted from TenderHub.mn) */}
+        <EcosystemStatsBanner
+          locale={locale}
+          onOpenDocAudit={() => handleOpenDocAudit()}
+          onOpenFinance={() => handleOpenFinance()}
+          onOpenChinaSupplier={() => handleOpenChinaSupplier()}
+        />
+
+        {/* 2. Prominent Global Keyword Search Bar */}
         <GlobalSearchBar
           value={searchInputValue}
           onChange={setSearchInputValue}
@@ -483,6 +516,30 @@ export default function Home() {
         onClose={() => setSelectedTenderForSlideOver(null)}
         locale={locale}
         onAskAI={handleAskAI}
+        onOpenDocAudit={(t) => handleOpenDocAudit(t)}
+        onOpenFinance={(t) => handleOpenFinance(t)}
+        onOpenChinaSupplier={(t) => handleOpenChinaSupplier(t)}
+      />
+
+      {/* ТББ Шалгагч AI Modal */}
+      <TenderDocAuditModal
+        isOpen={isDocAuditOpen}
+        onClose={() => setIsDocAuditOpen(false)}
+        tender={modalTenderContext}
+      />
+
+      {/* Тендерийн Баталгаа & Санхүүжилт Modal */}
+      <TenderFinanceModal
+        isOpen={isFinanceOpen}
+        onClose={() => setIsFinanceOpen(false)}
+        tender={modalTenderContext}
+      />
+
+      {/* Tender2China Хятадаас шууд үнийн санал авах Modal */}
+      <ChinaSupplierModal
+        isOpen={isChinaSupplierOpen}
+        onClose={() => setIsChinaSupplierOpen(false)}
+        tender={modalTenderContext}
       />
 
       {/* Footer */}

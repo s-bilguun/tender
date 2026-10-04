@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { 
   X, ExternalLink, Building2, Calendar, Clock, 
   DollarSign, FileText, ListChecks, Trophy, Sparkles, 
-  ArrowUpRight, ShieldCheck, Tag, Copy, Check
+  ArrowUpRight, ShieldCheck, Tag, Copy, Check, FileCheck, Globe2
 } from 'lucide-react';
 import { TenderItem, Locale } from '@/lib/types';
 import { IndustryIcon } from '@/components/IndustryIcon';
@@ -16,6 +16,9 @@ interface TenderSlideOverProps {
   onClose: () => void;
   locale?: Locale;
   onAskAI?: (tender: TenderItem) => void;
+  onOpenDocAudit?: (tender: TenderItem) => void;
+  onOpenFinance?: (tender: TenderItem) => void;
+  onOpenChinaSupplier?: (tender: TenderItem) => void;
 }
 
 export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
@@ -24,6 +27,9 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   onClose,
   locale = 'mn',
   onAskAI,
+  onOpenDocAudit,
+  onOpenFinance,
+  onOpenChinaSupplier,
 }) => {
   // Close on Escape key
   useEffect(() => {
@@ -135,6 +141,39 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                   {tender.receiveDate ? tender.receiveDate.split('T')[0] : '—'}
                 </span>
               </div>
+            </div>
+
+            {/* Quick Ecosystem Power-Actions */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              {onOpenDocAudit && (
+                <button
+                  onClick={() => onOpenDocAudit(tender)}
+                  className="p-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <FileCheck className="h-4 w-4 text-purple-600" />
+                  <span>ТББ Шалгагч AI</span>
+                </button>
+              )}
+
+              {onOpenFinance && (
+                <button
+                  onClick={() => onOpenFinance(tender)}
+                  className="p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  <span>Баталгаа тооцох</span>
+                </button>
+              )}
+
+              {onOpenChinaSupplier && (
+                <button
+                  onClick={() => onOpenChinaSupplier(tender)}
+                  className="p-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                >
+                  <Globe2 className="h-4 w-4 text-rose-600" />
+                  <span>🇨🇳 Хятадаас үнэ авах</span>
+                </button>
+              )}
             </div>
 
             {/* Eligibility & Technical Requirements */}
