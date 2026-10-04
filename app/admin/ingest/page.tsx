@@ -1,16 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Upload, FileText, CheckCircle2, AlertCircle, 
   Loader2, Globe, Database, ArrowLeft, Sparkles,
   Building2, Layers, Calendar, DollarSign, ListChecks,
   Copy, Check, ExternalLink, RefreshCw, Eye, Play,
-  FileCheck2, ShieldCheck, ChevronRight, HelpCircle
+  FileCheck2, Trophy, Users, TrendingDown, ChevronRight,
+  HelpCircle, ShieldCheck, Tag, BarChart3, ArrowUpRight
 } from 'lucide-react';
 import { TenderStructuredData } from '@/lib/ingestion/llm-extractor';
-import { IndustryIcon } from '@/components/IndustryIcon';
+import { SimilarTenderWithWinner, MarketIntelligenceSummary } from '@/lib/ingestion/similar-finder';
 
 interface ProcessLog {
   id: string;
@@ -18,6 +19,8 @@ interface ProcessLog {
   timestamp: string;
   status: 'loading' | 'success' | 'error';
   data?: TenderStructuredData;
+  similarTenders?: SimilarTenderWithWinner[];
+  marketIntelligence?: MarketIntelligenceSummary;
   dbSaved?: boolean;
   error?: string;
   duration?: number;
@@ -29,6 +32,7 @@ export default function AdminIngestPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [logs, setLogs] = useState<ProcessLog[]>([]);
   const [selectedLog, setSelectedLog] = useState<ProcessLog | null>(null);
+  const [inspectorTab, setInspectorTab] = useState<'specs' | 'winners' | 'market'>('winners');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [processedCount, setProcessedCount] = useState(0);
@@ -111,6 +115,8 @@ export default function AdminIngestPage() {
           timestamp: new Date().toLocaleTimeString(),
           status: res.ok && result.success ? 'success' : 'error',
           data: result.data,
+          similarTenders: result.similarTenders,
+          marketIntelligence: result.marketIntelligence,
           dbSaved: result.dbSaved,
           error: result.error || (result.dbError ? `DB Warning: ${result.dbError}` : undefined),
           duration,
@@ -119,6 +125,10 @@ export default function AdminIngestPage() {
         setLogs((prev) => prev.map((l) => (l.id === logId ? updatedLog : l)));
         if (updatedLog.status === 'success') {
           setSelectedLog(updatedLog);
+          // Default to winners tab if similar tenders found
+          if (updatedLog.similarTenders && updatedLog.similarTenders.length > 0) {
+            setInspectorTab('winners');
+          }
         }
       } catch (err: any) {
         setLogs((prev) =>
@@ -147,7 +157,7 @@ export default function AdminIngestPage() {
       .filter((u) => u.startsWith('http://') || u.startsWith('https://'));
 
     if (urls.length === 0) {
-      alert('Хамгийн багадаа 1 хүчинтэй PDF URL (http/https) оруулна уу.');
+      alert('Хамгийн багадаа 1 хүчинтэй PDF URL оруулна уу.');
       return;
     }
 
@@ -184,6 +194,8 @@ export default function AdminIngestPage() {
           timestamp: new Date().toLocaleTimeString(),
           status: res.ok && result.success ? 'success' : 'error',
           data: result.data,
+          similarTenders: result.similarTenders,
+          marketIntelligence: result.marketIntelligence,
           dbSaved: result.dbSaved,
           error: result.error || (result.dbError ? `DB Warning: ${result.dbError}` : undefined),
           duration,
@@ -192,6 +204,9 @@ export default function AdminIngestPage() {
         setLogs((prev) => prev.map((l) => (l.id === logId ? updatedLog : l)));
         if (updatedLog.status === 'success') {
           setSelectedLog(updatedLog);
+          if (updatedLog.similarTenders && updatedLog.similarTenders.length > 0) {
+            setInspectorTab('winners');
+          }
         }
       } catch (err: any) {
         setLogs((prev) =>
@@ -216,7 +231,7 @@ export default function AdminIngestPage() {
   const handleRunSampleDemo = () => {
     setActiveTab('urls');
     setUrlsInput(
-      'https://www.tender.gov.mn/documents/tender-spec-example.pdf\nhttps://www.tender.gov.mn/documents/civil-works-road.pdf'
+      'https://www.tender.gov.mn/documents/sample-mining-equipment.pdf\nhttps://www.tender.gov.mn/documents/sample-hospital-devices.pdf'
     );
   };
 
@@ -229,7 +244,7 @@ export default function AdminIngestPage() {
   return (
     <div className="min-h-screen bg-slate-50/90 text-slate-900 pb-16 font-sans">
       
-      {/* 1. Sleek Navigation Header */}
+      {/* 1. Header */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -238,7 +253,7 @@ export default function AdminIngestPage() {
               className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors flex items-center gap-1.5 text-xs font-semibold"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Үндсэн самбар руу буцах</span>
+              <span>Үндсэн самбар</span>
             </Link>
             <span className="text-slate-300">|</span>
             <div className="flex items-center gap-2">
@@ -246,7 +261,7 @@ export default function AdminIngestPage() {
                 TENDER<span className="text-blue-600">HUB</span>
               </span>
               <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-bold tracking-wider uppercase">
-                AI Ingestion Pipeline
+                PDF Analytics & Winner Discovery
               </span>
             </div>
           </div>
@@ -254,7 +269,7 @@ export default function AdminIngestPage() {
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>OpenAI & Supabase Ready</span>
+              <span>AI Ingest & Winner Matcher Active</span>
             </div>
             <Link
               href="/"
@@ -269,54 +284,21 @@ export default function AdminIngestPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
         
-        {/* 2. Visual 3-Step Pipeline Guide */}
-        <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+        {/* 2. Visual Value Proposition Header */}
+        <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 text-blue-200 text-xs font-medium backdrop-blur-md mb-3 border border-white/10">
-              <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-              <span>Автоматжуулсан дата цуглуулагч</span>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/15 text-amber-300 text-xs font-semibold backdrop-blur-md mb-3 border border-amber-400/20">
+              <Trophy className="h-3.5 w-3.5" />
+              <span>Төстэй тендерүүд & Ялагч нийлүүлэгчдийг илрүүлэгч</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white mb-2">
-              Төрийн тендерийн PDF баримтыг AI-аар задлан оруулах
+              Өөрийн PDF тендерээ уншуулаад, өмнөх ялагчид & үнийн дүнг шууд хар
             </h1>
             <p className="text-sm text-slate-300 leading-relaxed">
-              Монгол Улсын Засгийн газрын худалдан авах ажиллагааны цахим баримт бичгийг (PDF) оруулахад AI автоматаар текстийг шинжлэн, төсөв, салбар, захиалагч, шалгуур үзүүлэлтүүдийг ялгаж баазад шууд хадгална.
+              Та дурын төрийн тендерийн PDF баримтаа оруулснаар манай систем шаардлагуудыг задлан шинжлэхээс гадна <strong>өмнө нь тухайн захиалагчийн ижил төстэй тендерүүдэд аль компани ямар үнээр шалгарсан</strong> түүхэн үр дүнг автоматаар харьцуулан харуулна.
             </p>
-          </div>
-
-          {/* 3 Step Visual Badges */}
-          <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-xs">
-              <div className="h-8 w-8 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center shrink-0 text-sm">
-                1
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white">PDF / Холбоос оруулах</div>
-                <div className="text-[11px] text-slate-400">Файл чирж эсвэл URL оруулна</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-xs">
-              <div className="h-8 w-8 rounded-lg bg-purple-600 text-white font-bold flex items-center justify-center shrink-0 text-sm">
-                2
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white">OpenAI Structured JSON</div>
-                <div className="text-[11px] text-slate-400">10 талбартай стандартын дагуу</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-xs">
-              <div className="h-8 w-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center shrink-0 text-sm">
-                3
-              </div>
-              <div>
-                <div className="text-xs font-bold text-white">Шууд Баазад хадгалах</div>
-                <div className="text-[11px] text-slate-400">Supabase & UI дээр шууд харагдана</div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -375,10 +357,10 @@ export default function AdminIngestPage() {
                   <Upload className="h-7 w-7" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900 mb-1">
-                  Тендерийн PDF баримтаа энд чирж оруулна уу
+                  Тендерийн PDF баримтаа энд чирж оруулах
                 </h3>
                 <p className="text-xs text-slate-500 max-w-md mx-auto mb-5">
-                  Нэг дор хэдэн ч PDF файл сонгож болох бөгөөд систем тус бүрийг дарааллуулан AI-аар боловсруулна.
+                  Тендерийн өгөгдөл, шалгуурууд, төстэй түүхэн тендерүүд болон ялагчдыг шууд харах боломжтой.
                 </p>
 
                 <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl inline-flex items-center gap-2 text-xs shadow-md transition-all active:scale-95">
@@ -404,7 +386,7 @@ export default function AdminIngestPage() {
                     <span className="text-[11px] text-slate-400 font-medium">Жишээ: tender.gov.mn/file.pdf</span>
                   </div>
                   <textarea
-                    rows={5}
+                    rows={4}
                     value={urlsInput}
                     onChange={(e) => setUrlsInput(e.target.value)}
                     placeholder="https://tender.gov.mn/documents/2024-tender-01.pdf&#10;https://tender.gov.mn/documents/2024-tender-02.pdf"
@@ -415,7 +397,7 @@ export default function AdminIngestPage() {
                 <div className="flex items-center justify-between">
                   <p className="text-[11px] text-slate-500 flex items-center gap-1">
                     <HelpCircle className="h-3.5 w-3.5 text-slate-400" />
-                    <span>Систем URL-аас PDF-ийг автоматаар татан авч AI шинжилгээ хийнэ.</span>
+                    <span>Систем PDF-ийг уншиж AI шинжилгээ болон ялагчийн харьцуулалтыг хийнэ.</span>
                   </p>
                   <button
                     onClick={handleProcessUrls}
@@ -423,7 +405,7 @@ export default function AdminIngestPage() {
                     className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
                   >
                     {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    <span>Бүх холбоосыг боловсруулах</span>
+                    <span>Боловсруулж эхлэх</span>
                   </button>
                 </div>
               </div>
@@ -450,51 +432,16 @@ export default function AdminIngestPage() {
           </div>
         </div>
 
-        {/* 4. Live Stats Overview Cards */}
-        {logs.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
-                <CheckCircle2 className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Амжилттай орсон</div>
-                <div className="text-xl font-extrabold text-slate-900">{totalSuccess} баримт</div>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
-                <DollarSign className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Нийт төсвийн дүн</div>
-                <div className="text-lg font-extrabold text-blue-700">{totalBudgetIngested.toLocaleString()} ₮</div>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
-                <AlertCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Алдаатай гарсан</div>
-                <div className="text-xl font-extrabold text-rose-600">{totalError} баримт</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 5. Logs & Extracted JSON Inspector Split View */}
+        {/* 4. Split View: Processed Items List & Comprehensive Intelligence Inspector */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* Processed Items History List (7 cols) */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
+          {/* Processed Items History List (5 cols) */}
+          <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
             <div className="p-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileCheck2 className="h-4 w-4 text-slate-600" />
                 <span className="font-bold text-xs text-slate-800 uppercase tracking-wider">
-                  Боловсруулалтын жагсаалт ({logs.length})
+                  Шинжилсэн баримтууд ({logs.length})
                 </span>
               </div>
               {logs.length > 0 && (
@@ -507,16 +454,18 @@ export default function AdminIngestPage() {
               )}
             </div>
 
-            <div className="divide-y divide-slate-100 max-h-[550px] overflow-y-auto">
+            <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
               {logs.length === 0 ? (
                 <div className="p-12 text-center text-xs text-slate-400 space-y-2">
                   <FileText className="h-8 w-8 mx-auto text-slate-300" />
-                  <p>Одоогоор ямар нэгэн баримт боловсруулаагүй байна.</p>
-                  <p className="text-[11px] text-slate-400">Дээрх хэсгээр PDF файл сонгон боловсруулна уу.</p>
+                  <p>Одоогоор шинжилсэн баримт байхгүй байна.</p>
+                  <p className="text-[11px] text-slate-400">Дээрх хэсгээр өөрийн PDF баримтыг оруулна уу.</p>
                 </div>
               ) : (
                 logs.map((log) => {
                   const isSelected = selectedLog?.id === log.id;
+                  const winnersCount = log.similarTenders?.filter(s => s.winner).length || 0;
+
                   return (
                     <div
                       key={log.id}
@@ -547,11 +496,7 @@ export default function AdminIngestPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-bold text-xs text-slate-900 truncate">{log.source}</span>
-                          <div className="flex items-center gap-1.5 shrink-0 text-[10px] text-slate-400 font-mono">
-                            {log.duration && <span>{log.duration}s</span>}
-                            <span>•</span>
-                            <span>{log.timestamp}</span>
-                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono shrink-0">{log.timestamp}</span>
                         </div>
 
                         {log.status === 'success' && log.data && (
@@ -560,16 +505,15 @@ export default function AdminIngestPage() {
                               {log.data.tender_id}: {log.data.project_title_mn}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
-                              <span className="inline-flex items-center gap-1 font-medium bg-slate-100 px-1.5 py-0.2 rounded">
-                                <Building2 className="h-3 w-3 text-slate-400" />
-                                {log.data.buyer_name}
-                              </span>
-                              <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
                                 {log.data.estimated_budget_mnt?.toLocaleString()} ₮
                               </span>
-                              <span className="font-medium bg-blue-50 text-blue-700 px-1.5 py-0.2 rounded">
-                                {log.data.sector}
-                              </span>
+                              {winnersCount > 0 && (
+                                <span className="inline-flex items-center gap-1 font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded text-[10px]">
+                                  <Trophy className="h-3 w-3 text-amber-600" />
+                                  <span>{winnersCount} ялагч олдсон</span>
+                                </span>
+                              )}
                             </div>
                           </div>
                         )}
@@ -589,106 +533,310 @@ export default function AdminIngestPage() {
             </div>
           </div>
 
-          {/* Detailed Inspector Panel (5 cols) */}
-          <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 flex flex-col">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                <span className="font-bold text-xs text-slate-900 uppercase tracking-wider">
-                  AI Шинжилгээний үр дүн
-                </span>
+          {/* Detailed Inspector Panel with Winners & Competitors (7 cols) */}
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 flex flex-col">
+            
+            {/* Top Inspector Navigation Tabs */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 mb-4">
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setInspectorTab('winners')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    inspectorTab === 'winners'
+                      ? 'bg-amber-500 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <Trophy className="h-3.5 w-3.5" />
+                  <span>Төстэй тендер & Ялагчид</span>
+                  {selectedLog?.similarTenders && selectedLog.similarTenders.length > 0 && (
+                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-extrabold ${inspectorTab === 'winners' ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                      {selectedLog.similarTenders.length}
+                    </span>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setInspectorTab('specs')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    inspectorTab === 'specs'
+                      ? 'bg-blue-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <ListChecks className="h-3.5 w-3.5" />
+                  <span>PDF Шаардлагууд</span>
+                </button>
+
+                <button
+                  onClick={() => setInspectorTab('market')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    inspectorTab === 'market'
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <BarChart3 className="h-3.5 w-3.5" />
+                  <span>Өрсөлдөөний зах зээл</span>
+                </button>
               </div>
+
               {selectedLog?.data && (
                 <button
                   onClick={() => handleCopyJson(selectedLog.data, selectedLog.id)}
                   className="text-xs text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-lg font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Бүх JSON-ийг хуулах"
                 >
                   {copiedId === selectedLog.id ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copiedId === selectedLog.id ? 'Хуулагдлаа' : 'JSON Хуулах'}</span>
+                  <span>{copiedId === selectedLog.id ? 'Хуулагдлаа' : 'JSON'}</span>
                 </button>
               )}
             </div>
 
             {selectedLog?.data ? (
-              <div className="space-y-4 flex-1 overflow-y-auto max-h-[500px] pr-1 text-xs">
+              <div className="space-y-4 flex-1 overflow-y-auto max-h-[540px] pr-1 text-xs">
                 
-                {/* Title & Tender ID Card */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2 py-0.5 rounded-md bg-blue-600 text-white font-bold text-[10px] font-mono">
-                      {selectedLog.data.tender_id}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold text-[10px]">
-                      {selectedLog.data.sector}
-                    </span>
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-sm leading-snug">
-                    {selectedLog.data.project_title_mn}
-                  </h4>
-                </div>
-
-                {/* Procuring Entity & Budget */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Захиалагч байгууллага
-                    </span>
-                    <p className="font-semibold text-slate-800 line-clamp-2">
-                      {selectedLog.data.buyer_name}
+                {/* Active Tender Brief Banner */}
+                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[10px] font-mono">
+                        {selectedLog.data.tender_id}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-800 font-bold text-[10px] border border-blue-200">
+                        {selectedLog.data.sector}
+                      </span>
+                    </div>
+                    <h4 className="font-bold text-slate-900 text-sm">
+                      {selectedLog.data.project_title_mn}
+                    </h4>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      Захиалагч: <span className="font-semibold text-slate-800">{selectedLog.data.buyer_name}</span> | Төсөвт өртөг: <span className="font-bold text-emerald-700">{selectedLog.data.estimated_budget_mnt?.toLocaleString()} ₮</span>
                     </p>
                   </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/80">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      Төсөвт өртөг
-                    </span>
-                    <p className="font-black text-emerald-700 text-sm">
-                      {selectedLog.data.estimated_budget_mnt?.toLocaleString()} ₮
-                    </p>
-                    <span className="text-[10px] text-slate-500 font-mono">
-                      {selectedLog.data.budget_category}
-                    </span>
-                  </div>
+                  <Link
+                    href={`/?search=${encodeURIComponent(selectedLog.data.tender_id)}`}
+                    className="shrink-0 p-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors"
+                    title="Сайт дээр харах"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
                 </div>
 
-                {/* Technical Requirements */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
-                  <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
-                    <ListChecks className="h-4 w-4 text-blue-600" />
-                    <span>Шалгуур үзүүлэлтүүд (3-5 Requirements):</span>
-                  </div>
-                  <ul className="space-y-1.5 pl-1">
-                    {selectedLog.data.key_requirements?.map((req, i) => (
-                      <li key={i} className="flex items-start gap-2 text-slate-700 leading-relaxed text-[11px]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0 mt-1.5" />
-                        <span>{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {/* TAB 1: SIMILAR TENDERS & REAL WINNERS */}
+                {inspectorTab === 'winners' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-slate-700">
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <Trophy className="h-4 w-4 text-amber-500" />
+                        <span>Төстэй өмнөх тендерүүд & Шалгарсан ялагчид ({selectedLog.similarTenders?.length || 0}):</span>
+                      </div>
+                      <span className="text-[11px] text-slate-400">Үнийн дүн & Үнэлгээний шийдвэр</span>
+                    </div>
 
-                {/* Historical Comparison */}
-                {selectedLog.data.historical_comparison_notes && (
-                  <div className="p-3 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1">
-                    <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">
-                      Түүхэн харьцуулалтын тэмдэглэл
-                    </span>
-                    <p className="text-[11px] text-indigo-800 leading-relaxed">
-                      {selectedLog.data.historical_comparison_notes}
-                    </p>
+                    {(!selectedLog.similarTenders || selectedLog.similarTenders.length === 0) ? (
+                      <div className="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 text-slate-500 text-xs">
+                        Энэхүү захиалагч эсвэл салбарт яг төстэй өмнөх тендер одоогоор бүртгэгдээгүй байна.
+                      </div>
+                    ) : (
+                      selectedLog.similarTenders.map((sim, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-blue-300 transition-all space-y-2.5"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-[10px] font-mono text-slate-500 font-semibold">
+                                  {sim.tenderCode}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600 font-medium">
+                                  {sim.publishDate || 'Түүхэн'}
+                                </span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-blue-50 text-blue-700 font-semibold">
+                                  {sim.matchReason}
+                                </span>
+                              </div>
+                              <h5 className="font-bold text-slate-900 text-xs leading-snug">
+                                {sim.tenderName}
+                              </h5>
+                              <p className="text-[11px] text-slate-500 mt-0.5">
+                                Захиалагч: <span className="text-slate-700 font-medium">{sim.budgetEntityName}</span> | Нийт төсөв: <strong className="text-slate-900">{sim.totalBudget?.toLocaleString()} ₮</strong>
+                              </p>
+                            </div>
+
+                            <Link
+                              href={`/tender/${sim.invitationId}`}
+                              target="_blank"
+                              className="shrink-0 text-blue-600 hover:text-blue-800 p-1.5 rounded-md hover:bg-blue-50 transition-colors"
+                              title="Тендерийн дэлгэрэнгүйг үзэх"
+                            >
+                              <ArrowUpRight className="h-4 w-4" />
+                            </Link>
+                          </div>
+
+                          {/* Winner Spotlight Banner */}
+                          {sim.winner ? (
+                            <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <div className="space-y-0.5">
+                                <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
+                                  <Trophy className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
+                                  <span>Шалгарсан нийлүүлэгч: {sim.winner.supplierName}</span>
+                                  {sim.winner.registerNumber && (
+                                    <span className="text-[10px] font-normal text-emerald-700">
+                                      (РД: {sim.winner.registerNumber})
+                                    </span>
+                                  )}
+                                </div>
+                                {sim.winner.commentText && (
+                                  <p className="text-[11px] text-emerald-800 italic">
+                                    Дүгнэлт: &ldquo;{sim.winner.commentText}&rdquo;
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="text-right shrink-0">
+                                <div className="text-xs font-extrabold text-emerald-800">
+                                  {sim.winner.winningAmount > 0 ? `${sim.winner.winningAmount.toLocaleString()} ₮` : 'Гэрээ байгуулсан'}
+                                </div>
+                                {sim.winner.discountPercent > 0 && (
+                                  <div className="text-[10px] font-bold text-emerald-600">
+                                    Төсвөөс {sim.winner.discountPercent}% хямдарсан
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="p-2 rounded bg-slate-50 border border-slate-200/70 text-[11px] text-slate-500 flex items-center justify-between">
+                              <span>Төлөв: {sim.docStatusName}</span>
+                              <span className="text-slate-400">Оролцсон: {sim.biddersCount || 1} компани</span>
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
 
-                {/* Action CTA */}
-                <div className="pt-2">
-                  <Link
-                    href={`/?search=${encodeURIComponent(selectedLog.data.tender_id)}`}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 text-xs transition-colors shadow-2xs"
-                  >
-                    <span>Сайтын үндсэн жагсаалтаас харах</span>
-                    <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
-                  </Link>
-                </div>
+                {/* TAB 2: PDF SPECS & TECHNICAL REQUIREMENTS */}
+                {inspectorTab === 'specs' && (
+                  <div className="space-y-3">
+                    {/* Requirements List */}
+                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                        <ListChecks className="h-4 w-4 text-blue-600" />
+                        <span>PDF-ээс ялгасан гол шалгуур үзүүлэлтүүд:</span>
+                      </div>
+                      <ul className="space-y-1.5 pl-1">
+                        {selectedLog.data.key_requirements?.map((req, i) => (
+                          <li key={i} className="flex items-start gap-2 text-slate-700 leading-relaxed text-[11px]">
+                            <span className="h-1.5 w-1.5 rounded-full bg-blue-600 shrink-0 mt-1.5" />
+                            <span>{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Historical Comparison Notes */}
+                    {selectedLog.data.historical_comparison_notes && (
+                      <div className="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1">
+                        <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">
+                          Түүхэн харьцуулалтын тэмдэглэл (LLM Insight)
+                        </span>
+                        <p className="text-[11px] text-indigo-900 leading-relaxed">
+                          {selectedLog.data.historical_comparison_notes}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Metadata Badges */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Төсвийн ангилал</span>
+                        <span className="font-semibold text-slate-800 text-[11px] font-mono">{selectedLog.data.budget_category}</span>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Нийтэлсэн огноо</span>
+                        <span className="font-semibold text-slate-800 text-[11px]">{selectedLog.data.publish_date}</span>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Хугацааны он</span>
+                        <span className="font-semibold text-slate-800 text-[11px]">{selectedLog.data.deadline_year}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: MARKET INTELLIGENCE & COMPETITORS */}
+                {inspectorTab === 'market' && (
+                  <div className="space-y-3">
+                    {selectedLog.marketIntelligence ? (
+                      <>
+                        {/* Summary Metrics */}
+                        <div className="grid grid-cols-3 gap-2.5">
+                          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-center">
+                            <span className="text-[10px] font-bold text-blue-700 uppercase block">Дундаж хөнгөлөлт</span>
+                            <span className="text-lg font-black text-blue-950">
+                              {selectedLog.marketIntelligence.avgDiscountPercent}%
+                            </span>
+                            <span className="text-[9px] text-blue-600 block">төсвөөс доогуур</span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-center">
+                            <span className="text-[10px] font-bold text-purple-700 uppercase block">Өрсөлдөгчид</span>
+                            <span className="text-lg font-black text-purple-950">
+                              ~{selectedLog.marketIntelligence.avgBiddersCount}
+                            </span>
+                            <span className="text-[9px] text-purple-600 block">оролцогч/тендер</span>
+                          </div>
+
+                          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
+                            <span className="text-[10px] font-bold text-emerald-700 uppercase block">Өрсөлдөөний түвшин</span>
+                            <span className="text-xs font-black text-emerald-950 uppercase block mt-1">
+                              {selectedLog.marketIntelligence.estimatedCompetitionLevel === 'high' ? 'Өндөр' : selectedLog.marketIntelligence.estimatedCompetitionLevel === 'medium' ? 'Дунд' : 'Бага'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Top Winning Competitors */}
+                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                            <Users className="h-4 w-4 text-indigo-600" />
+                            <span>Тус захиалагчийн шалгарч байсан топ нийлүүлэгчид:</span>
+                          </div>
+
+                          {selectedLog.marketIntelligence.topPastWinners.length === 0 ? (
+                            <p className="text-[11px] text-slate-500">Тодорхой ялагчийн дата олдсонгүй.</p>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {selectedLog.marketIntelligence.topPastWinners.map((w, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-white border border-slate-200/80 text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <span className="h-5 w-5 rounded-full bg-amber-100 text-amber-800 font-bold text-[10px] flex items-center justify-center shrink-0">
+                                      {idx + 1}
+                                    </span>
+                                    <span className="font-bold text-slate-900">{w.name}</span>
+                                  </div>
+                                  <div className="text-right text-[11px]">
+                                    <span className="font-bold text-emerald-700">{w.totalWonAmount > 0 ? `${w.totalWonAmount.toLocaleString()} ₮` : `${w.winCount} удаа ялсан`}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Recommendation Note */}
+                        <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2">
+                          <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                          <span><strong>Үнийн санал өгөх зөвлөмж:</strong> {selectedLog.marketIntelligence.pricingRecommendation}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-6 text-center text-slate-400 text-xs">Өрсөлдөөний дата ачааллаж байна...</div>
+                    )}
+                  </div>
+                )}
 
               </div>
             ) : (
@@ -696,7 +844,7 @@ export default function AdminIngestPage() {
                 <Eye className="h-8 w-8 text-slate-300" />
                 <p className="text-xs font-semibold text-slate-600">Шинжилсэн өгөгдөл сонгогдоогүй байна</p>
                 <p className="text-[11px] max-w-xs">
-                  Зүүн талын жагсаалтаас аль нэг амжилттай боловсруулагдсан баримт дээр дарж дэлгэрэнгүй үзүүлэлтүүдийг шалгана уу.
+                  Зүүн талын жагсаалтаас баримт дээр дарж төстэй тендерүүд болон ялагч нийлүүлэгчдийн түүхэн мэдээллийг харна уу.
                 </p>
               </div>
             )}

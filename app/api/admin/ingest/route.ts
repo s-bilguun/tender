@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromPdfBuffer, extractTextFromPdfUrl } from '@/lib/ingestion/pdf-parser';
 import { extractTenderDataWithLLM } from '@/lib/ingestion/llm-extractor';
 import { saveTenderToDatabase } from '@/lib/ingestion/db-adapter';
+import { findSimilarTendersAndWinners } from '@/lib/ingestion/similar-finder';
 
 export const runtime = 'nodejs'; // pdf-parse Node.js runtime шаарддаг
 export const maxDuration = 60;   // Vercel serverless function timeout
@@ -42,12 +43,17 @@ export async function POST(req: NextRequest) {
     // 2. LLM-ээр бүтэцлэгдсэн өгөгдөл гаргах
     const structuredData = await extractTenderDataWithLLM(extractedText);
 
-    // 3. Database-д хадгалах
+    // 3. Төстэй өмнөх тендерүүд & Ялагчдыг олох
+    const { similarTenders, marketIntelligence } = await findSimilarTendersAndWinners(structuredData);
+
+    // 4. Database-д хадгалах
     const dbResult = await saveTenderToDatabase(structuredData, sourceUrl);
 
     return NextResponse.json({
       success: true,
       data: structuredData,
+      similarTenders,
+      marketIntelligence,
       dbSaved: dbResult.success,
       dbError: dbResult.error,
     });
