@@ -7,7 +7,8 @@
     "dev:3001": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sync": "tsx scripts/sync-tenders.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.78.0",
@@ -21,14 +22,18 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@google/genai": "^2.27.0",
+    "@google/generative-ai": "^0.24.1",
     "@types/node": "^20.14.10",
     "@types/pdf-parse": "^1.1.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
+    "dotenv": "^18.0.5",
     "playwright": "1.61.1",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
+    "tsx": "^4.23.15",
     "typescript": "^5.5.3"
   }
 }

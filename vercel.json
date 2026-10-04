@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync?limit=5",
+      "schedule": "*/30 * * * *"
+    }
+  ]
+}
