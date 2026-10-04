@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Locale, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { Sparkles, Globe, Clock } from 'lucide-react';
+import { Sparkles, Globe, Clock, FileUp } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 interface HeaderProps {
@@ -122,6 +123,16 @@ export const Header: React.FC<HeaderProps> = ({
             <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0" />
             <span className="font-semibold text-[11px] sm:text-xs">{locale === 'mn' ? 'MN' : 'EN'}</span>
           </button>
+
+          {/* PDF Ingestion Tool */}
+          <Link
+            href="/admin/ingest"
+            className="h-8 px-2 sm:px-3 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100/90 border border-blue-200/80 flex items-center gap-1.5 transition-colors shrink-0"
+            title="Тендерийн PDF баримт AI-аар задлан оруулах"
+          >
+            <FileUp className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+            <span className="hidden sm:inline whitespace-nowrap">{locale === 'mn' ? 'PDF Оруулах' : 'Ingest PDF'}</span>
+          </Link>
 
           {/* AI Assistant Button */}
           <button

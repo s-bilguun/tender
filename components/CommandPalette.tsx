@@ -5,7 +5,7 @@ import {
   Search, Sparkles, Layers, Download, LayoutGrid, 
   List, Bookmark, ArrowRight, CornerDownLeft, 
   ShieldCheck, Clock, X, Building2, Cpu, Stethoscope, 
-  Pickaxe, Utensils, Truck, Shield, BookOpen, Scale
+  Pickaxe, Utensils, Truck, Shield, BookOpen, Scale, FileUp
 } from 'lucide-react';
 import { TenderItem, TenderFilterParams } from '@/lib/types';
 import { INDUSTRIES } from '@/lib/taxonomy';
@@ -95,6 +95,18 @@ export function CommandPalette({
       onSelect: () => {
         onClose();
         onExportCSV();
+      },
+    });
+
+    items.push({
+      id: 'action-ingest',
+      title: 'Тендерийн PDF импортлох (AI Ingest Studio)',
+      subtitle: 'PDF баримтаас өгөгдөл задлан баазад хадгалах хэрэгсэл',
+      category: 'action',
+      icon: <FileUp className="h-4 w-4 text-emerald-600" />,
+      onSelect: () => {
+        onClose();
+        window.location.href = '/admin/ingest';
       },
     });
 
