@@ -4,9 +4,12 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
+import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
+import { TenderSlideOver } from '@/components/TenderSlideOver';
+import { EmptyState } from '@/components/EmptyState';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { AnalyticsView } from '@/components/AnalyticsView';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -15,7 +18,7 @@ import { ToastContainer, ToastMessage } from '@/components/Toast';
 import { exportTendersToCSV } from '@/lib/export';
 import {
   AlertCircle, ChevronLeft, ChevronRight, 
-  Star, Sparkles, Loader2
+  Star, Sparkles, Loader2, ArrowDown, RefreshCw
 } from 'lucide-react';
 
 export default function Home() {
@@ -56,7 +59,14 @@ export default function Home() {
   const [statsSource, setStatsSource] = useState<string | undefined>(undefined);
   const [listSource, setListSource] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
+
+  // Search Input State
+  const [searchInputValue, setSearchInputValue] = useState<string>('');
+
+  // Selected Tender for Slide-over Detailed View
+  const [selectedTenderForSlideOver, setSelectedTenderForSlideOver] = useState<TenderItem | null>(null);
 
   // Command Palette & Toasts
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState<boolean>(false);
@@ -128,7 +138,7 @@ export default function Home() {
     });
   };
 
-  // Default: Show Active Open Tenders first (immediately actionable opportunities)
+  // Default Filters
   const [filters, setFilters] = useState<TenderFilterParams>({
     search: '',
     category: 'all',
@@ -144,9 +154,19 @@ export default function Home() {
   const [aiTenderContext, setAiTenderContext] = useState<TenderItem | null>(null);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(false);
 
+  // Sync internal search input with filter
+  useEffect(() => {
+    setSearchInputValue(filters.search || '');
+  }, [filters.search]);
+
   // Fetch tenders
-  const loadTenders = useCallback(async (currentFilters: TenderFilterParams) => {
-    setIsLoading(true);
+  const loadTenders = useCallback(async (currentFilters: TenderFilterParams, isLoadMore = false) => {
+    if (isLoadMore) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
+    }
+
     try {
       const params = new URLSearchParams();
       if (currentFilters.search) params.append('search', currentFilters.search);
@@ -171,7 +191,15 @@ export default function Home() {
       const data = await res.json();
 
       if (data.success) {
-        setTenders(data.items);
+        if (isLoadMore) {
+          setTenders((prev) => {
+            const existingIds = new Set(prev.map((p) => String(p.invitationId)));
+            const newItems = data.items.filter((item: TenderItem) => !existingIds.has(String(item.invitationId)));
+            return [...prev, ...newItems];
+          });
+        } else {
+          setTenders(data.items);
+        }
         setTotalCount(data.totalCount);
         setTotalPages(data.totalPages || 1);
         setListSource(data.source || 'unknown');
@@ -180,11 +208,12 @@ export default function Home() {
       console.error('Failed to load tenders:', err);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   }, []);
 
   useEffect(() => {
-    loadTenders(filters);
+    loadTenders(filters, false);
   }, [filters, loadTenders]);
 
   useEffect(() => {
@@ -211,6 +240,20 @@ export default function Home() {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
+  const handleGlobalSearchSubmit = () => {
+    handleFilterChange({ search: searchInputValue.trim() ? searchInputValue.trim() : undefined, page: 1 });
+  };
+
+  const handleSelectSearchSuggestion = (query: string) => {
+    setSearchInputValue(query);
+    handleFilterChange({ search: query, page: 1 });
+  };
+
+  const handleLoadMore = () => {
+    const nextPerPage = (filters.perPage || 15) + 15;
+    handleFilterChange({ perPage: nextPerPage });
+  };
+
   // Watchlist View filtering
   const displayedTenders = useMemo(() => {
     if (filters.tabMode === 'watchlist') {
@@ -234,6 +277,28 @@ export default function Home() {
     });
   };
 
+  const handleResetAllFilters = () => {
+    setSearchInputValue('');
+    handleFilterChange({
+      search: undefined,
+      category: 'all',
+      industry: 'all',
+      minBudget: undefined,
+      maxBudget: undefined,
+      status: 'receiving',
+      tabMode: 'active',
+      urgency: 'all',
+      year: undefined,
+      dateFrom: undefined,
+      dateTo: undefined,
+      fundName: undefined,
+      ruleName: undefined,
+      positionName: undefined,
+      page: 1,
+      perPage: 15,
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
       {/* Top Header */}
@@ -249,18 +314,18 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-3">
-        {(statsSource === 'local_cache' || statsSource === 'unavailable' || listSource === 'local_cache' || listSource === 'live_fetch_partial') && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">
-            {listSource === 'live_fetch_partial'
-              ? (locale === 'mn'
-                ? 'Энэ хайлт эх сайтаас зөвхөн нэг хуудсыг шууд татсан. Бүрэн жагсаалт болон статистикийг өдөр тутмын синкээр шинэчилнэ.'
-                : 'This search is a live-source fallback for one page only. The daily sync provides the complete stored archive.')
-              : (locale === 'mn'
-                ? 'Бүрэн өгөгдлийн сангийн мэдээлэл боломжгүй байна. Жагсаалт эсвэл статистик кэшийн хэсэгчилсэн өгөгдөл байж болно.'
-                : 'Complete database data is temporarily unavailable. The list or metrics may reflect only a partial cache.')}
-          </div>
-        )}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4">
+        
+        {/* 1. Prominent Global Keyword Search Bar */}
+        <GlobalSearchBar
+          value={searchInputValue}
+          onChange={setSearchInputValue}
+          onSubmit={handleGlobalSearchSubmit}
+          onClear={() => handleFilterChange({ search: undefined, page: 1 })}
+          locale={locale}
+          totalFound={totalCount}
+          onSelectSuggestion={handleSelectSearchSuggestion}
+        />
 
         {/* Collapsible Analytics View */}
         {isAnalyticsOpen && stats && (
@@ -276,7 +341,7 @@ export default function Home() {
           />
         )}
 
-        {/* Unified Workflow Tabs, Sectors, Search & Filters Hub */}
+        {/* Unified Workflow Tabs, Sectors & Advanced Filter Controls */}
         <TenderFilters
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -300,7 +365,7 @@ export default function Home() {
                 </span>
               ) : (
                 <span>
-                  {locale === 'mn' ? 'Нийт олдсон:' : 'Total matches:'}{' '}
+                  {locale === 'mn' ? 'Нийт илэрц:' : 'Total matches:'}{' '}
                   <strong className="text-slate-900 font-mono tabular-nums">{totalCount.toLocaleString()}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
                 </span>
               )}
@@ -322,43 +387,12 @@ export default function Home() {
             <TenderSkeleton count={6} viewMode="grid" />
           )
         ) : displayedTenders.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-12 text-center space-y-3 shadow-2xs">
-            {filters.tabMode === 'watchlist' ? (
-              <>
-                <Star className="h-8 w-8 text-amber-400 mx-auto" />
-                <h3 className="text-sm font-semibold text-slate-800">
-                  {locale === 'mn' ? 'Хянаж буй тендер байхгүй байна' : 'No tracked tenders in watchlist'}
-                </h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  {locale === 'mn'
-                    ? 'Тендерийн жагсаалтаас од (⭐) дээр дарж сонирхсон тендерүүдээ энд хадгалан хянах боломжтой.'
-                    : 'Click the star icon (⭐) on any tender card or table row to pin it here.'}
-                </p>
-                <button
-                  onClick={() => handleFilterChange({ tabMode: 'active', status: 'receiving', page: 1 })}
-                  className="h-8 px-4 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer"
-                >
-                  {locale === 'mn' ? 'Идэвхтэй тендерүүд рүү буцах' : 'Back to Active Tenders'}
-                </button>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
-                <h3 className="text-sm font-semibold text-slate-800">{t.noResults}</h3>
-                <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                  {t.noResultsTip}
-                </p>
-                <div className="flex items-center justify-center gap-2 mt-1">
-                  <button
-                    onClick={() => handleFilterChange({ search: '', category: 'all', industry: 'all', minBudget: undefined, maxBudget: undefined, status: 'all', tabMode: 'all', urgency: 'all', year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
-                    className="h-8 px-4 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
-                  >
-                    {locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          /* Empty State */
+          <EmptyState
+            onResetFilters={handleResetAllFilters}
+            locale={locale}
+            onSelectSuggestion={handleSelectSearchSuggestion}
+          />
         ) : viewMode === 'table' ? (
           /* Table View */
           <TenderTable
@@ -369,8 +403,8 @@ export default function Home() {
             onAskAI={handleAskAI}
           />
         ) : (
-          /* Cards Grid View */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          /* Premium Cards Grid View */
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {displayedTenders.map((tender) => (
               <TenderCard
                 key={String(tender.invitationId)}
@@ -378,51 +412,84 @@ export default function Home() {
                 locale={locale}
                 isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
                 onToggleSave={handleToggleSave}
+                onSelect={(t) => setSelectedTenderForSlideOver(t)}
                 onAskAI={handleAskAI}
               />
             ))}
           </div>
         )}
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && filters.tabMode !== 'watchlist' && (
-          <div className="flex items-center justify-between border-t border-slate-200 pt-4 px-1 text-xs">
-            <div className="text-slate-500">
-              {locale === 'mn' ? 'Хуудас бүрт 15 тендер харуулж байна' : 'Showing 15 tenders per page'}
+        {/* Pagination & Load More Controls */}
+        {displayedTenders.length > 0 && totalCount > displayedTenders.length && filters.tabMode !== 'watchlist' && (
+          <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 pt-6 px-1 gap-4">
+            
+            {/* Showing status count */}
+            <div className="text-xs text-slate-500">
+              {locale === 'mn'
+                ? `Нийт ${totalCount.toLocaleString()} тендерээс ${displayedTenders.length}-ийг харуулж байна`
+                : `Showing ${displayedTenders.length} of ${totalCount.toLocaleString()} tenders`}
             </div>
 
-            <div className="flex items-center gap-1.5">
+            {/* Load More Button */}
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
-                disabled={(filters.page || 1) <= 1}
-                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                className="h-10 px-6 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 shadow-2xs hover:border-slate-400 flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
               >
-                <ChevronLeft className="h-4 w-4" />
-                <span>{locale === 'mn' ? 'Өмнөх' : 'Previous'}</span>
+                {isLoadingMore ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                ) : (
+                  <ArrowDown className="h-4 w-4 text-blue-600" />
+                )}
+                <span>{locale === 'mn' ? 'Цааш үзэх (+15 нэмэх)' : 'Load More (+15)'}</span>
               </button>
 
-              <span className="px-3 text-slate-700 font-medium tabular-nums">
-                {filters.page} / {totalPages}
-              </span>
+              {/* Standard Page Switcher */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
+                  <button
+                    onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
+                    disabled={(filters.page || 1) <= 1}
+                    className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden sm:inline">{locale === 'mn' ? 'Өмнөх' : 'Prev'}</span>
+                  </button>
 
-              <button
-                onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
-                disabled={(filters.page || 1) >= totalPages}
-                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
-              >
-                <span>{locale === 'mn' ? 'Дараах' : 'Next'}</span>
-                <ChevronRight className="h-4 w-4" />
-              </button>
+                  <span className="px-2 text-xs font-semibold text-slate-800 font-mono tabular-nums">
+                    {filters.page} / {totalPages}
+                  </span>
+
+                  <button
+                    onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
+                    disabled={(filters.page || 1) >= totalPages}
+                    className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                  >
+                    <span className="hidden sm:inline">{locale === 'mn' ? 'Дараах' : 'Next'}</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
       </main>
 
+      {/* Slide-over Full Detail View */}
+      <TenderSlideOver
+        tender={selectedTenderForSlideOver}
+        isOpen={Boolean(selectedTenderForSlideOver)}
+        onClose={() => setSelectedTenderForSlideOver(null)}
+        locale={locale}
+        onAskAI={handleAskAI}
+      />
+
       {/* Footer */}
       <footer className="border-t border-slate-200 py-6 bg-white text-xs text-slate-500 text-center mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>TenderHub — Төрийн цахим худалдан авах ажиллагааны идэвхтэй тендерийн систем</span>
-          <span>Өгөгдлийг албан ёсны tender.gov.mn системээс бодит цагт боловсруулав</span>
+          <span>TenderHub MN — Төрийн цахим худалдан авах ажиллагааны нэгдсэн хайлтын систем</span>
+          <span>Өгөгдлийг албан ёсны tender.gov.mn эх сурвалжаас бодит цагт боловсруулав</span>
         </div>
       </footer>
 

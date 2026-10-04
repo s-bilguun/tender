@@ -126,6 +126,12 @@ export interface TenderItem {
     topItems?: Array<{ name: string; qty?: string | number; unit?: string }>;
   };
 
+  // Full Document Ingestion & Search Engine Fields
+  full_scope_of_work?: string;
+  eligibility_requirements?: string[];
+  historical_flags?: string;
+  raw_data?: any;
+
   // Cross-Border & China Bidder Intelligence (ТШЗ & International Bidding analysis)
   chinaBidderAnalysis?: ChinaBidderAnalysis;
 }

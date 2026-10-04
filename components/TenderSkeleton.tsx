@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 
 interface TenderSkeletonProps {
@@ -12,19 +14,47 @@ export function TenderSkeleton({ viewMode, count = 6 }: TenderSkeletonProps) {
         {Array.from({ length: count }).map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-xl border border-slate-200/80 p-4 space-y-3.5 shadow-2xs"
+            className="bg-white rounded-2xl border border-slate-200/80 p-5 space-y-4 shadow-2xs"
           >
+            {/* Header badges */}
             <div className="flex items-center justify-between gap-2">
-              <div className="h-5 w-24 bg-slate-100 rounded border border-slate-200" />
-              <div className="h-5 w-16 bg-slate-100 rounded-full" />
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-24 bg-slate-200 rounded-md" />
+                <div className="h-5 w-20 bg-slate-100 rounded-md" />
+              </div>
+              <div className="h-5 w-5 bg-slate-100 rounded-full" />
             </div>
+
+            {/* Title */}
             <div className="space-y-2">
-              <div className="h-4 w-full bg-slate-100 rounded" />
-              <div className="h-4 w-3/4 bg-slate-100 rounded" />
+              <div className="h-4 w-full bg-slate-200 rounded-md" />
+              <div className="h-4 w-4/5 bg-slate-100 rounded-md" />
             </div>
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-              <div className="h-3 w-32 bg-slate-100 rounded" />
-              <div className="h-4 w-20 bg-slate-100 rounded" />
+
+            {/* Buyer */}
+            <div className="h-3.5 w-3/5 bg-slate-100 rounded-md" />
+
+            {/* Extracted items snippet */}
+            <div className="h-7 w-full bg-slate-50 border border-slate-100 rounded-lg" />
+
+            {/* Footer Grid */}
+            <div className="pt-3 border-t border-slate-100 space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <div className="h-2.5 w-14 bg-slate-100 rounded" />
+                  <div className="h-4 w-24 bg-slate-200 rounded" />
+                </div>
+                <div className="space-y-1">
+                  <div className="h-2.5 w-16 bg-slate-100 rounded" />
+                  <div className="h-4 w-20 bg-slate-100 rounded" />
+                </div>
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 pt-1">
+                <div className="h-8 w-20 bg-slate-100 rounded-xl" />
+                <div className="h-8 flex-1 bg-slate-200 rounded-xl" />
+              </div>
             </div>
           </div>
         ))}
@@ -33,22 +63,22 @@ export function TenderSkeleton({ viewMode, count = 6 }: TenderSkeletonProps) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200/90 overflow-hidden shadow-2xs animate-pulse">
+    <div className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-2xs animate-pulse">
       <div className="h-10 bg-slate-50/80 border-b border-slate-200/80 px-4 flex items-center gap-4">
-        <div className="h-3 w-20 bg-slate-200 rounded" />
-        <div className="h-3 w-40 bg-slate-200 rounded hidden sm:block" />
-        <div className="h-3 w-24 bg-slate-200 rounded ml-auto" />
+        <div className="h-3.5 w-20 bg-slate-200 rounded" />
+        <div className="h-3.5 w-40 bg-slate-200 rounded hidden sm:block" />
+        <div className="h-3.5 w-24 bg-slate-200 rounded ml-auto" />
       </div>
       <div className="divide-y divide-slate-100">
         {Array.from({ length: count }).map((_, i) => (
           <div key={i} className="p-4 flex items-center gap-4">
             <div className="h-5 w-5 bg-slate-100 rounded shrink-0" />
-            <div className="h-5 w-24 bg-slate-100 rounded border border-slate-200 shrink-0" />
+            <div className="h-5 w-24 bg-slate-200 rounded border border-slate-200 shrink-0" />
             <div className="flex-1 space-y-1.5 min-w-0">
-              <div className="h-4 w-3/4 bg-slate-100 rounded" />
-              <div className="h-3 w-1/3 bg-slate-50 rounded" />
+              <div className="h-4 w-3/4 bg-slate-200 rounded" />
+              <div className="h-3 w-1/3 bg-slate-100 rounded" />
             </div>
-            <div className="h-5 w-24 bg-slate-100 rounded shrink-0 ml-auto" />
+            <div className="h-5 w-24 bg-slate-200 rounded shrink-0 ml-auto" />
             <div className="h-4 w-16 bg-slate-100 rounded shrink-0 hidden md:block" />
           </div>
         ))}
