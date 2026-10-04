@@ -10,6 +10,7 @@ import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { StatusFilterTabs } from '@/components/StatusFilterTabs';
 import { ActiveFilterBar } from '@/components/ActiveFilterBar';
 import { ProductArbitrageHero } from '@/components/ProductArbitrageHero';
+import { DiscoveryCardsHub } from '@/components/DiscoveryCardsHub';
 import { ArbitrageCalculatorModal } from '@/components/ArbitrageCalculatorModal';
 import { ProductCategory } from '@/lib/product-categories';
 import { TenderTable } from '@/components/TenderTable';
@@ -406,7 +407,16 @@ export default function Home() {
           onOpenChinaSupplier={() => handleOpenChinaSupplier()}
         />
 
-        {/* 1. "Find What You Want" — Hero Control Center */}
+        {/* 1. Full-Info Discovery Cards Hub (Top Buyers, Sectors & Foreign Routes) */}
+        <DiscoveryCardsHub
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          locale={locale}
+          totalFound={totalCount}
+          stats={stats}
+        />
+
+        {/* 2. "Find What You Want" — Hero Control Center */}
         <section className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/90 shadow-2xs space-y-4">
           
           {/* Smart Search Bar */}

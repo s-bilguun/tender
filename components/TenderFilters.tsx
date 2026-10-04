@@ -542,247 +542,30 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         </div>
       </div>
 
-      {/* 2. Seamless Sector Navigation Bar with Interactive Scroll Chevrons */}
-      <div className="px-2 sm:px-3 py-2 bg-slate-50/70 border-b border-slate-100 flex items-center gap-1.5 relative">
-        <div className="flex items-center gap-1 text-xs font-semibold text-slate-700 shrink-0 pr-2 border-r border-slate-200">
-          <Layers className="h-3.5 w-3.5 text-blue-600" />
-          <span className="hidden sm:inline">{locale === 'mn' ? 'Салбар:' : 'Sector:'}</span>
-        </div>
-
-        {/* Scroll Left Button */}
-        {canScrollLeft && (
-          <button
-            onClick={() => handleScrollSector('left')}
-            className="h-7 w-6 rounded-md bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-600 shrink-0 cursor-pointer transition-colors z-10"
-            title="Өмнөх салбарууд"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </button>
-        )}
-
-        {/* Horizontal Pill Bar */}
-        <div
-          ref={sectorScrollRef}
-          onScroll={checkSectorScroll}
-          onWheel={(e) => {
-            if (e.deltaY !== 0 && sectorScrollRef.current) {
-              sectorScrollRef.current.scrollLeft += e.deltaY;
-            }
-          }}
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 w-full scroll-smooth"
-        >
-          <button
-            onClick={() => onFilterChange({ industry: 'all', sortBy: 'date_desc', page: 1 })}
-            className={`h-7 px-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 cursor-pointer select-none ${
-              currentIndustry === 'all'
-                ? 'bg-slate-900 text-white font-semibold shadow-2xs'
-                : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
-            }`}
-          >
-            <IndustryIcon id="all" className={currentIndustry === 'all' ? 'h-3.5 w-3.5 text-white' : 'h-3.5 w-3.5 text-slate-500'} />
-            <span>{locale === 'mn' ? 'Бүх салбар' : locale === 'zh' ? '全部行业' : 'All Sectors'}</span>
-          </button>
-
-          {INDUSTRIES.map((ind) => {
-            const isSelected = currentIndustry === ind.id;
-            const indStat = stats?.statsByIndustry?.[ind.id];
-            const activeCount = indStat?.activeCount || stats?.industryCounts?.[ind.id] || ind.activeCount || 0;
-            const shortLabel = locale === 'mn' 
-              ? (SHORT_INDUSTRY_NAMES[ind.id] || ind.labelMn) 
-              : locale === 'zh' 
-              ? (SHORT_INDUSTRY_NAMES_ZH[ind.id] || ind.labelZh || ind.labelEn) 
-              : ind.labelEn;
-
-            return (
-              <button
-                key={ind.id}
-                onClick={() => onFilterChange({ industry: isSelected ? 'all' : ind.id, sortBy: 'date_desc', page: 1 })}
-                title={locale === 'mn' ? `${ind.labelMn} — ${ind.descriptionMn}` : locale === 'zh' ? `${ind.labelZh || ind.labelEn} — ${ind.descriptionZh || ind.descriptionEn}` : ind.descriptionEn}
-                className={`h-7 px-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 cursor-pointer select-none ${
-                  isSelected
-                    ? 'bg-blue-600 text-white font-bold shadow-2xs ring-1 ring-blue-500'
-                    : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90'
-                }`}
-              >
-                <IndustryIcon id={ind.id} className={isSelected ? 'h-3.5 w-3.5 text-white' : 'h-3.5 w-3.5 text-slate-500'} />
-                <span>{shortLabel}</span>
-                {activeCount > 0 && (
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded font-bold tabular-nums ${
-                      isSelected ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-600'
-                    }`}
-                  >
-                    {activeCount}
-                  </span>
-                )}
-                {isSelected && <X className="h-3 w-3 ml-0.5 text-blue-200 hover:text-white" />}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Scroll Right Button */}
-        {canScrollRight && (
-          <button
-            onClick={() => handleScrollSector('right')}
-            className="h-7 w-6 rounded-md bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-600 shrink-0 cursor-pointer transition-colors z-10"
-            title="Дараах салбарууд"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-
-      {/* 3. Sector-Connected Top Tender Callers (Biggest Procurement Entities) */}
-      <div className="px-2 sm:px-3 py-1.5 bg-blue-50/40 border-b border-blue-100/70 flex items-center gap-1.5 relative">
-        <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-900 shrink-0 pr-2 border-r border-blue-200/70">
-          <Building2 className="h-3.5 w-3.5 text-blue-600" />
-          <span className="hidden sm:inline">
-            {currentIndustry !== 'all' && activeIndustryInfo
-              ? `${SHORT_INDUSTRY_NAMES[currentIndustry] || activeIndustryInfo.labelMn.split('&')[0].trim()} захиалагчид:`
-              : locale === 'mn' ? 'Топ захиалагчид:' : 'Top Callers:'}
-          </span>
-        </div>
-
-        {/* Scroll Left Button */}
-        {canScrollCompanyLeft && (
-          <button
-            onClick={() => handleScrollCompany('left')}
-            className="h-6 w-5 rounded bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-600 shrink-0 cursor-pointer transition-colors z-10"
-            title="Өмнөх байгууллагууд"
-          >
-            <ChevronLeft className="h-3 w-3" />
-          </button>
-        )}
-
-        {/* Horizontal Pill Bar */}
-        <div
-          ref={companyScrollRef}
-          onScroll={checkCompanyScroll}
-          onWheel={(e) => {
-            if (e.deltaY !== 0 && companyScrollRef.current) {
-              companyScrollRef.current.scrollLeft += e.deltaY;
-            }
-          }}
-          className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 w-full scroll-smooth"
-        >
-          {currentCompanies.map((comp) => {
-            const isSelected = activeCompany?.id === comp.id;
-
-            return (
-              <button
-                key={comp.id}
-                onClick={() => handleSelectCompany(comp)}
-                title={`${comp.name} — Нийт төсөв: ${comp.budgetEst} (${comp.approxTenders} тендер)`}
-                className={`h-6 px-2 rounded-md text-[11px] font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 cursor-pointer select-none ${
-                  isSelected
-                    ? 'bg-blue-600 text-white font-bold shadow-2xs ring-1 ring-blue-500'
-                    : 'bg-white hover:bg-blue-50/80 text-slate-700 hover:text-blue-900 border border-slate-200/90'
-                }`}
-              >
-                <span className="text-xs">{comp.icon}</span>
-                <span className="truncate max-w-[170px]">{comp.shortName}</span>
-                <span
-                  className={`text-[9px] px-1 py-0.2 rounded font-bold tabular-nums ${
-                    isSelected ? 'bg-blue-700 text-blue-100' : 'bg-blue-50 text-blue-700 border border-blue-200/60'
-                  }`}
-                >
-                  {comp.approxTenders}
-                </span>
-                {isSelected && <X className="h-3 w-3 ml-0.5 text-blue-200 hover:text-white" />}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Scroll Right Button */}
-        {canScrollCompanyRight && (
-          <button
-            onClick={() => handleScrollCompany('right')}
-            className="h-6 w-5 rounded bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs flex items-center justify-center text-slate-600 shrink-0 cursor-pointer transition-colors z-10"
-            title="Дараах байгууллагууд"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </button>
-        )}
-      </div>
-
-      {/* 4. Streamlined Search & Filters Toolbar (Single Unified Row) */}
+      {/* Quick Filter Controls Toolbar Row */}
       <div className="p-3 sm:p-4 space-y-2.5">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-2.5">
-          {/* Search Box with Suggestions */}
-          <div className="relative flex-1 min-w-[240px]" ref={suggestionsRef}>
-            <div className="relative flex items-center">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400" />
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                placeholder={
-                  currentTab === 'result'
-                    ? (locale === 'mn' ? 'Шалгарсан тендер, байгууллага, дүн хайх...' : 'Search awarded bids, companies...')
-                    : (locale === 'mn' ? 'Тендерийн нэр, захиалагч, бараа хайх (жишээ: шатахуун, зам, эмнэлэг)...' : 'Search tender title, entity, products...')
-                }
-                className="w-full pl-9 pr-8 py-2 bg-slate-50/80 border border-slate-200 hover:border-slate-300 focus:border-blue-600 focus:bg-white focus:outline-none rounded-lg text-xs sm:text-sm text-slate-900 placeholder-slate-400 transition-all shadow-2xs"
-              />
-              {searchTerm && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute right-2 p-1 rounded text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
-                  title="Цэвэрлэх"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Auto Suggestions Popover */}
-            {showSuggestions && !searchTerm && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-40 bg-white rounded-xl border border-slate-200 shadow-xl p-3 animate-in fade-in duration-150">
-                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-amber-500" />
-                  <span>Түгээмэл хайлтууд & Захиалагчид</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                  {popularSuggestions.map((item, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => handleApplySuggestion(item.query)}
-                      className="p-2 text-left text-xs font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-700 rounded-lg flex items-center justify-between transition-colors cursor-pointer"
-                    >
-                      <span>{item.label}</span>
-                      <Search className="h-3 w-3 text-slate-300" />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
+          {/* Category Segmented Controls */}
+          <div className="flex items-center bg-slate-100/90 p-0.5 rounded-xl border border-slate-200 h-9 shrink-0">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => onFilterChange({ category: cat.id, page: 1 })}
+                className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  currentCategory === cat.id
+                    ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
           </div>
 
-          {/* Quick Filter Controls Row */}
-          <div className="flex items-center gap-2 flex-wrap shrink-0">
-            {/* Category Segmented Controls */}
-            <div className="flex items-center bg-slate-100/90 p-0.5 rounded-lg border border-slate-200 h-8">
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => onFilterChange({ category: cat.id, page: 1 })}
-                  className={`h-7 px-2.5 rounded text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
-                    currentCategory === cat.id
-                      ? 'bg-white text-slate-900 font-semibold shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-
+          {/* Secondary Controls: Budget, Year, Sort & Advanced Filters */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0 justify-between lg:justify-end">
             {/* Budget Tier Selector Dropdown */}
-            <div className="relative flex items-center bg-white border border-slate-200 rounded-lg px-2 h-8 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
+            <div className="relative flex items-center bg-white border border-slate-200 rounded-xl px-2.5 h-9 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
               <span className="text-[11px] text-slate-400 font-medium mr-1">{locale === 'mn' ? 'Төсөв:' : 'Budget:'}</span>
               <select
                 value={activeBudgetTier}
@@ -801,8 +584,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </div>
 
             {/* Year Selector */}
-            <div className="relative flex items-center bg-white border border-slate-200 rounded-lg px-2 h-8 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
-              <Calendar className="h-3 w-3 text-blue-600 mr-1 shrink-0" />
+            <div className="relative flex items-center bg-white border border-slate-200 rounded-xl px-2.5 h-9 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
+              <Calendar className="h-3.5 w-3.5 text-blue-600 mr-1 shrink-0" />
               <select
                 value={filters.year || 'all'}
                 onChange={(e) => {
@@ -831,8 +614,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </div>
 
             {/* Sort Dropdown */}
-            <div className="relative flex items-center bg-white border border-slate-200 rounded-lg px-2 h-8 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
-              <ArrowUpDown className="h-3 w-3 text-slate-400 mr-1 shrink-0" />
+            <div className="relative flex items-center bg-white border border-slate-200 rounded-xl px-2.5 h-9 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
+              <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 mr-1 shrink-0" />
               <select
                 value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
                 onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
@@ -849,9 +632,9 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             {/* Advanced Filters Button */}
             <button
               onClick={() => setIsAdvancedModalOpen(true)}
-              className={`h-8 px-2.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+              className={`h-9 px-3 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
                 activeAdvancedCount > 0
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-600 text-white font-bold'
                   : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
               }`}
               title="Нарийвчилсан шүүлтүүр"
@@ -864,43 +647,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 </span>
               )}
             </button>
-          </div>
-        </div>
-
-        {/* Row C: China / Foreign Bidder Eligibility Filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100/80">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded mr-0.5 whitespace-nowrap shrink-0 flex items-center gap-1 ${
-              locale === 'zh'
-                ? 'text-red-700 bg-red-50 border border-red-200'
-                : 'text-slate-700 bg-slate-100 border border-slate-200'
-            }`}>
-              {locale === 'zh' && <span>🇨🇳</span>}
-              <span>{locale === 'mn' ? 'Гадаадын ААН оролцох:' : locale === 'zh' ? '中企投标资格:' : 'Foreign Bidder:'}</span>
-            </span>
-            {chinaEligibilityOptions.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => onFilterChange({ chinaEligibility: opt.id as any, page: 1 })}
-                className={`h-7 px-2.5 rounded-lg text-[11px] whitespace-nowrap transition-colors shrink-0 cursor-pointer flex items-center gap-1 ${
-                  (filters.chinaEligibility || 'all') === opt.id
-                    ? opt.activeClass
-                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
-                }`}
-                title={opt.title}
-              >
-                <span>{opt.label}</span>
-              </button>
-            ))}
-          </div>
-          <div className="text-[10px] text-slate-400 font-medium hidden lg:flex items-center gap-1">
-            <span>
-              {locale === 'mn' 
-                ? 'ТШЗ & ТХААХ-ийн дагуу гадаадын хуулийн этгээд оролцох боломж' 
-                : locale === 'zh' 
-                ? '依据蒙古国《政府采购法》及ТШЗ招标文件合规判定' 
-                : 'Foreign bidder eligibility according to procurement law & tender terms'}
-            </span>
           </div>
         </div>
 
