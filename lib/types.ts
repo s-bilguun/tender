@@ -20,9 +20,11 @@ export interface IndustryInfo {
   slug: string;
   labelMn: string;
   labelEn: string;
+  labelZh?: string;
   icon: string;
   descriptionMn: string;
   descriptionEn: string;
+  descriptionZh?: string;
   count?: number;
   totalCount?: number;
   activeCount?: number;
@@ -146,6 +148,7 @@ export interface ChinaBidderAnalysis {
   estimatedBudgetRMB?: number; // approx MNT / 480
   keyTakeawaysZh?: string[];
   recommendedActionZh?: string;
+  recommendedActionMn?: string;
   tenderTypeZh?: string;
   procuringEntityZh?: string;
   rawSpecsSummaryZh?: string;

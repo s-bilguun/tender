@@ -37,6 +37,18 @@ const SHORT_INDUSTRY_NAMES: Record<string, string> = {
   consulting: 'Зөвлөх, аудит',
 };
 
+const SHORT_INDUSTRY_NAMES_ZH: Record<string, string> = {
+  mining: '矿业重工',
+  construction: '建筑基建',
+  medical: '医疗器械',
+  food: '食品餐饮',
+  it: '信息技术',
+  transport: '交通燃油',
+  facility: '物业安保',
+  stationery: '办公家具',
+  consulting: '咨询审计',
+};
+
 export const TenderFilters: React.FC<TenderFiltersProps> = ({
   filters,
   onFilterChange,
@@ -192,27 +204,39 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   const chinaEligibilityOptions = [
     { 
       id: 'all', 
-      label: locale === 'mn' ? 'Бүх тендер' : '全部 / All', 
+      label: locale === 'mn' ? 'Бүх тендер' : locale === 'zh' ? '全部项目' : 'All Tenders', 
       activeClass: 'bg-slate-900 text-white font-semibold shadow-2xs',
-      title: 'Бүх тендерийг харах'
+      title: locale === 'mn' ? 'Бүх тендерийг харах' : locale === 'zh' ? '查看全部招标项目' : 'View all tenders'
     },
     { 
       id: 'direct', 
-      label: '🇨🇳 独立投标 (Direct Allowed)', 
+      label: locale === 'mn' ? 'Шууд оролцох (Direct)' : locale === 'zh' ? '🇨🇳 独立投标 (Direct)' : 'Direct Allowed', 
       activeClass: 'bg-emerald-600 text-white font-semibold shadow-2xs',
-      title: 'Хятад компани Монголд компани байгуулалгүй шууд санал өгөх боломжтой (Бараа нийлүүлэлт, нээлттэй олон улсын тендер)'
+      title: locale === 'mn' 
+        ? 'Монголд охин компани байгуулалгүй шууд санал өгөх боломжтой (Бараа нийлүүлэлт, олон улсын нээлттэй тендер)' 
+        : locale === 'zh'
+        ? '中企可直接以中国法人资质投标，无须在蒙设立子公司（物资设备采购与国际标）'
+        : 'Foreign companies can bid directly without a Mongolian entity (Goods & International Bidding)'
     },
     { 
       id: 'joint_venture', 
-      label: '🤝 需联合体 (JV Required)', 
+      label: locale === 'mn' ? 'Түншлэл шаардлагатай (JV)' : locale === 'zh' ? '🤝 需联合体 (JV)' : 'JV Required', 
       activeClass: 'bg-amber-600 text-white font-semibold shadow-2xs',
-      title: 'Монголын тусгай зөвшөөрөлтэй компанитай Түншлэл (联合体) байгуулах шаардлагатай (Барилга, зам, их засвар)'
+      title: locale === 'mn' 
+        ? 'Монголын тусгай зөвшөөрөлтэй компанитай Түншлэл (联合体) байгуулах шаардлагатай (Барилга, зам, их засвар)' 
+        : locale === 'zh'
+        ? '须与蒙古国持证企业组成联合体投标（工程施工、特种资质准入）'
+        : 'Must form a Joint Venture with a licensed Mongolian company (Works & Construction)'
     },
     { 
       id: 'domestic_only', 
-      label: '🇲🇳 仅限本土 (Domestic Only)', 
+      label: locale === 'mn' ? 'Зөвхөн дотоодын' : locale === 'zh' ? '🇲🇳 仅限本土 (Domestic)' : 'Domestic Only', 
       activeClass: 'bg-slate-700 text-white font-semibold shadow-2xs',
-      title: 'Зөвхөн Монгол Улсад бүртгэлтэй дотоодын ААН оролцох боломжтой (Бага төсөвтэй харьцуулалт)'
+      title: locale === 'mn' 
+        ? 'Зөвхөн Монгол Улсад бүртгэлтэй дотоодын ААН оролцох боломжтой (Бага төсөвтэй харьцуулалт)' 
+        : locale === 'zh'
+        ? '仅限蒙古国本土注册纳税实体（小型比价与本地专属项目）'
+        : 'Restricted to domestic Mongolian registered entities'
     },
   ];
 
@@ -386,7 +410,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span>{locale === 'mn' ? 'Санал авч буй' : 'Live Bids'}</span>
+            <span>{locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '正在招投标' : 'Live Bids'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
             }`}>
@@ -404,7 +428,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <Flame className="h-3.5 w-3.5 text-rose-400" />
-            <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : 'Closing Soon'}</span>
+            <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : locale === 'zh' ? '即将截标' : 'Closing Soon'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
             }`}>
@@ -422,7 +446,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <ShieldCheck className="h-3.5 w-3.5 text-teal-300" />
-            <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : 'No Bid Bond'}</span>
+            <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : locale === 'zh' ? '免投标保函' : 'No Bid Bond'}</span>
           </button>
 
           {/* Awarded / Concluded Winners Tab */}
@@ -435,7 +459,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <Trophy className="h-3.5 w-3.5 text-amber-300" />
-            <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : 'Awarded'}</span>
+            <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : locale === 'zh' ? '已定标 / 中标结果' : 'Awarded'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
             }`}>
@@ -453,7 +477,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <Database className="h-3.5 w-3.5 text-blue-400" />
-            <span>{locale === 'mn' ? 'Бүх сан' : 'All Tenders'}</span>
+            <span>{locale === 'mn' ? 'Бүх сан' : locale === 'zh' ? '全部标段' : 'All Tenders'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
               currentTab === 'all' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
             }`}>
@@ -471,7 +495,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <Star className={`h-3.5 w-3.5 ${currentTab === 'watchlist' ? 'fill-white' : 'text-amber-500'}`} />
-            <span>{locale === 'mn' ? 'Миний хянаж буй' : 'Watchlist'}</span>
+            <span>{locale === 'mn' ? 'Миний хянаж буй' : locale === 'zh' ? '关注收藏' : 'Watchlist'}</span>
             {watchlistCount > 0 && (
               <span className="ml-0.5 px-1.5 py-0.2 rounded text-[10px] bg-white/20 font-bold tabular-nums">
                 {watchlistCount}
@@ -486,10 +510,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <button
               onClick={onExportCSV}
               className="h-8 px-2.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
-              title={locale === 'mn' ? 'Excel / CSV файлаар татах' : 'Export to CSV / Excel'}
+              title={locale === 'mn' ? 'Excel / CSV файлаар татах' : locale === 'zh' ? '导出 Excel / CSV 表格' : 'Export to CSV / Excel'}
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
-              <span className="hidden md:inline">{locale === 'mn' ? 'Excel / CSV' : 'Export CSV'}</span>
+              <span className="hidden md:inline">{locale === 'mn' ? 'Excel / CSV' : locale === 'zh' ? '导出表格' : 'Export CSV'}</span>
             </button>
           )}
 
@@ -556,20 +580,24 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             }`}
           >
             <IndustryIcon id="all" className={currentIndustry === 'all' ? 'h-3.5 w-3.5 text-white' : 'h-3.5 w-3.5 text-slate-500'} />
-            <span>{locale === 'mn' ? 'Бүх салбар' : 'All Sectors'}</span>
+            <span>{locale === 'mn' ? 'Бүх салбар' : locale === 'zh' ? '全部行业' : 'All Sectors'}</span>
           </button>
 
           {INDUSTRIES.map((ind) => {
             const isSelected = currentIndustry === ind.id;
             const indStat = stats?.statsByIndustry?.[ind.id];
             const activeCount = indStat?.activeCount || stats?.industryCounts?.[ind.id] || ind.activeCount || 0;
-            const shortLabel = locale === 'mn' ? (SHORT_INDUSTRY_NAMES[ind.id] || ind.labelMn) : ind.labelEn;
+            const shortLabel = locale === 'mn' 
+              ? (SHORT_INDUSTRY_NAMES[ind.id] || ind.labelMn) 
+              : locale === 'zh' 
+              ? (SHORT_INDUSTRY_NAMES_ZH[ind.id] || ind.labelZh || ind.labelEn) 
+              : ind.labelEn;
 
             return (
               <button
                 key={ind.id}
                 onClick={() => onFilterChange({ industry: isSelected ? 'all' : ind.id, sortBy: 'date_desc', page: 1 })}
-                title={locale === 'mn' ? `${ind.labelMn} — ${ind.descriptionMn}` : ind.descriptionEn}
+                title={locale === 'mn' ? `${ind.labelMn} — ${ind.descriptionMn}` : locale === 'zh' ? `${ind.labelZh || ind.labelEn} — ${ind.descriptionZh || ind.descriptionEn}` : ind.descriptionEn}
                 className={`h-7 px-2.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 flex items-center gap-1.5 cursor-pointer select-none ${
                   isSelected
                     ? 'bg-blue-600 text-white font-bold shadow-2xs ring-1 ring-blue-500'
@@ -829,7 +857,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               title="Нарийвчилсан шүүлтүүр"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === 'mn' ? 'Шүүлтүүр' : 'Filters'}</span>
+              <span className="hidden sm:inline">{locale === 'mn' ? 'Шүүлтүүр' : locale === 'zh' ? '高级筛选' : 'Filters'}</span>
               {activeAdvancedCount > 0 && (
                 <span className="h-4 w-4 rounded-full bg-white text-blue-700 text-[10px] font-bold flex items-center justify-center">
                   {activeAdvancedCount}
@@ -842,9 +870,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         {/* Row C: China / Foreign Bidder Eligibility Filters */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100/80">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded mr-0.5 whitespace-nowrap shrink-0 flex items-center gap-1">
-              <span>🇨🇳</span>
-              <span>{locale === 'mn' ? 'Хятад ААН оролцох:' : 'China Bidder:'}</span>
+            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded mr-0.5 whitespace-nowrap shrink-0 flex items-center gap-1 ${
+              locale === 'zh'
+                ? 'text-red-700 bg-red-50 border border-red-200'
+                : 'text-slate-700 bg-slate-100 border border-slate-200'
+            }`}>
+              {locale === 'zh' && <span>🇨🇳</span>}
+              <span>{locale === 'mn' ? 'Гадаадын ААН оролцох:' : locale === 'zh' ? '中企投标资格:' : 'Foreign Bidder:'}</span>
             </span>
             {chinaEligibilityOptions.map((opt) => (
               <button
@@ -862,19 +894,34 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             ))}
           </div>
           <div className="text-[10px] text-slate-400 font-medium hidden lg:flex items-center gap-1">
-            <span>ТШЗ & ТХААХ-ийн дагуу гадаадын хуулийн этгээд оролцох боломж</span>
+            <span>
+              {locale === 'mn' 
+                ? 'ТШЗ & ТХААХ-ийн дагуу гадаадын хуулийн этгээд оролцох боломж' 
+                : locale === 'zh' 
+                ? '依据蒙古国《政府采购法》及ТШЗ招标文件合规判定' 
+                : 'Foreign bidder eligibility according to procurement law & tender terms'}
+            </span>
           </div>
         </div>
 
         {/* 5. Active Filters Dismissible Chips (ONLY when non-default custom filters applied) */}
         {isCustomFiltered && (
           <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 text-[11px] animate-in fade-in duration-150">
-            <span className="text-slate-400 font-semibold mr-1">Идэвхтэй:</span>
+            <span className="text-slate-400 font-semibold mr-1">
+              {locale === 'mn' ? 'Идэвхтэй:' : locale === 'zh' ? '已选条件:' : 'Active:'}
+            </span>
 
             {filters.chinaEligibility && filters.chinaEligibility !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 text-red-800 border border-red-200 font-semibold">
-                <span>🇨🇳 Шүүлтүүр: <strong>{chinaEligibilityOptions.find(o => o.id === filters.chinaEligibility)?.label}</strong></span>
-                <button onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })} className="hover:text-red-950 p-0.5 cursor-pointer">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border ${
+                locale === 'zh'
+                  ? 'bg-red-50 text-red-800 border-red-200'
+                  : 'bg-slate-100 text-slate-800 border-slate-200'
+              }`}>
+                <span>
+                  {locale === 'mn' ? 'Гадаад ААН:' : locale === 'zh' ? '🇨🇳 资格筛选:' : 'Eligibility:'}{' '}
+                  <strong>{chinaEligibilityOptions.find(o => o.id === filters.chinaEligibility)?.label}</strong>
+                </span>
+                <button onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>

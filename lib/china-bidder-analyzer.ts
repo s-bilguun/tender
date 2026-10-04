@@ -122,14 +122,19 @@ export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): Chin
 
   // Recommended next action for Chinese companies
   let recommendedActionZh = '';
+  let recommendedActionMn = '';
   if (status === 'direct_allowed') {
     recommendedActionZh = '推荐中国符合条件的企业直接准备招标文件、办理营业执照双认证与银行投标保函参与竞标。';
+    recommendedActionMn = 'Гадаадын хуулийн этгээд бие даан оролцож, банкны баталгаа болон гэрчилгээгээ бүрдүүлэн санал өгөх боломжтой.';
   } else if (status === 'joint_venture_required') {
     recommendedActionZh = '建议立即在蒙古国寻找具备特许执照的合作方组建联合体，中方承担设备与物资供货，蒙方负责属地审批与施工。';
+    recommendedActionMn = 'Монгол Улсын тусгай зөвшөөрөлтэй дотоодын ААН-тэй Түншлэл (Joint Venture) байгуулан, тоног төхөөрөмж/бараа нийлүүлэгчээр хамтран оролцохыг зөвлөж байна.';
   } else if (status === 'domestic_only') {
     recommendedActionZh = '建议通过蒙古国当地注册的独资子公司申报，或向中标的蒙古本土总包商供货。';
+    recommendedActionMn = 'Зөвхөн Монгол Улсад бүртгэлтэй дотоодын ААН оролцох боломжтой тул орон нутгийн компанитай хамтрах шаардлагатай.';
   } else {
     recommendedActionZh = '建议下载招标文件详细比对规格参数，提前确认资质认证要求。';
+    recommendedActionMn = 'Тендерийн баримт бичгийг татан авч нарийвчилсан шаардлагатай танилцана уу.';
   }
 
   return {
@@ -148,6 +153,7 @@ export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): Chin
     estimatedBudgetRMB: budgetRMB,
     keyTakeawaysZh: takeawaysZh,
     recommendedActionZh,
+    recommendedActionMn,
     tenderTypeZh,
     procuringEntityZh,
     rawSpecsSummaryZh: liveBundle?.topItems?.map((i: any) => `• ${i.name} (数量: ${i.qty || '见详单'} ${i.unit || ''})`).join('\n') || undefined

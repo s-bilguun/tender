@@ -66,11 +66,15 @@ export const Header: React.FC<HeaderProps> = ({
                 MN
               </span>
               <span className="text-[10px] sm:text-[11px] font-medium px-1.5 sm:px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/60 hidden md:inline-block">
-                {locale === 'mn' ? 'Нэгдсэн Аналитик' : 'Market Intelligence'}
+                {locale === 'mn' ? 'Нэгдсэн Аналитик' : locale === 'zh' ? '智选中标' : 'Market Intelligence'}
               </span>
             </div>
             <p className="text-xs text-slate-500 hidden sm:block">
-              {locale === 'mn' ? 'Монголын тендерийн нэгдсэн дата & зах зээлийн платформ' : 'Centralized Tender & Market Intelligence Hub'}
+              {locale === 'mn' 
+                ? 'Монголын тендерийн нэгдсэн дата & зах зээлийн платформ' 
+                : locale === 'zh'
+                ? '蒙古国政府采购全景数据与出海投标智能分析平台'
+                : 'Centralized Tender & Market Intelligence Hub'}
             </p>
           </div>
         </div>
@@ -83,14 +87,14 @@ export const Header: React.FC<HeaderProps> = ({
               <strong className="text-slate-900 tabular-nums">{stats.totalCount.toLocaleString()}</strong>
             </div>
             <div>
-              <span className="text-slate-500">{locale === 'mn' ? 'Идэвхтэй:' : 'Active:'}</span>{' '}
+              <span className="text-slate-500">{locale === 'mn' ? 'Идэвхтэй:' : locale === 'zh' ? '正在招标:' : 'Active:'}</span>{' '}
               <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 tabular-nums text-[11px]">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 {stats.activeTendersCount.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-slate-500">{locale === 'mn' ? 'Сүүлийн шинэчлэл:' : 'Last updated:'}</span>{' '}
+              <span className="text-slate-500">{locale === 'mn' ? 'Сүүлийн шинэчлэл:' : locale === 'zh' ? '最后更新:' : 'Last updated:'}</span>{' '}
               <span className="inline-flex items-center gap-1 font-semibold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 font-mono text-[11px] tabular-nums">
                 <Clock className="h-3 w-3 text-slate-500 shrink-0" />
                 {formattedTime || '—'}
@@ -100,47 +104,82 @@ export const Header: React.FC<HeaderProps> = ({
         )}
 
         {/* Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Command Palette Trigger */}
           {onOpenCommandPalette && (
             <button
               onClick={onOpenCommandPalette}
               className="h-8 px-2 sm:px-2.5 rounded-md text-xs font-medium bg-slate-100/90 text-slate-700 hover:bg-slate-200/80 border border-slate-200/80 flex items-center gap-1.5 transition-colors"
-              title="Шуурхай хайлт & комманд (⌘K)"
+              title={locale === 'mn' ? 'Шуурхай хайлт & комманд (⌘K)' : locale === 'zh' ? '快速搜索与指令 (⌘K)' : 'Quick Search & Commands (⌘K)'}
             >
-              <span className="hidden sm:inline text-[11px] text-slate-600 font-medium">Комманд</span>
+              <span className="hidden sm:inline text-[11px] text-slate-600 font-medium">
+                {locale === 'mn' ? 'Комманд' : locale === 'zh' ? '指令' : 'Commands'}
+              </span>
               <kbd className="px-1.5 py-0.2 text-[10px] font-mono font-semibold text-slate-500 bg-white border border-slate-200 rounded shadow-2xs">
                 ⌘K
               </kbd>
             </button>
           )}
 
-          {/* Language Switcher */}
-          <button
-            onClick={() => setLocale(locale === 'mn' ? 'en' : 'mn')}
-            className="h-8 px-2 sm:px-2.5 rounded-md text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex items-center gap-1 transition-colors shrink-0"
-          >
-            <Globe className="h-3.5 w-3.5 text-slate-500 shrink-0" />
-            <span className="font-semibold text-[11px] sm:text-xs">{locale === 'mn' ? 'MN' : 'EN'}</span>
-          </button>
+          {/* 3-Way Language Switcher (MN / EN / 中文) */}
+          <div className="flex items-center bg-slate-100/90 rounded-lg p-0.5 border border-slate-200/80 shrink-0">
+            <button
+              onClick={() => setLocale('mn')}
+              className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                locale === 'mn'
+                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Монгол хэл"
+            >
+              MN
+            </button>
+            <button
+              onClick={() => setLocale('en')}
+              className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                locale === 'en'
+                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="English"
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLocale('zh')}
+              className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                locale === 'zh'
+                  ? 'bg-red-600 text-white shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="中文 (Chinese)"
+            >
+              <span>🇨🇳</span>
+              <span>中文</span>
+            </button>
+          </div>
 
           {/* PDF Ingestion Tool */}
           <Link
             href="/admin/ingest"
             className="h-8 px-2 sm:px-3 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100/90 border border-blue-200/80 flex items-center gap-1.5 transition-colors shrink-0"
-            title="Тендерийн PDF баримт AI-аар задлан оруулах"
+            title={locale === 'mn' ? 'Тендерийн PDF баримт AI-аар задлан оруулах' : locale === 'zh' ? '上传PDF招标文件智能解析入库' : 'Ingest and parse tender PDF documents with AI'}
           >
             <FileUp className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-            <span className="hidden sm:inline whitespace-nowrap">{locale === 'mn' ? 'PDF Оруулах' : 'Ingest PDF'}</span>
+            <span className="hidden sm:inline whitespace-nowrap">
+              {locale === 'mn' ? 'PDF Оруулах' : locale === 'zh' ? 'PDF解析' : 'Ingest PDF'}
+            </span>
           </Link>
 
           {/* AI Assistant Button */}
           <button
             onClick={onOpenAI}
-            className="h-8 px-2.5 sm:px-3.5 rounded-md text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-1.5 transition-colors shadow-2xs shrink-0 active:scale-95"
+            className="h-8 px-2.5 sm:px-3.5 rounded-md text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 flex items-center gap-1.5 transition-colors shadow-2xs shrink-0 active:scale-95 cursor-pointer"
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-            <span className="whitespace-nowrap">{locale === 'mn' ? 'AI Шинжээч' : 'AI Assistant'}</span>
+            <span className="whitespace-nowrap">
+              {locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 专家' : 'AI Assistant'}
+            </span>
           </button>
         </div>
       </div>

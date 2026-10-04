@@ -35,7 +35,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
       return (
         <div className="text-right">
           <div className="font-bold text-slate-900 text-xs tabular-nums font-mono">
-            {(amount / 1_000_000_000).toFixed(2)} {locale === 'mn' ? 'тэрбум ₮' : 'B ₮'}
+            {locale === 'zh' 
+              ? `${(amount / 100_000_000).toFixed(2)} 亿 ₮` 
+              : `${(amount / 1_000_000_000).toFixed(2)} ${locale === 'mn' ? 'тэрбум ₮' : 'B ₮'}`}
           </div>
           <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString()} ₮</div>
         </div>
@@ -45,7 +47,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
       return (
         <div className="text-right">
           <div className="font-bold text-slate-900 text-xs tabular-nums font-mono">
-            {(amount / 1_000_000).toFixed(1)} {locale === 'mn' ? 'сая ₮' : 'M ₮'}
+            {locale === 'zh' 
+              ? `${(amount / 10_000).toLocaleString()} 万 ₮` 
+              : `${(amount / 1_000_000).toFixed(1)} ${locale === 'mn' ? 'сая ₮' : 'M ₮'}`}
           </div>
           <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString()} ₮</div>
         </div>
@@ -188,10 +192,12 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         {tender.chinaBidderAnalysis.eligibilityStatus === 'direct_allowed' && (
                           <span
                             className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300 inline-flex items-center gap-1 shrink-0"
-                            title={tender.chinaBidderAnalysis.eligibilityExplanationZh}
+                            title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
-                            <span>🇨🇳 独立投标</span>
-                            {Boolean((tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
+                            <span>
+                              {locale === 'zh' ? '🇨🇳 独立投标' : locale === 'mn' ? 'Шууд оролцох' : 'Direct Allowed'}
+                            </span>
+                            {locale === 'zh' && Boolean((tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
                               <span className="text-emerald-700 font-mono font-bold">
                                 ~¥{tender.chinaBidderAnalysis.estimatedBudgetRMB! >= 10_000 
                                   ? (tender.chinaBidderAnalysis.estimatedBudgetRMB! / 10_000).toFixed(1) + '万' 
@@ -203,10 +209,12 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         {tender.chinaBidderAnalysis.eligibilityStatus === 'joint_venture_required' && (
                           <span
                             className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300 inline-flex items-center gap-1 shrink-0"
-                            title={tender.chinaBidderAnalysis.eligibilityExplanationZh}
+                            title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
-                            <span>🤝 需联合体</span>
-                            {Boolean((tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
+                            <span>
+                              {locale === 'zh' ? '🤝 需联合体' : locale === 'mn' ? 'Түншлэлтэй' : 'JV Required'}
+                            </span>
+                            {locale === 'zh' && Boolean((tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
                               <span className="text-amber-700 font-mono font-bold">
                                 ~¥{tender.chinaBidderAnalysis.estimatedBudgetRMB! >= 10_000 
                                   ? (tender.chinaBidderAnalysis.estimatedBudgetRMB! / 10_000).toFixed(1) + '万' 
@@ -218,9 +226,11 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         {tender.chinaBidderAnalysis.eligibilityStatus === 'domestic_only' && (
                           <span
                             className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 inline-flex items-center gap-1 shrink-0"
-                            title={tender.chinaBidderAnalysis.eligibilityExplanationZh}
+                            title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
-                            <span>🇲🇳 仅限本土</span>
+                            <span>
+                              {locale === 'zh' ? '🇲🇳 仅限本土' : locale === 'mn' ? 'Зөвхөн дотоодын' : 'Domestic Only'}
+                            </span>
                           </span>
                         )}
                       </div>

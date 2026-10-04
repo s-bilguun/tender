@@ -178,18 +178,27 @@ export const TenderCard: React.FC<TenderCardProps> = ({
             {badge.label}
           </span>
           {tender.chinaBidderAnalysis?.eligibilityStatus === 'direct_allowed' && (
-            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
-              🇨🇳 独立投标
+            <span
+              className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300"
+              title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
+            >
+              {locale === 'zh' ? '🇨🇳 独立投标' : locale === 'mn' ? 'Шууд оролцох' : 'Direct Allowed'}
             </span>
           )}
           {tender.chinaBidderAnalysis?.eligibilityStatus === 'joint_venture_required' && (
-            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
-              🤝 需联合体
+            <span
+              className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300"
+              title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
+            >
+              {locale === 'zh' ? '🤝 需联合体' : locale === 'mn' ? 'Түншлэлтэй' : 'JV Required'}
             </span>
           )}
           {tender.chinaBidderAnalysis?.eligibilityStatus === 'domestic_only' && (
-            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-              🇲🇳 仅限本土
+            <span
+              className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
+              title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
+            >
+              {locale === 'zh' ? '🇲🇳 仅限本土' : locale === 'mn' ? 'Зөвхөн дотоодын' : 'Domestic Only'}
             </span>
           )}
         </div>
@@ -279,12 +288,12 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       <div className="pt-3 border-t border-slate-100 flex items-end justify-between gap-2 mt-auto">
         <div>
           <div className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-            {locale === 'mn' ? 'Төсөвт өртөг' : 'Budget'}
+            {locale === 'mn' ? 'Төсөвт өртөг' : locale === 'zh' ? '采购预算' : 'Budget'}
           </div>
           <div className="font-bold text-slate-900 text-sm sm:text-base tabular-nums font-mono">
             {formatCurrency(tender.totalBudget)}
           </div>
-          {Boolean(tender.chinaBidderAnalysis && (tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
+          {locale === 'zh' && Boolean(tender.chinaBidderAnalysis && (tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
             <div className="text-[10px] text-slate-500 font-mono font-medium">
               ~¥{tender.chinaBidderAnalysis!.estimatedBudgetRMB! >= 10_000 
                 ? (tender.chinaBidderAnalysis!.estimatedBudgetRMB! / 10_000).toFixed(1) + '万 人民币' 
@@ -309,14 +318,14 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           className="h-7 px-2.5 rounded-lg text-xs font-medium text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer"
         >
           <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-          <span>{locale === 'mn' ? 'AI шинжээч' : 'AI Analysis'}</span>
+          <span>{locale === 'mn' ? 'AI шинжээч' : locale === 'zh' ? 'AI 智能分析' : 'AI Analysis'}</span>
         </button>
 
         <Link
           href={`/tender/${tender.invitationId}`}
           className="h-7 px-3 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer ml-auto"
         >
-          <span>{locale === 'mn' ? 'Үзэх' : 'View Details'}</span>
+          <span>{locale === 'mn' ? 'Үзэх' : locale === 'zh' ? '查看详情' : 'View Details'}</span>
           <ArrowUpRight className="h-3.5 w-3.5" />
         </Link>
       </div>

@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { Locale } from '@/lib/types';
+import { getTranslation } from '@/lib/translations';
 import { 
   ArrowLeft, Building2, Calendar, ShieldCheck, Tag, FileText, 
   Copy, Check, Trophy, Users, CheckCircle2, XCircle, AlertCircle, 
@@ -13,6 +15,7 @@ import { FormattedChatMessage } from './AIChatDrawer';
 
 interface TenderDetailViewProps {
   initialData: any;
+  initialLocale?: Locale;
 }
 
 interface AIMessage {
@@ -23,8 +26,36 @@ interface AIMessage {
   topic?: string;
 }
 
-export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData }) => {
+export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData, initialLocale }) => {
   const [data, setData] = useState(initialData);
+  const [locale, setLocaleState] = useState<Locale>(initialLocale || 'mn');
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang') as Locale | null;
+      if (urlLang && ['mn', 'en', 'zh'].includes(urlLang)) {
+        setLocaleState(urlLang);
+        return;
+      }
+      const saved = localStorage.getItem('tenderhub_locale') as Locale | null;
+      if (saved && ['mn', 'en', 'zh'].includes(saved)) {
+        setLocaleState(saved);
+      }
+    } catch {}
+  }, []);
+
+  const setLocale = (newLoc: Locale) => {
+    setLocaleState(newLoc);
+    try {
+      localStorage.setItem('tenderhub_locale', newLoc);
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', newLoc);
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+  };
+
+  const t = getTranslation(locale);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'bds' | 'tech' | 'results' | 'history' | 'china'>('bds');
 
@@ -376,7 +407,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
             className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1 text-xs font-semibold"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Бүх тендер рүү буцах</span>
+            <span className="hidden sm:inline">
+              {locale === 'mn' ? 'Бүх тендер рүү буцах' : locale === 'zh' ? '返回招标列表' : 'Back to Tenders'}
+            </span>
           </Link>
           <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
           <span className="text-xs text-slate-500 hidden md:inline font-mono">
@@ -385,8 +418,46 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 3-Way Language Switcher */}
+          <div className="flex items-center bg-slate-100/90 rounded-lg p-0.5 border border-slate-200/80 shrink-0">
+            <button
+              onClick={() => setLocale('mn')}
+              className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                locale === 'mn'
+                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Монгол хэл"
+            >
+              MN
+            </button>
+            <button
+              onClick={() => setLocale('en')}
+              className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                locale === 'en'
+                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="English"
+            >
+              EN
+            </button>
+            <button
+              onClick={() => setLocale('zh')}
+              className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
+                locale === 'zh'
+                  ? 'bg-red-600 text-white shadow-2xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="中文 (Chinese)"
+            >
+              <span>🇨🇳</span>
+              <span>中文</span>
+            </button>
+          </div>
+
           <button
-            onClick={() => handleRunAiAnalysis(undefined, 'nav', 'Ерөнхий ТШББ дүгнэлт')}
+            onClick={() => handleRunAiAnalysis(undefined, 'nav', locale === 'zh' ? '综合ТШЗ招标文件分析' : 'Ерөнхий ТШББ дүгнэлт')}
             disabled={aiAnalyzing}
             className={`h-8 px-3 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
               aiAnalyzingTarget === 'nav'
@@ -397,12 +468,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
             {aiAnalyzingTarget === 'nav' ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 text-amber-600 animate-spin" />
-                <span>Шинжилж байна...</span>
+                <span>{locale === 'mn' ? 'Шинжилж байна...' : locale === 'zh' ? '正在智能分析...' : 'Analyzing...'}</span>
               </>
             ) : (
               <>
                 <Sparkles className="h-3.5 w-3.5 text-amber-600" />
-                <span>AI Шинжээч</span>
+                <span>{locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 专家分析' : 'AI Analysis'}</span>
               </>
             )}
           </button>
@@ -1039,17 +1110,30 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
             onClick={() => setActiveTab('china')}
             className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
               activeTab === 'china'
-                ? 'bg-red-700 text-white shadow-xs font-bold'
-                : 'text-slate-700 hover:text-slate-900 hover:bg-white/60 bg-red-50/70 border border-red-200/60'
+                ? locale === 'zh'
+                  ? 'bg-red-700 text-white shadow-xs font-bold'
+                  : 'bg-indigo-700 text-white shadow-xs font-bold'
+                : locale === 'zh'
+                  ? 'text-slate-700 hover:text-slate-900 hover:bg-white/60 bg-red-50/70 border border-red-200/60'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-white/60 bg-indigo-50/70 border border-indigo-200/60'
             }`}
           >
-            <span>🇨🇳</span>
-            <span className="truncate">中企投标指南</span>
+            <span>{locale === 'zh' ? '🇨🇳' : '🌐'}</span>
+            <span className="truncate">
+              {locale === 'zh' ? '中企投标指南' : locale === 'mn' ? 'Гадаад ААН-ийн заавар' : 'Foreign Bidder Guide'}
+            </span>
             {chinaAnalysis && (
               <span className={`hidden xl:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${
-                activeTab === 'china' ? 'bg-red-800 text-white' : 'bg-red-100 text-red-800'
+                activeTab === 'china'
+                  ? locale === 'zh' ? 'bg-red-800 text-white' : 'bg-indigo-800 text-white'
+                  : locale === 'zh' ? 'bg-red-100 text-red-800' : 'bg-indigo-100 text-indigo-800'
               }`}>
-                {chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '独立投标' : chinaAnalysis.eligibilityStatus === 'joint_venture_required' ? '需联合体' : '仅限本土'}
+                {locale === 'zh'
+                  ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '独立投标' : chinaAnalysis.eligibilityStatus === 'joint_venture_required' ? '需联合体' : '仅限本土')
+                  : locale === 'mn'
+                  ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? 'Шууд' : chinaAnalysis.eligibilityStatus === 'joint_venture_required' ? 'Түншлэл' : 'Дотоод')
+                  : (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? 'Direct' : chinaAnalysis.eligibilityStatus === 'joint_venture_required' ? 'JV' : 'Domestic')
+                }
               </span>
             )}
           </button>
@@ -2345,23 +2429,41 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
             </div>
           )}
 
-          {/* TAB 5: 🇨🇳 中国企业投标指南 (China Bidder Guide Dossier) */}
+          {/* TAB 5: Гадаад ААН / 中企投标指南 (Foreign / China Bidder Guide Dossier) */}
           {activeTab === 'china' && (
             <div className="space-y-6">
               {/* 1. Header & Hero Eligibility Card */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <span className="text-xl">🇨🇳</span>
-                    <span>中国企业与中资机构投标决策指南</span>
+                    <span className="text-xl">{locale === 'zh' ? '🇨🇳' : '🌐'}</span>
+                    <span>
+                      {locale === 'zh'
+                        ? '中国企业与中资机构投标决策指南'
+                        : locale === 'mn'
+                        ? 'Гадаадын болон Хятадын ААН-ийн тендерт оролцох заавар'
+                        : 'Foreign & Cross-Border Bidder Eligibility Dossier'}
+                    </span>
                   </h3>
                   <p className="text-xs text-slate-500 mt-1">
-                    根据《蒙古国国家采购法》(ТХААХ)及官方招标文件(ТШЗ)智能判定的投标资格、资质要求与本地化策略。
+                    {locale === 'zh'
+                      ? '根据《蒙古国国家采购法》(ТХААХ)及官方招标文件(ТШЗ)智能判定的投标资格、资质要求与本地化策略。'
+                      : locale === 'mn'
+                      ? 'Төрийн худалдан авах ажиллагааны хууль (ТХААХ) болон тендерийн ТШЗ-д үндэслэн тодорхойлсон гадаадын ААН-ийн эрх зүйн нөхцөл, тусгай зөвшөөрөл ба түншлэлийн шаардлага.'
+                      : 'Regulatory eligibility, licensing constraints, and joint venture guidelines based on Mongolian Procurement Law and official tender documentation.'}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shrink-0 bg-red-50 text-red-800 border-red-200">
-                    <span>北京时间 / 乌兰巴托 (UTC+8 无时差)</span>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shrink-0 ${
+                    locale === 'zh' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200'
+                  }`}>
+                    <span>
+                      {locale === 'zh'
+                        ? '北京时间 / 乌兰巴托 (UTC+8 无时差)'
+                        : locale === 'mn'
+                        ? 'Улаанбаатарын цаг (UTC+8)'
+                        : 'Ulaanbaatar Time (UTC+8)'}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -2385,23 +2487,47 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                               ? 'bg-amber-600 text-white'
                               : 'bg-slate-700 text-white'
                         }`}>
-                          {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '✓ 允许独立投标 (Direct Allowed)'}
-                          {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '⚠ 需组建联合体 (Joint Venture Required)'}
-                          {chinaAnalysis.eligibilityStatus === 'domestic_only' && '✕ 仅限蒙古国本土企业 (Domestic Only)'}
-                          {chinaAnalysis.eligibilityStatus === 'conditional' && 'ℹ 有条件参与 (Conditional)'}
+                          {locale === 'zh' ? (
+                            <>
+                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '✓ 允许独立投标 (Direct Allowed)'}
+                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '⚠ 需组建联合体 (Joint Venture Required)'}
+                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && '✕ 仅限蒙古国本土企业 (Domestic Only)'}
+                              {chinaAnalysis.eligibilityStatus === 'conditional' && 'ℹ 有条件参与 (Conditional)'}
+                            </>
+                          ) : locale === 'mn' ? (
+                            <>
+                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '✓ Шууд оролцох боломжтой (Direct Allowed)'}
+                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '⚠ Түншлэл / JV шаардлагатай (Joint Venture Required)'}
+                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && '✕ Зөвхөн дотоодын ААН (Domestic Only)'}
+                              {chinaAnalysis.eligibilityStatus === 'conditional' && 'ℹ Нөхцөлтэй оролцох (Conditional)'}
+                            </>
+                          ) : (
+                            <>
+                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '✓ Direct Bidding Allowed'}
+                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '⚠ Joint Venture Required'}
+                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && '✕ Domestic Bidders Only'}
+                              {chinaAnalysis.eligibilityStatus === 'conditional' && 'ℹ Conditional Participation'}
+                            </>
+                          )}
                         </span>
                         <h4 className="text-sm sm:text-base font-bold text-slate-900">
-                          {chinaAnalysis.eligibilityTitleZh}
+                          {locale === 'zh'
+                            ? chinaAnalysis.eligibilityTitleZh
+                            : chinaAnalysis.eligibilityTitleMn || chinaAnalysis.eligibilityTitleZh}
                         </h4>
                       </div>
                       <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                        {chinaAnalysis.eligibilityExplanationZh}
+                        {locale === 'zh'
+                          ? chinaAnalysis.eligibilityExplanationZh
+                          : chinaAnalysis.eligibilityExplanationMn || chinaAnalysis.eligibilityExplanationZh}
                       </p>
-                      <div className="pt-1 text-xs text-slate-500 italic">
-                        <strong>Монгол тайлбар:</strong> {chinaAnalysis.eligibilityExplanationMn}
-                      </div>
+                      {locale === 'zh' && chinaAnalysis.eligibilityExplanationMn && (
+                        <div className="pt-1 text-xs text-slate-500 italic">
+                          <strong>Монгол тайлбар:</strong> {chinaAnalysis.eligibilityExplanationMn}
+                        </div>
+                      )}
                     </div>
-                    {Boolean((chinaAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
+                    {locale === 'zh' && Boolean((chinaAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
                       <div className="bg-white/90 p-3.5 rounded-xl border border-slate-200/80 shadow-2xs shrink-0 sm:text-right min-w-[170px]">
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">折合人民币预算</span>
                         <span className="text-lg sm:text-xl font-bold font-mono text-slate-900 block text-red-600">
@@ -2416,12 +2542,18 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                     )}
                   </div>
 
-                  {chinaAnalysis.recommendedActionZh && (
+                  {(chinaAnalysis.recommendedActionZh || chinaAnalysis.recommendedActionMn) && (
                     <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-start gap-2 text-xs font-semibold text-slate-800">
                       <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <span className="text-amber-800 font-bold">行动建议：</span>
-                        <span>{chinaAnalysis.recommendedActionZh}</span>
+                        <span className="text-amber-800 font-bold">
+                          {locale === 'zh' ? '行动建议：' : locale === 'mn' ? 'Зөвлөмж:' : 'Recommendation:'}
+                        </span>
+                        <span className="ml-1">
+                          {locale === 'zh'
+                            ? chinaAnalysis.recommendedActionZh
+                            : chinaAnalysis.recommendedActionMn || chinaAnalysis.recommendedActionZh}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -2435,18 +2567,42 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                      投标保函与资金要求 (Bank Guarantee)
+                      {locale === 'zh'
+                        ? '投标保函与资金要求 (Bank Guarantee)'
+                        : locale === 'mn'
+                        ? 'Тендерийн баталгаа ба санхүүгийн шаардлага (Bank Guarantee)'
+                        : 'Bid Guarantee & Financial Requirements (Bank Guarantee)'}
                     </h4>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    {chinaAnalysis?.bankGuaranteePolicyZh || '根据蒙古国现行法，公开招标通常要求提供项目预算 1% 的投标保函。'}
+                    {locale === 'zh'
+                      ? chinaAnalysis?.bankGuaranteePolicyZh || '根据蒙古国现行法，公开招标通常要求提供项目预算 1% 的投标保函。'
+                      : chinaAnalysis?.bankGuaranteePolicyMn || 'Төрийн худалдан авах ажиллагааны хуулийн дагуу ихэвчлэн төсвийн 1%-ийн тендерийн баталгаа шаарддаг.'}
                   </p>
                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200/80 text-[11px] text-slate-600 space-y-1">
-                    <div className="font-semibold text-slate-800">中国企业出函路径：</div>
+                    <div className="font-semibold text-slate-800">
+                      {locale === 'zh' ? '出函路径与银行渠道：' : locale === 'mn' ? 'Баталгаа гаргуулах боломжит сувгууд:' : 'Guarantee Issuance Channels:'}
+                    </div>
                     <ul className="list-disc pl-4 space-y-0.5">
-                      <li>由中国银行乌兰巴托分行 (Bank of China Ulaanbaatar) 协助直接出具当地保函。</li>
-                      <li>国内银行 (中行/工行/进出口银行) 开立对外转开保函(Counter-Guarantee)至蒙古国商业银行(Khan Bank, TDB)。</li>
-                      <li>若标段预算低于5000万图格里克或特殊豁免标段，可享受 0₮ 免保函待遇。</li>
+                      {locale === 'zh' ? (
+                        <>
+                          <li>由中国银行乌兰巴托分行 (Bank of China Ulaanbaatar) 协助直接出具当地保函。</li>
+                          <li>国内银行 (中行/工行/进出口银行) 开立对外转开保函(Counter-Guarantee)至蒙古国商业银行(Khan Bank, TDB)。</li>
+                          <li>若标段预算低于5000万图格里克或特殊豁免标段，可享受 0₮ 免保函待遇。</li>
+                        </>
+                      ) : locale === 'mn' ? (
+                        <>
+                          <li>Улаанбаатар дахь Хятадын Банк (Bank of China Ulaanbaatar) эсвэл дотоодын арилжааны банкаар баталгаа гаргуулах.</li>
+                          <li>Гадаадын банкны сөрөг баталгаа (Counter-Guarantee)-г Монголын банкуудад (Хаан банк, ХХБ) баталгаажуулах.</li>
+                          <li>Төсөвт өртөг нь 50 сая ₮-өөс доош бол тендерийн баталгаа шаардахгүй (0₮).</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Direct guarantee via Bank of China Ulaanbaatar or local commercial banks.</li>
+                          <li>Foreign bank counter-guarantee confirmed by Mongolian banks (Khan Bank, TDB).</li>
+                          <li>If budget is under 50M MNT, no bid bond is required (0₮).</li>
+                        </>
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -2456,12 +2612,16 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-blue-600" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                      资质证书与特许执照 (Licenses & MCUD)
+                      {locale === 'zh'
+                        ? '资质证书与特许执照 (Licenses & MCUD)'
+                        : locale === 'mn'
+                        ? 'Тусгай зөвшөөрөл ба мэргэжлийн шаардлага (Licenses & MCUD)'
+                        : 'Licenses & Regulatory Certificates (MCUD)'}
                     </h4>
                   </div>
-                  {chinaAnalysis?.licenseRequirementsZh && chinaAnalysis.licenseRequirementsZh.length > 0 ? (
+                  {((locale === 'zh' ? chinaAnalysis?.licenseRequirementsZh : chinaAnalysis?.licenseRequirementsMn) || []).length > 0 ? (
                     <ul className="space-y-1.5 text-xs text-slate-700">
-                      {chinaAnalysis.licenseRequirementsZh.map((req: string, idx: number) => (
+                      {(locale === 'zh' ? chinaAnalysis!.licenseRequirementsZh : (chinaAnalysis!.licenseRequirementsMn || chinaAnalysis!.licenseRequirementsZh))!.map((req: string, idx: number) => (
                         <li key={idx} className="flex items-start gap-1.5">
                           <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
                           <span>{req}</span>
@@ -2470,12 +2630,24 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                     </ul>
                   ) : (
                     <p className="text-xs text-slate-600 leading-relaxed">
-                      本项目未发现强制性特殊工程施工执照限制。常规货物采购仅需提供原产地证明、质量检验报告(CO/CQ)及企业营业执照公证海牙认证件。
+                      {locale === 'zh'
+                        ? '本项目未发现强制性特殊工程施工执照限制。常规货物采购仅需提供原产地证明、质量检验报告(CO/CQ)及企业营业执照公证海牙认证件。'
+                        : locale === 'mn'
+                        ? 'Тусгай зөвшөөрөл шаардагдаагүй эсвэл ердийн бараа нийлүүлэлтийн шаардлага (гарал үүслийн гэрчилгээ, чанарын гэрчилгээ, албан ёсны орчуулга) тавигдсан байна.'
+                        : 'No mandatory specialized engineering license detected. Standard goods require CO/CQ certificates and apostilled business registration.'}
                     </p>
                   )}
                   <div className="bg-blue-50/60 p-2.5 rounded-lg border border-blue-200/70 text-[11px] text-blue-900 space-y-1">
-                    <span className="font-bold">认证须知：</span>
-                    <span>中国公证处出具的营业执照公证书需附加海牙认证(Apostille)或外交部/领事认证，翻译件需附蒙文或英文版本。</span>
+                    <span className="font-bold">
+                      {locale === 'zh' ? '认证须知：' : locale === 'mn' ? 'Баталгаажуулалт:' : 'Authentication:'}
+                    </span>
+                    <span className="ml-1">
+                      {locale === 'zh'
+                        ? '中国公证处出具的营业执照公证书需附加海牙认证(Apostille)或外交部/领事认证，翻译件需附蒙文或英文版本。'
+                        : locale === 'mn'
+                        ? 'Гадаадын байгууллагын хуулийн этгээдийн гэрчилгээг Апостиль (Apostille) гэрчилгээ эсвэл консулын баталгаажуулалттай, албан ёсны орчуулгын хамт ирүүлнэ.'
+                        : 'Foreign registration documents must include Apostille authentication or consular legalization, accompanied by certified translations.'}
+                    </span>
                   </div>
                 </div>
 
@@ -2484,17 +2656,39 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-purple-600" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                      联合体组建与本地化合作 (Consortium / JV)
+                      {locale === 'zh'
+                        ? '联合体组建与本地化合作 (Consortium / JV)'
+                        : locale === 'mn'
+                        ? 'Түншлэл / Хамтарсан консорциум ба дотоодын хамтын ажиллагаа'
+                        : 'Consortium / Joint Venture Strategy'}
                     </h4>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    {chinaAnalysis?.jointVentureNotesZh || '如涉及现场施工、工程报建或特种设备安装，建议中方作为主设备供货方，蒙方企业作为施工配合方共同签署《联合体协议书》(Түншлэлийн гэрээ)。'}
+                    {locale === 'zh'
+                      ? chinaAnalysis?.jointVentureNotesZh || '如涉及现场施工、工程报建或特种设备安装，建议中方作为主设备供货方，蒙方企业作为施工配合方共同签署《联合体协议书》(Түншлэлийн гэрээ)。'
+                      : chinaAnalysis?.jointVentureNotesMn || 'Барилга угсралт, тусгай зөвшөөрөл шаардсан ажлуудад гадаадын ААН нь дотоодын тусгай зөвшөөрөлтэй компанитай Түншлэлийн гэрээ байгуулан оролцох боломжтой.'}
                   </p>
                   <div className="bg-purple-50/60 p-2.5 rounded-lg border border-purple-200/70 text-[11px] text-purple-900 space-y-1">
-                    <span className="font-bold">分工推荐：</span>
+                    <span className="font-bold">
+                      {locale === 'zh' ? '分工推荐：' : locale === 'mn' ? 'Үүрэг хуваарилалт:' : 'Work Allocation:'}
+                    </span>
                     <ul className="list-disc pl-4 space-y-0.5">
-                      <li>中方成员：设备制造、技术参数保障、DAP口岸运输、安装调试技术指导。</li>
-                      <li>蒙方成员：持有蒙古国属地资质、办理海关清关与增值税发票、现场施工与工程验收。</li>
+                      {locale === 'zh' ? (
+                        <>
+                          <li>中方成员：设备制造、技术参数保障、DAP口岸运输、安装调试技术指导。</li>
+                          <li>蒙方成员：持有蒙古国属地资质、办理海关清关与增值税发票、现场施工与工程验收。</li>
+                        </>
+                      ) : locale === 'mn' ? (
+                        <>
+                          <li>Гадаад тал: Тоног төхөөрөмжийн үйлдвэрлэл, техникийн үзүүлэлтийн баталгаа, нийлүүлэлт, угсралт тохируулгын заавар.</li>
+                          <li>Дотоод тал: Монгол улсын тусгай зөвшөөрөл, гаалийн бүрдүүлэлт, НӨАТ-ын баримт, талбайн угсралт, улсын комисст хүлээлгэн өгөх.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li>Lead / Foreign partner: Manufacturing, specification compliance, shipping, and installation engineering.</li>
+                          <li>Domestic partner: Local licenses, customs clearance, VAT invoicing, on-site execution, and acceptance.</li>
+                        </>
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -2504,17 +2698,41 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-amber-600" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                      物流口岸与清关交货 (Logistics & Customs)
+                      {locale === 'zh'
+                        ? '物流口岸与清关交货 (Logistics & Customs)'
+                        : locale === 'mn'
+                        ? 'Тээвэр, хилийн боомт ба гаалийн бүрдүүлэлт'
+                        : 'Logistics, Border Ports & Customs Clearance'}
                     </h4>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed">
-                    蒙古国采购通常采用国际贸易术语解释通则(Incoterms 2020)：
+                    {locale === 'zh'
+                      ? '蒙古国采购通常采用国际贸易术语解释通则(Incoterms 2020)：'
+                      : locale === 'mn'
+                      ? 'Монгол Улсын худалдан авалтад Олон улсын худалдааны Инкотермс (Incoterms 2020) нөхцөлийг мөрддөг:'
+                      : 'International Commercial Terms (Incoterms 2020) typically applied in Mongolian state tenders:'}
                   </p>
                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200/80 text-[11px] text-slate-600 space-y-1">
                     <ul className="list-disc pl-4 space-y-1">
-                      <li><strong>扎门乌德口岸 (Erlian / Zamiin-Uud)：</strong>公路/铁路主要枢纽，适于机械与日常物资。</li>
-                      <li><strong>甘其毛都 / 嘎顺苏海图 (Gashuunsukhait)：</strong>矿山重卡、煤炭与工程设备直达。</li>
-                      <li><strong>交货条件：</strong>注意核对招标文件是否为 DAP 乌兰巴托仓库交货（含关税增值税由买方或卖方承担）。</li>
+                      {locale === 'zh' ? (
+                        <>
+                          <li><strong>扎门乌德口岸 (Erlian / Zamiin-Uud)：</strong>公路/铁路主要枢纽，适于机械与日常物资。</li>
+                          <li><strong>甘其毛都 / 嘎顺苏海图 (Gashuunsukhait)：</strong>矿山重卡、煤炭与工程设备直达。</li>
+                          <li><strong>交货条件：</strong>注意核对招标文件是否为 DAP 乌兰巴托仓库交货（含关税增值税由买方或卖方承担）。</li>
+                        </>
+                      ) : locale === 'mn' ? (
+                        <>
+                          <li><strong>Замын-Үүд / Эрээн боомт:</strong> Авто зам ба төмөр замын гол зангилаа, тоног төхөөрөмж ба бараа материалын гол гарц.</li>
+                          <li><strong>Гашуунсухайт / Ганцмод боомт:</strong> Уул уурхайн тоног төхөөрөмж, хүнд даацын тээврийн үндсэн коридор.</li>
+                          <li><strong>Нийлүүлэлтийн нөхцөл:</strong> DAP Улаанбаатар агуулах эсвэл DDP нөхцөлийн дагуу гааль, татварын хариуцлагыг нарийвчлан шалгах.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li><strong>Zamiin-Uud / Erlian Port:</strong> Primary road and rail hub for general equipment and manufactured goods.</li>
+                          <li><strong>Gashuunsukhait / Gantsmod Port:</strong> Primary corridor for heavy mining machinery and industrial bulk.</li>
+                          <li><strong>Delivery Terms:</strong> Check whether delivery is DAP Ulaanbaatar or DDP regarding import customs and VAT allocation.</li>
+                        </>
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -2526,10 +2744,20 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
                       <FileSpreadsheet className="h-4 w-4 text-blue-600" />
-                      <span>官方提取清单与技术参数 (BOQ & Extracted Specs)</span>
+                      <span>
+                        {locale === 'zh'
+                          ? '官方提取清单与技术参数 (BOQ & Extracted Specs)'
+                          : locale === 'mn'
+                          ? 'Тендерийн баримтаас ялгасан ажлын тоо хэмжээ, техникийн үзүүлэлт (BOQ)'
+                          : 'Extracted Bill of Quantities & Technical Specifications'}
+                      </span>
                     </h4>
                     <span className="text-[11px] text-slate-500 font-mono">
-                      共 {technicalSpecs.sampleItems.length} 项清单
+                      {locale === 'zh'
+                        ? `共 ${technicalSpecs.sampleItems.length} 项清单`
+                        : locale === 'mn'
+                        ? `Нийт ${technicalSpecs.sampleItems.length} мөр өгөгдөл`
+                        : `Total ${technicalSpecs.sampleItems.length} items`}
                     </span>
                   </div>
                   <div className="overflow-x-auto">
@@ -2537,10 +2765,18 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                       <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
                         <tr>
                           <th className="py-2 px-3 w-12 text-center">#</th>
-                          <th className="py-2 px-3">物资/工程名称 (Монгол нэр)</th>
-                          <th className="py-2 px-3 w-28 text-right">数量</th>
-                          <th className="py-2 px-3 w-24">单位</th>
-                          <th className="py-2 px-3">规格及交货要求</th>
+                          <th className="py-2 px-3">
+                            {locale === 'zh' ? '物资/工程名称 (Монгол нэр)' : locale === 'mn' ? 'Бараа / Ажлын нэр' : 'Item / Work Name'}
+                          </th>
+                          <th className="py-2 px-3 w-28 text-right">
+                            {locale === 'zh' ? '数量' : locale === 'mn' ? 'Тоо ширхэг' : 'Quantity'}
+                          </th>
+                          <th className="py-2 px-3 w-24">
+                            {locale === 'zh' ? '单位' : locale === 'mn' ? 'Хэмжих нэгж' : 'Unit'}
+                          </th>
+                          <th className="py-2 px-3">
+                            {locale === 'zh' ? '规格及交货要求' : locale === 'mn' ? 'Техникийн тодорхойлолт ба шаардлага' : 'Technical Specifications'}
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -2549,8 +2785,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                             <td className="py-2 px-3 text-center text-slate-400 font-mono">{idx + 1}</td>
                             <td className="py-2 px-3 font-semibold text-slate-900">{item.name}</td>
                             <td className="py-2 px-3 text-right font-mono font-bold text-slate-800">{item.quantity || 1}</td>
-                            <td className="py-2 px-3 text-slate-600">{item.unit || '件/批'}</td>
-                            <td className="py-2 px-3 text-slate-500 text-[11px]">{item.spec || '见详细招标文件'}</td>
+                            <td className="py-2 px-3 text-slate-600">{item.unit || (locale === 'zh' ? '件/批' : locale === 'mn' ? 'ш / багц' : 'pcs')}</td>
+                            <td className="py-2 px-3 text-slate-500 text-[11px]">{item.spec || (locale === 'zh' ? '见详细招标文件' : locale === 'mn' ? 'ТШЗ-аас үзнэ үү' : 'See bidding docs')}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -2559,70 +2795,188 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData 
                 </div>
               )}
 
-              {/* 5. Chinese AI Tender Analyst Quick Prompts */}
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-red-50 via-amber-50 to-slate-50 border-2 border-red-200 shadow-xs space-y-3">
+              {/* 5. Chinese / Foreign AI Tender Analyst Quick Prompts */}
+              <div className={`p-5 rounded-2xl border shadow-xs space-y-3 ${
+                locale === 'zh'
+                  ? 'bg-gradient-to-r from-red-50 via-amber-50 to-slate-50 border-red-200'
+                  : 'bg-gradient-to-r from-indigo-50 via-blue-50 to-slate-50 border-indigo-200'
+              }`}>
                 <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs">
+                  <div className={`h-8 w-8 rounded-lg text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
+                    locale === 'zh' ? 'bg-red-600' : 'bg-indigo-600'
+                  }`}>
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div>
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                      中企专属 AI 投标顾问一键咨询
+                      {locale === 'zh'
+                        ? '中企专属 AI 投标顾问一键咨询'
+                        : locale === 'mn'
+                        ? 'Тендерийн AI Шинжээчийн нэг товшилтын туслах'
+                        : 'AI Cross-Border Tender Advisor & Intelligence'}
                     </h4>
                     <p className="text-[11px] text-slate-500">
-                      点击下方预设问题，AI 立即基于官方 PDF 原文与蒙古国现行法规为您生成中文解答与实操方案：
+                      {locale === 'zh'
+                        ? '点击下方预设问题，AI 立即基于官方 PDF 原文与蒙古国现行法规为您生成中文解答与实操方案：'
+                        : locale === 'mn'
+                        ? 'Доорх бэлэн асуултуудаас сонгож, тендерийн ТШЗ болон холбогдох хууль тогтоомжийн дагуу AI-аас дэлгэрэнгүй зөвлөгөө аваарай:'
+                        : 'Select a query below for instant AI analysis against official bidding documents and Mongolian regulations:'}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <button
-                    onClick={() => handleRunAiAnalysis(
-                      '作为一家中国企业，如果我们直接参与此标段投标，需要准备哪些企业公证认证材料、制造商授权书(MAF)以及过往类似业绩证明？请详细列出清单。',
-                      'zh-eligibility',
-                      '中企申报资格与公证清单'
-                    )}
-                    disabled={aiAnalyzing}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
-                  >
-                    <span>📋 中国企业所需公证材料与业绩清单？</span>
-                  </button>
+                  {locale === 'zh' ? (
+                    <>
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          '作为一家中国企业，如果我们直接参与此标段投标，需要准备哪些企业公证认证材料、制造商授权书(MAF)以及过往类似业绩证明？请详细列出清单。',
+                          'zh-eligibility',
+                          '中企申报资格与公证清单'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>📋 中国企业所需公证材料与业绩清单？</span>
+                      </button>
 
-                  <button
-                    onClick={() => handleRunAiAnalysis(
-                      '该项目的投标保证金金额折合人民币是多少？中国银行乌兰巴托分行或国内银行出具保函的具体流程与格式要求是什么？',
-                      'zh-guarantee',
-                      '银行保函与资金安排'
-                    )}
-                    disabled={aiAnalyzing}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
-                  >
-                    <span>💰 投标保函金额与国内银行开函路径？</span>
-                  </button>
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          '该项目的投标保证金金额折合人民币是多少？中国银行乌兰巴托分行或国内银行出具保函的具体流程与格式要求是什么？',
+                          'zh-guarantee',
+                          '银行保函与资金安排'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>💰 投标保函金额与国内银行开函路径？</span>
+                      </button>
 
-                  <button
-                    onClick={() => handleRunAiAnalysis(
-                      '如果需要与蒙古国当地持证企业组建联合体(Joint Venture)参与竞标，中方与蒙方的权责划分、联合体协议公证要点以及付款结算有哪些关键注意事项？',
-                      'zh-jv',
-                      '联合体组建与合同分工'
-                    )}
-                    disabled={aiAnalyzing}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
-                  >
-                    <span>🤝 联合体协议书公证与当地伙伴分工策略？</span>
-                  </button>
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          '如果需要与蒙古国当地持证企业组建联合体(Joint Venture)参与竞标，中方与蒙方的权责划分、联合体协议公证要点以及付款结算有哪些关键注意事项？',
+                          'zh-jv',
+                          '联合体组建与合同分工'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>🤝 联合体协议书公证与当地伙伴分工策略？</span>
+                      </button>
 
-                  <button
-                    onClick={() => handleRunAiAnalysis(
-                      '请详细分析该招标文件的技术规格与供货清单，对于中国制造的产品是否存在标准差异(如GB/ISO/MNS)，交货地点与清关运输有哪些实操风险？',
-                      'zh-specs',
-                      '技术规格与中国制造适配度'
-                    )}
-                    disabled={aiAnalyzing}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
-                  >
-                    <span>🔍 技术规格解析与中国产品适配性？</span>
-                  </button>
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          '请详细分析该招标文件的技术规格与供货清单，对于中国制造的产品是否存在标准差异(如GB/ISO/MNS)，交货地点与清关运输有哪些实操风险？',
+                          'zh-specs',
+                          '技术规格与中国制造适配度'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-red-50 text-slate-800 hover:text-red-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>🔍 技术规格解析与中国产品适配性？</span>
+                      </button>
+                    </>
+                  ) : locale === 'mn' ? (
+                    <>
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'Энэхүү тендерт гадаадын эсвэл Хятадын ААН шууд оролцоход ямар бичиг баримт (Апостиль гэрчилгээ, үйлдвэрлэгчийн эрх MAF, ижил төстэй ажлын туршлага) шаардагдах вэ? Жагсаалтаар гаргаж өгнө үү.',
+                          'mn-eligibility',
+                          'Гадаадын ААН-ийн бүрдүүлэх баримт бичиг'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>📋 Гадаадын / Хятад ААН-ийн бүрдүүлэх бичиг баримтын жагсаалт?</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'Энэ төслийн тендерийн баталгааны хэмжээ хэд вэ? Гадаадын банкны сөрөг баталгаа эсвэл дотоодын банкаар баталгаа гаргуулах шаардлага юу байна вэ?',
+                          'mn-guarantee',
+                          'Тендерийн баталгааны шаардлага'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>💰 Тендерийн баталгааны дүн ба банкны сувгууд?</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'Дотоодын тусгай зөвшөөрөлтэй ААН-тэй хамтарсан консорциум / Түншлэлийн гэрээ (JV) байгуулахад хуулийн дагуу эрх үүрэг, хувь хэмжээг хэрхэн зохицуулах вэ?',
+                          'mn-jv',
+                          'Түншлэлийн гэрээ (JV) ба үүрэг хуваарилалт'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>🤝 Түншлэлийн гэрээ (JV) байгуулах ба үүрэг хуваарилалт?</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'Энэхүү тендерийн техникийн тодорхойлолт, нийлүүлэлтийн хуваарь болон импортын барааны стандарт (MNS/ISO/GB) тохирлын эрсдэлийг шинжилж өгнө үү.',
+                          'mn-specs',
+                          'Техникийн тодорхойлолт ба стандартын нийцэл'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>🔍 Техникийн тодорхойлолт ба чанарын стандарт?</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'What legal documents, apostilled certificates, manufacturer authorizations (MAF), and past experience references are required for a foreign entity to participate in this tender?',
+                          'en-eligibility',
+                          'Foreign Bidder Eligibility & Dossier'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>📋 Foreign bidder dossier & apostille checklist?</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'What is the exact bid bond amount and required format? Can a foreign bank issue a counter-guarantee to a Mongolian bank?',
+                          'en-guarantee',
+                          'Bid Guarantee & Banking Channels'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>💰 Bid security amount & guarantee channels?</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'If forming a Consortium / Joint Venture with a licensed Mongolian entity, what are the legal requirements and work allocation best practices?',
+                          'en-jv',
+                          'Joint Venture & Consortium Strategy'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>🤝 Joint Venture agreement & partner allocation?</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRunAiAnalysis(
+                          'Please analyze the technical specifications, delivery schedule, and compliance with national/international standards (MNS/ISO/GB).',
+                          'en-specs',
+                          'Technical Specifications & Compliance'
+                        )}
+                        disabled={aiAnalyzing}
+                        className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-slate-800 hover:text-indigo-700 border-slate-200 shadow-2xs cursor-pointer"
+                      >
+                        <span>🔍 Technical specifications & standards compliance?</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

@@ -19,7 +19,34 @@ import {
 } from 'lucide-react';
 
 export default function Home() {
-  const [locale, setLocale] = useState<Locale>('mn');
+  const [locale, setLocaleState] = useState<Locale>('mn');
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('lang') as Locale | null;
+      if (urlLang && ['mn', 'en', 'zh'].includes(urlLang)) {
+        setLocaleState(urlLang);
+        localStorage.setItem('tenderhub_locale', urlLang);
+        return;
+      }
+      const savedLang = localStorage.getItem('tenderhub_locale') as Locale | null;
+      if (savedLang && ['mn', 'en', 'zh'].includes(savedLang)) {
+        setLocaleState(savedLang);
+      }
+    } catch {}
+  }, []);
+
+  const setLocale = (newLocale: Locale) => {
+    setLocaleState(newLocale);
+    try {
+      localStorage.setItem('tenderhub_locale', newLocale);
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', newLocale);
+      window.history.replaceState({}, '', url.toString());
+    } catch {}
+  };
+
   const t = getTranslation(locale);
 
   const [tenders, setTenders] = useState<TenderItem[]>([]);
