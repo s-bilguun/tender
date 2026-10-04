@@ -9,6 +9,9 @@ import { EcosystemStatsBanner } from '@/components/EcosystemStatsBanner';
 import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { StatusFilterTabs } from '@/components/StatusFilterTabs';
 import { ActiveFilterBar } from '@/components/ActiveFilterBar';
+import { ProductArbitrageHero } from '@/components/ProductArbitrageHero';
+import { ArbitrageCalculatorModal } from '@/components/ArbitrageCalculatorModal';
+import { ProductCategory } from '@/lib/product-categories';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
@@ -74,10 +77,14 @@ export default function Home() {
   // Selected Tender for Slide-over Detailed View
   const [selectedTenderForSlideOver, setSelectedTenderForSlideOver] = useState<TenderItem | null>(null);
 
-  // Modals (ТББ Шалгагч AI, Баталгаа & Санхүүжилт, Tender2China)
+  // Multi-currency display (CNY, USD, MNT) for foreign & domestic suppliers
+  const [currency, setCurrency] = useState<'CNY' | 'USD' | 'MNT'>('CNY');
+
+  // Modals (ТББ Шалгагч AI, Баталгаа & Санхүүжилт, Tender2China, 差价测算)
   const [isDocAuditOpen, setIsDocAuditOpen] = useState<boolean>(false);
   const [isFinanceOpen, setIsFinanceOpen] = useState<boolean>(false);
   const [isChinaSupplierOpen, setIsChinaSupplierOpen] = useState<boolean>(false);
+  const [isArbitrageModalOpen, setIsArbitrageModalOpen] = useState<boolean>(false);
   const [modalTenderContext, setModalTenderContext] = useState<TenderItem | null>(null);
 
   // Command Palette & Toasts
@@ -366,6 +373,31 @@ export default function Home() {
       {/* Main Container */}
       <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
         
+        {/* Product-First Cross-Border Arbitrage & Sourcing Engine */}
+        <ProductArbitrageHero
+          locale={locale}
+          setLocale={setLocale}
+          currency={currency}
+          setCurrency={setCurrency}
+          searchValue={searchInputValue}
+          onSearchChange={setSearchInputValue}
+          onSearchSubmit={handleGlobalSearchSubmit}
+          onSelectCategory={(cat) => {
+            const query = cat.keywordsMn[0] || cat.nameMn;
+            setSearchInputValue(query);
+            handleFilterChange({ search: query, page: 1 });
+            showToast({
+              type: 'info',
+              title: locale === 'zh' ? `已筛选品类：${cat.nameZh}` : `Сонгосон бүтээгдэхүүн: ${cat.nameMn}`,
+              description: locale === 'zh' ? `政府采购均价溢价率: ${cat.arbitrageMargin}` : `Зах зээлийн зөрүү: ${cat.arbitrageMargin}`,
+            });
+          }}
+          onOpenArbitrageModal={() => {
+            setModalTenderContext(null);
+            setIsArbitrageModalOpen(true);
+          }}
+        />
+
         {/* Ecosystem Live Market Pulse Banner */}
         <EcosystemStatsBanner
           locale={locale}
@@ -450,10 +482,15 @@ export default function Home() {
                 key={String(tender.invitationId)}
                 tender={tender}
                 locale={locale}
+                currency={currency}
                 isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
                 onToggleSave={handleToggleSave}
                 onSelect={(t) => setSelectedTenderForSlideOver(t)}
                 onAskAI={handleAskAI}
+                onOpenArbitrage={(t) => {
+                  setModalTenderContext(t);
+                  setIsArbitrageModalOpen(true);
+                }}
               />
             ))}
           </div>
@@ -523,6 +560,10 @@ export default function Home() {
         onOpenDocAudit={(t) => handleOpenDocAudit(t)}
         onOpenFinance={(t) => handleOpenFinance(t)}
         onOpenChinaSupplier={(t) => handleOpenChinaSupplier(t)}
+        onOpenArbitrage={(t) => {
+          setModalTenderContext(t);
+          setIsArbitrageModalOpen(true);
+        }}
       />
 
       {/* ТББ Шалгагч AI Modal */}
@@ -544,6 +585,14 @@ export default function Home() {
         isOpen={isChinaSupplierOpen}
         onClose={() => setIsChinaSupplierOpen(false)}
         tender={modalTenderContext}
+      />
+
+      {/* 跨境差价测算 & 投标通道 Modal */}
+      <ArbitrageCalculatorModal
+        isOpen={isArbitrageModalOpen}
+        onClose={() => setIsArbitrageModalOpen(false)}
+        tender={modalTenderContext}
+        locale={locale}
       />
 
       {/* Footer */}

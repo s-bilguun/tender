@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { 
   X, ExternalLink, Building2, Calendar, Clock, 
   DollarSign, FileText, ListChecks, Trophy, Sparkles, 
-  ArrowUpRight, ShieldCheck, Tag, Copy, Check, FileCheck, Globe2
+  ArrowUpRight, ShieldCheck, Tag, Copy, Check, FileCheck, Globe2,
+  TrendingUp
 } from 'lucide-react';
 import { TenderItem, Locale } from '@/lib/types';
 import { IndustryIcon } from '@/components/IndustryIcon';
@@ -19,6 +20,7 @@ interface TenderSlideOverProps {
   onOpenDocAudit?: (tender: TenderItem) => void;
   onOpenFinance?: (tender: TenderItem) => void;
   onOpenChinaSupplier?: (tender: TenderItem) => void;
+  onOpenArbitrage?: (tender: TenderItem) => void;
 }
 
 export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
@@ -30,6 +32,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   onOpenDocAudit,
   onOpenFinance,
   onOpenChinaSupplier,
+  onOpenArbitrage,
 }) => {
   // Close on Escape key
   useEffect(() => {
@@ -144,34 +147,47 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             </div>
 
             {/* Quick Ecosystem Power-Actions */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {onOpenArbitrage && (
+                <button
+                  onClick={() => {
+                    onClose();
+                    onOpenArbitrage(tender);
+                  }}
+                  className="p-2.5 rounded-xl bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                >
+                  <TrendingUp className="h-3.5 w-3.5 text-white" />
+                  <span>{locale === 'zh' ? '测算差价' : 'Үнийн зөрүү'}</span>
+                </button>
+              )}
+
               {onOpenDocAudit && (
                 <button
                   onClick={() => onOpenDocAudit(tender)}
-                  className="p-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="p-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <FileCheck className="h-4 w-4 text-purple-600" />
-                  <span>ТББ Шалгагч AI</span>
+                  <FileCheck className="h-3.5 w-3.5 text-purple-600" />
+                  <span>ТББ Шалгагч</span>
                 </button>
               )}
 
               {onOpenFinance && (
                 <button
                   onClick={() => onOpenFinance(tender)}
-                  className="p-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-900 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  <span>Баталгаа тооцох</span>
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Баталгаа</span>
                 </button>
               )}
 
               {onOpenChinaSupplier && (
                 <button
                   onClick={() => onOpenChinaSupplier(tender)}
-                  className="p-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-900 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
-                  <Globe2 className="h-4 w-4 text-rose-600" />
-                  <span>🇨🇳 Хятадаас үнэ авах</span>
+                  <Globe2 className="h-3.5 w-3.5 text-slate-600" />
+                  <span>{locale === 'zh' ? '跨国直投' : 'Түнш олох'}</span>
                 </button>
               )}
             </div>
