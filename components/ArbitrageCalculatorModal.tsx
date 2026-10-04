@@ -12,16 +12,23 @@ interface ArbitrageCalculatorModalProps {
   isOpen: boolean;
   onClose: () => void;
   tender?: TenderItem | null;
-  locale: Locale;
+  locale?: Locale;
 }
 
 export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> = ({
   isOpen,
   onClose,
   tender,
-  locale = 'zh',
+  locale = 'en',
 }) => {
-  const [productName, setProductName] = useState(tender?.tenderName || '高压电力电缆 / 挖掘机 / 办公桌椅');
+  const defaultProductName = 
+    locale === 'zh' 
+      ? '高压电力电缆 / 挖掘机 / 办公桌椅' 
+      : locale === 'mn' 
+      ? 'Хүчний кабель / Экскаватор / Оффис сандал' 
+      : 'Heavy Machinery / Power Cables / Office Furniture';
+
+  const [productName, setProductName] = useState(tender?.tenderName || defaultProductName);
   const [factoryPriceUsd, setFactoryPriceUsd] = useState(500);
   const [quantity, setQuantity] = useState(200);
   const [govBudgetUsd, setGovBudgetUsd] = useState(
@@ -65,13 +72,23 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold flex items-center gap-2">
-                <span>出厂价与政府采购差价测算器</span>
+                <span>
+                  {locale === 'zh' 
+                    ? '出厂价与政府采购差价测算器' 
+                    : locale === 'mn' 
+                    ? 'Үйлдвэрийн үнэ & Тендерийн зөрүү тооцоолуур' 
+                    : 'Factory Cost vs. Gov Tender Arbitrage Calculator'}
+                </span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-200 border border-rose-400/30">
-                  Arbitrage Simulator
+                  {locale === 'zh' ? '高利润' : 'High Margin'}
                 </span>
               </h2>
               <p className="text-[11px] sm:text-xs text-slate-300">
-                “我出厂价 $500，蒙古采购价 $1000 — 测算我能赚多少并一键参标”
+                {locale === 'zh'
+                  ? '“我出厂价 $500，蒙古采购价 $1000 — 测算我能赚多少并一键参标”'
+                  : locale === 'mn'
+                  ? 'Үйлдвэрийн үнэ $500 байхад тендерт $1000-аар зарлагддаг — Зөрүү ашгаа тооцоолж оролцох'
+                  : '"I sell for $500, government buys for $1,000 — calculate my net margin & participate"'}
               </p>
             </div>
           </div>
@@ -91,8 +108,18 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
               <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-xs text-rose-950 flex items-start gap-2.5">
                 <Sparkles className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
-                  <span className="font-bold block mb-0.5">为什么中国工厂应该参与蒙古政府采购？</span>
-                  蒙古国绝大多数工业品、设备、建材和耗材完全依赖进口，当地贸易商层层加价使政府采购单价远高于中国出厂价。中国制造商直接投标可实现<strong>大宗出货 + 丰厚净利</strong>。
+                  <span className="font-bold block mb-0.5">
+                    {locale === 'zh' 
+                      ? '为什么外国/中国工厂应该参与蒙古政府采购？' 
+                      : locale === 'mn' 
+                      ? 'Яагаад шууд үйлдвэрлэгчид өрсөлдөх нь ашигтай вэ?' 
+                      : 'Why Direct Manufacturers Have a Huge Price Advantage?'}
+                  </span>
+                  {locale === 'zh'
+                    ? '蒙古国绝大多数工业品、设备、建材和耗材完全依赖进口，当地贸易商层层加价使政府采购单价远高于出厂价。制造商直接投标可实现大宗出货 + 丰厚净利。'
+                    : locale === 'mn'
+                    ? 'Ихэнх тоног төхөөрөмж, хүнд машин механизм, эмнэлгийн хэрэгслийг гаднаас импортолдог тул үйлдвэрлэгчид шууд оролцсоноор дундын зуучлалын зардлыг хэмнэж өндөр маржин авна.'
+                    : 'Most equipment, cables, furniture, and medical supplies in Mongolia are imported through middlemen. Direct suppliers and foreign manufacturers can capture massive margins by bidding direct or via JV.'}
                 </div>
               </div>
 
@@ -100,21 +127,27 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
               <div className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    产品名称 / 商品类别
+                    {locale === 'zh' ? '产品名称 / 商品类别' : locale === 'mn' ? 'Бүтээгдэхүүний нэр / Ангилал' : 'Product / Commodity Name'}
                   </label>
                   <input
                     type="text"
                     value={productName}
                     onChange={(e) => setProductName(e.target.value)}
                     className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600 font-medium"
-                    placeholder="例如: 10kV高压电力电缆, 20吨挖掘机, 办公椅, CT机..."
+                    placeholder={
+                      locale === 'zh'
+                        ? '例如: 10kV高压电力电缆, 20吨挖掘机, 办公椅, CT机...'
+                        : locale === 'mn'
+                        ? 'Жишээ: 10кВ цахилгааны кабель, 20т экскаватор, оффис сандал...'
+                        : 'e.g. 10kV Power Cables, 20t Excavators, Hospital Beds, Computers...'
+                    }
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      我的工厂出厂单价 ($ USD)
+                      {locale === 'zh' ? '我的工厂出厂单价 ($ USD)' : locale === 'mn' ? 'Үйлдвэрийн нэгж үнэ ($ USD)' : 'Factory Unit Cost ($ USD)'}
                     </label>
                     <input
                       type="number"
@@ -123,13 +156,13 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                       className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm font-bold font-mono focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                     />
                     <span className="text-[10px] text-slate-400 mt-0.5 block font-mono">
-                      约合 {formatRMB(factoryPriceUsd)} / 件
+                      {locale === 'zh' ? `约合 ${formatRMB(factoryPriceUsd)} / 件` : `~ $${factoryPriceUsd} / unit`}
                     </span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      预估采购数量
+                      {locale === 'zh' ? '预估采购数量' : locale === 'mn' ? 'Тоо ширхэг' : 'Estimated Quantity'}
                     </label>
                     <input
                       type="number"
@@ -138,13 +171,13 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                       className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm font-bold font-mono focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                     />
                     <span className="text-[10px] text-slate-400 mt-0.5 block">
-                      件 / 台 / 米 / 吨
+                      {locale === 'zh' ? '件 / 台 / 米 / 吨' : locale === 'mn' ? 'ш / метр / ком / тн' : 'units / meters / sets'}
                     </span>
                   </div>
 
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      标段政府总预算 ($ USD)
+                      {locale === 'zh' ? '标段政府总预算 ($ USD)' : locale === 'mn' ? 'Төсөвт нийт өртөг ($ USD)' : 'Gov Total Budget ($ USD)'}
                     </label>
                     <input
                       type="number"
@@ -153,7 +186,7 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                       className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-sm font-bold font-mono focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                     />
                     <span className="text-[10px] text-slate-400 mt-0.5 block font-mono">
-                      折合采购单价: ~${unitGovPrice}
+                      {locale === 'zh' ? `折合采购单价: ~$${unitGovPrice}` : locale === 'mn' ? `Нэгжийн төсөв: ~$${unitGovPrice}` : `Gov Unit Price: ~$${unitGovPrice}`}
                     </span>
                   </div>
                 </div>
@@ -163,17 +196,23 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
               <div className="bg-gradient-to-br from-slate-950 to-slate-900 text-white rounded-2xl p-5 border border-slate-800 space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                   <div>
-                    <span className="text-xs text-slate-400 block mb-0.5">预估本次参标净利润 (Net Profit)</span>
+                    <span className="text-xs text-slate-400 block mb-0.5">
+                      {locale === 'zh' ? '预估本次参标净利润 (Net Profit)' : locale === 'mn' ? 'Тооцоолсон цэвэр ашиг (Net Profit)' : 'Estimated Net Profit'}
+                    </span>
                     <div className="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">
                       {formatUSD(estimatedNetProfitUsd)}
                     </div>
                     <span className="text-xs text-slate-300 font-mono">
-                      约合 <strong className="text-emerald-300">{formatRMB(estimatedNetProfitUsd)}</strong> 人民币
+                      {locale === 'zh' 
+                        ? <>约合 <strong className="text-emerald-300">{formatRMB(estimatedNetProfitUsd)}</strong> 人民币</>
+                        : `~ ${formatUSD(estimatedNetProfitUsd)} (after estimated 12% freight & customs)`}
                     </span>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-xs text-slate-400 block mb-0.5">预期出厂利润率</span>
+                    <span className="text-xs text-slate-400 block mb-0.5">
+                      {locale === 'zh' ? '预期出厂利润率' : locale === 'mn' ? 'Ашгийн маржин' : 'Est. Profit Margin'}
+                    </span>
                     <div className="text-2xl sm:text-3xl font-black text-amber-300 font-mono">
                       +{profitMarginPercent}%
                     </div>
@@ -182,15 +221,21 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                   <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 block">政府预算单价</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {locale === 'zh' ? '政府预算单价' : locale === 'mn' ? 'Төсвийн нэгж үнэ' : 'Gov Budget / Unit'}
+                    </span>
                     <span className="font-bold text-white font-mono">${unitGovPrice}</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                    <span className="text-[10px] text-slate-400 block">您的出厂单价</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {locale === 'zh' ? '您的出厂单价' : locale === 'mn' ? 'Үйлдвэрийн үнэ' : 'Your Factory Cost'}
+                    </span>
                     <span className="font-bold text-rose-300 font-mono">${factoryPriceUsd}</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60 col-span-2 sm:col-span-1">
-                    <span className="text-[10px] text-slate-400 block">建议竞标总报价</span>
+                    <span className="text-[10px] text-slate-400 block">
+                      {locale === 'zh' ? '建议竞标总报价' : locale === 'mn' ? 'Санал болгох үнэ' : 'Target Bid Price'}
+                    </span>
                     <span className="font-bold text-emerald-400 font-mono">{formatUSD(recommendedBidPriceUsd)}</span>
                   </div>
                 </div>
@@ -201,7 +246,13 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                 onClick={() => setStep('result')}
                 className="w-full h-11 sm:h-12 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer active:scale-98"
               >
-                <span>下一步：选择我的投标参与通道</span>
+                <span>
+                  {locale === 'zh' 
+                    ? '下一步：选择我的投标参与通道' 
+                    : locale === 'mn' 
+                    ? 'Дараах: Оролцох сувгаа сонгох' 
+                    : 'Next: Select Bidding & Participation Route'}
+                </span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
@@ -210,7 +261,11 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
           {step === 'result' && (
             <form onSubmit={handleApply} className="space-y-4 animate-in fade-in duration-150">
               <h3 className="text-sm font-bold text-slate-900">
-                请选择您参与该标段的方式：
+                {locale === 'zh' 
+                  ? '请选择您参与该标段的方式：' 
+                  : locale === 'mn' 
+                  ? 'Тендерт оролцох хэлбэрээ сонгоно уу:' 
+                  : 'Select your participation method:'}
               </h3>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -227,16 +282,26 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                         <Globe2 className="h-4 w-4 text-rose-600" />
-                        <span>通道 A：中国企业独立跨境投标</span>
+                        <span>
+                          {locale === 'zh' 
+                            ? '通道 A：境外企业独立跨境投标' 
+                            : locale === 'mn' 
+                            ? 'Суваг A: Гадаад нийлүүлэгч бие даан оролцох' 
+                            : 'Route A: Direct Cross-Border Bidding'}
+                        </span>
                       </span>
                       {selectedRoute === 'direct' && <CheckCircle2 className="h-4 w-4 text-rose-600" />}
                     </div>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      适用于货物采购公开招标。使用中国企业营业执照、公证翻译件及银行反担保函直接提报，货交扎门乌德或乌兰巴托。
+                      {locale === 'zh'
+                        ? '适用于单项货物采购公开招标。使用境外企业营业执照、公证翻译件及银行反担保函直接提报，货交扎门乌德或乌兰巴托。'
+                        : locale === 'mn'
+                        ? '300 сая төгрөгөөс дээш бараа нийлүүлэлтийн олон улсын тендерт шууд үйлдвэрлэгчийн хувиар бие даан оролцох.'
+                        : 'For direct commodity and goods procurement (>300M MNT). Submit foreign corporate docs with notary translation and bank guarantee.'}
                     </p>
                   </div>
                   <span className="text-[10px] font-bold text-rose-700 bg-rose-100/70 px-2 py-0.5 rounded w-fit">
-                    自主把控 100% 利润
+                    {locale === 'zh' ? '自主把控 100% 利润' : locale === 'mn' ? '100% Шууд ашиг' : 'Retain 100% Direct Margin'}
                   </span>
                 </div>
 
@@ -253,16 +318,26 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                         <Handshake className="h-4 w-4 text-indigo-600" />
-                        <span>通道 B：匹配蒙古本土联合体伙伴</span>
+                        <span>
+                          {locale === 'zh' 
+                            ? '通道 B：匹配蒙古本土联合体伙伴' 
+                            : locale === 'mn' 
+                            ? 'Суваг B: Монголын тусгай зөвшөөрөлтэй түншээр хамтрах' 
+                            : 'Route B: Local Joint Venture (JV) Partner'}
+                        </span>
                       </span>
                       {selectedRoute === 'jv' && <CheckCircle2 className="h-4 w-4 text-indigo-600" />}
                     </div>
                     <p className="text-[11px] text-slate-600 leading-relaxed">
-                      由平台对接持有特许资质的蒙古国当地认证企业，由蒙方负责当地清关、纳税、现场验收，您专注提供出厂货物与技术支持。
+                      {locale === 'zh'
+                        ? '由平台对接持有特许资质的蒙古国当地认证企业，由蒙方负责当地清关、纳税、现场验收，您专注提供出厂货物与技术支持。'
+                        : locale === 'mn'
+                        ? 'Монголын тусгай зөвшөөрөлтэй туршлагатай компанитай хамтран консорциум байгуулж, эрсдэлгүй нийлүүлэх.'
+                        : 'Partner with a certified Mongolian licensee company who handles local permits, customs clearance, and site deployment.'}
                     </p>
                   </div>
                   <span className="text-[10px] font-bold text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded w-fit">
-                    最省心 / 规避属地风险
+                    {locale === 'zh' ? '最省心 / 规避属地风险' : locale === 'mn' ? 'Эрсдэлгүй хамтрал' : 'Low Friction / Local Compliant'}
                   </span>
                 </div>
               </div>
@@ -271,23 +346,23 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    联系人姓名 / 微信
+                    {locale === 'zh' ? '联系人姓名 / 微信 / 邮箱' : locale === 'mn' ? 'Холбоо барих хүн / И-мэйл' : 'Contact Person / WhatsApp / Email'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="张经理 / WeChat ID"
+                    placeholder="Name / WeChat / Email"
                     className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    中国手机号 (+86) / WhatsApp
+                    {locale === 'zh' ? '手机号 (+86 / +976 / intl)' : locale === 'mn' ? 'Утасны дугаар' : 'Phone / Mobile (+ country code)'}
                   </label>
                   <input
                     type="tel"
                     required
-                    placeholder="138-XXXX-XXXX"
+                    placeholder="+86 / +976 / +1 ..."
                     className="w-full h-10 px-3.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                   />
                 </div>
@@ -299,7 +374,7 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                   onClick={() => setStep('input')}
                   className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
                 >
-                  返回修改测算
+                  {locale === 'zh' ? '返回修改' : locale === 'mn' ? 'Буцах' : 'Back'}
                 </button>
                 <button
                   type="submit"
@@ -309,11 +384,11 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>正在提报跨境投标意向...</span>
+                      <span>{locale === 'zh' ? '正在提报意向...' : locale === 'mn' ? 'Илгээж байна...' : 'Submitting intent...'}</span>
                     </>
                   ) : (
                     <>
-                      <span>确认提交意向 — 开启投标</span>
+                      <span>{locale === 'zh' ? '确认提交意向 — 开启投标' : locale === 'mn' ? 'Тендерт оролцох хүсэлт илгээх' : 'Submit Intent — Start Bidding'}</span>
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
@@ -328,16 +403,24 @@ export const ArbitrageCalculatorModal: React.FC<ArbitrageCalculatorModalProps> =
                 <CheckCircle2 className="h-8 w-8" />
               </div>
               <h3 className="text-lg font-bold text-slate-900">
-                跨境参标对接意向已受理！
+                {locale === 'zh' 
+                  ? '跨境参标对接意向已受理！' 
+                  : locale === 'mn' 
+                  ? 'Таны хүсэлтийг амжилттай хүлээн авлаа!' 
+                  : 'Bidding Intent Successfully Registered!'}
               </h3>
               <p className="text-xs text-slate-600 max-w-md mx-auto leading-relaxed">
-                TenderHub 中蒙跨境采购服务专员已收到您的商品测算方案，将在 2 小时内通过微信/电话与您沟通招标文件翻译、报关路径及当地联合体协议签署流程。
+                {locale === 'zh'
+                  ? 'TenderHub 跨境采购服务专员已收到您的商品测算方案，将在 2 小时内与您沟通招标文件翻译、报关路径及联合体协议签署流程。'
+                  : locale === 'mn'
+                  ? 'Манай шинжээч таны барааны мэдээллийн дагуу тендерийн бичиг баримт, тээвэр логистик, хамтралын гэрээг баталгаажуулахаар холбогдох болно.'
+                  : 'Our cross-border procurement team has received your calculation. We will contact you to assist with official document translation, bank guarantees, and JV agreements.'}
               </p>
               <button
                 onClick={onClose}
                 className="px-6 py-2.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
-                完成
+                {locale === 'zh' ? '完成' : locale === 'mn' ? 'Хаах' : 'Done'}
               </button>
             </div>
           )}

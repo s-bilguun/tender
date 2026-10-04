@@ -181,7 +181,13 @@ export const ProductArbitrageHero: React.FC<ProductArbitrageHeroProps> = ({
               onClick={onOpenArbitrageModal}
               className="text-rose-400 hover:text-rose-300 flex items-center gap-1 hover:underline cursor-pointer text-[11px] font-bold"
             >
-              <span>{locale === 'zh' ? '🧮 测算我的出厂利润率' : 'Calculate Profit Margin'}</span>
+              <span>
+                {locale === 'zh' 
+                  ? '🧮 测算我的出厂利润率' 
+                  : locale === 'mn' 
+                  ? '🧮 Үнийн зөрүү, ашиг тооцоолох' 
+                  : '🧮 Calculate My Factory Profit Margin'}
+              </span>
               <ArrowRight className="h-3 w-3" />
             </button>
           </div>
@@ -196,7 +202,7 @@ export const ProductArbitrageHero: React.FC<ProductArbitrageHeroProps> = ({
                 <div className="flex items-center justify-between gap-1">
                   <span className="text-lg">{cat.emoji}</span>
                   <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
-                    {cat.arbitrageMargin} 差价
+                    {cat.arbitrageMargin} {locale === 'zh' ? '差价' : 'Margin'}
                   </span>
                 </div>
 
@@ -205,8 +211,8 @@ export const ProductArbitrageHero: React.FC<ProductArbitrageHeroProps> = ({
                     {locale === 'zh' ? cat.nameZh : locale === 'mn' ? cat.nameMn : cat.nameEn}
                   </div>
                   <div className="text-[10px] text-slate-400 mt-0.5 flex items-center justify-between font-mono">
-                    <span>出厂: ${cat.factoryPriceUsd}</span>
-                    <span className="text-emerald-400 font-bold">采购: ${cat.govPriceUsd}</span>
+                    <span>{locale === 'zh' ? '出厂' : locale === 'mn' ? 'Үйлдвэр' : 'Cost'}: ${cat.factoryPriceUsd}</span>
+                    <span className="text-emerald-400 font-bold">{locale === 'zh' ? '采购' : locale === 'mn' ? 'Төсөв' : 'Gov'}: ${cat.govPriceUsd}</span>
                   </div>
                 </div>
               </button>

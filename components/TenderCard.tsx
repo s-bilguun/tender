@@ -118,7 +118,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
     if (diffHours <= 24) {
       return {
         status: 'critical',
-        label: locale === 'zh' ? `🚨 仅剩 ${diffHours} 小时截标` : `🚨 ${diffHours} цаг үлдсэн`,
+        label: locale === 'zh' ? `🚨 仅剩 ${diffHours} 小时截标` : locale === 'mn' ? `🚨 ${diffHours} цаг үлдсэн` : `🚨 ${diffHours}h left`,
         color: 'bg-rose-50 text-rose-700 border-rose-300 font-bold ring-1 ring-rose-300/60 animate-pulse',
         iconColor: 'text-rose-600',
         isUrgent: true,
@@ -127,7 +127,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
     if (diffDays <= 3) {
       return {
         status: 'urgent',
-        label: locale === 'zh' ? `⏳ 剩 ${diffDays} 天截标` : `⏳ ${diffDays} хоног үлдсэн`,
+        label: locale === 'zh' ? `⏳ 剩 ${diffDays} 天截标` : locale === 'mn' ? `⏳ ${diffDays} хоног үлдсэн` : `⏳ ${diffDays}d left`,
         color: 'bg-rose-50 text-rose-700 border-rose-200 font-bold',
         iconColor: 'text-rose-600',
         isUrgent: true,
@@ -135,7 +135,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
     }
     return {
       status: 'active',
-      label: locale === 'zh' ? `还剩 ${diffDays} 天` : `${diffDays} хоног үлдсэн`,
+      label: locale === 'zh' ? `还剩 ${diffDays} 天` : locale === 'mn' ? `${diffDays} хоног үлдсэн` : `${diffDays} days left`,
       color: 'bg-emerald-50 text-emerald-700 border-emerald-200 font-medium',
       iconColor: 'text-emerald-600',
       isUrgent: false,
@@ -199,18 +199,18 @@ export const TenderCard: React.FC<TenderCardProps> = ({
             {isDirectAllowed ? (
               <span
                 className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 flex items-center gap-1 shrink-0"
-                title="中国企业可使用国内法人资格独立参与"
+                title={locale === 'zh' ? '企业可使用法人资格独立参与' : 'Eligible for direct foreign bidding'}
               >
                 <Globe2 className="h-3 w-3 text-emerald-600" />
-                <span>{locale === 'zh' ? '🇨🇳 可独立直投' : 'Direct Allowed'}</span>
+                <span>{locale === 'zh' ? '🇨🇳 可独立直投' : locale === 'mn' ? 'Бие даан оролцох' : 'Direct Bidding'}</span>
               </span>
             ) : (
               <span
                 className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-800 border border-indigo-300 flex items-center gap-1 shrink-0"
-                title="需与蒙古国持有特许施工资质的企业组建联合体"
+                title={locale === 'zh' ? '需与蒙古国持有特许资质的企业组建联合体' : 'Eligible via Mongolian JV partnership'}
               >
                 <Handshake className="h-3 w-3 text-indigo-600" />
-                <span>{locale === 'zh' ? '🤝 可匹配联合体' : 'JV Match'}</span>
+                <span>{locale === 'zh' ? '🤝 可匹配联合体' : locale === 'mn' ? 'Хамтрагч түнш' : 'JV Partner Match'}</span>
               </span>
             )}
           </div>
@@ -231,7 +231,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
                   className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                     isSaved ? 'text-amber-500 bg-amber-50 hover:bg-amber-100' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100'
                   }`}
-                  title={locale === 'zh' ? '加入监控' : 'Save to watchlist'}
+                  title={locale === 'zh' ? '加入监控' : locale === 'mn' ? 'Хадгалах' : 'Save to watchlist'}
                   aria-label="Bookmark tender"
                 >
                   <Star className={`h-4 w-4 ${isSaved ? 'fill-amber-500' : ''}`} />
@@ -243,7 +243,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                title="打开蒙古国官方招标网 tender.gov.mn 原文"
+                title={locale === 'zh' ? '打开蒙古国官方招标网 tender.gov.mn 原文' : 'Open tender.gov.mn official source'}
                 aria-label="Open on tender.gov.mn"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
@@ -260,7 +260,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         {/* Procuring Entity / Buyer */}
         <div className="flex items-center gap-1.5 text-xs text-slate-600">
           <Building2 className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-          <span className="truncate font-medium">{tender.budgetEntityName || '蒙古国政府采购实体'}</span>
+          <span className="truncate font-medium">{tender.budgetEntityName || (locale === 'zh' ? '蒙古国政府采购实体' : locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity')}</span>
         </div>
       </div>
 
@@ -268,10 +268,10 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       <div className="bg-gradient-to-r from-rose-50/70 via-amber-50/40 to-slate-50 p-3 rounded-xl border border-rose-200/80 space-y-2">
         <div className="flex items-baseline justify-between">
           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-            {locale === 'zh' ? '政府采购总预算' : 'Government Budget'}
+            {locale === 'zh' ? '政府采购总预算' : locale === 'mn' ? 'Төсөвт өртөг' : 'Total Gov Budget'}
           </span>
           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded font-mono">
-            {locale === 'zh' ? '⚡ 预估出厂利润空间: +75%~+130%' : '+85% Margin Gap'}
+            {locale === 'zh' ? '⚡ 预估出厂利润空间: +75%~+130%' : locale === 'mn' ? '⚡ Ашгийн зөрүү: +75%~+130%' : '⚡ Margin Gap: +75%~+130%'}
           </span>
         </div>
 
@@ -289,9 +289,9 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
         {/* Dates */}
         <div className="flex items-center justify-between text-[10px] text-slate-500 border-t border-rose-100 pt-1.5 font-mono">
-          <span>发布: {tender.publishDate ? tender.publishDate.split('T')[0] : '—'}</span>
+          <span>{locale === 'zh' ? '发布' : locale === 'mn' ? 'Нийтэлсэн' : 'Published'}: {tender.publishDate ? tender.publishDate.split('T')[0] : '—'}</span>
           <span className={urgency?.isUrgent ? 'text-rose-700 font-bold' : 'text-slate-700'}>
-            截标: {tender.receiveDate ? tender.receiveDate.split('T')[0] : '—'}
+            {locale === 'zh' ? '截标' : locale === 'mn' ? 'Эцсийн хугацаа' : 'Deadline'}: {tender.receiveDate ? tender.receiveDate.split('T')[0] : '—'}
           </span>
         </div>
       </div>
@@ -310,10 +310,10 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           <button
             onClick={() => onOpenArbitrage(tender)}
             className="w-full sm:w-auto h-11 sm:h-9 px-3.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 active:scale-95"
-            title="测算我的工厂利润并参标"
+            title="Calculate profit & bid"
           >
             <TrendingUp className="h-3.5 w-3.5 text-rose-600" />
-            <span>{locale === 'zh' ? '测算出厂利润 & 参标' : 'Calculate Profit'}</span>
+            <span>{locale === 'zh' ? '测算出厂利润 & 参标' : locale === 'mn' ? 'Үнийн зөрүү тооцоолох' : 'Calculate Profit & Bid'}</span>
           </button>
         )}
 
@@ -321,7 +321,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           onClick={handleCardClick}
           className="w-full sm:flex-1 h-11 sm:h-9 px-4 rounded-xl text-xs font-bold bg-slate-900 hover:bg-rose-600 text-white flex items-center justify-center gap-1.5 transition-all shadow-2xs group-hover:bg-rose-600 cursor-pointer active:scale-98"
         >
-          <span>{locale === 'zh' ? '查看招标明细' : 'Дэлгэрэнгүй үзэх'}</span>
+          <span>{locale === 'zh' ? '查看招标明细' : locale === 'mn' ? 'Дэлгэрэнгүй үзэх' : 'View Tender Details'}</span>
           <ArrowUpRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
         </button>
       </div>
