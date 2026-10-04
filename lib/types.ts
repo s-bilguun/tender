@@ -123,6 +123,32 @@ export interface TenderItem {
     turnoverReq?: string;
     topItems?: Array<{ name: string; qty?: string | number; unit?: string }>;
   };
+
+  // Cross-Border & China Bidder Intelligence (ТШЗ & International Bidding analysis)
+  chinaBidderAnalysis?: ChinaBidderAnalysis;
+}
+
+export type ForeignBidderStatus = 'direct_allowed' | 'joint_venture_required' | 'domestic_only' | 'conditional' | 'unknown';
+
+export interface ChinaBidderAnalysis {
+  eligibilityStatus: ForeignBidderStatus;
+  eligibilityTitleMn: string;
+  eligibilityTitleZh: string;
+  eligibilityExplanationMn: string;
+  eligibilityExplanationZh: string;
+  jointVentureRequired: boolean;
+  jointVentureNotesZh?: string;
+  jointVentureNotesMn?: string;
+  licenseRequirementsZh?: string[];
+  licenseRequirementsMn?: string[];
+  bankGuaranteePolicyZh?: string;
+  bankGuaranteePolicyMn?: string;
+  estimatedBudgetRMB?: number; // approx MNT / 480
+  keyTakeawaysZh?: string[];
+  recommendedActionZh?: string;
+  tenderTypeZh?: string;
+  procuringEntityZh?: string;
+  rawSpecsSummaryZh?: string;
 }
 
 export type ActiveTabMode = 'all' | 'active' | 'result' | 'closing_soon' | 'no_guarantee' | 'watchlist' | 'archive';
@@ -136,6 +162,7 @@ export interface TenderFilterParams {
   status?: string;         // all, receiving, opened, result, cancelled, requested
   tabMode?: ActiveTabMode;
   noBidSecurityOnly?: boolean;
+  chinaEligibility?: 'all' | 'direct' | 'joint_venture' | 'domestic_only'; // Filter for Chinese/foreign bidders
   urgency?: 'all' | 'urgent_48h' | 'new_48h' | 'high_budget';
   sortBy?: 'date_desc' | 'budget_desc' | 'budget_asc' | 'deadline_asc';
   year?: string;           // 'all', '2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019'
@@ -182,4 +209,4 @@ export interface TenderStats {
   lastUpdatedAt?: string;
 }
 
-export type Locale = 'mn' | 'en';
+export type Locale = 'mn' | 'en' | 'zh';

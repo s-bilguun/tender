@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import { tenderStore } from './tender-client';
 import { TenderItem } from './types';
 import { fetchTenderLiveBundle } from './live-fetcher';
+import { analyzeChinaBidderEligibility } from './china-bidder-analyzer';
 
 function generateBDS(_tender: any) {
   return {
@@ -550,6 +551,19 @@ export async function getTenderDetailData(id: string | number, options: { useSto
     technicalSpecs.evidenceStatus = evidenceStatus;
   }
 
+  const chinaBidderAnalysis = analyzeChinaBidderEligibility({
+    ...tenderItem,
+    bds,
+    liveBundleSummary: liveBundle ? {
+      hasBundle: true,
+      docCount: liveBundle.documents?.length || 0,
+      hasOcr: !!liveBundle.isScannedOcr,
+      isBidSecurityExempt: bds.bidSecurityAmount === 0 || bds.bidSecurity1Pct === 0,
+      topItems: technicalSpecs.sampleItems?.map((i: any) => ({ name: i.name, qty: i.quantity, unit: i.unit })),
+    } : undefined
+  });
+  (tenderItem as any).chinaBidderAnalysis = chinaBidderAnalysis;
+
   return {
     success: true,
     tender: tenderItem,
@@ -558,7 +572,8 @@ export async function getTenderDetailData(id: string | number, options: { useSto
     results,
     liveBundle,
     relatedByEntity,
-    similarTenders
+    similarTenders,
+    chinaBidderAnalysis
   };
 }
 

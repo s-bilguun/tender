@@ -3,6 +3,7 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
 import { tenderStore } from '@/lib/tender-client';
 import { KEYWORDS_MAP, classifyIndustry } from '@/lib/taxonomy';
 import { LIVE_BUNDLE_SCHEMA_VERSION, TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
+import { analyzeChinaBidderEligibility } from '@/lib/china-bidder-analyzer';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined;
     const tabMode = (searchParams.get('tabMode') as any) || undefined;
     const urgency = (searchParams.get('urgency') as any) || undefined;
+    const chinaEligibility = (searchParams.get('chinaEligibility') as any) || undefined;
     const sortBy = (searchParams.get('sortBy') as TenderFilterParams['sortBy']) || 'date_desc';
     const page = Math.max(1, Number(searchParams.get('page')) || 1);
     const perPage = Math.max(1, Math.min(100, Number(searchParams.get('perPage')) || 15));
@@ -188,7 +190,7 @@ export async function GET(request: NextRequest) {
             };
           }
 
-          return {
+          const item: TenderItem = {
             invitationId: row.invitation_id,
             invitationNumber: row.invitation_number,
             tenderCode: row.tender_code,
@@ -211,6 +213,11 @@ export async function GET(request: NextRequest) {
             industryName: classification.labelMn,
             liveBundleSummary,
           };
+          const chinaBidderAnalysis = analyzeChinaBidderEligibility(item);
+          return {
+            ...item,
+            chinaBidderAnalysis,
+          };
         });
 
         // Strict post-filtering to guarantee search term and industry intersection
@@ -228,6 +235,15 @@ export async function GET(request: NextRequest) {
 
         if (tabMode === 'no_guarantee') {
           mappedItems = mappedItems.filter((item) => item.liveBundleSummary?.isBidSecurityExempt);
+        }
+
+        if (chinaEligibility && chinaEligibility !== 'all') {
+          mappedItems = mappedItems.filter((item) => {
+            if (chinaEligibility === 'direct') return item.chinaBidderAnalysis?.eligibilityStatus === 'direct_allowed';
+            if (chinaEligibility === 'joint_venture') return item.chinaBidderAnalysis?.eligibilityStatus === 'joint_venture_required';
+            if (chinaEligibility === 'domestic_only') return item.chinaBidderAnalysis?.eligibilityStatus === 'domestic_only';
+            return true;
+          });
         }
 
         if (mappedItems.length > 0) {
@@ -283,6 +299,7 @@ export async function GET(request: NextRequest) {
       status,
       tabMode,
       urgency,
+      chinaEligibility,
       sortBy,
       page,
       perPage,

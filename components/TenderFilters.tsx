@@ -189,6 +189,33 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     { label: 'Улаанбаатар хотын захиргаа', query: 'Улаанбаатар' },
   ];
 
+  const chinaEligibilityOptions = [
+    { 
+      id: 'all', 
+      label: locale === 'mn' ? 'Бүх тендер' : '全部 / All', 
+      activeClass: 'bg-slate-900 text-white font-semibold shadow-2xs',
+      title: 'Бүх тендерийг харах'
+    },
+    { 
+      id: 'direct', 
+      label: '🇨🇳 独立投标 (Direct Allowed)', 
+      activeClass: 'bg-emerald-600 text-white font-semibold shadow-2xs',
+      title: 'Хятад компани Монголд компани байгуулалгүй шууд санал өгөх боломжтой (Бараа нийлүүлэлт, нээлттэй олон улсын тендер)'
+    },
+    { 
+      id: 'joint_venture', 
+      label: '🤝 需联合体 (JV Required)', 
+      activeClass: 'bg-amber-600 text-white font-semibold shadow-2xs',
+      title: 'Монголын тусгай зөвшөөрөлтэй компанитай Түншлэл (联合体) байгуулах шаардлагатай (Барилга, зам, их засвар)'
+    },
+    { 
+      id: 'domestic_only', 
+      label: '🇲🇳 仅限本土 (Domestic Only)', 
+      activeClass: 'bg-slate-700 text-white font-semibold shadow-2xs',
+      title: 'Зөвхөн Монгол Улсад бүртгэлтэй дотоодын ААН оролцох боломжтой (Бага төсөвтэй харьцуулалт)'
+    },
+  ];
+
   const currentTab: ActiveTabMode = filters.tabMode || 'active';
   const currentCategory = filters.category || 'all';
   const currentIndustry = filters.industry || 'all';
@@ -265,6 +292,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       fundName: undefined,
       ruleName: undefined,
       positionName: undefined,
+      chinaEligibility: undefined,
       sortBy: 'date_desc',
       page: 1,
     });
@@ -285,6 +313,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     activeBudgetTier !== 'all' || 
     Boolean(filters.fundName && filters.fundName !== 'all') || 
     Boolean(filters.ruleName && filters.ruleName !== 'all') || 
+    Boolean(filters.chinaEligibility && filters.chinaEligibility !== 'all') || 
     Boolean(filters.dateFrom || filters.dateTo)
   );
 
@@ -337,6 +366,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     activeBudgetTier !== 'all' || 
     Boolean(filters.fundName && filters.fundName !== 'all') || 
     Boolean(filters.ruleName && filters.ruleName !== 'all') || 
+    Boolean(filters.chinaEligibility && filters.chinaEligibility !== 'all') || 
     Boolean(filters.dateFrom || filters.dateTo) ||
     activeAdvancedCount > 0;
 
@@ -809,10 +839,46 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           </div>
         </div>
 
+        {/* Row C: China / Foreign Bidder Eligibility Filters */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100/80">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded mr-0.5 whitespace-nowrap shrink-0 flex items-center gap-1">
+              <span>🇨🇳</span>
+              <span>{locale === 'mn' ? 'Хятад ААН оролцох:' : 'China Bidder:'}</span>
+            </span>
+            {chinaEligibilityOptions.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => onFilterChange({ chinaEligibility: opt.id as any, page: 1 })}
+                className={`h-7 px-2.5 rounded-lg text-[11px] whitespace-nowrap transition-colors shrink-0 cursor-pointer flex items-center gap-1 ${
+                  (filters.chinaEligibility || 'all') === opt.id
+                    ? opt.activeClass
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                }`}
+                title={opt.title}
+              >
+                <span>{opt.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="text-[10px] text-slate-400 font-medium hidden lg:flex items-center gap-1">
+            <span>ТШЗ & ТХААХ-ийн дагуу гадаадын хуулийн этгээд оролцох боломж</span>
+          </div>
+        </div>
+
         {/* 5. Active Filters Dismissible Chips (ONLY when non-default custom filters applied) */}
         {isCustomFiltered && (
           <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 text-[11px] animate-in fade-in duration-150">
             <span className="text-slate-400 font-semibold mr-1">Идэвхтэй:</span>
+
+            {filters.chinaEligibility && filters.chinaEligibility !== 'all' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-red-50 text-red-800 border border-red-200 font-semibold">
+                <span>🇨🇳 Шүүлтүүр: <strong>{chinaEligibilityOptions.find(o => o.id === filters.chinaEligibility)?.label}</strong></span>
+                <button onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })} className="hover:text-red-950 p-0.5 cursor-pointer">
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            )}
 
             {filters.search && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
@@ -897,7 +963,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         )}
       </div>
 
-      {/* 6. Advanced Filter Slide-Over Modal */}
+      {/* 5. Advanced Filter Slide-Over Modal */}
       {isAdvancedModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden">

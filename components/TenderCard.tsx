@@ -177,6 +177,21 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           <span className={`text-[10px] font-medium px-2 py-0.5 rounded border ${badge.bg}`}>
             {badge.label}
           </span>
+          {tender.chinaBidderAnalysis?.eligibilityStatus === 'direct_allowed' && (
+            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300">
+              🇨🇳 独立投标
+            </span>
+          )}
+          {tender.chinaBidderAnalysis?.eligibilityStatus === 'joint_venture_required' && (
+            <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-300">
+              🤝 需联合体
+            </span>
+          )}
+          {tender.chinaBidderAnalysis?.eligibilityStatus === 'domestic_only' && (
+            <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+              🇲🇳 仅限本土
+            </span>
+          )}
         </div>
 
         <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
@@ -269,6 +284,13 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           <div className="font-bold text-slate-900 text-sm sm:text-base tabular-nums font-mono">
             {formatCurrency(tender.totalBudget)}
           </div>
+          {Boolean(tender.chinaBidderAnalysis && (tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
+            <div className="text-[10px] text-slate-500 font-mono font-medium">
+              ~¥{tender.chinaBidderAnalysis!.estimatedBudgetRMB! >= 10_000 
+                ? (tender.chinaBidderAnalysis!.estimatedBudgetRMB! / 10_000).toFixed(1) + '万 人民币' 
+                : tender.chinaBidderAnalysis!.estimatedBudgetRMB!.toLocaleString() + ' 人民币'}
+            </div>
+          )}
         </div>
 
         {/* Urgency / Status Pill */}

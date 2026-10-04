@@ -1,6 +1,7 @@
 import { TenderItem, TenderFilterParams, TenderStats } from './types';
 import { classifyIndustry } from './taxonomy';
 import { generateBidRequirements } from './bid-requirements';
+import { analyzeChinaBidderEligibility } from './china-bidder-analyzer';
 import { execFile } from 'child_process';
 import fs from 'fs';
 import path from 'path';
@@ -25,12 +26,14 @@ class TenderStore {
     const entity = item.budgetEntityName || (item as any).uusgesenEntityName || item.positionName || '';
     const classification = classifyIndustry(item.tenderName, item.tenderTypeCode, entity);
     const bidReqs = generateBidRequirements(item);
+    const chinaBidderAnalysis = item.chinaBidderAnalysis || analyzeChinaBidderEligibility(item);
     return {
       ...item,
       totalBudget: typeof item.totalBudget === 'number' ? item.totalBudget : Number(item.totalBudget) || 0,
       industry: item.industry || classification.id,
       industryName: item.industryName || classification.labelMn,
       bidRequirements: item.bidRequirements || bidReqs,
+      chinaBidderAnalysis,
     };
   }
 
@@ -282,6 +285,17 @@ class TenderStore {
           return pubTs ? pubTs <= toTime : false;
         });
       }
+    }
+
+    // China / Foreign Bidder Eligibility filter
+    if (params.chinaEligibility && params.chinaEligibility !== 'all') {
+      result = result.filter(item => {
+        const analysis = item.chinaBidderAnalysis || analyzeChinaBidderEligibility(item);
+        if (params.chinaEligibility === 'direct') return analysis.eligibilityStatus === 'direct_allowed';
+        if (params.chinaEligibility === 'joint_venture') return analysis.eligibilityStatus === 'joint_venture_required';
+        if (params.chinaEligibility === 'domestic_only') return analysis.eligibilityStatus === 'domestic_only';
+        return true;
+      });
     }
 
     // Sorting (robust numeric & date parsing)
