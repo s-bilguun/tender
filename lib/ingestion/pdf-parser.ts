@@ -1,6 +1,7 @@
 // Next.js Webpack bundler fix: import directly from pdf-parse/lib/pdf-parse.js to avoid test file debug check
 // @ts-ignore
 import pdfParse from 'pdf-parse/lib/pdf-parse.js';
+import { fetchStealthBinary } from './stealth-fetcher';
 
 export interface ExtractedPdfResult {
   text: string;
@@ -47,20 +48,9 @@ export async function extractTextFromPdfBuffer(buffer: Buffer): Promise<Extracte
 }
 
 /**
- * Цахим холбоос (URL)-аас PDF татаж текст задлах
+ * Цахим холбоос (URL)-аас Cloudflare ботыг алгасаж PDF татан текст задлах
  */
 export async function extractTextFromPdfUrl(url: string): Promise<ExtractedPdfResult> {
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`PDF файлыг татаж чадсангүй: HTTP ${response.status} (${url})`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  const buffer = Buffer.from(arrayBuffer);
+  const buffer = await fetchStealthBinary(url);
   return extractTextFromPdfBuffer(buffer);
 }

@@ -123,7 +123,8 @@ export async function findSimilarTendersAndWinners(
   similarTenders: SimilarTenderWithWinner[];
   marketIntelligence: MarketIntelligenceSummary;
 }> {
-  const keywords = extractKeywords(extracted.project_title_mn);
+  const title = extracted.project_title || (extracted as any).project_title_mn || '';
+  const keywords = extractKeywords(title);
   const buyerKeywords = extractKeywords(extracted.buyer_name);
   const bundles = getCachedLiveBundles();
 

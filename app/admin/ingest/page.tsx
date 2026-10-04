@@ -502,7 +502,7 @@ export default function AdminIngestPage() {
                         {log.status === 'success' && log.data && (
                           <div className="mt-1.5 space-y-1">
                             <p className="text-xs font-semibold text-blue-900 line-clamp-1">
-                              {log.data.tender_id}: {log.data.project_title_mn}
+                              {log.data.tender_id}: {log.data.project_title || log.data.project_title_mn}
                             </p>
                             <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
                               <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
@@ -608,7 +608,7 @@ export default function AdminIngestPage() {
                       </span>
                     </div>
                     <h4 className="font-bold text-slate-900 text-sm">
-                      {selectedLog.data.project_title_mn}
+                      {selectedLog.data.project_title || selectedLog.data.project_title_mn}
                     </h4>
                     <p className="text-[11px] text-slate-600 mt-0.5">
                       Захиалагч: <span className="font-semibold text-slate-800">{selectedLog.data.buyer_name}</span> | Төсөвт өртөг: <span className="font-bold text-emerald-700">{selectedLog.data.estimated_budget_mnt?.toLocaleString()} ₮</span>
@@ -725,10 +725,10 @@ export default function AdminIngestPage() {
                     <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
                       <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
                         <ListChecks className="h-4 w-4 text-blue-600" />
-                        <span>PDF-ээс ялгасан гол шалгуур үзүүлэлтүүд:</span>
+                        <span>Шалгуур үзүүлэлтүүд (Eligibility & Qualification Requirements):</span>
                       </div>
                       <ul className="space-y-1.5 pl-1">
-                        {selectedLog.data.key_requirements?.map((req, i) => (
+                        {(selectedLog.data.eligibility_requirements || selectedLog.data.key_requirements || []).map((req, i) => (
                           <li key={i} className="flex items-start gap-2 text-slate-700 leading-relaxed text-[11px]">
                             <span className="h-1.5 w-1.5 rounded-full bg-blue-600 shrink-0 mt-1.5" />
                             <span>{req}</span>
@@ -737,14 +737,29 @@ export default function AdminIngestPage() {
                       </ul>
                     </div>
 
+                    {/* Full Scope of Work */}
+                    {selectedLog.data.full_scope_of_work && (
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                            <FileText className="h-4 w-4 text-indigo-600" />
+                            <span>Ажлын даалгавар / Техникийн дэлгэрэнгүй тодорхойлолт (Scope of Work):</span>
+                          </span>
+                        </div>
+                        <div className="p-3 bg-white rounded-lg border border-slate-200 max-h-48 overflow-y-auto text-[11px] text-slate-700 leading-relaxed whitespace-pre-wrap font-sans">
+                          {selectedLog.data.full_scope_of_work}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Historical Comparison Notes */}
-                    {selectedLog.data.historical_comparison_notes && (
+                    {(selectedLog.data.historical_comparison_flags || selectedLog.data.historical_comparison_notes) && (
                       <div className="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1">
                         <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">
                           Түүхэн харьцуулалтын тэмдэглэл (LLM Insight)
                         </span>
                         <p className="text-[11px] text-indigo-900 leading-relaxed">
-                          {selectedLog.data.historical_comparison_notes}
+                          {selectedLog.data.historical_comparison_flags || selectedLog.data.historical_comparison_notes}
                         </p>
                       </div>
                     )}
@@ -760,8 +775,8 @@ export default function AdminIngestPage() {
                         <span className="font-semibold text-slate-800 text-[11px]">{selectedLog.data.publish_date}</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Хугацааны он</span>
-                        <span className="font-semibold text-slate-800 text-[11px]">{selectedLog.data.deadline_year}</span>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Хүлээн авах эцсийн хугацаа</span>
+                        <span className="font-semibold text-slate-800 text-[11px]">{selectedLog.data.deadline || `${selectedLog.data.deadline_year || ''}`}</span>
                       </div>
                     </div>
                   </div>

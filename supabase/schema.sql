@@ -1,9 +1,13 @@
 -- ==============================================================================
--- TenderHub MN: Supabase PostgreSQL Schema
+-- TenderHub MN: Supabase PostgreSQL & Search Engine Schema
 -- Run this script in the Supabase SQL Editor to initialize your database tables.
 -- ==============================================================================
 
--- 1. Create Tenders Table
+-- 1. Enable Necessary Extensions
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
+-- 2. Create Tenders Table with Full Scope & Search Indexing
 CREATE TABLE IF NOT EXISTS public.tenders (
     id BIGSERIAL PRIMARY KEY,
     invitation_id TEXT UNIQUE NOT NULL,
@@ -27,12 +31,18 @@ CREATE TABLE IF NOT EXISTS public.tenders (
     doc_status_name TEXT DEFAULT 'Тендер хүлээн авч байгаа',
     doc_status_color TEXT DEFAULT '#10b981',
     is_receiving INTEGER DEFAULT 1,
-    raw_data JSONB DEFAULT '{}'::jsonb,
+    
+    -- Full Document Ingestion & Search Engine Fields
+    full_scope_of_work TEXT,                 -- Full BoQ, technical specs & scope of work
+    eligibility_requirements JSONB DEFAULT '[]'::jsonb, -- Array of qualification rules
+    historical_flags TEXT,                   -- Recurring pattern notes & pricing trends
+    raw_data JSONB DEFAULT '{}'::jsonb,      -- Complete extracted JSON & Live Bundle
+    
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Create High-Performance Indexes
+-- 3. Core Relational & Filtering Indexes
 CREATE INDEX IF NOT EXISTS idx_tenders_invitation_number ON public.tenders (invitation_number);
 CREATE INDEX IF NOT EXISTS idx_tenders_tender_code ON public.tenders (tender_code);
 CREATE INDEX IF NOT EXISTS idx_tenders_publish_date ON public.tenders (publish_date DESC);
@@ -41,22 +51,23 @@ CREATE INDEX IF NOT EXISTS idx_tenders_total_budget ON public.tenders (total_bud
 CREATE INDEX IF NOT EXISTS idx_tenders_is_receiving ON public.tenders (is_receiving);
 CREATE INDEX IF NOT EXISTS idx_tenders_type_code ON public.tenders (tender_type_code);
 
--- 3. Full-Text Search GIN Indexes (Mongolian / Fast pattern matching)
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
+-- 4. Deep Search Engine Trigram GIN Indexes (Sub-second Mongolian & English search)
 CREATE INDEX IF NOT EXISTS idx_tenders_name_trgm ON public.tenders USING gin (tender_name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_tenders_entity_trgm ON public.tenders USING gin (budget_entity_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_tenders_scope_trgm ON public.tenders USING gin (full_scope_of_work gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_tenders_raw_data_gin ON public.tenders USING gin (raw_data);
+CREATE INDEX IF NOT EXISTS idx_tenders_eligibility_gin ON public.tenders USING gin (eligibility_requirements);
 
--- 4. Enable Row Level Security (RLS)
+-- 5. Enable Row Level Security (RLS)
 ALTER TABLE public.tenders ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access to all users
+-- Public read access for web users
 DROP POLICY IF EXISTS "Public read access for tenders" ON public.tenders;
 CREATE POLICY "Public read access for tenders" 
 ON public.tenders FOR SELECT 
 USING (true);
 
--- Allow service role & authenticated admin to insert/update
+-- Service role / Admin write access
 DROP POLICY IF EXISTS "Service role write access" ON public.tenders;
 CREATE POLICY "Service role write access" 
 ON public.tenders FOR ALL 
