@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { Header } from '@/components/Header';
-import { IndustryDiscoveryBar } from '@/components/IndustryDiscoveryBar';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
@@ -16,18 +15,8 @@ import { ToastContainer, ToastMessage } from '@/components/Toast';
 import { exportTendersToCSV } from '@/lib/export';
 import {
   AlertCircle, ChevronLeft, ChevronRight, 
-  FileSpreadsheet, Star, Sparkles, TrendingUp, 
-  ShieldCheck, Clock, Layers, Coins, CheckCircle2,
-  ArrowRight
+  Star, Sparkles, Loader2
 } from 'lucide-react';
-
-function formatCompactMnt(amount?: number | null): string {
-  if (amount == null) return '—';
-  if (amount >= 1_000_000_000_000) return `${(amount / 1_000_000_000_000).toFixed(1)} их наяд ₮`;
-  if (amount >= 1_000_000_000) return `${(amount / 1_000_000_000).toFixed(1)} тэрбум ₮`;
-  if (amount >= 1_000_000) return `${(amount / 1_000_000).toFixed(1)} сая ₮`;
-  return `${amount.toLocaleString()} ₮`;
-}
 
 export default function Home() {
   const [locale, setLocale] = useState<Locale>('mn');
@@ -58,6 +47,18 @@ export default function Home() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  // Global Keyboard Shortcuts (Ctrl+K / Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Watchlist LocalStorage State
   const [savedIds, setSavedIds] = useState<Set<string | number>>(new Set());
 
@@ -76,20 +77,21 @@ export default function Home() {
     setSavedIds((prev) => {
       const next = new Set(prev);
       const strId = String(id);
-      const wasSaved = next.has(id) || next.has(strId);
-      if (wasSaved) {
+      const isRemoving = next.has(id) || next.has(strId);
+      if (isRemoving) {
         next.delete(id);
         next.delete(strId);
         showToast({
           type: 'info',
-          title: locale === 'mn' ? 'Хадгалснаас хаслаа' : 'Removed from watchlist',
+          title: locale === 'mn' ? 'Хяналтаас хаслаа' : 'Removed from watchlist',
+          description: locale === 'mn' ? 'Тендерийг таны хадгалсан жагсаалтаас хаслаа.' : 'Tender removed from your pinned watchlist.',
         });
       } else {
         next.add(id);
         showToast({
           type: 'success',
-          title: locale === 'mn' ? 'Хянахаар хадгаллаа' : 'Added to watchlist',
-          description: locale === 'mn' ? 'Таны хянаж буй тендерийн жагсаалтад нэмэгдлээ.' : 'Pinned to your private watchlist.',
+          title: locale === 'mn' ? 'Хяналтад хадгаллаа' : 'Saved to watchlist',
+          description: locale === 'mn' ? 'Тендерийг "Миний хянаж буй" хэсэгт нэмлээ.' : 'Tender pinned to your watchlist tab.',
         });
       }
       try {
@@ -99,7 +101,7 @@ export default function Home() {
     });
   };
 
-  // Default: Show Active Open Tenders first
+  // Default: Show Active Open Tenders first (immediately actionable opportunities)
   const [filters, setFilters] = useState<TenderFilterParams>({
     search: '',
     category: 'all',
@@ -114,63 +116,6 @@ export default function Home() {
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState<boolean>(false);
   const [aiTenderContext, setAiTenderContext] = useState<TenderItem | null>(null);
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(false);
-
-  // Read URL params on initial mount
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    try {
-      const params = new URLSearchParams(window.location.search);
-      const initialFilters: Partial<TenderFilterParams> = {};
-      if (params.get('search')) initialFilters.search = params.get('search')!;
-      if (params.get('category')) initialFilters.category = params.get('category') as any;
-      if (params.get('industry')) initialFilters.industry = params.get('industry') as any;
-      if (params.get('status')) initialFilters.status = params.get('status') as any;
-      if (params.get('tabMode')) initialFilters.tabMode = params.get('tabMode') as any;
-      if (params.get('urgency')) initialFilters.urgency = params.get('urgency') as any;
-      if (params.get('page')) initialFilters.page = parseInt(params.get('page')!, 10);
-      if (params.get('view')) setViewMode(params.get('view') === 'grid' ? 'grid' : 'table');
-
-      if (Object.keys(initialFilters).length > 0) {
-        setFilters((prev) => ({ ...prev, ...initialFilters }));
-      }
-    } catch (e) {}
-  }, []);
-
-  // Sync URL query params when filters change (without full reload)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const params = new URLSearchParams();
-    if (filters.search) params.set('search', filters.search);
-    if (filters.category && filters.category !== 'all') params.set('category', filters.category);
-    if (filters.industry && filters.industry !== 'all') params.set('industry', filters.industry);
-    if (filters.status && filters.status !== 'receiving') params.set('status', filters.status);
-    if (filters.tabMode && filters.tabMode !== 'active') params.set('tabMode', filters.tabMode);
-    if (filters.urgency && filters.urgency !== 'all') params.set('urgency', filters.urgency);
-    if (filters.page && filters.page > 1) params.set('page', String(filters.page));
-    if (viewMode === 'grid') params.set('view', 'grid');
-
-    const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
-    window.history.replaceState({}, '', newUrl);
-  }, [filters, viewMode]);
-
-  // Global Keyboard Shortcuts (⌘K, v for viewMode)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if user is typing inside an input/textarea
-      const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
-      if (tag === 'input' || tag === 'textarea') return;
-
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        setIsCommandPaletteOpen((prev) => !prev);
-      } else if (e.key === 'v' && !e.metaKey && !e.ctrlKey) {
-        e.preventDefault();
-        setViewMode((prev) => (prev === 'table' ? 'grid' : 'table'));
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   // Fetch tenders
   const loadTenders = useCallback(async (currentFilters: TenderFilterParams) => {
@@ -277,7 +222,7 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 space-y-3">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 space-y-3">
         {(statsSource === 'local_cache' || statsSource === 'unavailable' || listSource === 'local_cache' || listSource === 'live_fetch_partial') && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900" role="status">
             {listSource === 'live_fetch_partial'
@@ -289,98 +234,6 @@ export default function Home() {
                 : 'Complete database data is temporarily unavailable. The list or metrics may reflect only a partial cache.')}
           </div>
         )}
-        {/* Executive Market Pulse: 4 High-Density Key Metrics */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-          {/* Card 1: Active Live Bids */}
-          <button
-            onClick={() => handleFilterChange({ tabMode: 'active', status: 'receiving', urgency: 'all', page: 1 })}
-            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer bg-white ${
-              filters.tabMode === 'active' && filters.status === 'receiving'
-                ? 'border-slate-900 ring-1 ring-slate-900/10 shadow-xs'
-                : 'border-slate-200/90 hover:border-slate-300 hover:shadow-2xs'
-            }`}
-          >
-            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-              <span className="font-semibold">{locale === 'mn' ? 'Идэвхтэй тендерүүд' : 'Active Live Bids'}</span>
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {stats?.activeTendersCount.toLocaleString() ?? '—'}
-              </span>
-              <span className="text-[11px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded">
-                {locale === 'mn' ? 'Санал авч буй' : 'Receiving'}
-              </span>
-            </div>
-          </button>
-
-          {/* Card 2: Open Market Capital */}
-          <div className="p-3 sm:p-3.5 rounded-xl border border-slate-200/90 bg-white text-left shadow-2xs">
-            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-              <span className="font-semibold">{locale === 'mn' ? 'Нээлттэй санхүүжилт' : 'Capital in Play'}</span>
-              <Coins className="h-3.5 w-3.5 text-blue-600 shrink-0" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {formatCompactMnt(stats?.activeBudgetSum ?? stats?.totalActiveBudget)}
-              </span>
-            </div>
-          </div>
-
-          {/* Card 3: Urgent Closing <48h */}
-          <button
-            onClick={() => handleFilterChange({ tabMode: 'closing_soon', status: 'receiving', urgency: 'urgent_48h', sortBy: 'deadline_asc', page: 1 })}
-            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer bg-white ${
-              filters.tabMode === 'closing_soon'
-                ? 'border-rose-500 ring-1 ring-rose-500/20 shadow-xs'
-                : 'border-slate-200/90 hover:border-slate-300 hover:shadow-2xs'
-            }`}
-          >
-            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-              <span className="font-semibold text-rose-700">{locale === 'mn' ? 'Шуурхай дуусах (<48ц)' : 'Closing Soon (<48h)'}</span>
-              <Clock className="h-3.5 w-3.5 text-rose-500 shrink-0" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {stats?.closingSoonCount?.toLocaleString() ?? '—'}
-              </span>
-              <span className="text-[11px] text-rose-700 font-medium">
-                {locale === 'mn' ? 'боломж' : 'bids'}
-              </span>
-            </div>
-          </button>
-
-          {/* Card 4: No Bid Bond Required */}
-          <button
-            onClick={() => handleFilterChange({ tabMode: 'no_guarantee', status: 'receiving', urgency: 'all', page: 1 })}
-            className={`p-3 sm:p-3.5 rounded-xl border text-left transition-all cursor-pointer bg-white ${
-              filters.tabMode === 'no_guarantee'
-                ? 'border-teal-600 ring-1 ring-teal-600/20 shadow-xs'
-                : 'border-slate-200/90 hover:border-slate-300 hover:shadow-2xs'
-            }`}
-          >
-            <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
-              <span className="font-semibold text-teal-800">{locale === 'mn' ? 'PDF-д баталгаа шаардаагүй' : 'PDF says no bid security'}</span>
-              <ShieldCheck className="h-3.5 w-3.5 text-teal-600 shrink-0" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tabular-nums">
-                {stats?.noGuaranteeCount?.toLocaleString() ?? '—'}
-              </span>
-              <span className="text-[11px] text-teal-700 font-medium">
-                {locale === 'mn' ? 'боловсруулсан баримтаас' : 'in processed PDFs'}
-              </span>
-            </div>
-          </button>
-        </div>
-
-        {/* Compact B2B Industry Horizontal Sector Bar */}
-        <IndustryDiscoveryBar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          stats={stats}
-          locale={locale}
-        />
 
         {/* Collapsible Analytics View */}
         {isAnalyticsOpen && stats && (
@@ -396,7 +249,7 @@ export default function Home() {
           />
         )}
 
-        {/* Unified Workflow Tabs, Search & Filters */}
+        {/* Unified Workflow Tabs, Sectors, Search & Filters Hub */}
         <TenderFilters
           filters={filters}
           onFilterChange={handleFilterChange}
@@ -406,11 +259,12 @@ export default function Home() {
           viewMode={viewMode}
           setViewMode={setViewMode}
           stats={stats}
+          onExportCSV={handleExportCSV}
         />
 
-        {/* Results Count Line */}
-        <div className="flex items-center justify-between text-xs text-slate-600 font-medium px-1 flex-wrap gap-2">
-          <div className="flex items-center gap-3">
+        {/* Results Summary Bar */}
+        <div className="flex items-center justify-between text-xs text-slate-500 font-medium px-1 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
             <span>
               {filters.tabMode === 'watchlist' ? (
                 <span>
@@ -419,49 +273,43 @@ export default function Home() {
                 </span>
               ) : (
                 <span>
-                  {locale === 'mn' ? 'Нээлттэй илэрц:' : 'Matching live tenders:'}{' '}
+                  {locale === 'mn' ? 'Нийт олдсон:' : 'Total matches:'}{' '}
                   <strong className="text-slate-900 font-mono tabular-nums">{totalCount.toLocaleString()}</strong> {locale === 'mn' ? 'тендер' : 'bids'}
                 </span>
               )}
             </span>
-
-            <button
-              onClick={handleExportCSV}
-              disabled={displayedTenders.length === 0}
-              className="h-6 px-2.5 rounded bg-white hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed text-slate-700 font-medium text-[11px] flex items-center gap-1.5 transition-colors border border-slate-200 shadow-2xs cursor-pointer"
-              title={locale === 'mn' ? 'Одоогийн жагсаалтыг Excel / CSV файлаар татах' : 'Export current results as CSV / Excel'}
-            >
-              <FileSpreadsheet className="h-3 w-3 text-emerald-600" />
-              <span>{locale === 'mn' ? 'Excel / CSV татах' : 'Export CSV'}</span>
-            </button>
           </div>
 
           {totalPages > 1 && filters.tabMode !== 'watchlist' && (
             <span className="text-slate-500 font-mono tabular-nums text-[11px]">
-              {locale === 'mn' ? 'Хуудас' : 'Page'} {filters.page} / {totalPages}
+              {locale === 'mn' ? 'Хуудас' : 'Page'} <strong className="text-slate-700">{filters.page}</strong> / {totalPages}
             </span>
           )}
         </div>
 
         {/* Main Content: Table or Grid */}
         {isLoading ? (
-          <TenderSkeleton viewMode={viewMode} count={8} />
+          viewMode === 'table' ? (
+            <TenderSkeleton count={8} viewMode="table" />
+          ) : (
+            <TenderSkeleton count={6} viewMode="grid" />
+          )
         ) : displayedTenders.length === 0 ? (
           <div className="bg-white rounded-xl border border-slate-200 p-12 text-center space-y-3 shadow-2xs">
             {filters.tabMode === 'watchlist' ? (
               <>
-                <Star className="h-8 w-8 text-amber-500 mx-auto" />
-                <h3 className="text-sm font-semibold text-slate-900">
+                <Star className="h-8 w-8 text-amber-400 mx-auto" />
+                <h3 className="text-sm font-semibold text-slate-800">
                   {locale === 'mn' ? 'Хянаж буй тендер байхгүй байна' : 'No tracked tenders in watchlist'}
                 </h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   {locale === 'mn'
-                    ? 'Тендерийн жагсаалтаас од дээр дарж сонирхсон тендерүүдээ энд хадгалан хянах боломжтой.'
-                    : 'Click the star icon on any tender card or table row to pin it here.'}
+                    ? 'Тендерийн жагсаалтаас од (⭐) дээр дарж сонирхсон тендерүүдээ энд хадгалан хянах боломжтой.'
+                    : 'Click the star icon (⭐) on any tender card or table row to pin it here.'}
                 </p>
                 <button
                   onClick={() => handleFilterChange({ tabMode: 'active', status: 'receiving', page: 1 })}
-                  className="h-8 px-4 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="h-8 px-4 rounded-lg text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors cursor-pointer"
                 >
                   {locale === 'mn' ? 'Идэвхтэй тендерүүд рүү буцах' : 'Back to Active Tenders'}
                 </button>
@@ -469,13 +317,13 @@ export default function Home() {
             ) : (
               <>
                 <AlertCircle className="h-8 w-8 text-slate-400 mx-auto" />
-                <h3 className="text-sm font-semibold text-slate-900">{t.noResults}</h3>
+                <h3 className="text-sm font-semibold text-slate-800">{t.noResults}</h3>
                 <p className="text-xs text-slate-500 max-w-sm mx-auto">
                   {t.noResultsTip}
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-1">
                   <button
-                    onClick={() => handleFilterChange({ search: '', category: 'all', minBudget: undefined, maxBudget: undefined, status: 'all', tabMode: 'all', urgency: 'all', year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
+                    onClick={() => handleFilterChange({ search: '', category: 'all', industry: 'all', minBudget: undefined, maxBudget: undefined, status: 'all', tabMode: 'all', urgency: 'all', year: undefined, dateFrom: undefined, dateTo: undefined, page: 1 })}
                     className="h-8 px-4 rounded-lg text-xs font-medium bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors cursor-pointer"
                   >
                     {locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}
@@ -520,20 +368,20 @@ export default function Home() {
               <button
                 onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
                 disabled={(filters.page || 1) <= 1}
-                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
                 <span>{locale === 'mn' ? 'Өмнөх' : 'Previous'}</span>
               </button>
 
-              <span className="px-3 text-slate-700 font-medium font-mono tabular-nums">
+              <span className="px-3 text-slate-700 font-medium tabular-nums">
                 {filters.page} / {totalPages}
               </span>
 
               <button
                 onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
                 disabled={(filters.page || 1) >= totalPages}
-                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer disabled:cursor-not-allowed"
+                className="h-8 px-3 rounded-lg text-xs font-medium bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
               >
                 <span>{locale === 'mn' ? 'Дараах' : 'Next'}</span>
                 <ChevronRight className="h-4 w-4" />
@@ -560,9 +408,28 @@ export default function Home() {
         className="sm:hidden fixed bottom-5 right-4 z-40 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-slate-900 text-white shadow-xl border border-slate-700/80 active:scale-95 transition-all text-xs font-semibold cursor-pointer"
         aria-label="Open AI Assistant"
       >
-        <Sparkles className="h-4 w-4 text-blue-400 shrink-0" />
+        <Sparkles className="h-4 w-4 text-amber-400 animate-pulse shrink-0" />
         <span>AI Шинжээч</span>
       </button>
+
+      {/* Command Palette (Cmd+K / Ctrl+K) */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onFilterChange={handleFilterChange}
+        onOpenAI={(t) => {
+          if (t) handleAskAI(t);
+          else {
+            setAiTenderContext(null);
+            setIsAIDrawerOpen(true);
+          }
+        }}
+        onExportCSV={handleExportCSV}
+        onToggleView={() => setViewMode((prev) => (prev === 'table' ? 'grid' : 'table'))}
+        viewMode={viewMode}
+        tenders={displayedTenders}
+        savedCount={savedIds.size}
+      />
 
       {/* AI Assistant Chat Drawer */}
       <AIChatDrawer
@@ -573,23 +440,7 @@ export default function Home() {
         locale={locale}
       />
 
-      {/* Raycast & Linear Style Global Command Palette */}
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
-        onFilterChange={handleFilterChange}
-        onOpenAI={(tender) => {
-          setAiTenderContext(tender || null);
-          setIsAIDrawerOpen(true);
-        }}
-        onExportCSV={handleExportCSV}
-        onToggleView={() => setViewMode((prev) => (prev === 'table' ? 'grid' : 'table'))}
-        viewMode={viewMode}
-        tenders={tenders}
-        savedCount={savedIds.size}
-      />
-
-      {/* Accessible Toast Notification System */}
+      {/* Global Action Toasts */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
