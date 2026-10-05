@@ -81,16 +81,6 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       badgeColor: 'bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold',
       href: '#watchlist',
     },
-    {
-      id: 'arbitrage',
-      labelMn: 'Үнийн зөрүү & Сэлбэг',
-      labelEn: 'Commodity Arbitrage',
-      labelZh: '跨境差价套利',
-      icon: Layers,
-      badge: '+38% Margin',
-      badgeColor: 'bg-rose-500/10 text-rose-400 border-rose-500/30',
-      href: '#arbitrage',
-    },
   ];
 
   const handleNavClick = (id: string, href: string) => {

@@ -148,7 +148,6 @@ export interface DiscoverySectorCard {
   icon: string;
   activeCount: number;
   totalBudgetFormatted: string;
-  arbitrageGap: string;
   topItemsMn: string[];
   topItemsEn: string[];
 }
@@ -162,7 +161,6 @@ export const DISCOVERY_SECTOR_CARDS: DiscoverySectorCard[] = [
     icon: '🚜',
     activeCount: 148,
     totalBudgetFormatted: '1.89 их наяд ₮',
-    arbitrageGap: '+107%',
     topItemsMn: ['Экскаватор, бульдозер', 'Хүчний кабель', 'Уурхайн дугуй', 'Сэлбэг'],
     topItemsEn: ['Excavators & Bulldozers', '10kV Power Cables', 'Mining Tyres', 'Heavy Spares'],
   },
@@ -174,7 +172,6 @@ export const DISCOVERY_SECTOR_CARDS: DiscoverySectorCard[] = [
     icon: '🏗️',
     activeCount: 215,
     totalBudgetFormatted: '2.40 их наяд ₮',
-    arbitrageGap: '+85%',
     topItemsMn: ['Ган хоолой, арматур', 'Сантехник, хаалт', 'Замын тоноглол', 'Тусгаарлагч'],
     topItemsEn: ['Steel Pipes & Rebar', 'Valves & Plumbing', 'Road Guardrails', 'Insulation Materials'],
   },
@@ -186,7 +183,6 @@ export const DISCOVERY_SECTOR_CARDS: DiscoverySectorCard[] = [
     icon: '🏥',
     activeCount: 92,
     totalBudgetFormatted: '640 тэрбум ₮',
-    arbitrageGap: '+122%',
     topItemsMn: ['Эмнэлгийн ор, тавилга', 'Оношилгооны тоног төхөөрөмж', 'Нэг удаагийн хэрэгсэл'],
     topItemsEn: ['Hospital Beds', 'Diagnostic Imaging', 'Surgical Consumables', 'PPE'],
   },
@@ -198,7 +194,6 @@ export const DISCOVERY_SECTOR_CARDS: DiscoverySectorCard[] = [
     icon: '💻',
     activeCount: 64,
     totalBudgetFormatted: '380 тэрбум ₮',
-    arbitrageGap: '+75%',
     topItemsMn: ['Сервер, сүлжээний төхөөрөмж', 'Компьютер, монитор', 'Хяналтын камер'],
     topItemsEn: ['Server Racks & Switches', 'Desktop PCs & Laptops', 'CCTV & Security Tech'],
   },
@@ -210,7 +205,6 @@ export const DISCOVERY_SECTOR_CARDS: DiscoverySectorCard[] = [
     icon: '🪑',
     activeCount: 78,
     totalBudgetFormatted: '310 тэрбум ₮',
-    arbitrageGap: '+138%',
     topItemsMn: ['Сургуулийн партын ширээ, сандал', 'Оффис сандал', 'Ган шүүгээ'],
     topItemsEn: ['School Desks & Chairs', 'Ergonomic Office Chairs', 'Steel Cabinets'],
   },
@@ -222,7 +216,6 @@ export const DISCOVERY_SECTOR_CARDS: DiscoverySectorCard[] = [
     icon: '🥩',
     activeCount: 42,
     totalBudgetFormatted: '220 тэрбум ₮',
-    arbitrageGap: '+45%',
     topItemsMn: ['Үдийн цайны бүтээгдэхүүн', 'Мах, гурил, будаа', 'Хөдөө аж ахуйн техник'],
     topItemsEn: ['School Meal Supplies', 'Flour, Rice & Meat', 'Agri Machinery & Tools'],
   },
@@ -504,8 +497,8 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                         {sector.icon}
                       </span>
                       
-                      <span className="text-xs font-black px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono">
-                        {sector.arbitrageGap} {locale === 'zh' ? '采购溢价' : 'Margin Gap'}
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-mono">
+                        {sector.activeCount}+ {locale === 'mn' ? 'тендер' : 'bids'}
                       </span>
                     </div>
 

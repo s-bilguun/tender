@@ -13,7 +13,6 @@ interface DashboardKPICardsProps {
   onOpenDocAudit?: () => void;
   onOpenFinance?: () => void;
   onOpenChinaSupplier?: () => void;
-  onOpenArbitrage?: () => void;
 }
 
 export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
@@ -22,7 +21,6 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
   onOpenDocAudit,
   onOpenFinance,
   onOpenChinaSupplier,
-  onOpenArbitrage,
 }) => {
   const [stats, setStats] = useState({
     openTenderCount: 504,

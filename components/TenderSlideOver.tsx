@@ -21,7 +21,6 @@ interface TenderSlideOverProps {
   onOpenDocAudit?: (tender: TenderItem) => void;
   onOpenFinance?: (tender: TenderItem) => void;
   onOpenChinaSupplier?: (tender: TenderItem) => void;
-  onOpenArbitrage?: (tender: TenderItem) => void;
 }
 
 interface TimeLeft {
@@ -41,7 +40,6 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   onOpenDocAudit,
   onOpenFinance,
   onOpenChinaSupplier,
-  onOpenArbitrage,
 }) => {
   // Live Countdown Timer
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
@@ -294,20 +292,20 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                         <Zap className="h-4 w-4 text-amber-300" />
                       </span>
                       <span className="text-xs font-bold text-white">
-                        {locale === 'zh' ? '💡 为什么该标段极具出海优势？' : locale === 'mn' ? '💡 Гадаадын нийлүүлэгчид яагаад ашигтай вэ?' : '💡 Cross-Border Winning Opportunity'}
+                        {locale === 'zh' ? '💡 为什么该标段适合跨境参与？' : locale === 'mn' ? '💡 Оролцох боломж & Давуу тал' : '💡 Procurement Opportunity'}
                       </span>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                      +85% Margin Gap
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                      {locale === 'mn' ? 'Төрийн худалдан авалт' : 'Direct Gov Budget'}
                     </span>
                   </div>
 
                   <p className="text-xs text-slate-300 leading-relaxed">
                     {locale === 'zh'
-                      ? `蒙古国本级采购预算为 ₮${(budgetMnt / 1e6).toFixed(1)}M，折合人民币约 ¥${budgetCny.toLocaleString()}。中国出厂同类工业设备均价较蒙古市场有 80%~120% 溢价空间，具备绝对成本定价权。`
+                      ? `蒙古国本级采购预算为 ₮${(budgetMnt / 1e6).toFixed(1)}M (约 ¥${budgetCny.toLocaleString()} CNY / $${budgetUsd.toLocaleString()} USD)。具备完整官方采购清单，支持工厂直接供货与技术对接。`
                       : locale === 'mn'
-                      ? `Энэхүү төсөл нь нийт ₮${budgetMnt.toLocaleString()} өртөгтэй бөгөөд олон улсын үйлдвэрлэгчийн шууд үнэтэй харьцуулахад зах зээлийн 85%+ үнийн зөрүүтэй тул өндөр ашигтай нийлүүлэх боломжтой.`
-                      : `Total procurement budget volume is ₮${budgetMnt.toLocaleString()} (~$${budgetUsd.toLocaleString()} USD). Direct factory pricing provides significant competitive edge over local distributors.`}
+                      ? `Энэхүү төсөл нь нийт ₮${budgetMnt.toLocaleString()} өртөгтэй бөгөөд албан ёсны техникийн шаардлагын дагуу шууд нийлүүлэх болон түншлэлээр оролцох бүрэн боломжтой.`
+                      : `Total procurement budget volume is ₮${budgetMnt.toLocaleString()} (~$${budgetUsd.toLocaleString()} USD / ~¥${budgetCny.toLocaleString()} CNY) with complete official specifications.`}
                   </p>
 
                   <div className="grid grid-cols-2 gap-2 pt-1 text-xs">

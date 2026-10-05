@@ -10,10 +10,7 @@ import { DashboardKPICards } from '@/components/DashboardKPICards';
 import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { StatusFilterTabs } from '@/components/StatusFilterTabs';
 import { ActiveFilterBar } from '@/components/ActiveFilterBar';
-import { ProductArbitrageHero } from '@/components/ProductArbitrageHero';
 import { DiscoveryCardsHub } from '@/components/DiscoveryCardsHub';
-import { ArbitrageCalculatorModal } from '@/components/ArbitrageCalculatorModal';
-import { ProductCategory } from '@/lib/product-categories';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
@@ -83,13 +80,12 @@ export default function Home() {
   const [selectedTenderForSlideOver, setSelectedTenderForSlideOver] = useState<TenderItem | null>(null);
 
   // Multi-currency display (CNY, USD, MNT) for foreign & domestic suppliers
-  const [currency, setCurrency] = useState<'CNY' | 'USD' | 'MNT'>('CNY');
+  const [currency, setCurrency] = useState<'CNY' | 'USD' | 'MNT'>('MNT');
 
-  // Modals (ТББ Шалгагч AI, Баталгаа & Санхүүжилт, Tender2China, 差价测算)
+  // Modals (ТББ Шалгагч AI, Баталгаа & Санхүүжилт, Tender2China)
   const [isDocAuditOpen, setIsDocAuditOpen] = useState<boolean>(false);
   const [isFinanceOpen, setIsFinanceOpen] = useState<boolean>(false);
   const [isChinaSupplierOpen, setIsChinaSupplierOpen] = useState<boolean>(false);
-  const [isArbitrageModalOpen, setIsArbitrageModalOpen] = useState<boolean>(false);
   const [modalTenderContext, setModalTenderContext] = useState<TenderItem | null>(null);
 
   // Command Palette & Toasts
@@ -411,8 +407,6 @@ export default function Home() {
               ? (locale === 'mn' ? 'Хадгалсан төслүүд' : 'My Saved Bids')
               : activeSection === 'buyers'
               ? (locale === 'mn' ? 'Захиалагч байгууллагууд' : 'Buyer Intelligence')
-              : activeSection === 'arbitrage'
-              ? (locale === 'mn' ? 'Үнийн зөрүү тооцоолуур' : 'Commodity Arbitrage')
               : undefined
           }
         />
@@ -423,45 +417,14 @@ export default function Home() {
           {/* Section: Dashboard Overview / Top KPI Row */}
           <section id="dashboard" className="space-y-6">
             
-            {/* 4. Horizontal Row of Clean KPI Cards (Replacing large old banner) */}
+            {/* Horizontal Row of Clean KPI Cards */}
             <DashboardKPICards
               locale={locale}
               onFilterActive={() => handleFilterChange({ status: 'receiving', tabMode: 'active', page: 1 })}
               onOpenDocAudit={() => handleOpenDocAudit()}
               onOpenFinance={() => handleOpenFinance()}
               onOpenChinaSupplier={() => handleOpenChinaSupplier()}
-              onOpenArbitrage={() => {
-                setModalTenderContext(null);
-                setIsArbitrageModalOpen(true);
-              }}
             />
-
-            {/* Product-First Cross-Border Arbitrage Hero Calculator */}
-            <div id="arbitrage">
-              <ProductArbitrageHero
-                locale={locale}
-                setLocale={setLocale}
-                currency={currency}
-                setCurrency={setCurrency}
-                searchValue={searchInputValue}
-                onSearchChange={setSearchInputValue}
-                onSearchSubmit={handleGlobalSearchSubmit}
-                onSelectCategory={(cat) => {
-                  const query = cat.keywordsMn[0] || cat.nameMn;
-                  setSearchInputValue(query);
-                  handleFilterChange({ search: query, page: 1 });
-                  showToast({
-                    type: 'info',
-                    title: locale === 'zh' ? `已筛选品类：${cat.nameZh}` : `Сонгосон бүтээгдэхүүн: ${cat.nameMn}`,
-                    description: locale === 'zh' ? `政府采购均价溢价率: ${cat.arbitrageMargin}` : `Зах зээлийн зөрүү: ${cat.arbitrageMargin}`,
-                  });
-                }}
-                onOpenArbitrageModal={() => {
-                  setModalTenderContext(null);
-                  setIsArbitrageModalOpen(true);
-                }}
-              />
-            </div>
 
             {/* Buyer Intelligence, Industry Verticals & Foreign Routes Hub */}
             <div id="buyers">
@@ -559,10 +522,6 @@ export default function Home() {
                     onToggleSave={handleToggleSave}
                     onSelect={(t) => setSelectedTenderForSlideOver(t)}
                     onAskAI={handleAskAI}
-                    onOpenArbitrage={(t) => {
-                      setModalTenderContext(t);
-                      setIsArbitrageModalOpen(true);
-                    }}
                   />
                 ))}
               </div>
@@ -644,10 +603,6 @@ export default function Home() {
         onOpenDocAudit={(t) => handleOpenDocAudit(t)}
         onOpenFinance={(t) => handleOpenFinance(t)}
         onOpenChinaSupplier={(t) => handleOpenChinaSupplier(t)}
-        onOpenArbitrage={(t) => {
-          setModalTenderContext(t);
-          setIsArbitrageModalOpen(true);
-        }}
       />
 
       {/* ТББ Шалгагч AI Modal */}
@@ -669,14 +624,6 @@ export default function Home() {
         isOpen={isChinaSupplierOpen}
         onClose={() => setIsChinaSupplierOpen(false)}
         tender={modalTenderContext}
-      />
-
-      {/* 跨境差价测算 & 投标通道 Modal */}
-      <ArbitrageCalculatorModal
-        isOpen={isArbitrageModalOpen}
-        onClose={() => setIsArbitrageModalOpen(false)}
-        tender={modalTenderContext}
-        locale={locale}
       />
 
       {/* Command Palette (Cmd+K / Ctrl+K) */}
