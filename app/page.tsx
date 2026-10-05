@@ -4,8 +4,9 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { MOCK_MONGOLIAN_TENDERS } from '@/lib/mock-tenders';
+import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { Header } from '@/components/Header';
-import { EcosystemStatsBanner } from '@/components/EcosystemStatsBanner';
+import { DashboardKPICards } from '@/components/DashboardKPICards';
 import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { StatusFilterTabs } from '@/components/StatusFilterTabs';
 import { ActiveFilterBar } from '@/components/ActiveFilterBar';
@@ -22,14 +23,13 @@ import { TenderFinanceModal } from '@/components/TenderFinanceModal';
 import { ChinaSupplierModal } from '@/components/ChinaSupplierModal';
 import { EmptyState } from '@/components/EmptyState';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
-import { AnalyticsView } from '@/components/AnalyticsView';
 import { CommandPalette } from '@/components/CommandPalette';
 import { TenderSkeleton } from '@/components/TenderSkeleton';
 import { ToastContainer, ToastMessage } from '@/components/Toast';
 import { exportTendersToCSV } from '@/lib/export';
 import {
-  AlertCircle, ChevronLeft, ChevronRight, 
-  Star, Sparkles, Loader2, ArrowDown, LayoutGrid, Table
+  ChevronLeft, ChevronRight, Sparkles, 
+  Loader2, ArrowDown, Database, Building2, Layers
 } from 'lucide-react';
 
 export default function Home() {
@@ -63,6 +63,10 @@ export default function Home() {
 
   const t = getTranslation(locale);
 
+  // Active section tracking for sidebar navigation
+  const [activeSection, setActiveSection] = useState<string>('dashboard');
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
+
   // Initial state populated with mock tenders for instant rich render
   const [tenders, setTenders] = useState<TenderItem[]>(MOCK_MONGOLIAN_TENDERS);
   const [totalCount, setTotalCount] = useState<number>(MOCK_MONGOLIAN_TENDERS.length);
@@ -72,7 +76,7 @@ export default function Home() {
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
 
-  // Search Input State
+  // Search Input State (Synchronized between Header and Main Filter Center)
   const [searchInputValue, setSearchInputValue] = useState<string>('');
 
   // Selected Tender for Slide-over Detailed View
@@ -173,7 +177,6 @@ export default function Home() {
 
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState<boolean>(false);
   const [aiTenderContext, setAiTenderContext] = useState<TenderItem | null>(null);
-  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState<boolean>(false);
 
   // Sync internal search input with filter
   useEffect(() => {
@@ -357,208 +360,279 @@ export default function Home() {
     });
   };
 
+  const handleSidebarSelectSection = (sectionId: string) => {
+    setActiveSection(sectionId);
+    if (sectionId === 'watchlist') {
+      handleFilterChange({ tabMode: 'watchlist', page: 1 });
+    } else if (sectionId === 'database') {
+      handleFilterChange({ tabMode: 'active', page: 1 });
+    }
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
-      {/* Top Header */}
-      <Header
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
+      
+      {/* 1. Fixed Left Sidebar Navigation Panel (w-[260px]) */}
+      <DashboardSidebar
+        activeSection={activeSection}
+        onSelectSection={handleSidebarSelectSection}
+        savedCount={savedIds.size}
         locale={locale}
-        setLocale={setLocale}
-        stats={stats}
-        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        isOpenMobile={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
         onOpenAI={() => {
           setAiTenderContext(null);
           setIsAIDrawerOpen(true);
         }}
+        onOpenDocAudit={() => handleOpenDocAudit()}
+        onOpenFinance={() => handleOpenFinance()}
+        onOpenChinaSupplier={() => handleOpenChinaSupplier()}
       />
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
+      {/* 2. Main Independent Scrollable Content Area */}
+      <div className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
         
-        {/* Product-First Cross-Border Arbitrage & Sourcing Engine */}
-        <ProductArbitrageHero
+        {/* Optimized Top Header Bar */}
+        <Header
           locale={locale}
           setLocale={setLocale}
-          currency={currency}
-          setCurrency={setCurrency}
+          stats={stats}
+          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          onOpenAI={() => {
+            setAiTenderContext(null);
+            setIsAIDrawerOpen(true);
+          }}
+          onToggleMobileSidebar={() => setIsMobileSidebarOpen((prev) => !prev)}
           searchValue={searchInputValue}
           onSearchChange={setSearchInputValue}
           onSearchSubmit={handleGlobalSearchSubmit}
-          onSelectCategory={(cat) => {
-            const query = cat.keywordsMn[0] || cat.nameMn;
-            setSearchInputValue(query);
-            handleFilterChange({ search: query, page: 1 });
-            showToast({
-              type: 'info',
-              title: locale === 'zh' ? `已筛选品类：${cat.nameZh}` : `Сонгосон бүтээгдэхүүн: ${cat.nameMn}`,
-              description: locale === 'zh' ? `政府采购均价溢价率: ${cat.arbitrageMargin}` : `Зах зээлийн зөрүү: ${cat.arbitrageMargin}`,
-            });
-          }}
-          onOpenArbitrageModal={() => {
-            setModalTenderContext(null);
-            setIsArbitrageModalOpen(true);
-          }}
+          activeSectionTitle={
+            activeSection === 'watchlist'
+              ? (locale === 'mn' ? 'Хадгалсан төслүүд' : 'My Saved Bids')
+              : activeSection === 'buyers'
+              ? (locale === 'mn' ? 'Захиалагч байгууллагууд' : 'Buyer Intelligence')
+              : activeSection === 'arbitrage'
+              ? (locale === 'mn' ? 'Үнийн зөрүү тооцоолуур' : 'Commodity Arbitrage')
+              : undefined
+          }
         />
 
-        {/* Ecosystem Live Market Pulse Banner */}
-        <EcosystemStatsBanner
-          locale={locale}
-          onOpenDocAudit={() => handleOpenDocAudit()}
-          onOpenFinance={() => handleOpenFinance()}
-          onOpenChinaSupplier={() => handleOpenChinaSupplier()}
-        />
-
-        {/* 1. Full-Info Discovery Cards Hub (Top Buyers, Sectors & Foreign Routes) */}
-        <DiscoveryCardsHub
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          locale={locale}
-          totalFound={totalCount}
-          stats={stats}
-        />
-
-        {/* 2. "Find What You Want" — Hero Control Center */}
-        <section className="bg-white rounded-3xl p-4 sm:p-6 border border-slate-200/90 shadow-2xs space-y-4">
+        {/* Independently Scrollable Main Viewport (Strict 8px Grid Multiples) */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
           
-          {/* Smart Search Bar */}
-          <GlobalSearchBar
-            value={searchInputValue}
-            onChange={setSearchInputValue}
-            onSubmit={handleGlobalSearchSubmit}
-            onClear={() => handleFilterChange({ search: undefined, page: 1 })}
-            locale={locale}
-            totalFound={totalCount}
-            onSelectSuggestion={handleSelectSearchSuggestion}
-          />
+          {/* Section: Dashboard Overview / Top KPI Row */}
+          <section id="dashboard" className="space-y-6">
+            
+            {/* 4. Horizontal Row of Clean KPI Cards (Replacing large old banner) */}
+            <DashboardKPICards
+              locale={locale}
+              onFilterActive={() => handleFilterChange({ status: 'receiving', tabMode: 'active', page: 1 })}
+              onOpenDocAudit={() => handleOpenDocAudit()}
+              onOpenFinance={() => handleOpenFinance()}
+              onOpenChinaSupplier={() => handleOpenChinaSupplier()}
+              onOpenArbitrage={() => {
+                setModalTenderContext(null);
+                setIsArbitrageModalOpen(true);
+              }}
+            />
 
-          {/* Status Filter Tabs (Mobile swipeable) */}
-          <StatusFilterTabs
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            locale={locale}
-            watchlistCount={savedIds.size}
-          />
-        </section>
-
-        {/* 2. "Active Filters" Indicator Bar (Шүүлтүүрийн ил тод байдал) */}
-        <ActiveFilterBar
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          onResetAll={handleResetAllFilters}
-          totalFound={displayedTenders.length}
-          locale={locale}
-        />
-
-        {/* Advanced Filters Drawer / Bar (Industry verticals, budget, year) */}
-        <TenderFilters
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          locale={locale}
-          totalFound={totalCount}
-          watchlistCount={savedIds.size}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          stats={stats}
-          onExportCSV={handleExportCSV}
-        />
-
-        {/* 3. "What Are These Tenders" — High-Clarity Result Cards */}
-        {isLoading ? (
-          viewMode === 'table' ? (
-            <TenderSkeleton count={8} viewMode="table" />
-          ) : (
-            <TenderSkeleton count={6} viewMode="grid" />
-          )
-        ) : displayedTenders.length === 0 ? (
-          /* 4. Zero-State / Empty State */
-          <EmptyState
-            onResetFilters={handleResetAllFilters}
-            locale={locale}
-            onSelectSuggestion={handleSelectSearchSuggestion}
-          />
-        ) : viewMode === 'table' ? (
-          /* Table View */
-          <TenderTable
-            tenders={displayedTenders}
-            locale={locale}
-            savedIds={savedIds}
-            onToggleSave={handleToggleSave}
-            onAskAI={handleAskAI}
-          />
-        ) : (
-          /* High-Clarity Mobile-First Cards Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-5">
-            {displayedTenders.map((tender) => (
-              <TenderCard
-                key={String(tender.invitationId)}
-                tender={tender}
+            {/* Product-First Cross-Border Arbitrage Hero Calculator */}
+            <div id="arbitrage">
+              <ProductArbitrageHero
                 locale={locale}
+                setLocale={setLocale}
                 currency={currency}
-                isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
-                onToggleSave={handleToggleSave}
-                onSelect={(t) => setSelectedTenderForSlideOver(t)}
-                onAskAI={handleAskAI}
-                onOpenArbitrage={(t) => {
-                  setModalTenderContext(t);
+                setCurrency={setCurrency}
+                searchValue={searchInputValue}
+                onSearchChange={setSearchInputValue}
+                onSearchSubmit={handleGlobalSearchSubmit}
+                onSelectCategory={(cat) => {
+                  const query = cat.keywordsMn[0] || cat.nameMn;
+                  setSearchInputValue(query);
+                  handleFilterChange({ search: query, page: 1 });
+                  showToast({
+                    type: 'info',
+                    title: locale === 'zh' ? `已筛选品类：${cat.nameZh}` : `Сонгосон бүтээгдэхүүн: ${cat.nameMn}`,
+                    description: locale === 'zh' ? `政府采购均价溢价率: ${cat.arbitrageMargin}` : `Зах зээлийн зөрүү: ${cat.arbitrageMargin}`,
+                  });
+                }}
+                onOpenArbitrageModal={() => {
+                  setModalTenderContext(null);
                   setIsArbitrageModalOpen(true);
                 }}
               />
-            ))}
-          </div>
-        )}
+            </div>
 
-        {/* Pagination & Load More Controls */}
-        {displayedTenders.length > 0 && totalCount > displayedTenders.length && filters.tabMode !== 'watchlist' && (
-          <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 pt-6 px-1 gap-4">
+            {/* Buyer Intelligence, Industry Verticals & Foreign Routes Hub */}
+            <div id="buyers">
+              <DiscoveryCardsHub
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                locale={locale}
+                totalFound={totalCount}
+                stats={stats}
+              />
+            </div>
+          </section>
+
+          {/* Section: Tender Database Feed & Search Center */}
+          <section id="database" className="space-y-6 pt-2">
             
-            <div className="text-xs text-slate-500 font-medium">
-              {locale === 'mn'
-                ? `Нийт ${totalCount.toLocaleString()} тендерээс ${displayedTenders.length}-ийг харуулж байна`
-                : `Showing ${displayedTenders.length} of ${totalCount.toLocaleString()} tenders`}
+            {/* Control Center Box */}
+            <div className="bg-slate-900/90 rounded-2xl p-4 sm:p-6 border border-slate-800 shadow-xs space-y-4">
+              
+              {/* Smart Search Bar */}
+              <GlobalSearchBar
+                value={searchInputValue}
+                onChange={setSearchInputValue}
+                onSubmit={handleGlobalSearchSubmit}
+                onClear={() => handleFilterChange({ search: undefined, page: 1 })}
+                locale={locale}
+                totalFound={totalCount}
+                onSelectSuggestion={handleSelectSearchSuggestion}
+              />
+
+              {/* Status Filter Tabs (Mobile swipeable) */}
+              <StatusFilterTabs
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                locale={locale}
+                watchlistCount={savedIds.size}
+              />
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-              <button
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-                className="flex-1 sm:flex-initial min-h-[44px] sm:min-h-[40px] px-6 rounded-xl text-xs sm:text-sm font-bold bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 shadow-2xs hover:border-slate-400 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
-              >
-                {isLoadingMore ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                ) : (
-                  <ArrowDown className="h-4 w-4 text-blue-600" />
-                )}
-                <span>{locale === 'mn' ? 'Цааш үзэх (+15 нэмэх)' : 'Load More (+15)'}</span>
-              </button>
+            {/* Active Filters Indicator */}
+            <ActiveFilterBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onResetAll={handleResetAllFilters}
+              totalFound={displayedTenders.length}
+              locale={locale}
+            />
 
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
-                  <button
-                    onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
-                    disabled={(filters.page || 1) <= 1}
-                    className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="hidden sm:inline">{locale === 'mn' ? 'Өмнөх' : 'Prev'}</span>
-                  </button>
+            {/* Advanced Filters Drawer / Bar */}
+            <TenderFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              locale={locale}
+              totalFound={totalCount}
+              watchlistCount={savedIds.size}
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              stats={stats}
+              onExportCSV={handleExportCSV}
+            />
 
-                  <span className="px-2 text-xs font-semibold text-slate-800 font-mono tabular-nums">
-                    {filters.page} / {totalPages}
-                  </span>
+            {/* Watchlist anchor target */}
+            <div id="watchlist" />
 
-                  <button
-                    onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
-                    disabled={(filters.page || 1) >= totalPages}
-                    className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
-                  >
-                    <span className="hidden sm:inline">{locale === 'mn' ? 'Дараах' : 'Next'}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
+            {/* Tender Result Cards / Table */}
+            {isLoading ? (
+              viewMode === 'table' ? (
+                <TenderSkeleton count={8} viewMode="table" />
+              ) : (
+                <TenderSkeleton count={6} viewMode="grid" />
+              )
+            ) : displayedTenders.length === 0 ? (
+              <EmptyState
+                onResetFilters={handleResetAllFilters}
+                locale={locale}
+                onSelectSuggestion={handleSelectSearchSuggestion}
+              />
+            ) : viewMode === 'table' ? (
+              <TenderTable
+                tenders={displayedTenders}
+                locale={locale}
+                savedIds={savedIds}
+                onToggleSave={handleToggleSave}
+                onAskAI={handleAskAI}
+              />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {displayedTenders.map((tender) => (
+                  <TenderCard
+                    key={String(tender.invitationId)}
+                    tender={tender}
+                    locale={locale}
+                    currency={currency}
+                    isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
+                    onToggleSave={handleToggleSave}
+                    onSelect={(t) => setSelectedTenderForSlideOver(t)}
+                    onAskAI={handleAskAI}
+                    onOpenArbitrage={(t) => {
+                      setModalTenderContext(t);
+                      setIsArbitrageModalOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Pagination & Load More Controls */}
+            {displayedTenders.length > 0 && totalCount > displayedTenders.length && filters.tabMode !== 'watchlist' && (
+              <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-800 pt-6 px-1 gap-4">
+                
+                <div className="text-xs text-slate-400 font-medium">
+                  {locale === 'mn'
+                    ? `Нийт ${totalCount.toLocaleString()} тендерээс ${displayedTenders.length}-ийг харуулж байна`
+                    : `Showing ${displayedTenders.length} of ${totalCount.toLocaleString()} tenders`}
                 </div>
-              )}
+
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    className="flex-1 sm:flex-initial min-h-[40px] px-6 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-850 text-white border border-slate-700 hover:border-slate-600 shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+                  >
+                    {isLoadingMore ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                    ) : (
+                      <ArrowDown className="h-4 w-4 text-blue-400" />
+                    )}
+                    <span>{locale === 'mn' ? 'Цааш үзэх (+15 нэмэх)' : 'Load More (+15)'}</span>
+                  </button>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 shadow-xs">
+                      <button
+                        onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
+                        disabled={(filters.page || 1) <= 1}
+                        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        <span className="hidden sm:inline">{locale === 'mn' ? 'Өмнөх' : 'Prev'}</span>
+                      </button>
+
+                      <span className="px-2 text-xs font-semibold text-slate-300 font-mono tabular-nums">
+                        {filters.page} / {totalPages}
+                      </span>
+
+                      <button
+                        onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
+                        disabled={(filters.page || 1) >= totalPages}
+                        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                      >
+                        <span className="hidden sm:inline">{locale === 'mn' ? 'Дараах' : 'Next'}</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+          </section>
+
+          {/* Footer */}
+          <footer className="border-t border-slate-850 py-6 text-xs text-slate-400 text-center">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-2">
+              <span>TenderHub MN — B2B Procurement Intelligence & Database</span>
+              <span>Албан ёсны tender.gov.mn эх сурвалжийн шууд боловсруулалт</span>
             </div>
-          </div>
-        )}
-      </main>
+          </footer>
+
+        </main>
+      </div>
 
       {/* Slide-over Full Detail View */}
       <TenderSlideOver
@@ -604,27 +678,6 @@ export default function Home() {
         tender={modalTenderContext}
         locale={locale}
       />
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 py-6 bg-white text-xs text-slate-500 text-center mt-auto">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>TenderHub MN — Монголын худалдан авалтын нэгдсэн экосистем</span>
-          <span>Өгөгдлийг албан ёсны tender.gov.mn эх сурвалжаас бодит цагт боловсруулав</span>
-        </div>
-      </footer>
-
-      {/* Mobile Floating AI Assistant Button */}
-      <button
-        onClick={() => {
-          setAiTenderContext(null);
-          setIsAIDrawerOpen(true);
-        }}
-        className="sm:hidden fixed bottom-5 right-4 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-slate-900 text-white shadow-xl border border-slate-700 active:scale-95 transition-all text-xs font-semibold cursor-pointer"
-        aria-label="Open AI Assistant"
-      >
-        <Sparkles className="h-4 w-4 text-amber-400 animate-pulse shrink-0" />
-        <span>AI Шинжээч</span>
-      </button>
 
       {/* Command Palette (Cmd+K / Ctrl+K) */}
       <CommandPalette

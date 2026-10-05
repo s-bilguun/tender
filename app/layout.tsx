@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'TenderHub | Тендерийн нэгдсэн дата & зах зээлийн аналитик төв',
+  title: 'TenderHub MN | B2B Procurement Intelligence & Tender Database',
   description: 'Монголын төрийн болон хувийн хэвшлийн тендер, худалдан авалтын нэгдсэн дата, AI шинжилгээ, зах зээлийн аналитик систем',
   icons: {
     icon: [
@@ -22,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="mn">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <html lang="mn" className="dark">
+      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
         <Suspense fallback={null}>
           <NavigationProgressBar />
         </Suspense>
