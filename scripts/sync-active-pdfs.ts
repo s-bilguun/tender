@@ -181,12 +181,21 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
       // ignore parse text warning
     }
 
-    // Extract brief scope summary
-    const cleanLines = extractedText
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 3);
-    const scopeSummary = cleanLines.slice(0, 30).join('\n').slice(0, 1500);
+    // Extract substantive scope summary using smart BDS extraction
+    let scopeSummary = '';
+    const bdsIdx = extractedText.lastIndexOf('ӨГӨГДЛИЙН ХҮСНЭГТ');
+    if (bdsIdx !== -1) {
+      const excerpt = extractedText.slice(bdsIdx, bdsIdx + 4000);
+      const match = excerpt.match(/(?:ТШЗ\s*1\.\d|A\.\s*ЕРӨНХИЙ ЗҮЙЛ|ТШЗ\s*17\.|ТШЗ\s*18\.)[\s\S]{100,2000}/i);
+      scopeSummary = (match ? match[0] : excerpt.slice(0, 1500)).trim();
+    }
+    if (!scopeSummary) {
+      const cleanLines = extractedText
+        .split('\n')
+        .map((l: string) => l.trim())
+        .filter((l: string) => l.length > 3);
+      scopeSummary = cleanLines.slice(0, 30).join('\n').slice(0, 1500);
+    }
 
     // 7. Update database record with linked PDF and structured data
     const existingRaw = tender.raw_data || {};
@@ -199,6 +208,7 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
       pdfFileName: fileName,
       pdfPageCount: pageCount,
       hasPdf: true,
+      full_scope_of_work: scopeSummary || existingRaw.full_scope_of_work || existingLiveBundle.fullScopeOfWork,
       liveBundle: {
         ...existingLiveBundle,
         schemaVersion: 2,

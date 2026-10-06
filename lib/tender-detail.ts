@@ -280,6 +280,9 @@ export async function getTenderDetailData(id: string | number, options: { useSto
     docStatusName: tenderData.doc_status_name || tenderData.docStatusName || '',
     isPackage: 0,
     rawData: tenderData.raw_data || tenderData.rawData,
+    raw_data: tenderData.raw_data || tenderData.rawData,
+    full_scope_of_work: tenderData.full_scope_of_work || tenderData.raw_data?.full_scope_of_work || tenderData.raw_data?.liveBundle?.fullScopeOfWork || tenderData.raw_data?.liveBundle?.structuredSpecs?.rawSpecText,
+    eligibility_requirements: tenderData.eligibility_requirements || tenderData.raw_data?.eligibility_requirements || tenderData.raw_data?.liveBundle?.structuredSpecs?.keyRequirements,
     registrationNumber: tenderData.registration_number || (tenderData.raw_data?.registrationNumber) || '',
     yearBudget: Number(tenderData.raw_data?.yearBudget || tenderData.total_budget || tenderData.totalBudget) || 0
   };

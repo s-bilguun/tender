@@ -45,6 +45,31 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   // Live Countdown Timer
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [isPdfReaderOpen, setIsPdfReaderOpen] = useState(false);
+  const [detailData, setDetailData] = useState<any>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+
+  useEffect(() => {
+    if (!tender?.invitationId || !isOpen) {
+      setDetailData(null);
+      return;
+    }
+    let cancelled = false;
+    setIsLoadingDetail(true);
+    fetch(`/api/tenders/${tender.invitationId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data?.success) {
+          setDetailData(data);
+        }
+      })
+      .catch((err) => console.warn('Could not load rich detail in slideover:', err))
+      .finally(() => {
+        if (!cancelled) setIsLoadingDetail(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [tender?.invitationId, isOpen]);
 
   useEffect(() => {
     if (!tender?.receiveDate) {
@@ -88,26 +113,32 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   if (!isOpen || !tender) return null;
 
   const portalUrl = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
-  const rawData = tender.raw_data || (tender as any).rawData;
+  const rawData = detailData?.tender?.raw_data || detailData?.tender?.rawData || tender.raw_data || (tender as any).rawData;
+  const liveBundle = detailData?.liveBundle || rawData?.liveBundle;
   const llmExtracted = rawData?.llmExtracted;
-  const structuredSpecs = rawData?.liveBundle?.structuredSpecs;
+  const structuredSpecs = detailData?.technicalSpecs || liveBundle?.structuredSpecs || rawData?.liveBundle?.structuredSpecs;
+  const bds = detailData?.bds;
 
   const storedPdfUrl: string | undefined = 
     rawData?.pdfUrl || 
-    rawData?.liveBundle?.documents?.find((d: any) => d.isStored || d.downloadUrl?.includes('supabase.co'))?.downloadUrl;
+    liveBundle?.documents?.find((d: any) => d.isStored || (typeof d.downloadUrl === 'string' && d.downloadUrl.includes('supabase.co')) || (typeof d.url === 'string' && d.url.includes('supabase.co')))?.downloadUrl ||
+    detailData?.technicalSpecs?.documents?.find((d: any) => d.isStored || (typeof d.downloadUrl === 'string' && d.downloadUrl.includes('supabase.co')) || (typeof d.url === 'string' && d.url.includes('supabase.co')))?.downloadUrl ||
+    (tender as any).pdfUrl;
   const storedPdfFileName: string = 
     rawData?.pdfFileName || 
-    rawData?.liveBundle?.documents?.find((d: any) => d.isStored)?.fileName || 
+    liveBundle?.documents?.find((d: any) => d.isStored)?.fileName || 
+    detailData?.technicalSpecs?.documents?.find((d: any) => d.isStored)?.name ||
     `${tender.tenderCode || tender.invitationId}_ТШББ.pdf`;
   const hasStoredPdf = Boolean(storedPdfUrl);
 
   // Extract eligibility requirements
   const eligibilityReqs: string[] = 
-    tender.eligibility_requirements ||
-    llmExtracted?.eligibility_requirements || 
-    llmExtracted?.key_requirements || 
-    structuredSpecs?.keyRequirements || 
-    (tender.bidRequirements?.requiredClearances?.map(c => c.nameMn) || [
+    (tender.eligibility_requirements && tender.eligibility_requirements.length > 0 ? tender.eligibility_requirements : null) ||
+    (detailData?.tender?.eligibility_requirements && detailData.tender.eligibility_requirements.length > 0 ? detailData.tender.eligibility_requirements : null) ||
+    (bds?.requiredLicenses && bds.requiredLicenses.length > 0 ? bds.requiredLicenses : null) ||
+    (rawData?.eligibility_requirements && rawData.eligibility_requirements.length > 0 ? rawData.eligibility_requirements : null) ||
+    (structuredSpecs?.keyRequirements && structuredSpecs.keyRequirements.length > 0 ? structuredSpecs.keyRequirements : null) ||
+    (tender.bidRequirements?.requiredClearances?.map((c) => c.nameMn) || [
       'Татварын өргүй тодорхойлолт (Цахим лавлагаа)',
       'Шүүхийн шийдвэр гүйцэтгэх газрын өргүй тодорхойлолт',
       'Нийгмийн даатгалын шимтгэл төлөлтийн тайлан',
@@ -117,9 +148,12 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   // Extract full scope of work
   const scopeOfWork: string = 
     tender.full_scope_of_work ||
-    llmExtracted?.full_scope_of_work || 
+    detailData?.tender?.full_scope_of_work ||
+    rawData?.full_scope_of_work ||
+    rawData?.llmExtracted?.full_scope_of_work || 
     structuredSpecs?.rawSpecText || 
     structuredSpecs?.fullScopeOfWork ||
+    liveBundle?.fullScopeOfWork ||
     '';
 
   const budgetMnt = Number(tender.totalBudget) || 0;
@@ -311,14 +345,33 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                   </div>
                   
                   {scopeOfWork ? (
-                    <div className="p-3 bg-slate-50 dark:bg-slate-950/80 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap font-sans">
+                    <div className="p-3.5 bg-slate-50 dark:bg-slate-950/80 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap font-sans">
                       {scopeOfWork}
+                    </div>
+                  ) : hasStoredPdf ? (
+                    <div className="p-3.5 bg-purple-50/60 dark:bg-purple-950/40 rounded-lg border border-purple-200 dark:border-purple-800/60 text-xs text-slate-700 dark:text-slate-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-900/60 text-purple-700 dark:text-purple-300 flex items-center justify-center shrink-0 border border-purple-200 dark:border-purple-800">
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-900 dark:text-white truncate text-xs">{storedPdfFileName}</div>
+                          <div className="text-[11px] text-purple-700 dark:text-purple-400 font-medium">
+                            {locale === 'mn' ? 'Албан ёсны ТШББ баримт хадгалагдсан' : 'Official bidding PDF document ready'}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setIsPdfReaderOpen(true)}
+                        className="w-full sm:w-auto px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
+                      >
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span>{locale === 'mn' ? '📖 ТШЗ Унших' : '📖 Read PDF'}</span>
+                      </button>
                     </div>
                   ) : (
                     <div className="p-3 bg-slate-50 dark:bg-slate-950/60 rounded-lg border border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 text-center italic">
-                      {hasStoredPdf
-                        ? (locale === 'mn' ? 'Тендерийн албан ёсны ТШЗ PDF баримт хадгалагдсан байна. Шууд татаж авна уу.' : 'Official PDF specification ready. Use download button to view.')
-                        : (locale === 'mn' ? 'Техникийн тодорхойлолтыг албан ёсны PDF баримтаас татаж үзнэ үү.' : 'Download technical specification document for complete details.')}
+                      {locale === 'mn' ? 'Техникийн тодорхойлолтыг албан ёсны PDF баримтаас татаж үзнэ үү.' : 'Download technical specification document for complete details.'}
                     </div>
                   )}
                 </div>

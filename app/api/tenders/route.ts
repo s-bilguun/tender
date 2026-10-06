@@ -168,17 +168,23 @@ export async function GET(request: NextRequest) {
       if (!error && data && data.length > 0) {
         let mappedItems: TenderItem[] = data.map((row) => {
           const classification = classifyIndustry(row.tender_name, row.tender_type_code, row.budget_entity_name || row.position_name);
-          const liveBundle = row.raw_data?.liveBundle;
+          const rawData = row.raw_data || {};
+          const liveBundle = rawData.liveBundle;
+          const pdfUrl = rawData.pdfUrl || liveBundle?.documents?.find((d: any) => d.isStored || (typeof d.downloadUrl === 'string' && d.downloadUrl.includes('supabase.co')) || (typeof d.url === 'string' && d.url.includes('supabase.co')))?.downloadUrl;
+          const pdfFileName = rawData.pdfFileName || liveBundle?.documents?.find((d: any) => d.isStored)?.fileName || liveBundle?.documents?.[0]?.fileName || `${row.tender_code || row.invitation_id}_ТШББ.pdf`;
+          const fullScope = rawData.full_scope_of_work || rawData.llmExtracted?.full_scope_of_work || liveBundle?.fullScopeOfWork || liveBundle?.structuredSpecs?.rawSpecText || liveBundle?.structuredSpecs?.fullScopeOfWork;
+          const eligReqs = rawData.eligibility_requirements || rawData.llmExtracted?.eligibility_requirements || liveBundle?.structuredSpecs?.keyRequirements;
+
           let liveBundleSummary = undefined;
-          if (liveBundle?.schemaVersion === LIVE_BUNDLE_SCHEMA_VERSION) {
-            const specs = liveBundle.structuredSpecs;
+          if (liveBundle || pdfUrl) {
+            const specs = liveBundle?.structuredSpecs;
             const items = specs?.deliverySchedule || specs?.items || [];
             const bidSecReq = specs?.bidSecurityReq;
             const isBidSecExempt = typeof bidSecReq === 'string' && bidSecReq.includes('Шаардахгүй');
             liveBundleSummary = {
-              hasBundle: true,
-              docCount: liveBundle.documents?.length || 0,
-              hasOcr: !!liveBundle.isScannedOcr,
+              hasBundle: Boolean(liveBundle || pdfUrl),
+              docCount: liveBundle?.documents?.length || (pdfUrl ? 1 : 0),
+              hasOcr: !!liveBundle?.isScannedOcr,
               bidSecurityReq: bidSecReq,
               isBidSecurityExempt: isBidSecExempt,
               turnoverReq: specs?.turnoverReq,
@@ -212,6 +218,29 @@ export async function GET(request: NextRequest) {
             industry: classification.id,
             industryName: classification.labelMn,
             liveBundleSummary,
+            full_scope_of_work: fullScope || undefined,
+            eligibility_requirements: Array.isArray(eligReqs) ? eligReqs : undefined,
+            raw_data: {
+              pdfUrl,
+              pdfFileName,
+              hasPdf: Boolean(pdfUrl),
+              pdfPageCount: rawData.pdfPageCount || liveBundle?.pdfPageCount,
+              full_scope_of_work: fullScope,
+              eligibility_requirements: eligReqs,
+              liveBundle: liveBundle ? {
+                documents: liveBundle.documents,
+                structuredSpecs: liveBundle.structuredSpecs,
+                fullScopeOfWork: fullScope,
+              } : (pdfUrl ? {
+                documents: [{
+                  fileName: pdfFileName,
+                  downloadUrl: pdfUrl,
+                  isStored: true,
+                  isPrimary: true,
+                }],
+                fullScopeOfWork: fullScope,
+              } : undefined),
+            },
           };
           const chinaBidderAnalysis = analyzeChinaBidderEligibility(item);
           return {
