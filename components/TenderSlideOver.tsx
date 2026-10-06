@@ -7,10 +7,11 @@ import {
   DollarSign, FileText, ListChecks, Trophy, Sparkles, 
   ArrowUpRight, ShieldCheck, Tag, Copy, Check, FileCheck, Globe2,
   TrendingUp, Download, Lock, CheckCircle2, AlertTriangle, Handshake,
-  Layers, ArrowRight, Zap, HelpCircle
+  Layers, ArrowRight, Zap, HelpCircle, BookOpen
 } from 'lucide-react';
 import { TenderItem, Locale } from '@/lib/types';
 import { IndustryIcon } from '@/components/IndustryIcon';
+import { TenderPdfReaderModal } from '@/components/TenderPdfReaderModal';
 
 interface TenderSlideOverProps {
   tender: TenderItem | null;
@@ -43,6 +44,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 }) => {
   // Live Countdown Timer
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+  const [isPdfReaderOpen, setIsPdfReaderOpen] = useState(false);
 
   useEffect(() => {
     if (!tender?.receiveDate) {
@@ -156,10 +158,14 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 </span>
 
                 {hasStoredPdf && (
-                  <span className="text-xs text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/15 px-2.5 py-1 rounded-lg font-bold border border-purple-200 dark:border-purple-500/30 flex items-center gap-1">
-                    <FileText className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                    <span>{locale === 'zh' ? '📄 标书已归档' : locale === 'mn' ? '📄 ТШЗ PDF' : '📄 PDF Ready'}</span>
-                  </span>
+                  <button
+                    onClick={() => setIsPdfReaderOpen(true)}
+                    className="text-xs text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/15 hover:bg-purple-100 dark:hover:bg-purple-500/25 px-2.5 py-1 rounded-lg font-bold border border-purple-200 dark:border-purple-500/30 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                    title="PDF баримтыг вебсайт дээрээс шууд унших"
+                  >
+                    <BookOpen className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>{locale === 'zh' ? '📄 标书已归档 (点击阅读)' : locale === 'mn' ? '📄 ТШЗ PDF (Унших)' : '📄 Read PDF'}</span>
+                  </button>
                 )}
               </div>
 
@@ -282,16 +288,25 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       <span>{locale === 'mn' ? 'Ажлын даалгавар / Техникийн үзүүлэлт' : 'Technical Specifications Scope'}</span>
                     </span>
                     {hasStoredPdf && (
-                      <a
-                        href={storedPdfUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        download={storedPdfFileName}
-                        className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1 transition-colors"
-                      >
-                        <Download className="h-3 w-3" />
-                        <span>{locale === 'mn' ? 'ТШЗ Татах' : 'Download PDF'}</span>
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setIsPdfReaderOpen(true)}
+                          className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 hover:text-purple-900 bg-purple-50 dark:bg-purple-950/60 px-2.5 py-1 rounded-md border border-purple-200 dark:border-purple-800 flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                        >
+                          <BookOpen className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                          <span>{locale === 'mn' ? 'PDF Унших' : 'Read PDF'}</span>
+                        </button>
+                        <a
+                          href={storedPdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          download={storedPdfFileName}
+                          className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1 transition-colors"
+                        >
+                          <Download className="h-3 w-3" />
+                          <span>{locale === 'mn' ? 'Татах' : 'Download'}</span>
+                        </a>
+                      </div>
                     )}
                   </div>
                   
@@ -418,8 +433,20 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             </div>
 
             {/* Right: High-Converting Split Action Buttons */}
-            <div className="flex items-center gap-2.5 w-full sm:w-auto">
+            <div className="flex items-center gap-2.5 w-full sm:w-auto flex-wrap">
               
+              {/* Read PDF Button */}
+              {hasStoredPdf && (
+                <button
+                  onClick={() => setIsPdfReaderOpen(true)}
+                  className="flex-1 sm:flex-initial h-11 px-4 rounded-xl bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                  title="PDF баримтыг вебсайт дээрээс шууд унших"
+                >
+                  <BookOpen className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <span>{locale === 'mn' ? '📖 ТШЗ Унших' : locale === 'zh' ? '📖 阅读标书 (PDF)' : '📖 Read PDF'}</span>
+                </button>
+              )}
+
               {/* Secondary Button: Download Specs (Self-Serve Option) */}
               <a
                 href={hasStoredPdf ? storedPdfUrl : portalUrl}
@@ -436,7 +463,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 <Download className={`h-4 w-4 ${hasStoredPdf ? 'text-emerald-500' : 'text-slate-400'}`} />
                 <span>
                   {hasStoredPdf
-                    ? (locale === 'mn' ? '⚡ ТШЗ Татах (PDF)' : locale === 'zh' ? '⚡ 下载招标文件 (PDF)' : '⚡ Download PDF')
+                    ? (locale === 'mn' ? '⚡ Татах' : locale === 'zh' ? '⚡ 下载' : '⚡ Download')
                     : (locale === 'mn' ? 'Материал татах' : locale === 'zh' ? '下载招标文件' : 'Download Specs')}
                 </span>
               </a>
@@ -466,6 +493,17 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 
         </div>
       </div>
+
+      {/* Embedded In-App PDF Reader Modal */}
+      <TenderPdfReaderModal
+        isOpen={isPdfReaderOpen}
+        onClose={() => setIsPdfReaderOpen(false)}
+        tender={tender}
+        pdfUrl={storedPdfUrl}
+        fileName={storedPdfFileName}
+        locale={locale}
+        onAskAI={onAskAI}
+      />
     </div>
   );
 };

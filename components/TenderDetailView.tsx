@@ -9,9 +9,10 @@ import {
   Copy, Check, Trophy, Users, CheckCircle2, XCircle, AlertCircle, 
   ExternalLink, Sparkles, Clock, AlertTriangle, Layers, Briefcase, 
   CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye, X, Loader2,
-  Send, MessageSquare, Bot, User, Trash2, ChevronDown, ChevronUp, Package, Upload
+  Send, MessageSquare, Bot, User, Trash2, ChevronDown, ChevronUp, Package, Upload, BookOpen
 } from 'lucide-react';
 import { FormattedChatMessage } from './AIChatDrawer';
+import { TenderPdfReaderModal } from '@/components/TenderPdfReaderModal';
 
 interface TenderDetailViewProps {
   initialData: any;
@@ -95,6 +96,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   const [manualPdfBusy, setManualPdfBusy] = useState(false);
   const [manualPdfMessage, setManualPdfMessage] = useState('');
   const [manualPdfError, setManualPdfError] = useState(false);
+  const [isPdfReaderOpen, setIsPdfReaderOpen] = useState(false);
+  const [pdfReaderDoc, setPdfReaderDoc] = useState<{ url: string; name: string } | null>(null);
 
   const handleManualPdfImport = async () => {
     if (!manualPdfFile || !manualPdfSecret || !data?.tender?.invitationId) return;
@@ -505,17 +508,33 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             )}
           </button>
           {storedPrimaryPdf && (
-            <a
-              href={storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              download={storedPrimaryPdf.name || 'ТШББ.pdf'}
-              className="h-8 px-3 rounded-md text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 flex items-center gap-1.5 transition-colors shadow-2xs"
-              title="Supabase CDN-ээс ТШЗ PDF-ийг шууд татах"
-            >
-              <Download className="h-3.5 w-3.5 text-emerald-600" />
-              <span>⚡ ТШЗ Татах (PDF)</span>
-            </a>
+            <>
+              <button
+                onClick={() => {
+                  setPdfReaderDoc({
+                    url: storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url,
+                    name: storedPrimaryPdf.name || 'ТШББ.pdf'
+                  });
+                  setIsPdfReaderOpen(true);
+                }}
+                className="h-8 px-3 rounded-md text-xs font-bold text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-300 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                title="ТШЗ PDF баримтыг вебсайт дээрээс шууд унших"
+              >
+                <BookOpen className="h-3.5 w-3.5 text-purple-600" />
+                <span>📖 ТШЗ Унших</span>
+              </button>
+              <a
+                href={storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={storedPrimaryPdf.name || 'ТШББ.pdf'}
+                className="h-8 px-3 rounded-md text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 flex items-center gap-1.5 transition-colors shadow-2xs"
+                title="Supabase CDN-ээс ТШЗ PDF-ийг шууд татах"
+              >
+                <Download className="h-3.5 w-3.5 text-emerald-600" />
+                <span>⚡ ТШЗ Татах</span>
+              </a>
+            </>
           )}
           <a
             href={publicLink}
@@ -1821,6 +1840,23 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           </div>
 
                           <div className="flex items-center gap-2 self-end sm:self-auto shrink-0 flex-wrap">
+                            {(doc.downloadUrl || doc.url) && (
+                              <button
+                                onClick={() => {
+                                  setPdfReaderDoc({
+                                    url: doc.downloadUrl || doc.url,
+                                    name: doc.name || 'Баримт бичиг.pdf'
+                                  });
+                                  setIsPdfReaderOpen(true);
+                                }}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors border border-purple-200 shadow-2xs cursor-pointer"
+                                title="PDF баримтыг цонхонд шууд бүтнээр нь унших"
+                              >
+                                <BookOpen className="h-3.5 w-3.5 text-purple-600" />
+                                <span>PDF Унших</span>
+                              </button>
+                            )}
+
                             <button
                               onClick={() => setPreviewModalDoc({
                                 name: doc.name,
@@ -3230,6 +3266,26 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           </span>
         )}
       </button>
+
+      {/* In-App Embedded PDF Reader Modal */}
+      <TenderPdfReaderModal
+        isOpen={isPdfReaderOpen}
+        onClose={() => {
+          setIsPdfReaderOpen(false);
+          setPdfReaderDoc(null);
+        }}
+        tender={data?.tender}
+        pdfUrl={pdfReaderDoc?.url || storedPrimaryPdf?.downloadUrl || storedPrimaryPdf?.url}
+        fileName={pdfReaderDoc?.name || storedPrimaryPdf?.name}
+        locale={locale}
+        onAskAI={(_t, q) => {
+          setIsAiCollapsed(false);
+          if (q) {
+            handleRunAiAnalysis(q, 'pdf-modal');
+          }
+          aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }}
+      />
     </div>
   );
 };

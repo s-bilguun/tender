@@ -301,8 +301,11 @@ export default function Home() {
     return tenders;
   }, [tenders, filters.tabMode, savedIds]);
 
-  const handleAskAI = (tender: TenderItem) => {
+  const [aiInitialPrompt, setAiInitialPrompt] = useState<string | undefined>(undefined);
+
+  const handleAskAI = (tender: TenderItem, prompt?: string) => {
     setAiTenderContext(tender);
+    setAiInitialPrompt(prompt);
     setIsAIDrawerOpen(true);
   };
 
@@ -625,10 +628,17 @@ export default function Home() {
       {/* AI Assistant Chat Drawer */}
       <AIChatDrawer
         isOpen={isAIDrawerOpen}
-        onClose={() => setIsAIDrawerOpen(false)}
+        onClose={() => {
+          setIsAIDrawerOpen(false);
+          setAiInitialPrompt(undefined);
+        }}
         selectedTender={aiTenderContext}
-        onClearSelectedTender={() => setAiTenderContext(null)}
+        onClearSelectedTender={() => {
+          setAiTenderContext(null);
+          setAiInitialPrompt(undefined);
+        }}
         locale={locale}
+        initialPrompt={aiInitialPrompt}
       />
 
       {/* Global Action Toasts */}

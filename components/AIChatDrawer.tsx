@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { cleanThoughtBlocks } from '@/lib/ai-cleaner';
-import { X, Send, Sparkles, Bot, User, Trash2, Tag, Loader2, ExternalLink } from 'lucide-react';
+import { X, Send, Sparkles, Bot, User, Trash2, Tag, Loader2, ExternalLink, FileText } from 'lucide-react';
 
 interface Message {
   id: string;
@@ -20,6 +20,7 @@ interface AIChatDrawerProps {
   selectedTender: TenderItem | null;
   onClearSelectedTender: () => void;
   locale: Locale;
+  initialPrompt?: string;
 }
 
 const renderInline = (text: string, isUser: boolean): React.ReactNode => {
@@ -383,6 +384,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
   selectedTender,
   onClearSelectedTender,
   locale,
+  initialPrompt,
 }) => {
   const t = getTranslation(locale);
   const [selectedModel, setSelectedModel] = useState<string>('google/gemma-4-26b-a4b-it:free');
@@ -392,7 +394,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       sender: 'assistant',
       text: locale === 'mn'
         ? `Сайн байна уу! Би тендерийн цахим системийн бүх зарлал, төсөв, шаардлагыг шинжилж туслах таны AI зөвлөх байна.\n\nТа сонирхсон тендерийнхээ нэр, салбар, төсвийн талаар чөлөөтэй асуугаарай. Жишээ нь:\n• *"Хамгийн их төсөвтэй тендерүүд юу байна?"*\n• *"Эрдэнэт үйлдвэрийн тендерүүд"*\n• *"Одоо зарлагдсан эмнэлгийн тоног төхөөрөмжийн тендер"*`
-        : `Hello! I'm your AI tender consultant, ready to help you analyze procurement bids, budgets, and requirements.\n\nFeel free to ask about any tender, agency, or sector!`,
+      : `Hello! I'm your AI tender consultant, ready to help you analyze procurement bids, budgets, and requirements.\n\nFeel free to ask about any tender, agency, or sector!`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -406,13 +408,13 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
 
   useEffect(() => {
     if (selectedTender && isOpen) {
-      const autoPrompt = locale === 'mn'
+      const autoPrompt = initialPrompt || (locale === 'mn'
         ? `"${selectedTender.tenderName}" (${selectedTender.tenderCode}) тендерийн төсөв, шаардлага, онцлогийг шинжилж, оролцогчдод зориулсан зөвлөмж өгнө үү.`
-        : `Analyze the tender "${selectedTender.tenderName}" (${selectedTender.tenderCode}), highlighting key requirements and actionable recommendations.`;
+        : `Analyze the tender "${selectedTender.tenderName}" (${selectedTender.tenderCode}), highlighting key requirements and actionable recommendations.`);
       
       handleSend(autoPrompt);
     }
-  }, [selectedTender]);
+  }, [selectedTender, initialPrompt]);
 
   const handleSend = async (messageText?: string) => {
     const textToSend = messageText || input;
@@ -550,11 +552,17 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
           <div className="flex items-center gap-2 truncate text-slate-700 dark:text-slate-300 min-w-0">
             <Tag className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <div className="truncate">
-              <span className="text-slate-400 dark:text-slate-500 mr-1.5 font-medium">Сонгосон:</span>
+            <div className="truncate flex items-center gap-1.5">
+              <span className="text-slate-400 dark:text-slate-500 mr-1 font-medium shrink-0">Сонгосон:</span>
               <span className="font-semibold text-slate-900 dark:text-white truncate">
                 {selectedTender.tenderName}
               </span>
+              {Boolean((selectedTender as any).raw_data?.pdfUrl || (selectedTender as any).rawData?.pdfUrl || (selectedTender as any).hasStoredPdf) && (
+                <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 flex items-center gap-1 shrink-0">
+                  <FileText className="h-3 w-3 text-purple-500" />
+                  <span>📄 ТШЗ PDF холбогдсон</span>
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
