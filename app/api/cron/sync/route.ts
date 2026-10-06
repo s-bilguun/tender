@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchLatestTenders, downloadPdfBuffer, parseTenderWithGemini, upsertTenderToDatabase } from '@/scripts/sync-tenders';
+import { supabase, syncSingleTenderPdf } from '@/scripts/sync-active-pdfs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60s maximum execution time for serverless
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
-  const limit = Math.min(Number(searchParams.get('limit')) || 3, 10);
+  const limit = Math.min(Number(searchParams.get('limit')) || 3, 5);
 
   console.log(`[Vercel Cron] Triggered /api/cron/sync (limit: ${limit})...`);
 
@@ -47,10 +48,38 @@ export async function GET(request: NextRequest) {
           };
         }
 
-        await upsertTenderToDatabase(tender, extracted, pdfRes?.fileName);
+        await upsertTenderToDatabase(tender, extracted, pdfRes?.fileName, pdfRes?.buffer);
         results.push({ id: tender.tender_id, success: true, sector: extracted.sector });
       } catch (err: any) {
         results.push({ id: tender.tender_id, success: false, error: err.message });
+      }
+    }
+
+    // 2. Incremental backfill: store PDFs for up to 2 active tenders lacking Supabase CDN links
+    const backfillResults = [];
+    if (supabase) {
+      try {
+        const { data: missingTenders } = await supabase
+          .from('tenders')
+          .select('invitation_id, invitation_number, tender_code, tender_name, raw_data')
+          .eq('is_receiving', 1)
+          .order('publish_date', { ascending: false })
+          .limit(10);
+
+        if (missingTenders && missingTenders.length > 0) {
+          const toBackfill = missingTenders.filter((t) => {
+            const raw = t.raw_data;
+            const url = raw?.pdfUrl || raw?.liveBundle?.documents?.[0]?.downloadUrl;
+            return !url || !String(url).includes('supabase.co');
+          }).slice(0, 2);
+
+          for (const t of toBackfill) {
+            const bfRes = await syncSingleTenderPdf(t);
+            backfillResults.push(bfRes);
+          }
+        }
+      } catch (bfErr: any) {
+        console.warn('[Vercel Cron] Backfill warning:', bfErr.message);
       }
     }
 
@@ -58,6 +87,8 @@ export async function GET(request: NextRequest) {
       success: true,
       processedCount: results.length,
       results,
+      backfilledCount: backfillResults.length,
+      backfillResults,
       timestamp: new Date().toISOString(),
     });
   } catch (error: any) {

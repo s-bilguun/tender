@@ -436,12 +436,52 @@ export async function parseTenderWithGemini(
 // Step 4: Upsert to Database
 // ==========================================
 
+const BUCKET_NAME = 'tender-documents';
+
 export async function upsertTenderToDatabase(
   discovered: DiscoveredTender,
   extracted: GeminiExtractedTender,
-  pdfFileName?: string
+  pdfFileName?: string,
+  pdfBuffer?: Buffer
 ) {
   console.log(`💾 [Step 4: Database] Upserting tender [${discovered.tender_id}] into database...`);
+
+  let publicPdfUrl = discovered.pdf_download_url;
+  let isStoredInBucket = false;
+  let storagePath: string | undefined = undefined;
+
+  // If we have Supabase and a valid PDF buffer, upload it to Supabase Storage bucket 'tender-documents'
+  if (supabase && pdfBuffer && pdfBuffer.length > 500) {
+    try {
+      const safeDocName = (pdfFileName || `${discovered.tender_id}.pdf`).replace(/[^a-zA-Z0-9._-]/g, '_');
+      storagePath = `tenders/${discovered.invitation_id}/${safeDocName}`;
+
+      const { error: uploadErr } = await supabase.storage
+        .from(BUCKET_NAME)
+        .upload(storagePath, pdfBuffer, {
+          contentType: 'application/pdf',
+          upsert: true,
+        });
+
+      if (!uploadErr) {
+        const { data: urlData } = supabase.storage
+          .from(BUCKET_NAME)
+          .getPublicUrl(storagePath);
+
+        if (urlData?.publicUrl) {
+          publicPdfUrl = urlData.publicUrl;
+          isStoredInBucket = true;
+          console.log(`☁️ Uploaded PDF to Supabase Storage: ${publicPdfUrl}`);
+        }
+      } else {
+        console.warn(`⚠️ Supabase Storage upload warning: ${uploadErr.message}`);
+      }
+    } catch (storageErr: any) {
+      console.warn(`⚠️ Storage upload exception: ${storageErr.message}`);
+    }
+  }
+
+  const effectivePdfUrl = publicPdfUrl || discovered.pdf_download_url;
 
   const row = {
     invitation_id: discovered.invitation_id,
@@ -463,7 +503,9 @@ export async function upsertTenderToDatabase(
     eligibility_requirements: extracted.eligibility_requirements,
     raw_data: {
       sourceUrl: discovered.tender_url,
+      pdfUrl: effectivePdfUrl,
       pdfFileName: pdfFileName || `${discovered.tender_id}.pdf`,
+      hasPdf: !!(effectivePdfUrl || (pdfBuffer && pdfBuffer.length > 500)),
       extractedWith: process.env.GEMINI_API_KEY ? 'Google Gemini 1.5 Flash (Multimodal OCR)' : 'TenderHub Ingestion Engine',
       extractedAt: new Date().toISOString(),
       llmExtracted: extracted,
@@ -472,9 +514,11 @@ export async function upsertTenderToDatabase(
         documents: [
           {
             fileName: pdfFileName || 'ТШББ_Үзүүлэлт.pdf',
-            downloadUrl: discovered.pdf_download_url || discovered.tender_url,
+            downloadUrl: effectivePdfUrl || discovered.tender_url,
             category: 'Тендер шалгаруулалтын үндсэн баримт бичиг (ТШББ)',
             extractionStatus: 'complete',
+            isStored: isStoredInBucket || !!(effectivePdfUrl && effectivePdfUrl.includes('supabase.co')),
+            storagePath: storagePath,
           }
         ],
         structuredSpecs: {
@@ -599,7 +643,7 @@ export async function run() {
       console.log(`✨ Requirements: ${extracted.eligibility_requirements.length} item(s)`);
 
       // 4. Upsert to Database
-      await upsertTenderToDatabase(tender, extracted, pdfRes?.fileName);
+      await upsertTenderToDatabase(tender, extracted, pdfRes?.fileName, pdfRes?.buffer);
 
       successCount++;
     } catch (err: any) {
@@ -620,7 +664,7 @@ export async function run() {
 }
 
 // Direct CLI invocation
-if (require.main === module || (process.argv[1] && process.argv[1].endsWith('sync-tenders.ts'))) {
+if (typeof process !== 'undefined' && process.argv && (require.main === module || (process.argv[1] && process.argv[1].endsWith('sync-tenders.ts')))) {
   run().catch((e) => {
     console.error('Fatal sync error:', e);
     process.exit(1);
