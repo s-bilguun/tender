@@ -144,9 +144,14 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   const portalUrl = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
 
   // PDF Extracted Highlight
+  const rawData = tender.raw_data || (tender as any).rawData;
+  const storedPdfUrl = rawData?.pdfUrl || rawData?.liveBundle?.documents?.find((d: any) => d.isStored || d.downloadUrl?.includes('supabase.co'))?.downloadUrl;
+  const hasStoredPdf = Boolean(storedPdfUrl || rawData?.hasPdf);
+
   const extractedHighlight = 
     tender.full_scope_of_work || 
-    tender.raw_data?.llmExtracted?.full_scope_of_work ||
+    rawData?.llmExtracted?.full_scope_of_work ||
+    rawData?.liveBundle?.fullScopeOfWork ||
     (tender.liveBundleSummary?.topItems && tender.liveBundleSummary.topItems.length > 0 
       ? `Барааны жагсаалт: ${tender.liveBundleSummary.topItems.map(i => i.name).join(', ')}` 
       : '') ||
@@ -208,6 +213,16 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               >
                 <Handshake className="h-3 w-3 text-indigo-600" />
                 <span>{locale === 'zh' ? '🤝 可匹配联合体' : locale === 'mn' ? 'Түншлэл (JV)' : 'JV Partner Match'}</span>
+              </span>
+            )}
+
+            {hasStoredPdf && (
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1 shrink-0"
+                title={locale === 'zh' ? '已提取官方 ТШЗ 招标文件' : 'ТШЗ Баримт хадгалагдсан'}
+              >
+                <FileText className="h-3 w-3 text-purple-600" />
+                <span>{locale === 'zh' ? '📄 标书已备' : locale === 'mn' ? '📄 ТШЗ PDF' : '📄 PDF Ready'}</span>
               </span>
             )}
           </div>
@@ -292,10 +307,17 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
       {/* 4. Extracted PDF Highlight */}
       <div className="p-2.5 rounded-xl bg-slate-50/80 border border-slate-200/60 flex items-start gap-2">
-        <FileText className="h-3.5 w-3.5 text-blue-600 shrink-0 mt-0.5" />
-        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-          {extractedHighlight}
-        </p>
+        <FileText className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${hasStoredPdf ? 'text-emerald-600' : 'text-blue-600'}`} />
+        <div className="flex-1 min-w-0">
+          {hasStoredPdf && (
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mr-1.5 inline-block">
+              {locale === 'zh' ? '官方标书' : locale === 'mn' ? 'ТШЗ Бэлэн' : 'Official Spec'}
+            </span>
+          )}
+          <span className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+            {extractedHighlight}
+          </span>
+        </div>
       </div>
 
       {/* 5. Footer Actions */}

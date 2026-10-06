@@ -328,7 +328,34 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
     documents: data?.technicalSpecs?.documents || [],
     extractedQualifications: data?.technicalSpecs?.extractedQualifications || [],
   };
-  const pdfDocuments: any[] = Array.isArray(technicalSpecs.documents) ? technicalSpecs.documents : [];
+  const tenderRawData = data?.tender?.raw_data || data?.tender?.rawData || data?.rawData;
+  let pdfDocuments: any[] = Array.isArray(technicalSpecs.documents) ? [...technicalSpecs.documents] : [];
+  if (pdfDocuments.length === 0 && tenderRawData?.pdfUrl) {
+    pdfDocuments = [{
+      id: 'stored-primary-pdf',
+      fileId: tenderRawData.tenderDocumentId || 'primary',
+      name: tenderRawData.pdfFileName || `${data?.tender?.tenderCode || data?.tender?.invitationId}_ТШББ.pdf`,
+      fileExtention: 'pdf',
+      category: 'Тендер шалгаруулалтын баримт бичиг (ТШББ)',
+      type: 'PDF Баримт',
+      date: (data?.tender?.publishDate || '').substring(0, 10),
+      url: tenderRawData.pdfUrl,
+      downloadUrl: tenderRawData.pdfUrl,
+      isStored: true,
+      source: 'stored_cdn',
+      extractionStatus: 'text_extracted',
+      extractedPageCount: tenderRawData.pdfPageCount || 1,
+      totalPageCount: tenderRawData.pdfPageCount || 1,
+      extractedSummary: tenderRawData.liveBundle?.fullScopeOfWork || '',
+      officialNotice: 'Supabase хадгалагдсан албан ёсны ТШЗ баримт'
+    }];
+  }
+  const storedPrimaryPdf = pdfDocuments.find((d: any) => d.isStored || d.downloadUrl?.includes('supabase.co') || d.url?.includes('supabase.co')) || 
+    (tenderRawData?.pdfUrl ? {
+      name: tenderRawData.pdfFileName || `${data?.tender?.tenderCode || data?.tender?.invitationId}_ТШББ.pdf`,
+      downloadUrl: tenderRawData.pdfUrl,
+      url: tenderRawData.pdfUrl
+    } : null);
   const readablePdfDocuments = pdfDocuments.filter((doc: any) =>
     ['text_extracted', 'partial', 'ocr_partial'].includes(doc.extractionStatus) || !!doc.extractedSummary,
   );
@@ -477,6 +504,19 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </>
             )}
           </button>
+          {storedPrimaryPdf && (
+            <a
+              href={storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={storedPrimaryPdf.name || 'ТШББ.pdf'}
+              className="h-8 px-3 rounded-md text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 flex items-center gap-1.5 transition-colors shadow-2xs"
+              title="Supabase CDN-ээс ТШЗ PDF-ийг шууд татах"
+            >
+              <Download className="h-3.5 w-3.5 text-emerald-600" />
+              <span>⚡ ТШЗ Татах (PDF)</span>
+            </a>
+          )}
           <a
             href={publicLink}
             target="_blank"
@@ -1732,7 +1772,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   ) : pdfDocuments.map((doc: any, idx: number) => {
                     const isExpanded = !!expandedDocSummaries[doc.id || idx];
                     const isImageAttachment = /^(?:png|jpe?g)$/i.test(doc.fileExtention || '') || /\.(?:png|jpe?g)$/i.test(doc.name || '');
-                    const downloadHref = doc.fileId
+                    const isStoredCdn = Boolean(doc.isStored || doc.downloadUrl?.includes('supabase.co') || doc.url?.includes('supabase.co'));
+                    const downloadHref = isStoredCdn
+                      ? (doc.downloadUrl || doc.url)
+                      : doc.fileId
                       ? `/api/download?fileId=${encodeURIComponent(doc.fileId)}&name=${encodeURIComponent(doc.name || 'tender.pdf')}${isImageAttachment ? '&allowImage=1' : ''}`
                       : (doc.downloadUrl || doc.url || '#');
                     const extractionLabel = ({
@@ -1756,6 +1799,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs font-bold text-slate-900 block">{doc.name}</span>
+                                {isStoredCdn && (
+                                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    ⚡ CDN Шууд татах
+                                  </span>
+                                )}
                                 {doc.source === 'manual_upload' && (
                                   <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-violet-50 text-violet-700 border border-violet-200">
                                     Гараар оруулсан
@@ -1801,8 +1849,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               disabled={aiAnalyzing}
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md border transition-all cursor-pointer ${
                                 aiAnalyzingTarget === `doc-${doc.id || idx}`
-                                  ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50 cursor-wait'
-                                  : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100 shadow-2xs'
+                                   ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50 cursor-wait'
+                                   : 'bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100 shadow-2xs'
                               }`}
                             >
                               {aiAnalyzingTarget === `doc-${doc.id || idx}` ? (
@@ -1818,17 +1866,21 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               )}
                             </button>
 
-                            {doc.fileId || doc.source === 'manual_upload' ? (
+                            {isStoredCdn || doc.fileId || doc.source === 'manual_upload' ? (
                               <a
                                 href={downloadHref}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 download={doc.name || 'tender.pdf'}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-2xs"
-                                title={doc.source === 'manual_upload' ? 'Оруулсан PDF-г татах' : 'Албан ёсны эх баримтыг шууд татах'}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors shadow-2xs ${
+                                  isStoredCdn
+                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                }`}
+                                title={isStoredCdn ? 'Supabase CDN-ээс шууд татах' : doc.source === 'manual_upload' ? 'Оруулсан PDF-г татах' : 'Албан ёсны эх баримтыг шууд татах'}
                               >
                                 <Download className="h-3.5 w-3.5" />
-                                <span>{doc.source === 'manual_upload' ? 'PDF татах' : 'Эх файлыг татах'}</span>
+                                <span>{isStoredCdn ? '⚡ ТШЗ PDF татах' : doc.source === 'manual_upload' ? 'PDF татах' : 'Эх файлыг татах'}</span>
                               </a>
                             ) : (
                               <a

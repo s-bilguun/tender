@@ -332,6 +332,13 @@ export async function getTenderDetailData(id: string | number, options: { useSto
     }
   }
 
+  // Fallback to stored liveBundle if live fetch returned nothing or failed
+  if (!liveBundle || !liveBundle.documents || liveBundle.documents.length === 0) {
+    if (rawData?.liveBundle?.documents && rawData.liveBundle.documents.length > 0) {
+      liveBundle = rawData.liveBundle;
+    }
+  }
+
   // 5. Generate structured BDS & Specs & Results
   const bds = generateBDS(tenderData);
   const technicalSpecs = generateTechnicalSpecs(tenderData);
@@ -361,6 +368,12 @@ export async function getTenderDetailData(id: string | number, options: { useSto
           }
         }
 
+        const storedDoc = rawData?.liveBundle?.documents?.find((sd: any) => 
+          String(sd.fileId) === String(d.fileId) || sd.fileName === d.fileName
+        );
+        const resolvedUrl = storedDoc?.downloadUrl || d.downloadUrl;
+        const isStored = Boolean(d.isStored || storedDoc?.isStored || resolvedUrl?.includes('supabase.co'));
+
         return {
           id: String(documentIdentifier || d.fileName),
           fileId: d.fileId,
@@ -369,24 +382,26 @@ export async function getTenderDetailData(id: string | number, options: { useSto
           category: d.category || (d.isPrimary ? 'Тендер шалгаруулалтын баримт бичиг (ТШББ)' : 'Хавсралт баримт бичиг'),
           type: `${(d.fileExtention || 'pdf').toUpperCase()} Баримт`,
           date: d.createdDate ? d.createdDate.substring(0, 16) : (tenderItem.publishDate || '').substring(0, 10),
-          url: d.downloadUrl,
-          downloadUrl: d.downloadUrl,
-          officialNotice: d.source === 'manual_upload'
+          url: resolvedUrl,
+          downloadUrl: resolvedUrl,
+          isStored,
+          officialNotice: isStored
+            ? 'Supabase хадгалагдсан ТШЗ баримт'
+            : d.source === 'manual_upload'
             ? 'Гараар оруулсан PDF; задласан текстийг эх файлтай тулгана уу.'
             : 'tender.gov.mn дээрх албан ёсны эх баримт бичиг',
-          source: d.source || 'official',
+          source: isStored ? 'stored_cdn' : (d.source || 'official'),
           isScannedOcr: !!d.isScannedOcr,
           ocrModel: d.ocrModel,
           extractionStatus: d.extractionStatus || (extractedSummary ? 'text_extracted' : 'not_extracted'),
-          extractedPageCount: d.extractedPageCount,
-          totalPageCount: d.totalPageCount,
+          extractedPageCount: d.extractedPageCount || storedDoc?.pageCount,
+          totalPageCount: d.totalPageCount || storedDoc?.pageCount,
           ocrSampleCount: d.ocrSampleCount,
-          extractedSummary
+          extractedSummary: extractedSummary || storedDoc?.extractedSummary || rawData?.liveBundle?.fullScopeOfWork
         };
       });
       (technicalSpecs as any).isScannedOcr = !!liveBundle.isScannedOcr;
     }
-
 
     // Extracted PDF text & structured criteria
     if (liveBundle.structuredSpecs) {
@@ -549,6 +564,27 @@ export async function getTenderDetailData(id: string | number, options: { useSto
         : 'partial';
     bds.evidenceStatus = evidenceStatus;
     technicalSpecs.evidenceStatus = evidenceStatus;
+  }
+
+  // Fallback if documents array is still empty but raw_data has stored PDF
+  if ((!technicalSpecs.documents || technicalSpecs.documents.length === 0) && rawData?.pdfUrl) {
+    technicalSpecs.documents = [{
+      id: 'stored-primary-pdf',
+      name: rawData.pdfFileName || 'ТШББ_баримт.pdf',
+      fileExtention: 'pdf',
+      category: 'Тендер шалгаруулалтын баримт бичиг (ТШББ)',
+      type: 'PDF Баримт',
+      date: (tenderItem.publishDate || '').substring(0, 10),
+      url: rawData.pdfUrl,
+      downloadUrl: rawData.pdfUrl,
+      isStored: true,
+      source: 'stored_cdn',
+      extractionStatus: 'text_extracted',
+      extractedPageCount: rawData.pdfPageCount || 1,
+      totalPageCount: rawData.pdfPageCount || 1,
+      extractedSummary: rawData.liveBundle?.fullScopeOfWork || '',
+      officialNotice: 'Supabase хадгалагдсан албан ёсны ТШЗ баримт'
+    }];
   }
 
   const chinaBidderAnalysis = analyzeChinaBidderEligibility({

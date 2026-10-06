@@ -90,6 +90,15 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   const llmExtracted = rawData?.llmExtracted;
   const structuredSpecs = rawData?.liveBundle?.structuredSpecs;
 
+  const storedPdfUrl: string | undefined = 
+    rawData?.pdfUrl || 
+    rawData?.liveBundle?.documents?.find((d: any) => d.isStored || d.downloadUrl?.includes('supabase.co'))?.downloadUrl;
+  const storedPdfFileName: string = 
+    rawData?.pdfFileName || 
+    rawData?.liveBundle?.documents?.find((d: any) => d.isStored)?.fileName || 
+    `${tender.tenderCode || tender.invitationId}_ТШББ.pdf`;
+  const hasStoredPdf = Boolean(storedPdfUrl);
+
   // Extract eligibility requirements
   const eligibilityReqs: string[] = 
     tender.eligibility_requirements ||
@@ -145,6 +154,13 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   {tender.docStatusName || (locale === 'mn' ? 'Санал авч буй' : 'Open for Bidding')}
                 </span>
+
+                {hasStoredPdf && (
+                  <span className="text-xs text-purple-400 bg-purple-500/15 px-2.5 py-1 rounded-lg font-bold border border-purple-500/30 flex items-center gap-1">
+                    <FileText className="h-3.5 w-3.5 text-purple-400" />
+                    <span>{locale === 'zh' ? '📄 标书已归档' : locale === 'mn' ? '📄 ТШЗ PDF' : '📄 PDF Ready'}</span>
+                  </span>
+                )}
               </div>
 
               <h1 className="text-base sm:text-xl font-black text-white leading-snug tracking-tight">
@@ -260,10 +276,24 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 
                 {/* Technical Scope Preview */}
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2.5">
-                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                    <Tag className="h-4 w-4 text-purple-400" />
-                    <span>{locale === 'mn' ? 'Ажлын даалгавар / Техникийн үзүүлэлт' : 'Technical Specifications Scope'}</span>
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Tag className="h-4 w-4 text-purple-400" />
+                      <span>{locale === 'mn' ? 'Ажлын даалгавар / Техникийн үзүүлэлт' : 'Technical Specifications Scope'}</span>
+                    </span>
+                    {hasStoredPdf && (
+                      <a
+                        href={storedPdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download={storedPdfFileName}
+                        className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
+                      >
+                        <Download className="h-3 w-3" />
+                        <span>{locale === 'mn' ? 'ТШЗ Татах' : 'Download PDF'}</span>
+                      </a>
+                    )}
+                  </div>
                   
                   {scopeOfWork ? (
                     <div className="p-3 bg-slate-950/80 rounded-lg border border-slate-800 text-xs text-slate-300 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap font-sans">
@@ -271,7 +301,9 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                     </div>
                   ) : (
                     <div className="p-3 bg-slate-950/60 rounded-lg border border-slate-800 text-xs text-slate-400 text-center italic">
-                      {locale === 'mn' ? 'Техникийн тодорхойлолтыг албан ёсны PDF баримтаас татаж үзнэ үү.' : 'Download technical specification document for complete details.'}
+                      {hasStoredPdf
+                        ? (locale === 'mn' ? 'Тендерийн албан ёсны ТШЗ PDF баримт хадгалагдсан байна. Шууд татаж авна уу.' : 'Official PDF specification ready. Use download button to view.')
+                        : (locale === 'mn' ? 'Техникийн тодорхойлолтыг албан ёсны PDF баримтаас татаж үзнэ үү.' : 'Download technical specification document for complete details.')}
                     </div>
                   )}
                 </div>
@@ -390,13 +422,23 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
               
               {/* Secondary Button: Download Specs (Self-Serve Option) */}
               <a
-                href={portalUrl}
+                href={hasStoredPdf ? storedPdfUrl : portalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 sm:flex-initial h-11 px-4 rounded-xl bg-slate-900 hover:bg-slate-850 text-slate-200 hover:text-white border border-slate-700 hover:border-slate-600 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs"
+                download={hasStoredPdf ? storedPdfFileName : undefined}
+                className={`flex-1 sm:flex-initial h-11 px-4 rounded-xl border font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-xs ${
+                  hasStoredPdf
+                    ? 'bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 hover:text-emerald-200 border-emerald-500/50'
+                    : 'bg-slate-900 hover:bg-slate-850 text-slate-200 hover:text-white border-slate-700 hover:border-slate-600'
+                }`}
+                title={hasStoredPdf ? 'Supabase CDN-ээс шууд татах' : 'tender.gov.mn албан ёсны портал дээр нээх'}
               >
-                <Download className="h-4 w-4 text-slate-400" />
-                <span>{locale === 'mn' ? 'Материал татах' : locale === 'zh' ? '下载招标文件' : 'Download Specs'}</span>
+                <Download className={`h-4 w-4 ${hasStoredPdf ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <span>
+                  {hasStoredPdf
+                    ? (locale === 'mn' ? '⚡ ТШЗ Татах (PDF)' : locale === 'zh' ? '⚡ 下载招标文件 (PDF)' : '⚡ Download PDF')
+                    : (locale === 'mn' ? 'Материал татах' : locale === 'zh' ? '下载招标文件' : 'Download Specs')}
+                </span>
               </a>
 
               {/* Primary Button: Premium Local Facilitation Service */}

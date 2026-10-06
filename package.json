@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "sync": "tsx scripts/sync-tenders.ts"
+    "sync": "tsx scripts/sync-tenders.ts",
+    "sync:active-pdfs": "tsx scripts/sync-active-pdfs.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.78.0",
