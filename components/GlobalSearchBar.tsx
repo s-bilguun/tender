@@ -50,15 +50,15 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
     <div className="w-full space-y-2.5">
       {/* Search Input Container */}
       <div
-        className={`relative flex items-center bg-white rounded-2xl border transition-all shadow-xs ${
+        className={`relative flex items-center bg-white dark:bg-slate-900 rounded-2xl border transition-all shadow-xs ${
           isFocused
             ? 'border-blue-600 ring-4 ring-blue-500/10 shadow-md'
-            : 'border-slate-200/90 hover:border-slate-300'
+            : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
         }`}
       >
         {/* Leading Search Icon */}
         <div className="pl-3.5 sm:pl-5 pr-2 flex items-center pointer-events-none text-slate-400">
-          <Search className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${isFocused ? 'text-blue-600' : 'text-slate-400'}`} />
+          <Search className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${isFocused ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
         </div>
 
         {/* Input Field with Mobile Responsive Placeholder */}
@@ -76,7 +76,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
               ? 'Тендерийн нэр, дугаар, түлхүүр үг (жишээ: Цэцэрлэг)...'
               : 'Search tender title, ID, buyer, or keyword (e.g., School)...')
           }
-          className="w-full py-3 sm:py-4 text-xs sm:text-sm text-slate-900 placeholder-slate-400 bg-transparent focus:outline-hidden"
+          className="w-full py-3 sm:py-4 text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 bg-transparent focus:outline-hidden"
         />
 
         {/* Clear and Search Buttons */}
@@ -88,7 +88,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
                 onClear?.();
                 inputRef.current?.focus();
               }}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="Цэвэрлэх"
               aria-label="Clear search"
             >
@@ -122,7 +122,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
               onChange(pill.query);
               onSelectSuggestion?.(pill.query);
             }}
-            className="px-2.5 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-medium bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 transition-colors shrink-0 cursor-pointer border border-slate-200/60 hover:border-blue-200 snap-start active:scale-95"
+            className="px-2.5 sm:px-3 py-1 rounded-lg text-[11px] sm:text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-700 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-300 transition-colors shrink-0 cursor-pointer border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-200 dark:hover:border-blue-800 snap-start active:scale-95"
           >
             {pill.label}
           </button>

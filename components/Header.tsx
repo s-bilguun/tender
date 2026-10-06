@@ -4,9 +4,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Locale, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
+import { useTheme } from '@/components/ThemeProvider';
 import { 
   Sparkles, Globe, Clock, Search, Menu, 
-  Command, CornerDownLeft, X, Layers
+  Command, CornerDownLeft, X, Layers, Sun, Moon
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeSectionTitle,
 }) => {
   const t = getTranslation(locale);
+  const { theme, toggleTheme } = useTheme();
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -46,24 +48,24 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-slate-800 bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0">
+    <header className="sticky top-0 z-30 h-16 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 transition-colors">
       
       {/* Left Section: Mobile Menu Trigger & Breadcrumbs */}
       <div className="flex items-center gap-3 shrink-0">
         {/* Mobile Hamburger Toggle */}
         <button
           onClick={onToggleMobileSidebar}
-          className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-900 border border-slate-800 transition-colors"
+          className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors"
           aria-label="Open sidebar navigation"
         >
           <Menu className="h-5 w-5" />
         </button>
 
         {/* Breadcrumb / Title */}
-        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
-          <span className="text-slate-300">TenderHub</span>
-          <span className="text-slate-600">/</span>
-          <span className="text-white font-bold tracking-tight">
+        <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <span className="text-slate-600 dark:text-slate-300">TenderHub</span>
+          <span className="text-slate-400 dark:text-slate-600">/</span>
+          <span className="text-slate-900 dark:text-white font-bold tracking-tight">
             {activeSectionTitle || (locale === 'mn' ? 'Хяналтын самбар' : locale === 'zh' ? '智选控制台' : 'Dashboard')}
           </span>
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
@@ -73,15 +75,15 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Center Section: Global Search Bar with Cmd+K Trigger */}
       <div className="flex-1 max-w-xl mx-2 sm:mx-4">
         <div
-          className={`relative flex items-center h-10 w-full rounded-xl bg-slate-900 border transition-all ${
+          className={`relative flex items-center h-10 w-full rounded-xl bg-slate-100/90 dark:bg-slate-900 border transition-all ${
             isSearchFocused
-              ? 'border-blue-500 ring-2 ring-blue-500/20 bg-slate-900/95'
-              : 'border-slate-800 hover:border-slate-700'
+              ? 'border-blue-500 ring-2 ring-blue-500/20 bg-white dark:bg-slate-900/95'
+              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
           }`}
         >
           {/* Search Icon */}
           <div className="pl-3 pr-2 flex items-center pointer-events-none text-slate-400">
-            <Search className={`h-4 w-4 transition-colors ${isSearchFocused ? 'text-blue-400' : 'text-slate-400'}`} />
+            <Search className={`h-4 w-4 transition-colors ${isSearchFocused ? 'text-blue-500' : 'text-slate-400'}`} />
           </div>
 
           {/* Search Input */}
@@ -100,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ? '搜索标讯名称、编号、关键词 (⌘K)...'
                 : 'Search tender title, ID, buyer, or keyword (⌘K)...'
             }
-            className="w-full text-xs sm:text-sm text-slate-100 placeholder-slate-400 bg-transparent focus:outline-hidden"
+            className="w-full text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 bg-transparent focus:outline-hidden"
           />
 
           {/* Clear & Cmd+K Shortcut */}
@@ -111,7 +113,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onSearchChange?.('');
                   searchInputRef.current?.focus();
                 }}
-                className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
                 title="Clear"
               >
                 <X className="h-3.5 w-3.5" />
@@ -121,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
             {onOpenCommandPalette && (
               <button
                 onClick={onOpenCommandPalette}
-                className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-800 text-slate-400 hover:text-white border border-slate-700 hover:border-slate-600 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                 title="Command Palette (⌘K)"
               >
                 <kbd className="text-[10px]">⌘</kbd>
@@ -132,17 +134,31 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Right Section: Language Toggle & AI Assistant */}
+      {/* Right Section: Language Toggle, Theme Toggle & AI Assistant */}
       <div className="flex items-center gap-2 shrink-0">
         
+        {/* Global Dark / Light Mode Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shrink-0"
+          aria-label={theme === 'dark' ? 'Гэгээлэг горим руу шилжих' : 'Харанхуй горим руу шилжих'}
+          title={theme === 'dark' ? 'Гэгээлэг горим (Light mode)' : 'Харанхуй горим (Dark mode)'}
+        >
+          {theme === 'dark' ? (
+            <Sun className="h-4 w-4 text-amber-400 transition-transform hover:rotate-45" />
+          ) : (
+            <Moon className="h-4 w-4 text-slate-700 transition-transform hover:-rotate-12" />
+          )}
+        </button>
+
         {/* 3-Way Language Toggle (MN / EN / ZH) */}
-        <div className="flex items-center bg-slate-900 rounded-xl p-0.5 border border-slate-800 shrink-0">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-900 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shrink-0">
           <button
             onClick={() => setLocale('mn')}
             className={`h-7 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
               locale === 'mn'
                 ? 'bg-blue-600 text-white font-bold shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
             title="Монгол хэл"
           >
@@ -153,7 +169,7 @@ export const Header: React.FC<HeaderProps> = ({
             className={`h-7 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
               locale === 'en'
                 ? 'bg-blue-600 text-white font-bold shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
             title="English"
           >
@@ -164,7 +180,7 @@ export const Header: React.FC<HeaderProps> = ({
             className={`h-7 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
               locale === 'zh'
                 ? 'bg-red-600 text-white font-bold shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
             title="中文 (Chinese)"
           >

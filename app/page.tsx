@@ -8,8 +8,6 @@ import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { Header } from '@/components/Header';
 import { DashboardKPICards } from '@/components/DashboardKPICards';
 import { GlobalSearchBar } from '@/components/GlobalSearchBar';
-import { StatusFilterTabs } from '@/components/StatusFilterTabs';
-import { ActiveFilterBar } from '@/components/ActiveFilterBar';
 import { DiscoveryCardsHub } from '@/components/DiscoveryCardsHub';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
@@ -26,7 +24,7 @@ import { ToastContainer, ToastMessage } from '@/components/Toast';
 import { exportTendersToCSV } from '@/lib/export';
 import {
   ChevronLeft, ChevronRight, Sparkles, 
-  Loader2, ArrowDown, Database, Building2, Layers
+  Loader2, ArrowDown
 } from 'lucide-react';
 
 export default function Home() {
@@ -366,7 +364,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
+    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-200">
       
       {/* 1. Fixed Left Sidebar Navigation Panel (w-[260px]) */}
       <DashboardSidebar
@@ -439,41 +437,20 @@ export default function Home() {
           </section>
 
           {/* Section: Tender Database Feed & Search Center */}
-          <section id="database" className="space-y-6 pt-2">
+          <section id="database" className="space-y-4 pt-2">
             
-            {/* Control Center Box */}
-            <div className="bg-slate-900/90 rounded-2xl p-4 sm:p-6 border border-slate-800 shadow-xs space-y-4">
-              
-              {/* Smart Search Bar */}
-              <GlobalSearchBar
-                value={searchInputValue}
-                onChange={setSearchInputValue}
-                onSubmit={handleGlobalSearchSubmit}
-                onClear={() => handleFilterChange({ search: undefined, page: 1 })}
-                locale={locale}
-                totalFound={totalCount}
-                onSelectSuggestion={handleSelectSearchSuggestion}
-              />
-
-              {/* Status Filter Tabs (Mobile swipeable) */}
-              <StatusFilterTabs
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                locale={locale}
-                watchlistCount={savedIds.size}
-              />
-            </div>
-
-            {/* Active Filters Indicator */}
-            <ActiveFilterBar
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onResetAll={handleResetAllFilters}
-              totalFound={displayedTenders.length}
+            {/* Primary Search Bar with Quick Presets */}
+            <GlobalSearchBar
+              value={searchInputValue}
+              onChange={setSearchInputValue}
+              onSubmit={handleGlobalSearchSubmit}
+              onClear={() => handleFilterChange({ search: undefined, page: 1 })}
               locale={locale}
+              totalFound={totalCount}
+              onSelectSuggestion={handleSelectSearchSuggestion}
             />
 
-            {/* Advanced Filters Drawer / Bar */}
+            {/* Comprehensive Tender Filters & Workflow Console */}
             <TenderFilters
               filters={filters}
               onFilterChange={handleFilterChange}
@@ -511,7 +488,7 @@ export default function Home() {
                 onAskAI={handleAskAI}
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
                 {displayedTenders.map((tender) => (
                   <TenderCard
                     key={String(tender.invitationId)}
@@ -529,9 +506,9 @@ export default function Home() {
 
             {/* Pagination & Load More Controls */}
             {displayedTenders.length > 0 && totalCount > displayedTenders.length && filters.tabMode !== 'watchlist' && (
-              <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-800 pt-6 px-1 gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6 px-1 gap-4">
                 
-                <div className="text-xs text-slate-400 font-medium">
+                <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                   {locale === 'mn'
                     ? `Нийт ${totalCount.toLocaleString()} тендерээс ${displayedTenders.length}-ийг харуулж байна`
                     : `Showing ${displayedTenders.length} of ${totalCount.toLocaleString()} tenders`}
@@ -541,35 +518,35 @@ export default function Home() {
                   <button
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
-                    className="flex-1 sm:flex-initial min-h-[40px] px-6 rounded-xl text-xs sm:text-sm font-bold bg-slate-900 hover:bg-slate-850 text-white border border-slate-700 hover:border-slate-600 shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+                    className="flex-1 sm:flex-initial min-h-[40px] px-6 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
                   >
                     {isLoadingMore ? (
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                     ) : (
-                      <ArrowDown className="h-4 w-4 text-blue-400" />
+                      <ArrowDown className="h-4 w-4 text-blue-500" />
                     )}
                     <span>{locale === 'mn' ? 'Цааш үзэх (+15 нэмэх)' : 'Load More (+15)'}</span>
                   </button>
 
                   {totalPages > 1 && (
-                    <div className="flex items-center gap-1.5 bg-slate-900 p-1 rounded-xl border border-slate-800 shadow-xs">
+                    <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
                       <button
                         onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
                         disabled={(filters.page || 1) <= 1}
-                        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
                       >
                         <ChevronLeft className="h-4 w-4" />
                         <span className="hidden sm:inline">{locale === 'mn' ? 'Өмнөх' : 'Prev'}</span>
                       </button>
 
-                      <span className="px-2 text-xs font-semibold text-slate-300 font-mono tabular-nums">
+                      <span className="px-2 text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono tabular-nums">
                         {filters.page} / {totalPages}
                       </span>
 
                       <button
                         onClick={() => handleFilterChange({ page: Math.min(totalPages, (filters.page || 1) + 1) })}
                         disabled={(filters.page || 1) >= totalPages}
-                        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
+                        className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
                       >
                         <span className="hidden sm:inline">{locale === 'mn' ? 'Дараах' : 'Next'}</span>
                         <ChevronRight className="h-4 w-4" />
@@ -583,7 +560,7 @@ export default function Home() {
           </section>
 
           {/* Footer */}
-          <footer className="border-t border-slate-850 py-6 text-xs text-slate-400 text-center">
+          <footer className="border-t border-slate-200 dark:border-slate-800 py-6 text-xs text-slate-500 dark:text-slate-400 text-center">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-2">
               <span>TenderHub MN — B2B Procurement Intelligence & Database</span>
               <span>Албан ёсны tender.gov.mn эх сурвалжийн шууд боловсруулалт</span>

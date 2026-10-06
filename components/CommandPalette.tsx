@@ -231,15 +231,15 @@ export function CommandPalette({
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-2xs transition-opacity" 
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity" 
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Palette Container */}
-      <div className="relative w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden z-10 animate-in fade-in-0 zoom-in-95 duration-100">
+      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-10 animate-in fade-in-0 zoom-in-95 duration-100 text-slate-900 dark:text-slate-100">
         {/* Search Header */}
-        <div className="flex items-center px-4 py-3.5 border-b border-slate-100 gap-3">
+        <div className="flex items-center px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 gap-3">
           <Search className="h-5 w-5 text-slate-400 shrink-0" />
           <input
             ref={inputRef}
@@ -251,16 +251,16 @@ export function CommandPalette({
             }}
             onKeyDown={handleKeyDown}
             placeholder="Тендер, салбар, үйлдлээс хайх... (жишээ: барилга, AI, 0₮ БҮ)"
-            className="w-full text-sm bg-transparent border-none outline-none text-slate-900 placeholder:text-slate-400 font-medium"
+            className="w-full text-sm bg-transparent border-none outline-none text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 font-medium"
             spellCheck={false}
           />
-          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded">
+          <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono font-semibold text-slate-400 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded">
             ESC
           </kbd>
         </div>
 
         {/* Results List */}
-        <div className="max-h-[380px] overflow-y-auto p-2 divide-y divide-slate-50 overscroll-contain">
+        <div className="max-h-[380px] overflow-y-auto p-2 divide-y divide-slate-50 dark:divide-slate-800/50 overscroll-contain">
           {commandItems.length === 0 ? (
             <div className="py-10 text-center text-slate-400 text-xs">
               Тохирох үйлдэл эсвэл тендер олдсонгүй.
@@ -274,22 +274,22 @@ export function CommandPalette({
                     key={item.id}
                     onClick={item.onSelect}
                     onMouseEnter={() => setSelectedIndex(idx)}
-                    className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                    className={`w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-left transition-colors cursor-pointer ${
                       isSelected
-                        ? 'bg-blue-50 text-blue-900'
-                        : 'text-slate-700 hover:bg-slate-50'
+                        ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-900 dark:text-blue-100'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`p-1.5 rounded-md shrink-0 ${isSelected ? 'bg-white shadow-2xs' : 'bg-slate-100'}`}>
+                      <div className={`p-1.5 rounded-md shrink-0 ${isSelected ? 'bg-white dark:bg-slate-800 shadow-2xs' : 'bg-slate-100 dark:bg-slate-800/80'}`}>
                         {item.icon}
                       </div>
                       <div className="min-w-0">
-                        <p className={`text-xs font-semibold truncate ${isSelected ? 'text-blue-950' : 'text-slate-900'}`}>
+                        <p className={`text-xs font-semibold truncate ${isSelected ? 'text-blue-950 dark:text-blue-200' : 'text-slate-900 dark:text-white'}`}>
                           {item.title}
                         </p>
                         {item.subtitle && (
-                          <p className="text-[11px] text-slate-500 truncate mt-0.5">
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
                             {item.subtitle}
                           </p>
                         )}
@@ -297,7 +297,7 @@ export function CommandPalette({
                     </div>
 
                     {isSelected && (
-                      <div className="flex items-center gap-1 shrink-0 text-[11px] font-mono text-blue-600">
+                      <div className="flex items-center gap-1 shrink-0 text-[11px] font-mono text-blue-600 dark:text-blue-400">
                         <span>Сонгох</span>
                         <CornerDownLeft className="h-3.5 w-3.5" />
                       </div>
@@ -310,7 +310,7 @@ export function CommandPalette({
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+        <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900/80 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 font-mono">
           <div className="flex items-center gap-3">
             <span>↑↓ шилжих</span>
             <span>↵ сонгох</span>

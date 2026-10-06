@@ -395,9 +395,9 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     activeAdvancedCount > 0;
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden transition-all">
       {/* 1. Primary Workflow Status Tabs & Utility Controls */}
-      <div className="px-3 sm:px-4 pt-3 pb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100">
+      <div className="px-3 sm:px-4 pt-3 pb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 dark:border-slate-800">
         {/* Status Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
           {/* Active Live Tab */}
@@ -406,13 +406,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'active'
                 ? 'bg-emerald-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
             }`}
           >
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
             <span>{locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '正在招投标' : 'Live Bids'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 text-emerald-800'
+              currentTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
             }`}>
               {tabMetrics.active.toLocaleString()}
             </span>
@@ -424,13 +424,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'closing_soon'
                 ? 'bg-rose-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
             }`}
           >
             <Flame className="h-3.5 w-3.5 text-rose-400" />
             <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : locale === 'zh' ? '即将截标' : 'Closing Soon'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 text-rose-800'
+              currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
             }`}>
               {tabMetrics.closing.toLocaleString()}
             </span>
@@ -442,7 +442,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'no_guarantee'
                 ? 'bg-teal-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
             }`}
           >
             <ShieldCheck className="h-3.5 w-3.5 text-teal-300" />
@@ -455,13 +455,13 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'result'
                 ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
             }`}
           >
             <Trophy className="h-3.5 w-3.5 text-amber-300" />
             <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : locale === 'zh' ? '已定标 / 中标结果' : 'Awarded'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 text-blue-800'
+              currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300'
             }`}>
               {tabMetrics.result.toLocaleString()}
             </span>
@@ -472,14 +472,14 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             onClick={() => handleTabSelect('all')}
             className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'all'
-                ? 'bg-slate-900 text-white shadow-2xs'
-                : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-2xs'
+                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
             }`}
           >
             <Database className="h-3.5 w-3.5 text-blue-400" />
             <span>{locale === 'mn' ? 'Бүх сан' : locale === 'zh' ? '全部标段' : 'All Tenders'}</span>
             <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'all' ? 'bg-slate-800 text-slate-200' : 'bg-slate-200 text-slate-700'
+              currentTab === 'all' ? 'bg-slate-800 dark:bg-slate-600 text-slate-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
             }`}>
               {tabMetrics.all.toLocaleString()}
             </span>
@@ -491,7 +491,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
               currentTab === 'watchlist'
                 ? 'bg-amber-500 text-white shadow-2xs'
-                : 'bg-slate-100/90 text-slate-700 hover:bg-slate-200/80'
+                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
             }`}
           >
             <Star className={`h-3.5 w-3.5 ${currentTab === 'watchlist' ? 'fill-white' : 'text-amber-500'}`} />
@@ -509,19 +509,19 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {onExportCSV && (
             <button
               onClick={onExportCSV}
-              className="h-8 px-2.5 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+              className="h-8 px-2.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
               title={locale === 'mn' ? 'Excel / CSV файлаар татах' : locale === 'zh' ? '导出 Excel / CSV 表格' : 'Export to CSV / Excel'}
             >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden md:inline">{locale === 'mn' ? 'Excel / CSV' : locale === 'zh' ? '导出表格' : 'Export CSV'}</span>
             </button>
           )}
 
-          <div className="flex items-center bg-slate-100/90 p-0.5 rounded-lg border border-slate-200 h-8">
+          <div className="flex items-center bg-slate-100/90 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700 h-8">
             <button
               onClick={() => setViewMode('table')}
               className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
-                viewMode === 'table' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
+                viewMode === 'table' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
               title={locale === 'mn' ? 'Хүснэгт' : 'Table view'}
             >
@@ -531,7 +531,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <button
               onClick={() => setViewMode('grid')}
               className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
-                viewMode === 'grid' ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'text-slate-500 hover:text-slate-800'
+                viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
               title={locale === 'mn' ? 'Карт' : 'Grid view'}
             >
@@ -546,15 +546,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       <div className="p-3 sm:p-4 space-y-2.5">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           {/* Category Segmented Controls */}
-          <div className="flex items-center bg-slate-100/90 p-0.5 rounded-xl border border-slate-200 h-9 shrink-0">
+          <div className="flex items-center bg-slate-100/90 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 h-9 shrink-0">
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => onFilterChange({ category: cat.id, page: 1 })}
                 className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   currentCategory === cat.id
-                    ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-bold'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 {cat.label}
@@ -565,7 +565,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Secondary Controls: Budget, Year, Sort & Advanced Filters */}
           <div className="flex items-center gap-2 flex-wrap shrink-0 justify-between lg:justify-end">
             {/* Budget Tier Selector Dropdown */}
-            <div className="relative flex items-center bg-white border border-slate-200 rounded-xl px-2.5 h-9 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
+            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
               <span className="text-[11px] text-slate-400 font-medium mr-1">{locale === 'mn' ? 'Төсөв:' : 'Budget:'}</span>
               <select
                 value={activeBudgetTier}
@@ -574,18 +574,18 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                   const selected = budgetTiers.find((b) => b.id === tierId);
                   onFilterChange({ minBudget: selected?.min, maxBudget: selected?.max, page: 1 });
                 }}
-                className="bg-transparent text-xs text-slate-800 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
+                className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
               >
                 {budgetTiers.map((b) => (
-                  <option key={b.id} value={b.id}>{b.label}</option>
+                  <option key={b.id} value={b.id} className="dark:bg-slate-850 dark:text-white">{b.label}</option>
                 ))}
               </select>
               <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
             </div>
 
             {/* Year Selector */}
-            <div className="relative flex items-center bg-white border border-slate-200 rounded-xl px-2.5 h-9 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
-              <Calendar className="h-3.5 w-3.5 text-blue-600 mr-1 shrink-0" />
+            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
+              <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 mr-1 shrink-0" />
               <select
                 value={filters.year || 'all'}
                 onChange={(e) => {
@@ -598,33 +598,33 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     page: 1,
                   });
                 }}
-                className="bg-transparent text-xs text-slate-800 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
+                className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
               >
-                <option value="all">{locale === 'mn' ? 'Бүх он' : 'All Years'}</option>
-                <option value="2026">2026 он</option>
-                <option value="2025">2025 он</option>
-                <option value="2024">2024 он</option>
-                <option value="2023">2023 он</option>
-                <option value="2022">2022 он</option>
-                <option value="2021">2021 он</option>
-                <option value="2020">2020 он</option>
-                <option value="2019">2019 он</option>
+                <option value="all" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Бүх он' : 'All Years'}</option>
+                <option value="2026" className="dark:bg-slate-850 dark:text-white">2026 он</option>
+                <option value="2025" className="dark:bg-slate-850 dark:text-white">2025 он</option>
+                <option value="2024" className="dark:bg-slate-850 dark:text-white">2024 он</option>
+                <option value="2023" className="dark:bg-slate-850 dark:text-white">2023 он</option>
+                <option value="2022" className="dark:bg-slate-850 dark:text-white">2022 он</option>
+                <option value="2021" className="dark:bg-slate-850 dark:text-white">2021 он</option>
+                <option value="2020" className="dark:bg-slate-850 dark:text-white">2020 он</option>
+                <option value="2019" className="dark:bg-slate-850 dark:text-white">2019 он</option>
               </select>
               <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
             </div>
 
             {/* Sort Dropdown */}
-            <div className="relative flex items-center bg-white border border-slate-200 rounded-xl px-2.5 h-9 text-xs text-slate-700 shadow-2xs hover:border-slate-300">
+            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
               <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 mr-1 shrink-0" />
               <select
                 value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
                 onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
-                className="bg-transparent text-xs text-slate-800 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
+                className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
               >
-                <option value="date_desc">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest'}</option>
-                <option value="deadline_asc">{locale === 'mn' ? 'Хугацаа ойртсоноор' : 'Ending Soon'}</option>
-                <option value="budget_desc">{t.sortOptions.budget_desc}</option>
-                <option value="budget_asc">{t.sortOptions.budget_asc}</option>
+                <option value="date_desc" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest'}</option>
+                <option value="deadline_asc" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Хугацаа ойртсоноор' : 'Ending Soon'}</option>
+                <option value="budget_desc" className="dark:bg-slate-850 dark:text-white">{t.sortOptions.budget_desc}</option>
+                <option value="budget_asc" className="dark:bg-slate-850 dark:text-white">{t.sortOptions.budget_asc}</option>
               </select>
               <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
             </div>
@@ -635,7 +635,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               className={`h-9 px-3 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
                 activeAdvancedCount > 0
                   ? 'bg-blue-600 text-white font-bold'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border border-slate-200'
+                  : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
               }`}
               title="Нарийвчилсан шүүлтүүр"
             >
@@ -652,7 +652,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
         {/* 5. Active Filters Dismissible Chips (ONLY when non-default custom filters applied) */}
         {isCustomFiltered && (
-          <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 text-[11px] animate-in fade-in duration-150">
+          <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] animate-in fade-in duration-150">
             <span className="text-slate-400 font-semibold mr-1">
               {locale === 'mn' ? 'Идэвхтэй:' : locale === 'zh' ? '已选条件:' : 'Active:'}
             </span>
@@ -660,86 +660,86 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             {filters.chinaEligibility && filters.chinaEligibility !== 'all' && (
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border ${
                 locale === 'zh'
-                  ? 'bg-red-50 text-red-800 border-red-200'
-                  : 'bg-slate-100 text-slate-800 border-slate-200'
+                  ? 'bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
               }`}>
                 <span>
                   {locale === 'mn' ? 'Гадаад ААН:' : locale === 'zh' ? '🇨🇳 资格筛选:' : 'Eligibility:'}{' '}
                   <strong>{chinaEligibilityOptions.find(o => o.id === filters.chinaEligibility)?.label}</strong>
                 </span>
-                <button onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {filters.search && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                 <span>Хайлт / Захиалагч: <strong>"{filters.search}"</strong></span>
-                <button onClick={handleClearSearch} className="hover:text-blue-950 p-0.5 cursor-pointer">
+                <button onClick={handleClearSearch} className="hover:text-blue-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {currentIndustry !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-800 border border-blue-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
                 <span>Салбар: <strong>{INDUSTRIES.find(i => i.id === currentIndustry)?.labelMn}</strong></span>
-                <button onClick={() => onFilterChange({ industry: 'all', page: 1 })} className="hover:text-blue-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ industry: 'all', page: 1 })} className="hover:text-blue-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {filters.category && filters.category !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                 <span>Төрөл: <strong>{categories.find(c => c.id === filters.category)?.label}</strong></span>
-                <button onClick={() => onFilterChange({ category: 'all', page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ category: 'all', page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {filters.year && filters.year !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                 <span>Он: <strong>{filters.year}</strong></span>
-                <button onClick={() => onFilterChange({ year: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ year: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {activeBudgetTier !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                 <span>Төсөв: <strong>{budgetTiers.find(b => b.id === activeBudgetTier)?.label}</strong></span>
-                <button onClick={() => onFilterChange({ minBudget: undefined, maxBudget: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ minBudget: undefined, maxBudget: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {filters.fundName && filters.fundName !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                 <span>Санхүүжилт: <strong>{filters.fundName}</strong></span>
-                <button onClick={() => onFilterChange({ fundName: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ fundName: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {filters.ruleName && filters.ruleName !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                 <span>Арга: <strong>{filters.ruleName}</strong></span>
-                <button onClick={() => onFilterChange({ ruleName: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ ruleName: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
             )}
 
             {(filters.dateFrom || filters.dateTo) && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 text-slate-800 border border-slate-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                 <span>Огноо: <strong>{filters.dateFrom || '...'} ~ {filters.dateTo || '...'}</strong></span>
-                <button onClick={() => onFilterChange({ dateFrom: undefined, dateTo: undefined, page: 1 })} className="hover:text-slate-950 p-0.5 cursor-pointer">
+                <button onClick={() => onFilterChange({ dateFrom: undefined, dateTo: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
                   <X className="h-3 w-3" />
                 </button>
               </span>
@@ -747,7 +747,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
             <button
               onClick={handleResetAll}
-              className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-rose-600 hover:text-rose-800 hover:bg-rose-50 font-semibold transition-colors cursor-pointer"
+              className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 font-semibold transition-colors cursor-pointer"
             >
               <RotateCcw className="h-3 w-3" />
               <span>Шүүлтүүр цэвэрлэх</span>
@@ -759,15 +759,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       {/* 5. Advanced Filter Slide-Over Modal */}
       {isAdvancedModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/80">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
+            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/60">
               <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4 text-blue-600" />
-                <h3 className="text-sm font-bold text-slate-900">Нарийвчилсан шүүлтүүр</h3>
+                <SlidersHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Нарийвчилсан шүүлтүүр</h3>
               </div>
               <button
                 onClick={() => setIsAdvancedModalOpen(false)}
-                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-200/60"
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -776,7 +776,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <div className="p-5 overflow-y-auto space-y-4 text-xs">
               {/* Fund Source */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   Санхүүжилтийн эх үүсвэр
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -786,8 +786,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                       onClick={() => onFilterChange({ fundName: f.id === 'all' ? undefined : f.id, page: 1 })}
                       className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
                         (filters.fundName || 'all') === f.id || (!filters.fundName && f.id === 'all')
-                          ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
                       }`}
                     >
                       {f.label}
@@ -798,7 +798,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
               {/* Procurement Rule */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   Худалдан авах ажиллагааны арга
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -808,8 +808,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                       onClick={() => onFilterChange({ ruleName: r.id === 'all' ? undefined : r.id, page: 1 })}
                       className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
                         (filters.ruleName || 'all') === r.id || (!filters.ruleName && r.id === 'all')
-                          ? 'bg-blue-50 border-blue-300 text-blue-900 font-bold'
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
+                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
                       }`}
                     >
                       {r.label}
@@ -820,7 +820,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
               {/* Custom Date Range */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   Хугацааны интервал
                 </label>
                 <div className="flex items-center gap-2">
@@ -831,10 +831,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                       dateFrom: e.target.value || undefined,
                       page: 1,
                     })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white"
                     title="Эхлэх огноо"
                   />
-                  <span>-</span>
+                  <span className="text-slate-400">-</span>
                   <input
                     type="date"
                     value={filters.dateTo || ''}
@@ -842,7 +842,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                       dateTo: e.target.value || undefined,
                       page: 1,
                     })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white"
                     title="Дуусах огноо"
                   />
                 </div>
@@ -850,7 +850,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
               {/* Custom Budget Range */}
               <div>
-                <label className="font-bold text-slate-700 block mb-1.5">
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1.5">
                   Төсөвт өртгийн интервал (₮)
                 </label>
                 <div className="flex items-center gap-2">
@@ -859,21 +859,21 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     placeholder="Доод дүн"
                     value={filters.minBudget !== undefined ? filters.minBudget : ''}
                     onChange={(e) => onFilterChange({ minBudget: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white"
                   />
-                  <span>-</span>
+                  <span className="text-slate-400">-</span>
                   <input
                     type="number"
                     placeholder="Дээд дүн"
                     value={filters.maxBudget !== undefined ? filters.maxBudget : ''}
                     onChange={(e) => onFilterChange({ maxBudget: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-200 bg-slate-50/80 flex items-center justify-between">
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/60 flex items-center justify-between">
               <button
                 onClick={() => {
                   onFilterChange({
@@ -886,7 +886,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     page: 1,
                   });
                 }}
-                className="text-xs text-slate-500 hover:text-slate-800 font-medium cursor-pointer"
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium cursor-pointer"
               >
                 Бүгдийг арилгах
               </button>

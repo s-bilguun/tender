@@ -269,13 +269,13 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
   };
 
   return (
-    <section className="bg-slate-900/90 rounded-2xl border border-slate-800 shadow-xs overflow-hidden transition-all">
+    <section className="bg-white dark:bg-slate-900/90 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden transition-all">
       
       {/* 1. Header with View Tabs */}
-      <div className="p-4 sm:p-5 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-950/40">
+      <div className="p-4 sm:p-5 border-b border-slate-200/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/60 dark:bg-slate-950/40">
         <div>
-          <h2 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-blue-400 shrink-0" />
+          <h2 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
             <span>
               {locale === 'zh'
                 ? '采购方大数据与行业分析模块'
@@ -284,7 +284,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                 : 'Buyer Intelligence Modules & Market Sectors'}
             </span>
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             {locale === 'zh'
               ? '实时查看重点采购实体年度预算规模、主要采购商品清单及外资直接投标通道'
               : locale === 'mn'
@@ -294,13 +294,13 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center bg-slate-950 p-1 rounded-xl gap-1 border border-slate-800 self-start md:self-auto">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-950 p-1 rounded-xl gap-1 border border-slate-200 dark:border-slate-800 self-start md:self-auto">
           <button
             onClick={() => setActiveHubTab('buyers')}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeHubTab === 'buyers'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Building2 className="h-3.5 w-3.5" />
@@ -312,7 +312,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
             className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeHubTab === 'sectors'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -324,7 +324,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
             className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeHubTab === 'foreign'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-400 hover:text-white'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Globe2 className="h-3.5 w-3.5" />
@@ -338,55 +338,52 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
         
         {/* Tab A: Buyer Intelligence Modules */}
         {activeHubTab === 'buyers' && (
-          /* Requirement 1: CSS Grid (3 columns on desktop, 1 on mobile) & Standardized Height */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 animate-in fade-in duration-200">
             {DISCOVERY_BUYER_CARDS.map((buyer) => {
               const isSelected = 
                 currentSearch === buyer.query.toLowerCase() || 
                 currentSearch === buyer.shortName.toLowerCase();
 
               return (
-                /* Requirement 5: Hoverable with subtle elevation/shadow effect indicating clickable for full procurement history */
                 <div
                   key={buyer.id}
                   onClick={() => handleSelectBuyer(buyer)}
                   className={`rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between h-full min-h-[380px] cursor-pointer group relative ${
                     isSelected
-                      ? 'border-blue-500 bg-slate-900/95 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/10'
-                      : 'border-slate-800 bg-slate-900/90 hover:border-blue-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1'
+                      ? 'border-blue-500 bg-blue-50/20 dark:bg-slate-900/95 ring-2 ring-blue-500/30 shadow-lg shadow-blue-500/10'
+                      : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-blue-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-900 hover:shadow-xl hover:shadow-blue-500/5 hover:-translate-y-1'
                   }`}
                 >
-                  {/* Top Section: Header Icon, Title & Requirement 4 Status Badges at Top-Right */}
+                  {/* Top Section: Header Icon, Title & Status Badges */}
                   <div className="space-y-3">
                     
                     {/* Top Row: Icon + Direct/JV Status Badge */}
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-2xl p-2 bg-slate-800/90 border border-slate-700/80 rounded-xl shrink-0 shadow-2xs">
+                        <span className="text-2xl p-2 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl shrink-0 shadow-2xs">
                           {buyer.icon}
                         </span>
                         <div className="min-w-0">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-mono">
+                          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block font-mono">
                             {buyer.industryId.toUpperCase()}
                           </span>
-                          <span className="text-xs text-slate-300 font-medium truncate block">
+                          <span className="text-xs text-slate-600 dark:text-slate-300 font-medium truncate block">
                             {buyer.shortName}
                           </span>
                         </div>
                       </div>
 
-                      {/* Requirement 4: Highly visible status badge at top-right (Green for Direct, Yellow for JV) */}
                       <div className="shrink-0">
                         {buyer.eligibility === 'direct_allowed' ? (
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shadow-2xs">
-                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1.5 shadow-2xs">
+                            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                             <span>
                               {locale === 'zh' ? '🇨🇳 可独立直投' : locale === 'mn' ? 'Шууд оролцох' : 'Direct Bid'}
                             </span>
                           </span>
                         ) : (
-                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 flex items-center gap-1.5 shadow-2xs">
-                            <Handshake className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-500/30 flex items-center gap-1.5 shadow-2xs">
+                            <Handshake className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                             <span>
                               {locale === 'zh' ? '🤝 需联合体' : locale === 'mn' ? 'Түншлэл (JV)' : 'JV Required'}
                             </span>
@@ -396,51 +393,50 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                     </div>
 
                     {/* Official Entity Name */}
-                    <h3 className="text-base font-extrabold text-white group-hover:text-blue-400 transition-colors leading-snug">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug">
                       {locale === 'en' ? buyer.nameEn : buyer.name}
                     </h3>
 
-                    {/* Requirement 2: Annual Budget in prominent, large font with subtle green trend indicator next to it */}
-                    <div className="p-3.5 bg-slate-950/70 rounded-xl border border-slate-800/80 space-y-2">
+                    {/* Annual Budget */}
+                    <div className="p-3.5 bg-slate-50 dark:bg-slate-950/70 rounded-xl border border-slate-200/80 dark:border-slate-800/80 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                           {locale === 'zh' ? '年采购预算规模' : locale === 'mn' ? 'Жилийн төсөв' : 'Annual Budget'}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-400">
+                        <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
                           {buyer.budgetUsdEst}
                         </span>
                       </div>
 
                       <div className="flex items-baseline justify-between gap-2 flex-wrap">
-                        <span className="text-xl sm:text-2xl font-black text-white font-mono tracking-tight">
+                        <span className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
                           {buyer.totalBudgetFormatted}
                         </span>
 
-                        {/* Subtle Green Trend Indicator */}
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold font-mono px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold font-mono px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30">
                           <TrendingUp className="h-3 w-3" />
                           <span>{buyer.trendGrowth}</span>
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-slate-400 border-t border-slate-850 pt-2">
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200/60 dark:border-slate-850 pt-2">
                         <span>{locale === 'mn' ? 'Нийт зарласан тендер:' : 'Active & Past Bids:'}</span>
-                        <span className="font-bold text-blue-400 font-mono">
+                        <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
                           {buyer.activeTendersCount.toLocaleString()}+ тендер
                         </span>
                       </div>
                     </div>
 
-                    {/* Requirement 3: Turn "Гол нийлүүлэх бараа" into a horizontal row of distinct, color-coded pill tags */}
+                    {/* Primary Commodities */}
                     <div className="space-y-2 pt-1">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                         {locale === 'zh' ? '主要采购商品清单：' : locale === 'mn' ? 'Гол нийлүүлэх бараа:' : 'Primary Commodities:'}
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {(locale === 'en' ? buyer.topGoodsEn : buyer.topGoodsMn).map((good, idx) => (
                           <span
                             key={idx}
-                            className="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-100 border border-slate-700/80 font-medium group-hover:border-slate-600 transition-colors shadow-2xs"
+                            className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 font-medium group-hover:border-slate-300 dark:group-hover:border-slate-600 transition-colors shadow-2xs"
                           >
                             {good}
                           </span>
@@ -450,16 +446,16 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
                   </div>
 
-                  {/* Bottom Procurement History Action Prompt (Click Indication) */}
-                  <div className="pt-3 mt-4 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5 text-slate-400">
-                      <History className="h-3.5 w-3.5 text-blue-400" />
+                  {/* Bottom History Link */}
+                  <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                      <History className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                       <span className="text-[11px] line-clamp-1 italic">
                         {locale === 'en' ? buyer.biddingTipEn : buyer.biddingTipMn}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1 text-xs font-bold text-blue-400 shrink-0 ml-2 group-hover:text-blue-300">
+                    <div className="flex items-center gap-1 text-xs font-bold text-blue-600 dark:text-blue-400 shrink-0 ml-2 group-hover:text-blue-500">
                       <span>
                         {isSelected
                           ? (locale === 'mn' ? 'Сонгогдсон' : 'Filtered')
@@ -477,7 +473,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
         {/* Tab B: Industrial Sectors Market Intelligence Cards */}
         {activeHubTab === 'sectors' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 animate-in fade-in duration-200">
             {DISCOVERY_SECTOR_CARDS.map((sector) => {
               const isSelected = filters.industry === sector.id;
 
@@ -487,40 +483,40 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                   onClick={() => handleSelectSector(sector)}
                   className={`rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between h-full min-h-[360px] cursor-pointer group relative ${
                     isSelected
-                      ? 'border-emerald-500 bg-slate-900/95 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10'
-                      : 'border-slate-800 bg-slate-900/90 hover:border-emerald-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1'
+                      ? 'border-emerald-500 bg-emerald-50/20 dark:bg-slate-900/95 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10'
+                      : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-emerald-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-900 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1'
                   }`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-2xl p-2 bg-slate-800/90 border border-slate-700/80 rounded-xl shadow-2xs">
+                      <span className="text-2xl p-2 bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl shadow-2xs">
                         {sector.icon}
                       </span>
                       
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-500/15 text-blue-400 border border-blue-500/30 font-mono">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30 font-mono">
                         {sector.activeCount}+ {locale === 'mn' ? 'тендер' : 'bids'}
                       </span>
                     </div>
 
-                    <h3 className="text-base font-extrabold text-white group-hover:text-emerald-400 transition-colors">
+                    <h3 className="text-base font-extrabold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                       {locale === 'zh' ? sector.nameZh : locale === 'mn' ? sector.nameMn : sector.nameEn}
                     </h3>
 
                     {/* Metrics */}
-                    <div className="p-3.5 bg-slate-950/70 rounded-xl border border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
+                    <div className="p-3.5 bg-slate-50 dark:bg-slate-950/70 rounded-xl border border-slate-200/80 dark:border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
                       <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                           {locale === 'zh' ? '总采购资金池' : locale === 'mn' ? 'Салбарын нийт төсөв' : 'Sector Budget Pool'}
                         </span>
-                        <span className="text-lg font-black text-white font-mono block mt-0.5">
+                        <span className="text-lg font-black text-slate-900 dark:text-white font-mono block mt-0.5">
                           {sector.totalBudgetFormatted}
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                           {locale === 'zh' ? '在办招标' : locale === 'mn' ? 'Идэвхтэй тендер' : 'Active Bids'}
                         </span>
-                        <span className="text-lg font-black text-emerald-400 font-mono block mt-0.5">
+                        <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 font-mono block mt-0.5">
                           {sector.activeCount}+
                         </span>
                       </div>
@@ -528,14 +524,14 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
                     {/* In-Demand Goods */}
                     <div className="space-y-2 pt-1">
-                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                         {locale === 'zh' ? '高频采购物资：' : locale === 'mn' ? 'Эрэлттэй бараа бүтээгдэхүүн:' : 'Top Procured Commodities:'}
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {(locale === 'en' ? sector.topItemsEn : sector.topItemsMn).map((item, idx) => (
                           <span
                             key={idx}
-                            className="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-100 border border-slate-700/80 font-medium group-hover:border-slate-600 transition-colors shadow-2xs"
+                            className="text-xs px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-100 border border-slate-200 dark:border-slate-700/80 font-medium group-hover:border-slate-300 dark:group-hover:border-slate-600 transition-colors shadow-2xs"
                           >
                             {item}
                           </span>
@@ -544,8 +540,8 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                     </div>
                   </div>
 
-                  <div className="pt-3 mt-4 border-t border-slate-800/80 flex items-center justify-between text-xs">
-                    <span className="text-xs font-bold text-emerald-400 flex items-center gap-1 ml-auto group-hover:text-emerald-300">
+                  <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs">
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 ml-auto group-hover:text-emerald-500">
                       <span>{isSelected ? (locale === 'mn' ? 'Сонгогдсон' : 'Filtered') : (locale === 'mn' ? 'Салбараар шүүх' : 'Filter by Sector')}</span>
                       <ArrowUpRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                     </span>
@@ -558,29 +554,29 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
         {/* Tab C: Cross-Border Foreign Bidding Routes */}
         {activeHubTab === 'foreign' && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 animate-in fade-in duration-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5 animate-in fade-in duration-200">
             {/* Direct Foreign Bidding Card */}
             <div
               onClick={() => handleSelectEligibility('direct')}
               className={`rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between h-full min-h-[360px] cursor-pointer group ${
                 filters.chinaEligibility === 'direct'
-                  ? 'border-emerald-500 bg-slate-900/95 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10'
-                  : 'border-slate-800 bg-slate-900/90 hover:border-emerald-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1'
+                  ? 'border-emerald-500 bg-emerald-50/20 dark:bg-slate-900/95 ring-2 ring-emerald-500/30 shadow-lg shadow-emerald-500/10'
+                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-emerald-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-900 hover:shadow-xl hover:shadow-emerald-500/5 hover:-translate-y-1'
               }`}
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="p-2.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 rounded-xl text-xl">
+                  <span className="p-2.5 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 rounded-xl text-xl">
                     🌐
                   </span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/30">
                     100% Direct Margin
                   </span>
                 </div>
-                <h3 className="text-base font-extrabold text-white">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                   {locale === 'zh' ? '🇨🇳 独立跨境直投通道' : locale === 'mn' ? 'Гадаадын нийлүүлэгч бие даан оролцох' : 'Direct Foreign Bidding (Direct)'}
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {locale === 'zh'
                     ? '3亿图格里克以上单项商品、设备物资采购，中企可使用中国企业执照与银行反担保函独立投标，无须设立蒙古国子公司。'
                     : locale === 'mn'
@@ -589,11 +585,11 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                 </p>
               </div>
 
-              <div className="pt-3 mt-4 border-t border-slate-800/80 flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-400">
+              <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                   {locale === 'mn' ? 'Шууд оролцох тендерүүд' : 'View Eligible Tenders'}
                 </span>
-                <ArrowUpRight className="h-4 w-4 text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
 
@@ -602,23 +598,23 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
               onClick={() => handleSelectEligibility('joint_venture')}
               className={`rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between h-full min-h-[360px] cursor-pointer group ${
                 filters.chinaEligibility === 'joint_venture'
-                  ? 'border-indigo-500 bg-slate-900/95 ring-2 ring-indigo-500/30 shadow-lg shadow-indigo-500/10'
-                  : 'border-slate-800 bg-slate-900/90 hover:border-indigo-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1'
+                  ? 'border-indigo-500 bg-indigo-50/20 dark:bg-slate-900/95 ring-2 ring-indigo-500/30 shadow-lg shadow-indigo-500/10'
+                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-indigo-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-900 hover:shadow-xl hover:shadow-indigo-500/5 hover:-translate-y-1'
               }`}
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="p-2.5 bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 rounded-xl text-xl">
+                  <span className="p-2.5 bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-xl">
                     🤝
                   </span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-300 dark:border-indigo-500/30">
                     Low Risk / Local Compliance
                   </span>
                 </div>
-                <h3 className="text-base font-extrabold text-white">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                   {locale === 'zh' ? '🤝 蒙古本土联合体伙伴对接' : locale === 'mn' ? 'Монголын тусгай зөвшөөрөлтэй түншээр хамтрах' : 'Local Joint Venture (JV) Match'}
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {locale === 'zh'
                     ? '针对建筑工程、道路施工及特种安装项目，平台撮合蒙古国持证合规联合体伙伴，蒙方负责属地资质与报关，您专注货物出厂与技术。'
                     : locale === 'mn'
@@ -627,11 +623,11 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                 </p>
               </div>
 
-              <div className="pt-3 mt-4 border-t border-slate-800/80 flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-400">
+              <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
                   {locale === 'mn' ? 'Түншлэлтэй тендерүүд' : 'Explore JV Tenders'}
                 </span>
-                <ArrowUpRight className="h-4 w-4 text-indigo-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="h-4 w-4 text-indigo-600 dark:text-indigo-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
 
@@ -640,23 +636,23 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
               onClick={() => onFilterChange({ urgency: 'urgent', tabMode: 'closing_soon', page: 1 })}
               className={`rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between h-full min-h-[360px] cursor-pointer group ${
                 filters.tabMode === 'closing_soon'
-                  ? 'border-rose-500 bg-slate-900/95 ring-2 ring-rose-500/30 shadow-lg shadow-rose-500/10'
-                  : 'border-slate-800 bg-slate-900/90 hover:border-rose-500/50 hover:bg-slate-900 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1'
+                  ? 'border-rose-500 bg-rose-50/20 dark:bg-slate-900/95 ring-2 ring-rose-500/30 shadow-lg shadow-rose-500/10'
+                  : 'border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-rose-500/50 hover:bg-slate-50/80 dark:hover:bg-slate-900 hover:shadow-xl hover:shadow-rose-500/5 hover:-translate-y-1'
               }`}
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="p-2.5 bg-rose-500/15 border border-rose-500/30 text-rose-400 rounded-xl text-xl">
+                  <span className="p-2.5 bg-rose-50 dark:bg-rose-500/15 border border-rose-200 dark:border-rose-500/30 text-rose-600 dark:text-rose-400 rounded-xl text-xl">
                     🚨
                   </span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 animate-pulse">
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-500/30 animate-pulse">
                     &lt; 48-72 Hours Left
                   </span>
                 </div>
-                <h3 className="text-base font-extrabold text-white">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                   {locale === 'zh' ? '⏳ 48小时内即将截标急单' : locale === 'mn' ? '⏳ Хаагдах дөхсөн яаралтай тендерүүд' : 'Urgent Closing Bids (<48h)'}
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
                   {locale === 'zh'
                     ? '截标时间临近、竞争对手较少的高确定性标段，支持加急报价与技术规范快速匹配。'
                     : locale === 'mn'
@@ -665,11 +661,11 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                 </p>
               </div>
 
-              <div className="pt-3 mt-4 border-t border-slate-800/80 flex items-center justify-between">
-                <span className="text-xs font-bold text-rose-400">
+              <div className="pt-3 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+                <span className="text-xs font-bold text-rose-600 dark:text-rose-400">
                   {locale === 'mn' ? 'Яаралтай тендер үзэх' : 'View Urgent Bids'}
                 </span>
-                <ArrowUpRight className="h-4 w-4 text-rose-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                <ArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </div>
             </div>
           </div>
