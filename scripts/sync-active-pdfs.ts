@@ -263,27 +263,48 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
  * Fetch candidates among active tenders that need a stored PDF
  */
 export async function getMissingPdfCandidates(maxCandidates = 1000): Promise<any[]> {
-  const { data: activeTenders, error } = await supabase
-    .from('tenders')
-    .select('invitation_id, invitation_number, tender_code, tender_name, total_budget, budget_entity_name, raw_data')
-    .eq('is_receiving', 1)
-    .order('publish_date', { ascending: false })
-    .limit(1000);
+  const candidates: any[] = [];
+  const pageSize = 100;
+  let page = 0;
 
-  if (error || !activeTenders) {
-    console.error('❌ Could not query active tenders:', error?.message);
-    return [];
+  while (candidates.length < maxCandidates) {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data: batch, error } = await supabase
+      .from('tenders')
+      .select('invitation_id, invitation_number, tender_code, tender_name, total_budget, budget_entity_name, raw_data')
+      .eq('is_receiving', 1)
+      .order('publish_date', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      console.error('❌ Could not query active tenders batch:', error.message);
+      break;
+    }
+
+    if (!batch || batch.length === 0) {
+      break;
+    }
+
+    for (const t of batch) {
+      const rawData = t.raw_data;
+      if (rawData?.pdfUrl && typeof rawData.pdfUrl === 'string' && rawData.pdfUrl.includes('supabase.co')) {
+        continue;
+      }
+      const docs = rawData?.liveBundle?.documents;
+      const hasStoredPdf = docs?.some((d: any) => d.isStored || (d.downloadUrl && typeof d.downloadUrl === 'string' && d.downloadUrl.includes('supabase.co')));
+      if (!hasStoredPdf) {
+        candidates.push(t);
+        if (candidates.length >= maxCandidates) break;
+      }
+    }
+
+    if (batch.length < pageSize) break;
+    page++;
   }
 
-  return activeTenders.filter((t) => {
-    const rawData = t.raw_data;
-    if (rawData?.pdfUrl && typeof rawData.pdfUrl === 'string' && rawData.pdfUrl.includes('supabase.co')) {
-      return false;
-    }
-    const docs = rawData?.liveBundle?.documents;
-    const hasStoredPdf = docs?.some((d: any) => d.isStored || (d.downloadUrl && typeof d.downloadUrl === 'string' && d.downloadUrl.includes('supabase.co')));
-    return !hasStoredPdf;
-  }).slice(0, maxCandidates);
+  return candidates;
 }
 
 /**
