@@ -129,6 +129,15 @@ export interface TenderItem {
   // Full Document Ingestion & Search Engine Fields
   full_scope_of_work?: string;
   eligibility_requirements?: string[];
+  items?: Array<{ name: string; specs?: string; unit?: string; qty?: string | number }>;
+  deliverySchedule?: DeliveryScheduleItem[];
+  licenses?: string[];
+  personnel?: any[];
+  machinery?: string[];
+  turnoverReq?: string;
+  liquidAssetsReq?: string;
+  similarExpReq?: string;
+  bidSecurityReq?: string;
   historical_flags?: string;
   raw_data?: any;
 

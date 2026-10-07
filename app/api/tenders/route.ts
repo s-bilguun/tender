@@ -220,6 +220,15 @@ export async function GET(request: NextRequest) {
             liveBundleSummary,
             full_scope_of_work: fullScope || undefined,
             eligibility_requirements: Array.isArray(eligReqs) ? eligReqs : undefined,
+            items: rawData.structuredSpecs?.items || liveBundle?.structuredSpecs?.items || rawData.items || undefined,
+            deliverySchedule: rawData.structuredSpecs?.deliverySchedule || liveBundle?.structuredSpecs?.deliverySchedule || undefined,
+            licenses: rawData.structuredSpecs?.licenses || liveBundle?.structuredSpecs?.licenses || undefined,
+            personnel: rawData.structuredSpecs?.personnel || liveBundle?.structuredSpecs?.personnel || undefined,
+            machinery: rawData.structuredSpecs?.machinery || liveBundle?.structuredSpecs?.machinery || undefined,
+            turnoverReq: rawData.structuredSpecs?.turnoverReq || liveBundle?.structuredSpecs?.turnoverReq || undefined,
+            liquidAssetsReq: rawData.structuredSpecs?.liquidAssetsReq || liveBundle?.structuredSpecs?.liquidAssetsReq || undefined,
+            similarExpReq: rawData.structuredSpecs?.similarExpReq || liveBundle?.structuredSpecs?.similarExpReq || undefined,
+            bidSecurityReq: rawData.structuredSpecs?.bidSecurityReq || liveBundle?.structuredSpecs?.bidSecurityReq || undefined,
             raw_data: {
               pdfUrl,
               pdfFileName,
@@ -227,9 +236,10 @@ export async function GET(request: NextRequest) {
               pdfPageCount: rawData.pdfPageCount || liveBundle?.pdfPageCount,
               full_scope_of_work: fullScope,
               eligibility_requirements: eligReqs,
+              structuredSpecs: rawData.structuredSpecs || liveBundle?.structuredSpecs,
               liveBundle: liveBundle ? {
                 documents: liveBundle.documents,
-                structuredSpecs: liveBundle.structuredSpecs,
+                structuredSpecs: liveBundle.structuredSpecs || rawData.structuredSpecs,
                 fullScopeOfWork: fullScope,
               } : (pdfUrl ? {
                 documents: [{
@@ -238,6 +248,7 @@ export async function GET(request: NextRequest) {
                   isStored: true,
                   isPrimary: true,
                 }],
+                structuredSpecs: rawData.structuredSpecs,
                 fullScopeOfWork: fullScope,
               } : undefined),
             },

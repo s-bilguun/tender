@@ -405,46 +405,48 @@ export async function getTenderDetailData(id: string | number, options: { useSto
       });
       (technicalSpecs as any).isScannedOcr = !!liveBundle.isScannedOcr;
     }
+  }
 
-    // Extracted PDF text & structured criteria
-    if (liveBundle.structuredSpecs) {
+  // Extracted PDF text & structured criteria from liveBundle or raw_data
+  const specsSource = liveBundle?.structuredSpecs || rawData?.structuredSpecs || rawData?.liveBundle?.structuredSpecs;
+  if (specsSource) {
       // Real BDS requirements from official PDF
-      if (liveBundle.structuredSpecs.licenses && liveBundle.structuredSpecs.licenses.length > 0) {
-        bds.requiredLicenses = liveBundle.structuredSpecs.licenses;
+      if (specsSource.licenses && specsSource.licenses.length > 0) {
+        bds.requiredLicenses = specsSource.licenses;
       }
-      if (liveBundle.structuredSpecs.personnel && liveBundle.structuredSpecs.personnel.length > 0) {
-        bds.keyPersonnel = liveBundle.structuredSpecs.personnel;
+      if (specsSource.personnel && specsSource.personnel.length > 0) {
+        bds.keyPersonnel = specsSource.personnel;
       }
-      if (liveBundle.structuredSpecs.machinery && liveBundle.structuredSpecs.machinery.length > 0) {
-        bds.machinery = liveBundle.structuredSpecs.machinery;
+      if (specsSource.machinery && specsSource.machinery.length > 0) {
+        bds.machinery = specsSource.machinery;
       }
-      if (liveBundle.structuredSpecs.bidSecurityReq) {
-        (bds as any).bidSecurityReq = liveBundle.structuredSpecs.bidSecurityReq;
-        if (liveBundle.structuredSpecs.bidSecurityReq.includes('Шаардахгүй')) {
+      if (specsSource.bidSecurityReq) {
+        (bds as any).bidSecurityReq = specsSource.bidSecurityReq;
+        if (specsSource.bidSecurityReq.includes('Шаардахгүй')) {
           bds.bidSecurityAmount = 0;
           bds.bidSecurity1Pct = 0;
           bds.bidSecurity2Pct = 0;
         }
       }
-      if (liveBundle.structuredSpecs.turnoverReq) {
-        (bds as any).turnoverReq = liveBundle.structuredSpecs.turnoverReq;
+      if (specsSource.turnoverReq) {
+        (bds as any).turnoverReq = specsSource.turnoverReq;
       }
-      if (liveBundle.structuredSpecs.similarExpReq) {
-        (bds as any).similarExpReq = liveBundle.structuredSpecs.similarExpReq;
+      if (specsSource.similarExpReq) {
+        (bds as any).similarExpReq = specsSource.similarExpReq;
       }
-      if (liveBundle.structuredSpecs.liquidAssetsReq) {
-        (bds as any).liquidAssetsReq = liveBundle.structuredSpecs.liquidAssetsReq;
+      if (specsSource.liquidAssetsReq) {
+        (bds as any).liquidAssetsReq = specsSource.liquidAssetsReq;
       }
 
-      (technicalSpecs as any).extractedSpecs = liveBundle.structuredSpecs;
-      (technicalSpecs as any).realSpecsText = liveBundle.structuredSpecs.rawSpecText;
-      (technicalSpecs as any).extractedQualifications = liveBundle.structuredSpecs.qualifications;
-      (technicalSpecs as any).pdfPageCount = liveBundle.pdfPageCount;
-      (technicalSpecs as any).rawPdfText = liveBundle.pdfText ? liveBundle.pdfText.substring(0, 30000) : undefined;
+      (technicalSpecs as any).extractedSpecs = specsSource;
+      (technicalSpecs as any).realSpecsText = specsSource.rawSpecText;
+      (technicalSpecs as any).extractedQualifications = specsSource.qualifications;
+      (technicalSpecs as any).pdfPageCount = liveBundle?.pdfPageCount || rawData?.pdfPageCount;
+      (technicalSpecs as any).rawPdfText = liveBundle?.pdfText ? liveBundle.pdfText.substring(0, 30000) : undefined;
 
       // Real Special Conditions of Contract (ГТН / SCC)
-      if (liveBundle.structuredSpecs.specialConditions && liveBundle.structuredSpecs.specialConditions.length > 0) {
-        const validScc = liveBundle.structuredSpecs.specialConditions.filter((c: any) => {
+      if (specsSource.specialConditions && specsSource.specialConditions.length > 0) {
+        const validScc = specsSource.specialConditions.filter((c: any) => {
           if (!c.content) return false;
           const str = c.content.trim();
           if (str.length === 0 || str.endsWith(':')) return false;
@@ -496,26 +498,12 @@ export async function getTenderDetailData(id: string | number, options: { useSto
               };
             }
           }
-        } else {
-          (technicalSpecs as any).specialConditions = [];
-          (bds as any).specialConditions = [];
-          (technicalSpecs as any).sccStandardNotice = 'Захиалагч ТШББ-д гэрээний тусгай нөхцөлийг жишиг загвараар баталсан бөгөөд нарийвчилсан хугацаа, нөхцөлүүд нь ТӨХ болон нийлүүлэлтийн хуваарийн дагуу хэрэгжинэ.';
         }
       }
 
-      // Real Delivery Schedule from official PDF
-      if (liveBundle.structuredSpecs.deliverySchedule && liveBundle.structuredSpecs.deliverySchedule.length > 0) {
-        (technicalSpecs as any).deliverySchedule = liveBundle.structuredSpecs.deliverySchedule;
-        technicalSpecs.sampleItems = liveBundle.structuredSpecs.deliverySchedule.map((it: any) => ({
-          name: it.name,
-          quantity: it.quantity,
-          unit: it.unit,
-          spec: `Хүргэх газар: ${it.location} | Хугацаа: ${it.deadline}`,
-          isRealExtracted: true
-        }));
-        (technicalSpecs as any).isRealExtracted = true;
-      } else if (liveBundle.structuredSpecs.items && liveBundle.structuredSpecs.items.length > 0) {
-        technicalSpecs.sampleItems = liveBundle.structuredSpecs.items.map((it: any) => ({
+      // Real Itemized BoQ Table from official PDF
+      if (specsSource.items && specsSource.items.length > 0) {
+        technicalSpecs.sampleItems = specsSource.items.map((it: any) => ({
           name: it.name,
           quantity: it.quantity || it.qty || 1,
           unit: it.unit || 'ширхэг',
@@ -523,11 +511,26 @@ export async function getTenderDetailData(id: string | number, options: { useSto
           isRealExtracted: true
         }));
         (technicalSpecs as any).isRealExtracted = true;
+      } else if (specsSource.deliverySchedule && specsSource.deliverySchedule.length > 0) {
+        technicalSpecs.sampleItems = specsSource.deliverySchedule.map((it: any) => ({
+          name: it.name,
+          quantity: it.quantity,
+          unit: it.unit,
+          spec: `Хүргэх газар: ${it.location} | Хугацаа: ${it.deadline}`,
+          isRealExtracted: true
+        }));
+        (technicalSpecs as any).isRealExtracted = true;
+      }
+
+      // Real Delivery Schedule from official PDF
+      if (specsSource.deliverySchedule && specsSource.deliverySchedule.length > 0) {
+        (technicalSpecs as any).deliverySchedule = specsSource.deliverySchedule;
       }
     }
 
-    // Sub-tenders / Packages & Official Status
-    if (liveBundle.subTenders && liveBundle.subTenders.length > 0) {
+    if (liveBundle) {
+      // Sub-tenders / Packages & Official Status
+      if (liveBundle.subTenders && liveBundle.subTenders.length > 0) {
       (results as any).subTenders = liveBundle.subTenders;
       (tenderItem as any).subTenders = liveBundle.subTenders;
 

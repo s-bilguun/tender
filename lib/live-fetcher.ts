@@ -448,6 +448,90 @@ export function parseDeliverySchedule(fullText: string): DeliveryScheduleItem[] 
   return list;
 }
 
+export function parseTechnicalSpecsTable(fullText: string): Array<{ name: string; specs: string; unit: string; qty: string | number }> {
+  const items: Array<{ name: string; specs: string; unit: string; qty: string | number }> = [];
+  if (!fullText) return items;
+
+  const techStartIdx = fullText.lastIndexOf('ТЕХНИКИЙН ТОДОРХОЙЛОЛТ');
+  const deliveryStartIdx = fullText.lastIndexOf('БАРАА НИЙЛҮҮЛЭЛТИЙН ХУВААРЬ');
+  
+  let targetSection = '';
+  if (techStartIdx !== -1) {
+    const section = fullText.slice(techStartIdx);
+    const endMatch = section.search(/IV\s*БҮЛЭГ|ТЕНДЕРИЙН\s*ЖИШИГ\s*МАЯГТУУД|V\s*БҮЛЭГ|МАЯГТ\s*1/i);
+    targetSection = endMatch !== -1 ? section.slice(0, endMatch) : section.slice(0, 35000);
+  } else if (deliveryStartIdx !== -1) {
+    const section = fullText.slice(deliveryStartIdx);
+    const endMatch = section.search(/IV\s*БҮЛЭГ|ТЕНДЕРИЙН\s*ЖИШИГ\s*МАЯГТУУД|V\s*БҮЛЭГ/i);
+    targetSection = endMatch !== -1 ? section.slice(0, endMatch) : section.slice(0, 25000);
+  }
+
+  if (!targetSection) return items;
+
+  const lines = targetSection.split('\n').map(l => l.trim()).filter(Boolean);
+  let currentItem: { number?: number; name: string; specs: string; unit: string; qty: number } | null = null;
+  const numRowRegex = /^(\d{1,3})[\.\)]\s*(.*)$/;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^(?:No|№|Барааны нэр|Захиалагчийн|Техникийн тодорхойлолт|Хэмжих нэгж|Тоо хэмжээ|Тавигдах шаардлага|Санамж|Тайлбар)$/i.test(line)) {
+      continue;
+    }
+    if (line.includes('ҮНИЙН САНАЛЫН МАЯГТ') || line.includes('ТЕНДЕР БЭЛТГЭХ ЗААВАР')) {
+      break;
+    }
+
+    const match = line.match(numRowRegex);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      if (num >= 1 && num <= 300) {
+        if (currentItem && currentItem.name && currentItem.name.length > 2) {
+          items.push(currentItem);
+        }
+        currentItem = {
+          number: num,
+          name: match[2].trim(),
+          specs: '',
+          unit: 'ш',
+          qty: 1
+        };
+        continue;
+      }
+    }
+
+    if (currentItem) {
+      if (!currentItem.name) {
+        currentItem.name = line;
+      } else {
+        currentItem.specs = currentItem.specs ? `${currentItem.specs} ${line}` : line;
+      }
+    }
+  }
+
+  if (currentItem && currentItem.name && currentItem.name.length > 2) {
+    items.push(currentItem);
+  }
+
+  return items.map(item => {
+    let qty: number | string = 1;
+    let unit = 'ш';
+    const specs = item.specs || '';
+    const textToSearch = `${item.name} ${specs}`;
+    const qtyUnitMatch = textToSearch.match(/(\d+(?:[\,\.]\d+)?)\s*(?:хүртэл\s*)?(Ширхэг|ширхэг|ш|ком|комплект|хайрцаг|багц|метр|м|м2|м3|тн|тонн|кг|литр|л|хоног|сар)(?![А-ЯЁа-яёA-Za-z0-9])/i);
+    if (qtyUnitMatch) {
+      qty = parseFloat(qtyUnitMatch[1].replace(',', '.'));
+      unit = qtyUnitMatch[2].toLowerCase();
+    }
+
+    return {
+      name: item.name,
+      specs: specs.trim(),
+      unit,
+      qty
+    };
+  });
+}
+
 // Extract structured specifications and requirements from raw Mongolian PDF text
 export function parsePdfContent(fullText: string): ParsedPdfResult {
   const result: ParsedPdfResult = {
@@ -469,7 +553,12 @@ export function parsePdfContent(fullText: string): ParsedPdfResult {
 
   // Extract Delivery Schedule (БАРАА НИЙЛҮҮЛЭЛТИЙН ХУВААРЬ)
   result.deliverySchedule = parseDeliverySchedule(fullText);
-  if (result.deliverySchedule.length > 0) {
+
+  // Extract Itemized BoQ Table from Technical Specifications (ТЕХНИКИЙН ТОДОРХОЙЛОЛТ)
+  const techItems = parseTechnicalSpecsTable(fullText);
+  if (techItems.length > 0) {
+    result.items = techItems;
+  } else if (result.deliverySchedule.length > 0) {
     result.items = result.deliverySchedule.map(s => ({
       name: s.name,
       specs: `Хүргэх газар: ${s.location} | Хугацаа: ${s.deadline}`,

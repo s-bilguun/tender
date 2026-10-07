@@ -1126,7 +1126,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             }`}
           >
             <Layers className="h-4 w-4 shrink-0" />
-            <span className="truncate">Техникийн тодорхойлолт</span>
+            <span className="truncate">Техникийн тодорхойлолт & Барааны хүснэгт</span>
+            {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-100 text-blue-800 font-mono font-bold shrink-0">
+                {technicalSpecs.sampleItems.length}
+              </span>
+            )}
           </button>
 
           <button
@@ -1223,6 +1228,32 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   <span>{copiedStructuredJson ? 'JSON хуулагдлаа' : 'Бүтцийн өгөгдлийг хуулах (JSON)'}</span>
                 </button>
               </div>
+
+              {/* Highlight Banner: Extracted Items Table */}
+              {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-white border border-blue-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                      <Layers className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-slate-900">
+                        ТШЗ PDF-ээс ялгасан бараа, ажлын хүснэгт ({technicalSpecs.sampleItems.length} нэр төрөл)
+                      </h4>
+                      <p className="text-xs text-slate-600 mt-0.5">
+                        Тоо хэмжээ, хэмжих нэгж, чанарын техникийн шаардлагууд бүрэн бүтэцчилэгдсэн байна.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('tech')}
+                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shrink-0 shadow-2xs cursor-pointer flex items-center gap-1.5 transition-colors self-start sm:self-auto"
+                  >
+                    <span>Хүснэгт үзэх & CSV татах</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
 
               {/* 1. Тусгай зөвшөөрөл */}
               <div className="border border-slate-200 rounded-lg p-4 space-y-2.5">
@@ -1444,38 +1475,81 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       </div>
                     </div>
 
-                    <div className="p-3 sm:p-4 space-y-3 bg-white max-h-[600px] overflow-y-auto">
-                      {filtered.length === 0 ? (
-                        <div className="text-xs text-slate-500 text-center py-6 italic">
-                          &quot;{itemSearchQuery}&quot; хайлтад тохирох бараа, үзүүлэлт олдсонгүй.
-                        </div>
-                      ) : (
-                        filtered.map((item: any, idx: number) => (
-                          <div key={idx} className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-200/90 hover:border-slate-300 transition-colors">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-200/60">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[11px] font-bold flex items-center justify-center shrink-0">
+                    <div className="overflow-x-auto max-h-[600px] overflow-y-auto bg-white">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead className="bg-slate-100/90 text-slate-700 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10 border-b border-slate-200">
+                          <tr>
+                            <th className="py-2.5 px-3 w-12 text-center">№</th>
+                            <th className="py-2.5 px-3 min-w-[200px]">Бараа / Ажлын нэр</th>
+                            <th className="py-2.5 px-3 w-32 text-center">Тоо хэмжээ & Нэгж</th>
+                            <th className="py-2.5 px-4 min-w-[300px]">Техникийн тодорхойлолт & Шаардлага</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {filtered.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="py-8 text-center text-slate-500 italic">
+                                &quot;{itemSearchQuery}&quot; хайлтад тохирох бараа, үзүүлэлт олдсонгүй.
+                              </td>
+                            </tr>
+                          ) : (
+                            filtered.map((item: any, idx: number) => (
+                              <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                                <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-400">
                                   {idx + 1}
-                                </span>
-                                <span className="font-bold text-slate-900 text-xs sm:text-sm">{item.name}</span>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                                <span className="px-2.5 py-0.5 rounded-md bg-white border border-slate-200 font-mono font-bold text-xs text-blue-700 shadow-2xs">
-                                  {item.quantity} {item.unit}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="pt-2 text-xs text-slate-600 leading-relaxed text-pretty">
-                              <span className="text-[11px] font-semibold text-slate-500 block mb-0.5">Техникийн тодорхойлолт & Чанарын шаардлага:</span>
-                              {item.spec}
-                            </div>
-                          </div>
-                        ))
-                      )}
+                                </td>
+                                <td className="py-2.5 px-3 font-bold text-slate-900">
+                                  {item.name}
+                                </td>
+                                <td className="py-2.5 px-3 text-center">
+                                  <span className="px-2.5 py-0.5 rounded-md font-mono font-bold text-xs bg-blue-50 text-blue-700 border border-blue-200 inline-block shadow-2xs">
+                                    {item.quantity} {item.unit}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-4 text-slate-600 leading-relaxed text-pretty text-[11px] sm:text-xs">
+                                  {item.spec}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 );
               })()}
+
+              {/* 1. Хэрэв хүснэгт задлагдаагүй бол PDF үзэх уриалга карт */}
+              {(!technicalSpecs.sampleItems || technicalSpecs.sampleItems.length === 0) && (
+                <div className="border border-slate-200 rounded-xl p-5 bg-white text-center space-y-3 shadow-2xs">
+                  <div className="h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mx-auto">
+                    <FileSpreadsheet className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-900">
+                      Бараа, ажлын хүснэгт эх ТШББ баримтад хавсрагдсан
+                    </h4>
+                    <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                      Энэ тендерийн нарийвчилсан тоо хэмжээ, тамгатай хүснэгт болон техникийн даалгаврыг албан ёсны ТШЗ PDF баримтаас шууд унших боломжтой.
+                    </p>
+                  </div>
+                  {storedPrimaryPdf && (
+                    <button
+                      onClick={() => {
+                        setPdfReaderDoc({
+                          url: storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url,
+                          name: storedPrimaryPdf.name || 'ТШББ.pdf'
+                        });
+                        setIsPdfReaderOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      <span>📖 ТШЗ PDF Уншигчаар үзэх</span>
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* 1b. БАРАА НИЙЛҮҮЛЭЛТИЙН АЛБАН ЁСНЫ ХУВААРЬ (DELIVERY SCHEDULE) */}
               {technicalSpecs.deliverySchedule && technicalSpecs.deliverySchedule.length > 0 && (
