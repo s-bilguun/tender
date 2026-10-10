@@ -9,7 +9,7 @@ import { formatCurrencyMulti, MNT_TO_RMB_RATE, MNT_TO_USD_RATE } from '@/lib/pro
 import { 
   Building2, Sparkles, ExternalLink, Star, Clock, 
   Loader2, FileText, ArrowUpRight, ShieldCheck, AlertCircle, 
-  DollarSign, Handshake, Globe2
+  DollarSign, Handshake, Globe2, Layers, Package, CheckCircle2
 } from 'lucide-react';
 
 interface TenderCardProps {
@@ -143,18 +143,25 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   const urgency = calculateUrgency(tender.receiveDate || tender.openDate);
   const portalUrl = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
 
-  // PDF Extracted Highlight
+  // PDF & BoQ Extracted Data
   const rawData = tender.raw_data || (tender as any).rawData;
   const storedPdfUrl = rawData?.pdfUrl || rawData?.liveBundle?.documents?.find((d: any) => d.isStored || d.downloadUrl?.includes('supabase.co'))?.downloadUrl;
   const hasStoredPdf = Boolean(storedPdfUrl || rawData?.hasPdf);
 
+  const items = tender.items || rawData?.structuredSpecs?.items || rawData?.items || [];
+  const itemCount = Array.isArray(items) ? items.length : 0;
+  const licenses = tender.licenses || rawData?.structuredSpecs?.licenses || [];
+  const licenseCount = Array.isArray(licenses) ? licenses.length : 0;
+  const bidSecurityReq = tender.bidSecurityReq || rawData?.structuredSpecs?.bidSecurityReq;
+  const isNoBidSecurity = bidSecurityReq?.includes('Шаардахгүй');
+
   const extractedHighlight = 
+    (itemCount > 0 
+      ? `${locale === 'mn' ? `Нийт ${itemCount} нэр төрлийн бараа:` : locale === 'zh' ? `共${itemCount}项物料清单:` : `${itemCount} itemized goods:`} ${items.slice(0, 3).map((i: any) => i.name).join(', ')}${itemCount > 3 ? '...' : ''}`
+      : '') ||
     tender.full_scope_of_work || 
     rawData?.llmExtracted?.full_scope_of_work ||
     rawData?.liveBundle?.fullScopeOfWork ||
-    (tender.liveBundleSummary?.topItems && tender.liveBundleSummary.topItems.length > 0 
-      ? `Барааны жагсаалт: ${tender.liveBundleSummary.topItems.map(i => i.name).join(', ')}` 
-      : '') ||
     'Тендерийн техникийн тодорхойлолт болон ажлын даалгавар баримт бичигт бүрэн тусгагдсан.';
 
   const handleCardClick = () => {
@@ -223,6 +230,43 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               >
                 <FileText className="h-3 w-3 text-purple-600 dark:text-purple-400" />
                 <span>{locale === 'zh' ? '📄 标书已备' : locale === 'mn' ? '📄 ТШЗ PDF' : '📄 PDF Ready'}</span>
+              </span>
+            )}
+
+            {itemCount > 0 && (
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 flex items-center gap-1 shrink-0"
+                title={locale === 'zh' ? `已解析 ${itemCount} 项采购物料` : `${itemCount} нэр төрлийн барааны хүснэгт бэлэн`}
+              >
+                <Layers className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+                <span>{locale === 'zh' ? `📦 ${itemCount}项物料` : locale === 'mn' ? `📦 ${itemCount} бараа` : `📦 ${itemCount} items`}</span>
+              </span>
+            )}
+
+            {licenseCount > 0 ? (
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 flex items-center gap-1 shrink-0"
+                title={licenses.join(', ')}
+              >
+                <ShieldCheck className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+                <span>{locale === 'zh' ? `${licenseCount}项资质` : `${licenseCount} зөвшөөрөл`}</span>
+              </span>
+            ) : rawData?.structuredSpecs ? (
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1 shrink-0"
+                title="Тусгай зөвшөөрөл шаардагдахгүй"
+              >
+                <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                <span>{locale === 'zh' ? '无特许资质' : locale === 'mn' ? 'Зөвшөөрөлгүй' : 'No License'}</span>
+              </span>
+            ) : null}
+
+            {isNoBidSecurity && (
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 flex items-center gap-1 shrink-0"
+                title="Тендерийн баталгаа шаардахгүй"
+              >
+                <span>{locale === 'zh' ? '免保证金' : locale === 'mn' ? 'Баталгаагүй' : 'No Bond'}</span>
               </span>
             )}
           </div>

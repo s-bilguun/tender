@@ -637,7 +637,7 @@ export async function POST(request: NextRequest) {
     const evidence = targetTender ? retrievePdfEvidence(activePdfText, message) : [];
     const structuredRequirements = targetRawData?.eligibility_requirements || targetRawData?.llmExtracted?.eligibility_requirements || [];
     const fullScopeOfWork = targetRawData?.full_scope_of_work || targetRawData?.llmExtracted?.full_scope_of_work || liveBundle?.fullScopeOfWork || targetRawData?.liveBundle?.fullScopeOfWork || '';
-    const structuredSpecs = targetRawData?.liveBundle?.structuredSpecs || liveBundle?.structuredSpecs || null;
+    const structuredSpecs = targetRawData?.structuredSpecs || targetRawData?.llmExtracted?.structuredSpecs || targetRawData?.liveBundle?.structuredSpecs || liveBundle?.structuredSpecs || null;
 
     const structuredInfo = targetTender ? {
       extractionStatus: activePdfText ? 'complete' : (liveBundle?.extractionStatus || 'unavailable'),

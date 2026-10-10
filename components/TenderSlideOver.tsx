@@ -1,13 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
   X, ExternalLink, Building2, Calendar, Clock, 
   DollarSign, FileText, ListChecks, Trophy, Sparkles, 
   ArrowUpRight, ShieldCheck, Tag, Copy, Check, FileCheck, Globe2,
   TrendingUp, Download, Lock, CheckCircle2, AlertTriangle, Handshake,
-  Layers, ArrowRight, Zap, HelpCircle, BookOpen, Search, FileSpreadsheet
+  Layers, ArrowRight, Zap, HelpCircle, BookOpen, Search, FileSpreadsheet,
+  Calculator, RotateCcw
 } from 'lucide-react';
 import { TenderItem, Locale } from '@/lib/types';
 import { IndustryIcon } from '@/components/IndustryIcon';
@@ -49,6 +50,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [activeTab, setActiveTab] = useState<'bds' | 'items' | 'ai'>('bds');
   const [itemSearchQuery, setItemSearchQuery] = useState('');
+  const [isEstimatorMode, setIsEstimatorMode] = useState(false);
+  const [itemPrices, setItemPrices] = useState<Record<number, number>>({});
+  const [userAnnualTurnover, setUserAnnualTurnover] = useState<string>('');
+  const [checkedLicenses, setCheckedLicenses] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (!tender?.invitationId || !isOpen) {
@@ -217,9 +222,123 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   const budgetUsd = Math.round(budgetMnt / 3450);
   const budgetCny = Math.round(budgetMnt / 475);
 
+  const totalEstimatedBid = useMemo(() => {
+    return items.reduce((acc, it, idx) => {
+      const rawQty = parseFloat(String(it.qty || (it as any).quantity || 1).replace(/[^\d.]/g, '')) || 1;
+      const price = itemPrices[idx] || 0;
+      return acc + (rawQty * price);
+    }, 0);
+  }, [items, itemPrices]);
+
+  const budgetDiff = totalEstimatedBid > 0 && budgetMnt > 0 ? totalEstimatedBid - budgetMnt : 0;
+  const budgetDiffPercent = budgetMnt > 0 && totalEstimatedBid > 0 ? ((totalEstimatedBid - budgetMnt) / budgetMnt) * 100 : 0;
+
+  const handlePriceChange = (index: number, val: string) => {
+    const num = parseFloat(val.replace(/[^\d.]/g, '')) || 0;
+    setItemPrices((prev) => ({ ...prev, [index]: num }));
+  };
+
+  const handleAutoDistributeBudget = (percentageMultiplier: number = 1.0) => {
+    if (items.length === 0 || budgetMnt <= 0) return;
+    const targetTotal = budgetMnt * percentageMultiplier;
+    const amountPerItem = targetTotal / items.length;
+    const newPrices: Record<number, number> = {};
+    items.forEach((it, idx) => {
+      const rawQty = Math.max(1, parseFloat(String(it.qty || (it as any).quantity || 1).replace(/[^\d.]/g, '')) || 1);
+      newPrices[idx] = Math.round(amountPerItem / rawQty);
+    });
+    setItemPrices(newPrices);
+  };
+
+  const handleResetPrices = () => {
+    setItemPrices({});
+  };
+
+  const parsedTurnoverReqMnt = useMemo(() => {
+    if (!turnoverReq) return null;
+    const str = String(turnoverReq).toLowerCase();
+    const bilMatch = str.match(/([\d.,]+)\s*(тэрбум|billion)/);
+    if (bilMatch) return parseFloat(bilMatch[1].replace(/,/g, '')) * 1_000_000_000;
+    const milMatch = str.match(/([\d.,]+)\s*(сая|million)/);
+    if (milMatch) return parseFloat(milMatch[1].replace(/,/g, '')) * 1_000_000;
+    const numMatch = str.replace(/[^\d]/g, '');
+    if (numMatch && numMatch.length >= 6) return parseFloat(numMatch);
+    return null;
+  }, [turnoverReq]);
+
+  const userTurnoverNum = useMemo(() => {
+    return parseFloat(userAnnualTurnover.replace(/[^\d.]/g, '')) || 0;
+  }, [userAnnualTurnover]);
+
+  const licenseMatchCount = useMemo(() => {
+    if (licenses.length === 0) return 0;
+    return licenses.filter((lic) => checkedLicenses[lic]).length;
+  }, [licenses, checkedLicenses]);
+
+  const eligibilityVerdict = useMemo(() => {
+    const hasInputs = userTurnoverNum > 0 || Object.values(checkedLicenses).some(Boolean);
+    if (!hasInputs && licenses.length === 0) return null;
+    
+    const allLicensesOk = licenses.length === 0 || licenseMatchCount === licenses.length;
+    const turnoverOk = !parsedTurnoverReqMnt || (userTurnoverNum >= parsedTurnoverReqMnt);
+    
+    if (allLicensesOk && turnoverOk && (userTurnoverNum > 0 || licenses.length > 0)) {
+      return {
+        status: 'pass',
+        title: locale === 'mn' ? '🟢 100% Тэнцэх бүрэн боломжтой' : locale === 'zh' ? '🟢 100% 完全符合资格' : '🟢 100% Fully Eligible to Bid',
+        desc: locale === 'mn' ? 'Бүх тусгай зөвшөөрөл болон санхүүгийн босго шаардлага бүрэн хангагдсан байна.' : locale === 'zh' ? '已具备全部所需资质及年度营业额门槛要求。' : 'All required licenses and annual turnover criteria are satisfied.'
+      };
+    } else if (hasInputs) {
+      return {
+        status: 'warning',
+        title: locale === 'mn' ? '🟡 Түншлэл (JV) эсвэл Туслан гүйцэтгэгч шаардлагатай' : locale === 'zh' ? '🟡 建议组成联合体 (JV) 联合投标' : '🟡 Joint Venture (JV) Recommended',
+        desc: locale === 'mn' ? `Дутуу шалгуур: ${[!allLicensesOk ? `Зөвшөөрөл (${licenses.length - licenseMatchCount} дутуу)` : '', !turnoverOk && parsedTurnoverReqMnt ? 'Борлуулалтын босго хүрэхгүй' : ''].filter(Boolean).join(', ')}. Консорциум үүсгэж оролцохыг зөвлөж байна.` : locale === 'zh' ? '部分资质或财务门槛未达标，建议寻找本地合作伙伴联合投标。' : 'Some criteria are not met. Bidding via a consortium is recommended.'
+      };
+    }
+    return null;
+  }, [licenses, licenseMatchCount, parsedTurnoverReqMnt, userTurnoverNum, checkedLicenses, locale]);
+
   const handleExportItemsCsv = () => {
     const listToExport = items.length > 0 ? items : deliverySchedule;
     if (listToExport.length === 0) return;
+
+    if (isEstimatorMode && items.length > 0) {
+      const headers = ['№', 'Бараа / Ажлын нэр', 'Тоо хэмжээ', 'Хэмжих нэгж', 'Нэгж үнэ (₮)', 'Нийт үнэ (₮)', 'Техникийн тодорхойлолт'];
+      const rows = listToExport.map((it: any, idx: number) => {
+        const rawQty = parseFloat(String(it.qty || it.quantity || 1).replace(/[^\d.]/g, '')) || 1;
+        const unitPrice = itemPrices[idx] || 0;
+        const lineTotal = rawQty * unitPrice;
+        return [
+          idx + 1,
+          `"${(it.name || '').replace(/"/g, '""')}"`,
+          rawQty,
+          `"${(it.unit || '').replace(/"/g, '""')}"`,
+          unitPrice,
+          lineTotal,
+          `"${(it.specs || it.spec || '').replace(/"/g, '""')}"`
+        ];
+      });
+      rows.push([
+        '',
+        `"НИЙТ САНАЛ БОЛГОХ ДҮН"`,
+        '',
+        '',
+        '',
+        totalEstimatedBid,
+        `"Төсөвт өртөг: ₮${budgetMnt.toLocaleString()} (Зөрүү: ${budgetDiffPercent > 0 ? '+' : ''}${budgetDiffPercent.toFixed(1)}%)"`
+      ]);
+      const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Tender_${tender.tenderCode || tender.invitationId}_priced_bid.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
     const headers = ['№', 'Бараа / Ажлын нэр', 'Тоо хэмжээ', 'Хэмжих нэгж', 'Техникийн үзүүлэлт / Шаардлага'];
     const rows = listToExport.map((it: any, idx: number) => [
       idx + 1,
@@ -487,6 +606,106 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                   </div>
                 )}
 
+                {/* 🎯 Interactive BDS Eligibility Self-Assessment Widget */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/40 dark:via-slate-900 dark:to-blue-950/30 border border-indigo-200 dark:border-indigo-800/80 space-y-4 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
+                        ⚖️
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-900 dark:text-white">
+                          {locale === 'mn' ? 'Шалгуурын үнэлгээ & Нийцлийн тооцоолуур' : locale === 'zh' ? '投标资质自查与匹配评估' : 'BDS Eligibility Self-Assessment'}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          {locale === 'mn' ? 'Танай байгууллага энэ тендерт тэнцэх боломжтой эсэхийг шалгах' : 'Verify if your enterprise meets minimum criteria'}
+                        </p>
+                      </div>
+                    </div>
+                    {eligibilityVerdict && (
+                      <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shadow-2xs border ${
+                        eligibilityVerdict.status === 'pass'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+                          : 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                      }`}>
+                        {eligibilityVerdict.title}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Checklist Section: Required Licenses */}
+                  {licenses.length > 0 && (
+                    <div className="space-y-2 pt-1">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                        <span>1. Тусгай зөвшөөрлийн бэлэн байдал:</span>
+                        <span className="font-mono text-indigo-600 dark:text-indigo-400">
+                          {licenseMatchCount} / {licenses.length} хангасан
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {licenses.map((lic, idx) => {
+                          const isChecked = !!checkedLicenses[lic];
+                          return (
+                            <label
+                              key={idx}
+                              className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all select-none ${
+                                isChecked
+                                  ? 'bg-emerald-50/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
+                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => setCheckedLicenses((prev) => ({ ...prev, [lic]: e.target.checked }))}
+                                className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
+                              />
+                              <span className="font-medium text-pretty leading-tight">{lic}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Turnover Input */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
+                        2. Байгууллагын жилийн борлуулалт (₮):
+                      </label>
+                      <input
+                        type="text"
+                        value={userAnnualTurnover}
+                        onChange={(e) => setUserAnnualTurnover(e.target.value)}
+                        placeholder={parsedTurnoverReqMnt ? `Босго: ₮${parsedTurnoverReqMnt.toLocaleString()}` : 'Жишээ: 150000000'}
+                        className="w-full px-3 py-1.5 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
+                      />
+                    </div>
+                    {parsedTurnoverReqMnt && (
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 pb-1">
+                        Шаардагдах босго: <strong className="text-slate-800 dark:text-slate-200 font-mono">₮{parsedTurnoverReqMnt.toLocaleString()}</strong>
+                        {userTurnoverNum > 0 && (
+                          <span className={`ml-2 font-bold ${userTurnoverNum >= parsedTurnoverReqMnt ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                            {userTurnoverNum >= parsedTurnoverReqMnt ? '✓ Хангаж байна' : '✗ Хүрэхгүй байна'}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Verdict description if available */}
+                  {eligibilityVerdict && (
+                    <div className={`p-3 rounded-lg border text-xs leading-relaxed ${
+                      eligibilityVerdict.status === 'pass'
+                        ? 'bg-emerald-50/50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                        : 'bg-amber-50/50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'
+                    }`}>
+                      {eligibilityVerdict.desc}
+                    </div>
+                  )}
+                </div>
+
                 {/* Eligibility & Compliance Checklist */}
                 <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
@@ -530,7 +749,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                           target="_blank"
                           rel="noopener noreferrer"
                           download={storedPdfFileName}
-                          className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 flex items-center gap-1 transition-colors"
+                          className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:emerald-500 flex items-center gap-1 transition-colors"
                         >
                           <Download className="h-3 w-3" />
                           <span>{locale === 'mn' ? 'Татах' : 'Download'}</span>
@@ -590,8 +809,8 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <div className="relative flex-1 sm:w-52">
+                      <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                        <div className="relative flex-1 sm:w-44">
                           <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                           <input
                             type="text"
@@ -601,6 +820,20 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                             className="w-full pl-8 pr-3 py-1.5 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                           />
                         </div>
+
+                        <button
+                          onClick={() => setIsEstimatorMode(!isEstimatorMode)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer shadow-2xs ${
+                            isEstimatorMode
+                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-500/20'
+                              : 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-slate-800'
+                          }`}
+                          title="Үнийн санал бодох горим"
+                        >
+                          <Calculator className="h-3.5 w-3.5" />
+                          <span>{isEstimatorMode ? 'Тооцоолуур идэвхтэй' : 'Үнийн санал бодох'}</span>
+                        </button>
+
                         <button
                           onClick={handleExportItemsCsv}
                           className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-2xs transition-colors shrink-0 cursor-pointer"
@@ -612,47 +845,145 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       </div>
                     </div>
 
+                    {/* Quick Budget Distribute Bar in Estimator Mode */}
+                    {isEstimatorMode && (
+                      <div className="p-3 bg-indigo-50/80 dark:bg-indigo-950/40 border-b border-indigo-100 dark:border-indigo-900/60 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1 text-[11px]">
+                            <span>⚡ Төсвөөр жигд хуваарилах:</span>
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleAutoDistributeBudget(0.90)}
+                              className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 cursor-pointer shadow-2xs"
+                            >
+                              -10% (₮{Math.round(budgetMnt * 0.9).toLocaleString()})
+                            </button>
+                            <button
+                              onClick={() => handleAutoDistributeBudget(0.95)}
+                              className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 cursor-pointer shadow-2xs"
+                            >
+                              -5% (₮{Math.round(budgetMnt * 0.95).toLocaleString()})
+                            </button>
+                            <button
+                              onClick={() => handleAutoDistributeBudget(1.0)}
+                              className="px-2 py-0.5 rounded bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 cursor-pointer shadow-2xs"
+                            >
+                              100% (₮{budgetMnt.toLocaleString()})
+                            </button>
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleResetPrices}
+                          className="text-[11px] text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 flex items-center gap-1 font-medium cursor-pointer"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          <span>Цэвэрлэх</span>
+                        </button>
+                      </div>
+                    )}
+
                     {/* Table View */}
                     <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                       <table className="w-full text-left border-collapse text-xs">
                         <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
                           <tr>
                             <th className="py-2.5 px-3 w-12 text-center">№</th>
-                            <th className="py-2.5 px-3 min-w-[200px]">Бараа / Ажлын нэр</th>
+                            <th className="py-2.5 px-3 min-w-[180px]">Бараа / Ажлын нэр</th>
                             <th className="py-2.5 px-3 w-28 text-center">Тоо хэмжээ</th>
-                            <th className="py-2.5 px-3 min-w-[250px]">Техникийн тодорхойлолт & Шаардлага</th>
+                            {isEstimatorMode && (
+                              <>
+                                <th className="py-2.5 px-3 w-36 text-right">Нэгж үнэ (₮)</th>
+                                <th className="py-2.5 px-3 w-32 text-right">Нийт дүн (₮)</th>
+                              </>
+                            )}
+                            <th className="py-2.5 px-3 min-w-[220px]">Техникийн тодорхойлолт & Шаардлага</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800">
                           {filteredItems.length === 0 ? (
                             <tr>
-                              <td colSpan={4} className="py-8 text-center text-slate-500 italic">
+                              <td colSpan={isEstimatorMode ? 6 : 4} className="py-8 text-center text-slate-500 italic">
                                 &quot;{itemSearchQuery}&quot; хайлтад тохирох бараа олдсонгүй.
                               </td>
                             </tr>
                           ) : (
-                            filteredItems.map((it, idx) => (
-                              <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                                <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-500 dark:text-slate-400">
-                                  {idx + 1}
-                                </td>
-                                <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">
-                                  {it.name}
-                                </td>
-                                <td className="py-2.5 px-3 text-center">
-                                  <span className="px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 inline-block">
-                                    {it.qty || (it as any).quantity || 1} {it.unit || 'ш'}
-                                  </span>
-                                </td>
-                                <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 leading-relaxed text-pretty">
-                                  {it.specs || (it as any).spec || '—'}
-                                </td>
-                              </tr>
-                            ))
+                            filteredItems.map((it, idx) => {
+                              const rawQty = parseFloat(String(it.qty || (it as any).quantity || 1).replace(/[^\d.]/g, '')) || 1;
+                              const unitPrice = itemPrices[idx] || 0;
+                              const lineTotal = rawQty * unitPrice;
+
+                              return (
+                                <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                                  <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-500 dark:text-slate-400">
+                                    {idx + 1}
+                                  </td>
+                                  <td className="py-2.5 px-3 font-bold text-slate-900 dark:text-slate-100">
+                                    {it.name}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center">
+                                    <span className="px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/80 inline-block">
+                                      {it.qty || (it as any).quantity || 1} {it.unit || 'ш'}
+                                    </span>
+                                  </td>
+                                  {isEstimatorMode && (
+                                    <>
+                                      <td className="py-2.5 px-3">
+                                        <div className="relative">
+                                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-[10px]">₮</span>
+                                          <input
+                                            type="text"
+                                            value={itemPrices[idx] != null && itemPrices[idx] > 0 ? itemPrices[idx].toLocaleString() : ''}
+                                            onChange={(e) => handlePriceChange(idx, e.target.value)}
+                                            placeholder="0"
+                                            className="w-full pl-5 pr-2 py-1 text-xs bg-white dark:bg-slate-950 border border-indigo-200 dark:border-indigo-800 rounded font-mono font-bold text-right text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                          />
+                                        </div>
+                                      </td>
+                                      <td className="py-2.5 px-3 font-mono font-bold text-right text-slate-900 dark:text-white">
+                                        ₮ {lineTotal.toLocaleString()}
+                                      </td>
+                                    </>
+                                  )}
+                                  <td className="py-2.5 px-3 text-slate-600 dark:text-slate-300 leading-relaxed text-pretty">
+                                    {it.specs || (it as any).spec || '—'}
+                                  </td>
+                                </tr>
+                              );
+                            })
                           )}
                         </tbody>
                       </table>
                     </div>
+
+                    {/* Estimator Mode Bottom Summary Bar */}
+                    {isEstimatorMode && (
+                      <div className="p-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-3 border-t border-slate-800">
+                        <div className="flex items-center gap-4 flex-wrap">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Нийт санал болгох дүн:</span>
+                            <span className="text-base sm:text-lg font-black font-mono text-emerald-400">
+                              ₮ {totalEstimatedBid.toLocaleString()}
+                            </span>
+                          </div>
+                          {budgetMnt > 0 && totalEstimatedBid > 0 && (
+                            <div className="border-l border-slate-700 pl-4">
+                              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Төсөвтэй харьцуулахад:</span>
+                              <span className={`text-xs sm:text-sm font-bold font-mono ${budgetDiff <= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {budgetDiffPercent > 0 ? '+' : ''}{budgetDiffPercent.toFixed(1)}% ({budgetDiff <= 0 ? 'Хэмнэлттэй' : 'Төсөв давсан'})
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleExportItemsCsv}
+                          className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95 ml-auto"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          <span>Үнийн санал CSV татах</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : deliverySchedule.length > 0 ? (
                   <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">

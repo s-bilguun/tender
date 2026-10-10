@@ -150,41 +150,55 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       {tender.tenderName}
                     </Link>
 
-                    {/* Real Extracted PDF Specs / Goods Preview */}
-                    {tender.liveBundleSummary && (
-                      ((tender.liveBundleSummary.topItems && tender.liveBundleSummary.topItems.length > 0) ||
-                       tender.liveBundleSummary.isBidSecurityExempt ||
-                       (tender.liveBundleSummary.docCount && tender.liveBundleSummary.docCount > 0)) && (
+                    {/* Real Extracted BoQ & PDF Specs Preview */}
+                    {(() => {
+                      const items = tender.items || tender.raw_data?.structuredSpecs?.items || tender.liveBundleSummary?.topItems || [];
+                      const itemCount = Array.isArray(items) ? items.length : 0;
+                      const licenses = tender.licenses || tender.raw_data?.structuredSpecs?.licenses || [];
+                      const isNoBond = tender.bidSecurityReq?.includes('Шаардахгүй') || tender.liveBundleSummary?.isBidSecurityExempt;
+                      const hasStoredPdf = Boolean(tender.raw_data?.pdfUrl || tender.raw_data?.hasPdf || (tender.liveBundleSummary?.docCount && tender.liveBundleSummary.docCount > 0));
+
+                      if (itemCount === 0 && licenses.length === 0 && !isNoBond && !hasStoredPdf) return null;
+
+                      return (
                         <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                          {tender.liveBundleSummary.topItems && tender.liveBundleSummary.topItems.length > 0 && (
-                            <span className="text-[10px] font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1 max-w-[340px] truncate">
-                              <Package className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
-                              <span className="truncate">{tender.liveBundleSummary.topItems[0].name}</span>
-                              {tender.liveBundleSummary.topItems[0].qty && (
+                          {itemCount > 0 && (
+                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 inline-flex items-center gap-1 max-w-[340px] truncate">
+                              <Package className="h-3 w-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                              <span className="font-extrabold">{itemCount} бараа:</span>
+                              <span className="truncate">{items[0].name}</span>
+                              {items[0].quantity && (
                                 <strong className="text-slate-900 dark:text-white font-bold shrink-0 font-mono tabular-nums">
-                                  ({tender.liveBundleSummary.topItems[0].qty} {tender.liveBundleSummary.topItems[0].unit || ''})
+                                  ({items[0].quantity} {items[0].unit || ''})
                                 </strong>
                               )}
                             </span>
                           )}
-                          {tender.liveBundleSummary.isBidSecurityExempt && (
-                            <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200/80 dark:border-emerald-800 inline-flex items-center gap-1 shrink-0">
+                          {licenses.length > 0 ? (
+                            <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 inline-flex items-center gap-1 shrink-0">
+                              <ShieldCheck className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                              <span>{licenses.length} зөвшөөрөл</span>
+                            </span>
+                          ) : tender.raw_data?.structuredSpecs ? (
+                            <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1 shrink-0">
                               <ShieldCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                              <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : 'No Bid Bond'}</span>
+                              <span>Зөвшөөрөлгүй</span>
+                            </span>
+                          ) : null}
+                          {isNoBond && (
+                            <span className="text-[10px] font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-800 inline-flex items-center gap-1 shrink-0">
+                              <span>Баталгаагүй</span>
                             </span>
                           )}
-                          {tender.liveBundleSummary.docCount > 0 && (
-                            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium inline-flex items-center gap-1 shrink-0">
-                              <FileText className="h-3 w-3 text-slate-400 shrink-0" />
-                              <span>{tender.liveBundleSummary.docCount} PDF</span>
-                              {tender.liveBundleSummary.hasOcr && (
-                                <span className="text-[9px] text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/60 px-1 rounded border border-amber-200 dark:border-amber-800">OCR</span>
-                              )}
+                          {hasStoredPdf && (
+                            <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold bg-purple-50 dark:bg-purple-950/50 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 inline-flex items-center gap-1 shrink-0">
+                              <FileText className="h-3 w-3 text-purple-500 shrink-0" />
+                              <span>ТШЗ PDF</span>
                             </span>
                           )}
                         </div>
-                      )
-                    )}
+                      );
+                    })()}
 
                     {/* China / Foreign Bidder Status Badge */}
                     {tender.chinaBidderAnalysis && (
