@@ -31,22 +31,18 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
   });
 
   useEffect(() => {
-    fetch('https://gateway.tenderhub.mn/services/thcore/public/summary')
+    fetch('/api/analytics')
       .then((res) => res.json())
       .then((data) => {
-        if (data && data.openTenderCount) {
+        if (data?.stats) {
           setStats((prev) => ({
             ...prev,
-            companyCount: data.companyCount || prev.companyCount,
-            openTenderCount: data.openTenderCount || prev.openTenderCount,
-            openTenderAmount: data.openTenderAmount || prev.openTenderAmount,
-            financeAmount: data.financeAmount || prev.financeAmount,
+            openTenderCount: data.stats.activeTendersCount || data.stats.totalCount || prev.openTenderCount,
+            openTenderAmount: data.stats.totalBudgetSum || prev.openTenderAmount,
           }));
         }
       })
-      .catch(() => {
-        // Fallback gracefully
-      });
+      .catch(() => {});
   }, []);
 
   const formatBillion = (amount: number) => {
