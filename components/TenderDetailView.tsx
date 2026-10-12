@@ -4,13 +4,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
+import { useTheme } from '@/components/ThemeProvider';
 import { 
   ArrowLeft, Building2, Calendar, ShieldCheck, Tag, FileText, 
   Copy, Check, Trophy, Users, CheckCircle2, XCircle, AlertCircle, 
   ExternalLink, Sparkles, Clock, AlertTriangle, Layers, Briefcase, 
   CheckSquare, FileSpreadsheet, Download, RefreshCw, Eye, X, Loader2,
   Send, MessageSquare, Bot, User, Trash2, ChevronDown, ChevronUp, Package, Upload, BookOpen,
-  Calculator, RotateCcw
+  Calculator, RotateCcw, Sun, Moon
 } from 'lucide-react';
 import { FormattedChatMessage } from './AIChatDrawer';
 import { TenderPdfReaderModal } from '@/components/TenderPdfReaderModal';
@@ -31,6 +32,7 @@ interface AIMessage {
 export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData, initialLocale }) => {
   const [data, setData] = useState(initialData);
   const [locale, setLocaleState] = useState<Locale>(initialLocale || 'mn');
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     try {
@@ -555,34 +557,48 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
     URL.revokeObjectURL(url);
   };
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-20">
+    <div className="tender-detail-root min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20 transition-colors duration-150">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-900 transition-colors flex items-center gap-1 text-xs font-semibold"
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-semibold"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">
               {locale === 'mn' ? 'Бүх тендер рүү буцах' : locale === 'zh' ? '返回招标列表' : 'Back to Tenders'}
             </span>
           </Link>
-          <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
-          <span className="text-xs text-slate-500 hidden md:inline font-mono">
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+          <span className="text-xs text-slate-500 dark:text-slate-400 hidden md:inline font-mono">
             {tender.tenderCode || tender.invitationNumber}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Global Dark / Light Mode Toggle */}
+          <button
+            onClick={toggleTheme}
+            className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shrink-0"
+            aria-label={theme === 'dark' ? 'Гэгээлэг горим руу шилжих' : 'Харанхуй горим руу шилжих'}
+            title={theme === 'dark' ? 'Гэгээлэг горим (Light mode)' : 'Харанхуй горим (Dark mode)'}
+          >
+            {theme === 'dark' ? (
+              <Sun className="h-4 w-4 text-amber-400 transition-transform hover:rotate-45" />
+            ) : (
+              <Moon className="h-4 w-4 text-slate-700 dark:text-slate-300 transition-transform hover:-rotate-12" />
+            )}
+          </button>
+
           {/* 3-Way Language Switcher */}
-          <div className="flex items-center bg-slate-100/90 rounded-lg p-0.5 border border-slate-200/80 shrink-0">
+          <div className="flex items-center bg-slate-100/90 dark:bg-slate-800 rounded-lg p-0.5 border border-slate-200/80 dark:border-slate-700 shrink-0">
             <button
               onClick={() => setLocale('mn')}
               className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
                 locale === 'mn'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="Монгол хэл"
             >
@@ -592,8 +608,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               onClick={() => setLocale('en')}
               className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
                 locale === 'en'
-                  ? 'bg-white text-slate-900 shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="English"
             >
@@ -604,7 +620,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
                 locale === 'zh'
                   ? 'bg-red-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="中文 (Chinese)"
             >
@@ -667,16 +683,16 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             href={publicLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-8 px-3 rounded-md text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 flex items-center gap-1.5 transition-colors shadow-2xs"
+            className="h-8 px-3 rounded-md text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition-colors shadow-2xs"
           >
             <span>tender.gov.mn</span>
-            <ExternalLink className="h-3 w-3 text-slate-400" />
+            <ExternalLink className="h-3 w-3 text-slate-400 dark:text-slate-400" />
           </a>
           <a
             href={supplierLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-8 px-3.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 flex items-center gap-1.5 transition-colors shadow-xs"
+            className="h-8 px-3.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 flex items-center gap-1.5 transition-colors shadow-xs"
           >
             <span>Оролцох</span>
             <ExternalLink className="h-3 w-3 text-slate-300" />

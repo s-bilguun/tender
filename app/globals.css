@@ -50,3 +50,191 @@ table {
   scrollbar-width: none !important;
   -webkit-overflow-scrolling: touch;
 }
+
+.dark body {
+  background-color: #020617;
+  color: #f8fafc;
+}
+
+/* =========================================================
+   TENDER DETAIL VIEW - COMPREHENSIVE DARK MODE SUPPORT
+   ========================================================= */
+
+.dark .tender-detail-root {
+  background-color: #020617 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Header & Card Surfaces */
+.dark .tender-detail-root header {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-color: #1e293b !important;
+}
+
+.dark .tender-detail-root .bg-white {
+  background-color: #0f172a !important;
+  color: #f1f5f9;
+}
+
+.dark .tender-detail-root .bg-slate-50 {
+  background-color: #0b1120 !important;
+}
+
+.dark .tender-detail-root .bg-slate-100,
+.dark .tender-detail-root .bg-slate-100\/90,
+.dark .tender-detail-root .bg-slate-100\/80 {
+  background-color: #1e293b !important;
+}
+
+/* Borders */
+.dark .tender-detail-root .border-slate-200,
+.dark .tender-detail-root .border-slate-200\/90,
+.dark .tender-detail-root .border-slate-200\/80,
+.dark .tender-detail-root .border-slate-200\/70,
+.dark .tender-detail-root .border-slate-200\/60,
+.dark .tender-detail-root .border-slate-100,
+.dark .tender-detail-root .border-slate-300 {
+  border-color: #1e293b !important;
+}
+
+.dark .tender-detail-root .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+.dark .tender-detail-root .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #1e293b !important;
+}
+
+/* Typography Hierarchy */
+.dark .tender-detail-root .text-slate-950,
+.dark .tender-detail-root .text-slate-900,
+.dark .tender-detail-root .text-slate-800 {
+  color: #f8fafc !important;
+}
+
+.dark .tender-detail-root .text-slate-700,
+.dark .tender-detail-root .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.dark .tender-detail-root .text-slate-500,
+.dark .tender-detail-root .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+/* Tables & Hover states */
+.dark .tender-detail-root th {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+.dark .tender-detail-root tr:hover,
+.dark .tender-detail-root .hover\:bg-slate-50:hover,
+.dark .tender-detail-root .hover\:bg-slate-50\/60:hover {
+  background-color: rgba(30, 41, 59, 0.6) !important;
+}
+
+.dark .tender-detail-root .hover\:bg-slate-100:hover,
+.dark .tender-detail-root .hover\:bg-slate-200:hover {
+  background-color: #334155 !important;
+}
+
+/* Inputs, Textareas, Details */
+.dark .tender-detail-root input,
+.dark .tender-detail-root textarea,
+.dark .tender-detail-root select {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.dark .tender-detail-root input::placeholder,
+.dark .tender-detail-root textarea::placeholder {
+  color: #64748b !important;
+}
+
+.dark .tender-detail-root details {
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+/* Colored accent cards (Blue, Emerald, Amber, Indigo, Purple, Rose) */
+.dark .tender-detail-root .bg-blue-50,
+.dark .tender-detail-root .bg-blue-50\/60,
+.dark .tender-detail-root .bg-blue-50\/40 {
+  background-color: rgba(30, 58, 138, 0.25) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #93c5fd !important;
+}
+
+.dark .tender-detail-root .text-blue-950,
+.dark .tender-detail-root .text-blue-900,
+.dark .tender-detail-root .text-blue-800 {
+  color: #60a5fa !important;
+}
+
+.dark .tender-detail-root .bg-emerald-50,
+.dark .tender-detail-root .bg-emerald-50\/60,
+.dark .tender-detail-root .bg-emerald-50\/50 {
+  background-color: rgba(6, 78, 59, 0.25) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  color: #6ee7b7 !important;
+}
+
+.dark .tender-detail-root .text-emerald-950,
+.dark .tender-detail-root .text-emerald-900,
+.dark .tender-detail-root .text-emerald-800 {
+  color: #34d399 !important;
+}
+
+.dark .tender-detail-root .bg-amber-50,
+.dark .tender-detail-root .bg-amber-50\/60 {
+  background-color: rgba(120, 53, 15, 0.25) !important;
+  border-color: rgba(245, 158, 11, 0.3) !important;
+  color: #fcd34d !important;
+}
+
+.dark .tender-detail-root .text-amber-950,
+.dark .tender-detail-root .text-amber-900,
+.dark .tender-detail-root .text-amber-800 {
+  color: #fbbf24 !important;
+}
+
+.dark .tender-detail-root .bg-purple-50,
+.dark .tender-detail-root .bg-purple-50\/60 {
+  background-color: rgba(88, 28, 135, 0.25) !important;
+  border-color: rgba(168, 85, 247, 0.3) !important;
+  color: #d8b4fe !important;
+}
+
+.dark .tender-detail-root .bg-rose-50,
+.dark .tender-detail-root .bg-rose-50\/60 {
+  background-color: rgba(136, 19, 55, 0.25) !important;
+  border-color: rgba(244, 63, 94, 0.3) !important;
+  color: #fda4af !important;
+}
+
+.dark .tender-detail-root .bg-indigo-50,
+.dark .tender-detail-root .bg-indigo-50\/50 {
+  background-color: rgba(49, 46, 129, 0.25) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  color: #a5b4fc !important;
+}
+
+.dark .tender-detail-root .bg-gradient-to-r {
+  background: #0f172a !important;
+  border-color: #1e293b !important;
+}
+
+/* Active tab highlight */
+.dark .tender-detail-root button.bg-white {
+  background-color: #1e293b !important;
+  color: #60a5fa !important;
+  border-color: #334155 !important;
+}
+
+/* Shadow styling in dark mode */
+.dark .tender-detail-root .shadow-xs,
+.dark .tender-detail-root .shadow-2xs,
+.dark .tender-detail-root .shadow-sm,
+.dark .tender-detail-root .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.4) !important;
+}
