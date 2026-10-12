@@ -104,17 +104,23 @@ function extractSubstantiveKeywords(title: string): string[] {
 async function findSimilarTenders(tenderItem: any, currentId: string | number) {
   const keywords = extractSubstantiveKeywords(tenderItem.tenderName);
   let candidates: any[] = [];
+  const numericId = tenderItem.invitationId && /^\d+$/.test(String(tenderItem.invitationId))
+    ? String(tenderItem.invitationId)
+    : (/^\d+$/.test(String(currentId)) ? String(currentId) : null);
 
   // Step 1: Query Supabase with substantive keywords
   if (keywords.length > 0) {
     const orClause = keywords.slice(0, 5).map(k => `tender_name.ilike.%${k}%`).join(',');
     try {
-      const { data } = await supabase
+      let simQuery = supabase
         .from('tenders')
-        .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_code, tender_type_name, doc_status_name, publish_date')
-        .neq('invitation_id', currentId)
-        .or(orClause)
-        .limit(30);
+        .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_code, tender_type_name, doc_status_name, publish_date');
+
+      if (numericId) {
+        simQuery = simQuery.neq('invitation_id', numericId);
+      }
+
+      const { data } = await simQuery.or(orClause).limit(30);
       if (data && data.length > 0) {
         candidates = data;
       }
@@ -127,7 +133,7 @@ async function findSimilarTenders(tenderItem: any, currentId: string | number) {
   if (candidates.length < 5) {
     try {
       const allStoreTenders = tenderStore.getAllTenders();
-      const existingIds = new Set([String(currentId), ...candidates.map(c => String(c.invitation_id || c.invitationId))]);
+      const existingIds = new Set([String(currentId), String(tenderItem.invitationId), ...candidates.map(c => String(c.invitation_id || c.invitationId))]);
       
       for (const item of allStoreTenders) {
         if (existingIds.has(String(item.invitationId))) continue;
@@ -162,12 +168,17 @@ async function findSimilarTenders(tenderItem: any, currentId: string | number) {
   // Step 3: Augment by same category / tender_type_code if still < 5
   if (candidates.length < 5) {
     try {
-      const existingIds = new Set([String(currentId), ...candidates.map(c => String(c.invitation_id || c.invitationId))]);
-      const { data: fallbackData } = await supabase
+      const existingIds = new Set([String(currentId), String(tenderItem.invitationId), ...candidates.map(c => String(c.invitation_id || c.invitationId))]);
+      let catQuery = supabase
         .from('tenders')
         .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_code, tender_type_name, doc_status_name, publish_date')
-        .eq('tender_type_code', tenderItem.tenderTypeCode || 'PRODUCT')
-        .neq('invitation_id', currentId)
+        .eq('tender_type_code', tenderItem.tenderTypeCode || 'PRODUCT');
+
+      if (numericId) {
+        catQuery = catQuery.neq('invitation_id', numericId);
+      }
+
+      const { data: fallbackData } = await catQuery
         .order('publish_date', { ascending: false })
         .limit(10);
 
@@ -237,23 +248,57 @@ async function findSimilarTenders(tenderItem: any, currentId: string | number) {
 export async function getTenderDetailData(id: string | number, options: { useStoredLiveBundle?: boolean } = {}) {
   if (!id) return null;
 
+  const rawIdStr = String(id).trim();
+  let decodedId = rawIdStr;
+  try {
+    decodedId = decodeURIComponent(rawIdStr).trim();
+  } catch {}
+
+  const isNumeric = /^\d+$/.test(decodedId);
+
   // 1. Fetch main tender
   let tenderData: any = null;
   try {
-    const { data, error } = await supabase
-      .from('tenders')
-      .select('*')
-      .eq('invitation_id', id)
-      .single();
-    if (!error && data) {
-      tenderData = data;
+    if (isNumeric) {
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .eq('invitation_id', decodedId)
+        .maybeSingle();
+      if (!error && data) {
+        tenderData = data;
+      }
+    }
+
+    if (!tenderData) {
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .or(`tender_code.eq."${decodedId}",invitation_number.eq."${decodedId}"`)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) {
+        tenderData = data;
+      }
+    }
+
+    if (!tenderData && decodedId !== rawIdStr) {
+      const { data, error } = await supabase
+        .from('tenders')
+        .select('*')
+        .or(`tender_code.eq."${rawIdStr}",invitation_number.eq."${rawIdStr}"`)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) {
+        tenderData = data;
+      }
     }
   } catch (e) {
     console.warn('Supabase fetch error, fallback to tenderStore:', e);
   }
 
   if (!tenderData) {
-    tenderData = tenderStore.getTenderById(id);
+    tenderData = tenderStore.getTenderById(decodedId) || tenderStore.getTenderById(rawIdStr);
   }
 
   if (!tenderData) {
@@ -287,29 +332,40 @@ export async function getTenderDetailData(id: string | number, options: { useSto
     yearBudget: Number(tenderData.raw_data?.yearBudget || tenderData.total_budget || tenderData.totalBudget) || 0
   };
 
+  const numericInvitationId = tenderItem.invitationId && /^\d+$/.test(String(tenderItem.invitationId))
+    ? String(tenderItem.invitationId)
+    : null;
+
   // 2. Fetch related tenders from same entity
   let relatedByEntity: any[] = [];
   if (tenderItem.budgetEntityName) {
     try {
-      const { data: relData } = await supabase
+      let relQuery = supabase
         .from('tenders')
         .select('invitation_id, tender_code, tender_name, total_budget, tender_type_code, tender_type_name, doc_status_name, publish_date')
-        .eq('budget_entity_name', tenderItem.budgetEntityName)
-        .neq('invitation_id', id)
+        .eq('budget_entity_name', tenderItem.budgetEntityName);
+
+      if (numericInvitationId) {
+        relQuery = relQuery.neq('invitation_id', numericInvitationId);
+      }
+
+      const { data: relData } = await relQuery
         .order('publish_date', { ascending: false })
         .limit(5);
 
       if (relData) {
-        relatedByEntity = relData.map(r => ({
-          invitationId: r.invitation_id,
-          tenderCode: r.tender_code,
-          tenderName: r.tender_name,
-          totalBudget: Number(r.total_budget) || 0,
-          tenderTypeCode: r.tender_type_code,
-          tenderTypeName: r.tender_type_name,
-          docStatusName: r.doc_status_name,
-          publishDate: r.publish_date
-        }));
+        relatedByEntity = relData
+          .filter(r => String(r.invitation_id) !== String(tenderItem.invitationId))
+          .map(r => ({
+            invitationId: r.invitation_id,
+            tenderCode: r.tender_code,
+            tenderName: r.tender_name,
+            totalBudget: Number(r.total_budget) || 0,
+            tenderTypeCode: r.tender_type_code,
+            tenderTypeName: r.tender_type_name,
+            docStatusName: r.doc_status_name,
+            publishDate: r.publish_date
+          }));
       }
     } catch (e) {
       // ignore
@@ -322,16 +378,25 @@ export async function getTenderDetailData(id: string | number, options: { useSto
   // 4. Fetch live data from tender.gov.mn (documents, bidders, PDF extractions)
   let liveBundle: any = null;
   const rawData = tenderData.raw_data || tenderData.rawData;
-  if (options.useStoredLiveBundle) {
+  const hasStoredBundle = Boolean(rawData?.liveBundle && (rawData.liveBundle.documents?.length || rawData.liveBundle.structuredSpecs || rawData.liveBundle.bidders?.length));
+
+  if (options.useStoredLiveBundle || hasStoredBundle) {
     liveBundle = rawData?.liveBundle || null;
   } else {
     try {
-      liveBundle = await fetchTenderLiveBundle(
-        id,
-        rawData?.tenderId
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Live bundle fetch timeout (3.5s exceeded)')), 3500)
       );
+      liveBundle = await Promise.race([
+        fetchTenderLiveBundle(
+          tenderItem.invitationId || id,
+          rawData?.tenderId
+        ),
+        timeoutPromise
+      ]);
     } catch (liveErr) {
-      console.warn('Live bundle fetch failed:', liveErr);
+      console.warn('Live bundle fetch failed or timed out:', liveErr);
+      liveBundle = rawData?.liveBundle || null;
     }
   }
 
