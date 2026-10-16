@@ -6,6 +6,7 @@ import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { IndustryIcon } from '@/components/IndustryIcon';
 import { formatCurrencyMulti, MNT_TO_RMB_RATE, MNT_TO_USD_RATE } from '@/lib/product-categories';
+import { getBilingualTenderInfo } from '@/lib/bilingual-title';
 import { 
   Building2, Sparkles, ExternalLink, Star, Clock, 
   Loader2, FileText, ArrowUpRight, ShieldCheck, AlertCircle, 
@@ -38,6 +39,13 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   const budgetMnt = Number(tender.totalBudget) || 0;
   const budgetRmb = Math.round(budgetMnt / MNT_TO_RMB_RATE);
   const budgetUsd = Math.round(budgetMnt / MNT_TO_USD_RATE);
+
+  const bilingual = getBilingualTenderInfo(
+    tender.tenderName,
+    tender.budgetEntityName,
+    budgetMnt,
+    tender.tenderTypeCode
+  );
 
   const getIndustryDetails = (industryId?: string, typeCode?: string) => {
     switch (industryId) {
@@ -310,13 +318,26 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
         {/* 2. Project Title */}
         <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base leading-snug line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {tender.tenderName}
+          {locale === 'zh' ? (
+            <span className="flex flex-col gap-0.5">
+              <span className="text-blue-600 dark:text-blue-400 font-bold block text-sm sm:text-base leading-snug">
+                {bilingual.titleZh}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 font-normal">
+                {tender.tenderName}
+              </span>
+            </span>
+          ) : (
+            tender.tenderName
+          )}
         </h3>
 
         {/* Procuring Entity / Buyer */}
         <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
           <Building2 className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-          <span className="truncate font-medium">{tender.budgetEntityName || (locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity')}</span>
+          <span className="truncate font-medium">
+            {locale === 'zh' ? bilingual.entityZh : (tender.budgetEntityName || (locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity'))}
+          </span>
         </div>
       </div>
 
@@ -324,17 +345,28 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       <div className="bg-slate-50 dark:bg-slate-950/60 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800/80 space-y-2">
         <div className="flex items-baseline justify-between">
           <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            {locale === 'zh' ? '政府采购总预算' : locale === 'mn' ? 'Төсөвт өртөг' : 'Total Budget'}
+            {locale === 'zh' ? '采购总预算与折合' : locale === 'mn' ? 'Төсөвт өртөг' : 'Total Budget'}
           </span>
           <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-            {currency === 'CNY' ? `≈ ¥${budgetRmb.toLocaleString()} CNY` : `≈ $${budgetUsd.toLocaleString()} USD`}
+            {locale === 'zh' ? `保函1%: ~${bilingual.guaranteeRmbFormatted}` : (currency === 'CNY' ? `≈ ¥${budgetRmb.toLocaleString()} CNY` : `≈ $${budgetUsd.toLocaleString()} USD`)}
           </span>
         </div>
 
         <div className="flex items-baseline justify-between flex-wrap gap-1">
-          <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight font-sans">
-            ₮ {budgetMnt.toLocaleString()}
-          </div>
+          {locale === 'zh' ? (
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <div className="text-base sm:text-lg font-black text-red-600 dark:text-red-400 tracking-tight font-sans">
+                {bilingual.budgetRmbFormatted}
+              </div>
+              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono">
+                (₮{budgetMnt.toLocaleString()})
+              </div>
+            </div>
+          ) : (
+            <div className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight font-sans">
+              ₮ {budgetMnt.toLocaleString()}
+            </div>
+          )}
           <div className="text-[11px] font-mono text-blue-600 dark:text-blue-400 font-semibold">
             {tender.tenderCode || `INV-${tender.invitationId}`}
           </div>

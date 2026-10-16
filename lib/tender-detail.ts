@@ -101,6 +101,13 @@ function extractSubstantiveKeywords(title: string): string[] {
   return Array.from(new Set(stems));
 }
 
+function isBoilerplateItem(item: any): boolean {
+  if (!item || !item.name) return true;
+  const n = String(item.name).toLowerCase().trim();
+  if (n.length < 3) return true;
+  return /худалдан авах ажиллагааны|сангийн сайдын|оролцогчдод өгөх|жишиг баримт|хууль тогтоомж|төрийн болон орон|тшз-|гэрээний ерөнхий|тогтоомж\s*\d/i.test(n);
+}
+
 async function findSimilarTenders(tenderItem: any, currentId: string | number) {
   const keywords = extractSubstantiveKeywords(tenderItem.tenderName);
   let candidates: any[] = [];
@@ -530,10 +537,24 @@ export async function getTenderDetailData(id: string | number, options: { useSto
             if (cleanedLoc) technicalSpecs.deliveryLocation = cleanedLoc;
           }
 
-          const timeClause = validScc.find((c: any) => c.clause.includes('2.6') || c.title.includes('хугацаа') || c.content.includes('хугацаа'));
+          const timeClause = validScc.find((c: any) =>
+            (c.clause.includes('2.6') || c.title.toLowerCase().includes('нийлүүлэх хугацаа') || c.content.toLowerCase().includes('нийлүүлэх хугацаа') || c.title.toLowerCase().includes('ажил эхлэх')) &&
+            !c.title.toLowerCase().includes('баталгаат') &&
+            !c.content.toLowerCase().includes('баталгаат хугацаа')
+          );
           if (timeClause) {
             const cleanedTime = timeClause.content.replace(/^Бараа нийлүүлэх хугацаа\s*:\s*/i, '').trim();
             if (cleanedTime) (technicalSpecs as any).deliveryPeriodText = cleanedTime;
+          }
+
+          const incoClause = validScc.find((c: any) => c.clause.includes('2.10') || c.title.includes('хүлээлгэн өгөх'));
+          if (incoClause) {
+            (technicalSpecs as any).deliveryConditionText = incoClause.content;
+          }
+
+          const adjClause = validScc.find((c: any) => c.clause.includes('3.8') || c.title.includes('Үнийн тохируулга'));
+          if (adjClause) {
+            (technicalSpecs as any).priceAdjustmentText = adjClause.content;
           }
 
           const payClause = validScc.find((c: any) => c.clause.includes('3.9') || c.title.includes('Төлбөр'));
@@ -563,12 +584,47 @@ export async function getTenderDetailData(id: string | number, options: { useSto
               };
             }
           }
+
+          const advClause = validScc.find((c: any) => c.clause.includes('5.4') || c.title.includes('Урьдчилгаа'));
+          if (advClause) {
+            (technicalSpecs as any).advancePaymentText = advClause.content;
+            const advMatch = advClause.content.match(/(\d+(?:\.\d+)?)\s*хувь/);
+            if (advMatch) {
+              technicalSpecs.paymentTerms = {
+                ...(technicalSpecs.paymentTerms || {}),
+                advancePaymentPct: parseFloat(advMatch[1])
+              };
+            }
+          }
         }
       }
 
-      // Real Itemized BoQ Table from official PDF
-      if (specsSource.items && specsSource.items.length > 0) {
-        technicalSpecs.sampleItems = specsSource.items.map((it: any) => ({
+      // Direct mapping from structuredSpecs if not already mapped from SCC
+      if (specsSource.deliveryPeriod && !(technicalSpecs as any).deliveryPeriodText) {
+        (technicalSpecs as any).deliveryPeriodText = specsSource.deliveryPeriod;
+      }
+      if (!(technicalSpecs as any).deliveryPeriodText && specsSource.deliverySchedule?.[0]?.deadline) {
+        (technicalSpecs as any).deliveryPeriodText = specsSource.deliverySchedule[0].deadline;
+      }
+      if (specsSource.warrantyPeriod && !(technicalSpecs as any).warrantyText) {
+        (technicalSpecs as any).warrantyText = specsSource.warrantyPeriod;
+      }
+      if (specsSource.keyRequirements && specsSource.keyRequirements.length > 0) {
+        bds.generalRequirements = specsSource.keyRequirements;
+        if (!(technicalSpecs as any).extractedQualifications || (technicalSpecs as any).extractedQualifications.length === 0) {
+          (technicalSpecs as any).extractedQualifications = specsSource.keyRequirements;
+        }
+      }
+      if (!technicalSpecs.deliveryLocation) {
+        technicalSpecs.deliveryLocation = specsSource.deliverySchedule?.[0]?.location || tenderItem.budgetEntityName || 'Улаанбаатар хот / Захиалагчийн заасан байршил';
+      }
+
+      // Real Itemized BoQ Table: Filter out boilerplate items and prefer real goods or delivery schedule
+      const rawItems = Array.isArray(specsSource.items) ? specsSource.items : [];
+      const cleanItems = rawItems.filter((it: any) => !isBoilerplateItem(it));
+
+      if (cleanItems.length > 0) {
+        technicalSpecs.sampleItems = cleanItems.map((it: any) => ({
           name: it.name,
           quantity: it.quantity || it.qty || 1,
           unit: it.unit || 'ширхэг',
@@ -577,14 +633,127 @@ export async function getTenderDetailData(id: string | number, options: { useSto
         }));
         (technicalSpecs as any).isRealExtracted = true;
       } else if (specsSource.deliverySchedule && specsSource.deliverySchedule.length > 0) {
-        technicalSpecs.sampleItems = specsSource.deliverySchedule.map((it: any) => ({
-          name: it.name,
-          quantity: it.quantity,
-          unit: it.unit,
-          spec: `Хүргэх газар: ${it.location} | Хугацаа: ${it.deadline}`,
-          isRealExtracted: true
-        }));
-        (technicalSpecs as any).isRealExtracted = true;
+        const cleanSched = specsSource.deliverySchedule.filter((it: any) => !isBoilerplateItem(it));
+        if (cleanSched.length > 0) {
+          technicalSpecs.sampleItems = cleanSched.map((it: any) => ({
+            name: it.name,
+            quantity: it.quantity,
+            unit: it.unit,
+            spec: `Хүргэх газар: ${it.location} | Хугацаа: ${it.deadline}`,
+            isRealExtracted: true
+          }));
+          (technicalSpecs as any).isRealExtracted = true;
+        }
+      }
+
+      // If sampleItems is still empty after both checks, run the intelligent fallback synthesis
+      if (!technicalSpecs.sampleItems || technicalSpecs.sampleItems.length === 0) {
+        // Fallback intelligent BoQ item synthesis from rawSpecText or tenderName
+        const specText = specsSource.rawSpecText || tenderItem.full_scope_of_work || '';
+        const bulletLines = specText
+          .split('\n')
+          .map((l: string) => l.trim())
+          .filter((l: string) => l.startsWith('-') || l.startsWith('•') || l.startsWith('*'));
+
+        const specSummary = bulletLines.length > 0
+          ? bulletLines.join(' | ')
+          : (specText.substring(0, 300) || 'Тендерийн техникийн тодорхойлолтын дагуу');
+
+        let cleanItemName = (tenderItem.tenderName || '')
+          .replace(/худалдан\s*авах|нийлүүлэх|гүйцэтгэх|сонгон\s*шалгаруулах/gi, '')
+          .replace(/^(?:Хан-Уул|Баянзүрх|Сүхбаатар|Чингэлтэй|Сонгинохайрхан|Баянгол|Налайх|Багануур|Багахангай)\s*дүүргийн\s*/gi, '')
+          .replace(/^(?:Улаанбаатар|Дорноговь|Өмнөговь|Дархан-Уул|Сэлэнгэ|Орхон|Хөвсгөл|Архангай|Төв)\s*аймгийн\s*/gi, '')
+          .trim();
+
+        if (!cleanItemName) cleanItemName = tenderItem.tenderName;
+
+        let estimatedQty = 1;
+        const qtyMatch = specText.match(/(\d+)\s*(?:ширхэг|ком|ш|тоо|багц|метр|м|м2|м3|тн|тонн)/i);
+        if (qtyMatch) {
+          estimatedQty = parseInt(qtyMatch[1], 10);
+        } else if (tenderItem.totalBudget > 200_000_000 && /компьютер|ноут/i.test(tenderItem.tenderName)) {
+          estimatedQty = Math.max(1, Math.round(tenderItem.totalBudget / 3_500_000));
+        }
+
+        let detectedUnit = 'ширхэг';
+        const unitMatch = specText.match(/(?:ширхэг|ш|ком|комплект|м2|м3|метр|м|тн|тонн|кг|литр|л|багц)/i);
+        if (unitMatch) {
+          detectedUnit = unitMatch[0].toLowerCase();
+        } else if (/ажил|үйлчилгээ/i.test(tenderItem.tenderTypeName)) {
+          detectedUnit = 'багц';
+        }
+
+        technicalSpecs.sampleItems = [{
+          name: cleanItemName,
+          quantity: estimatedQty,
+          unit: detectedUnit,
+          spec: specSummary,
+          isRealExtracted: Boolean(specText)
+        }];
+        (technicalSpecs as any).isRealExtracted = Boolean(specText);
+      }
+
+      // Generate dynamic Submission Checklist if empty
+      if (!technicalSpecs.submissionChecklist || technicalSpecs.submissionChecklist.length === 0) {
+        const checklist = [
+          {
+            id: 'form-1',
+            title: 'Маягт 1: Тендерийн маягт ба Үнийн санал',
+            desc: 'Тендерийн нийт үнэ, нийлүүлэх хугацаа, хүчинтэй байх хугацааг (30+ хоног) баталгаажуулсан маягт',
+            required: true
+          },
+          {
+            id: 'company-cert',
+            title: 'Хуулийн этгээдийн улсын бүртгэлийн гэрчилгээ',
+            desc: 'Улсын бүртгэлийн ерөнхий газрын лавлагаа эсвэл гэрчилгээний хуулбар',
+            required: true
+          },
+          {
+            id: 'tax-clearance',
+            title: 'Татварын цахим тодорхойлолт',
+            desc: 'Татварын албаны хугацаа хэтэрсэн өр төлбөргүйг нотлох цахим лавлагаа',
+            required: true
+          },
+          {
+            id: 'financials',
+            title: 'Санхүүгийн тайлан & Аудитын дүгнэлт',
+            desc: (bds as any).turnoverReq || 'Сүүлийн 2 жилийн санхүүгийн баталгаажсан тайлан',
+            required: true
+          },
+          {
+            id: 'similar-exp',
+            title: 'Ижил төстэй ажлын гэрээ, хүлээлцсэн акт',
+            desc: (bds as any).similarExpReq || 'Сүүлийн жилүүдэд гүйцэтгэсэн ижил төстэй нийлүүлэлтийн гэрээ, акт',
+            required: true
+          },
+          {
+            id: 'tech-spec-compliance',
+            title: 'Техникийн тодорхойлолт ба Үйлдвэрлэгчийн каталог',
+            desc: 'Санал болгож буй барааны зураг, үзүүлэлт, гарал үүслийн гэрчилгээ',
+            required: true
+          }
+        ];
+
+        if (bds.requiredLicenses && bds.requiredLicenses.length > 0) {
+          checklist.push({
+            id: 'licenses',
+            title: `Тусгай зөвшөөрөл: ${bds.requiredLicenses.join(', ')}`,
+            desc: 'Холбогдох төрийн захиргааны байгууллагаас олгосон хүчин төгөлдөр тусгай зөвшөөрөл',
+            required: true
+          });
+        }
+
+        const isExempt = (bds as any).bidSecurityReq?.includes('Шаардахгүй') || bds.bidSecurityAmount === 0;
+        if (!isExempt) {
+          checklist.push({
+            id: 'bid-bond',
+            title: 'Тендерийн баталгаа (Банкны баталгаа / Үнэт цаас)',
+            desc: `Төсвийн 1-2%-ийн банкны баталгаа (хугацаа 30+ хоног)`,
+            required: true
+          });
+        }
+
+        technicalSpecs.submissionChecklist = checklist;
       }
 
       // Real Delivery Schedule from official PDF

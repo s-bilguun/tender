@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
+import { getBilingualTenderInfo } from '@/lib/bilingual-title';
 import { 
   ExternalLink, Sparkles, Star, Package, ShieldCheck, 
   FileText, Clock, AlertCircle, Eye, ArrowUpRight 
@@ -143,12 +144,33 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         </span>
                       )}
                     </div>
-                    <Link 
-                      href={`/tender/${tender.invitationId}`}
-                      className="font-semibold text-slate-900 dark:text-white text-left line-clamp-2 leading-snug hover:text-blue-600 dark:hover:text-blue-400 transition-colors block cursor-pointer"
-                    >
-                      {tender.tenderName}
-                    </Link>
+                    {(() => {
+                      const bilingual = getBilingualTenderInfo(
+                        tender.tenderName,
+                        tender.budgetEntityName,
+                        Number(tender.totalBudget) || 0,
+                        tender.tenderTypeCode
+                      );
+                      return (
+                        <Link 
+                          href={`/tender/${tender.invitationId}`}
+                          className="font-semibold text-slate-900 dark:text-white text-left line-clamp-2 leading-snug hover:text-blue-600 dark:hover:text-blue-400 transition-colors block cursor-pointer"
+                        >
+                          {locale === 'zh' ? (
+                            <span className="flex flex-col gap-0.5">
+                              <span className="text-blue-600 dark:text-blue-400 font-bold block text-xs sm:text-sm">
+                                {bilingual.titleZh}
+                              </span>
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 font-normal">
+                                {tender.tenderName}
+                              </span>
+                            </span>
+                          ) : (
+                            tender.tenderName
+                          )}
+                        </Link>
+                      );
+                    })()}
 
                     {/* Real Extracted BoQ & PDF Specs Preview */}
                     {(() => {

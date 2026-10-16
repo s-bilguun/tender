@@ -36,18 +36,23 @@ export default function Home() {
       const urlLang = params.get('lang') as Locale | null;
       if (urlLang && ['mn', 'en', 'zh'].includes(urlLang)) {
         setLocaleState(urlLang);
+        if (urlLang === 'zh') setCurrency('CNY');
         localStorage.setItem('tenderhub_locale', urlLang);
         return;
       }
       const savedLang = localStorage.getItem('tenderhub_locale') as Locale | null;
       if (savedLang && ['mn', 'en', 'zh'].includes(savedLang)) {
         setLocaleState(savedLang);
+        if (savedLang === 'zh') setCurrency('CNY');
       }
     } catch {}
   }, []);
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);
+    if (newLocale === 'zh') {
+      setCurrency('CNY');
+    }
     try {
       localStorage.setItem('tenderhub_locale', newLocale);
       const url = new URL(window.location.href);
@@ -604,6 +609,7 @@ export default function Home() {
         isOpen={isChinaSupplierOpen}
         onClose={() => setIsChinaSupplierOpen(false)}
         tender={modalTenderContext}
+        locale={locale}
       />
 
       {/* Command Palette (Cmd+K / Ctrl+K) */}

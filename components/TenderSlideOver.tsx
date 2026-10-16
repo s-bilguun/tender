@@ -13,6 +13,7 @@ import {
 import { TenderItem, Locale } from '@/lib/types';
 import { IndustryIcon } from '@/components/IndustryIcon';
 import { TenderPdfReaderModal } from '@/components/TenderPdfReaderModal';
+import { getBilingualTenderInfo } from '@/lib/bilingual-title';
 
 interface TenderSlideOverProps {
   tender: TenderItem | null;
@@ -54,6 +55,16 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
   const [itemPrices, setItemPrices] = useState<Record<number, number>>({});
   const [userAnnualTurnover, setUserAnnualTurnover] = useState<string>('');
   const [checkedLicenses, setCheckedLicenses] = useState<Record<string, boolean>>({});
+
+  const bilingual = useMemo(() => {
+    if (!tender) return null;
+    return getBilingualTenderInfo(
+      tender.tenderName,
+      tender.budgetEntityName,
+      Number(tender.totalBudget) || 0,
+      tender.tenderTypeCode
+    );
+  }, [tender]);
 
   useEffect(() => {
     if (!tender?.invitationId || !isOpen) {
@@ -421,12 +432,25 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
               </div>
 
               <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white leading-snug tracking-tight">
-                {tender.tenderName}
+                {locale === 'zh' && bilingual ? (
+                  <span className="flex flex-col gap-0.5">
+                    <span className="text-blue-600 dark:text-blue-400 font-bold block text-base sm:text-lg">
+                      {bilingual.titleZh}
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">
+                      {tender.tenderName}
+                    </span>
+                  </span>
+                ) : (
+                  tender.tenderName
+                )}
               </h1>
 
               <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
                 <Building2 className="h-4 w-4 text-blue-500 shrink-0" />
-                <span className="text-slate-700 dark:text-slate-200 font-semibold">{tender.budgetEntityName}</span>
+                <span className="text-slate-700 dark:text-slate-200 font-semibold">
+                  {locale === 'zh' && bilingual ? bilingual.entityZh : tender.budgetEntityName}
+                </span>
               </div>
             </div>
 

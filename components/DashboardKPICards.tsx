@@ -46,11 +46,21 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
   }, []);
 
   const formatBillion = (amount: number) => {
+    if (locale === 'zh') {
+      const rmb = Math.round(amount / 485);
+      const rmbYi = rmb / 100_000_000;
+      return `约 ¥${rmbYi.toFixed(1)} 亿元`;
+    }
     const billion = amount / 1_000_000_000;
     return `₮ ${billion.toFixed(1)} тэрбум`;
   };
 
   const formatBillionShort = (amount: number) => {
+    if (locale === 'zh') {
+      const rmb = Math.round(amount / 485);
+      const rmbYi = rmb / 100_000_000;
+      return `¥${rmbYi.toFixed(1)}亿`;
+    }
     const billion = amount / 1_000_000_000;
     return `₮${billion.toFixed(1)}B`;
   };
@@ -78,7 +88,7 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
               className="h-8 px-3 rounded-lg text-xs font-semibold bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/80 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1.5 transition-all cursor-pointer hover:border-purple-400"
             >
               <FileCheck className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-              <span>ТББ Шалгагч AI</span>
+              <span>{locale === 'zh' ? '标书自测 AI' : 'ТББ Шалгагч AI'}</span>
             </button>
           )}
 
@@ -88,7 +98,7 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
               className="h-8 px-3 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1.5 transition-all cursor-pointer hover:border-emerald-400"
             >
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>Баталгаа & Санхүүжилт</span>
+              <span>{locale === 'zh' ? '保函与融资服务' : 'Баталгаа & Санхүүжилт'}</span>
             </button>
           )}
 
@@ -98,7 +108,7 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
               className="h-8 px-3 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/70 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-rose-700 dark:text-rose-200 border border-rose-200 dark:border-rose-800/60 flex items-center gap-1.5 transition-all cursor-pointer hover:border-rose-400"
             >
               <Globe2 className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
-              <span>🇨🇳 Хятад Нийлүүлэгч</span>
+              <span>{locale === 'zh' ? '🇨🇳 中企出海专区' : '🇨🇳 Хятад Нийлүүлэгч'}</span>
             </button>
           )}
         </div>
