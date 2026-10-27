@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import { tenderStore } from './tender-client';
-import { TenderItem } from './types';
-import { fetchTenderLiveBundle } from './live-fetcher';
+import { LIVE_BUNDLE_SCHEMA_VERSION, TenderItem } from './types';
+import { fetchTenderLiveBundle, isGarbledPdfText, cleanTechnicalSectionText } from './live-fetcher';
 import { analyzeChinaBidderEligibility } from './china-bidder-analyzer';
 
 function generateBDS(_tender: any) {
@@ -382,22 +382,29 @@ export async function getTenderDetailData(id: string | number, options: { useSto
   // 3. Fetch smart similar tenders in category / substantive keywords
   const similarTenders = await findSimilarTenders(tenderItem, id);
 
-  // 4. Fetch live data from tender.gov.mn (documents, bidders, PDF extractions)
+  // 4. Fetch live data from tender.gov.mn or re-parse stored Supabase PDF if schemaVersion < LIVE_BUNDLE_SCHEMA_VERSION
   let liveBundle: any = null;
   const rawData = tenderData.raw_data || tenderData.rawData;
-  const hasStoredBundle = Boolean(rawData?.liveBundle && (rawData.liveBundle.documents?.length || rawData.liveBundle.structuredSpecs || rawData.liveBundle.bidders?.length));
+  const hasStoredBundle = Boolean(
+    rawData?.liveBundle &&
+    rawData.liveBundle.schemaVersion === LIVE_BUNDLE_SCHEMA_VERSION &&
+    (rawData.liveBundle.documents?.length || rawData.liveBundle.structuredSpecs || rawData.liveBundle.bidders?.length)
+  );
 
-  if (options.useStoredLiveBundle || hasStoredBundle) {
-    liveBundle = rawData?.liveBundle || null;
+  if (options.useStoredLiveBundle && rawData?.liveBundle) {
+    liveBundle = rawData.liveBundle;
+  } else if (hasStoredBundle) {
+    liveBundle = rawData.liveBundle;
   } else {
     try {
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Live bundle fetch timeout (3.5s exceeded)')), 3500)
+        setTimeout(() => reject(new Error('Live bundle fetch timeout (5.0s exceeded)')), 5000)
       );
       liveBundle = await Promise.race([
         fetchTenderLiveBundle(
           tenderItem.invitationId || id,
-          rawData?.tenderId
+          rawData?.tenderId,
+          Boolean(rawData?.pdfUrl && rawData?.liveBundle?.schemaVersion !== LIVE_BUNDLE_SCHEMA_VERSION)
         ),
         timeoutPromise
       ]);
@@ -498,7 +505,13 @@ export async function getTenderDetailData(id: string | number, options: { useSto
           bds.bidSecurityAmount = 0;
           bds.bidSecurity1Pct = 0;
           bds.bidSecurity2Pct = 0;
+        } else {
+          const amtNum = Number(String(specsSource.bidSecurityReq).replace(/[^\d]/g, ''));
+          if (amtNum > 0) bds.bidSecurityAmount = amtNum;
         }
+      }
+      if (typeof specsSource.foreignEligible === 'boolean') {
+        (bds as any).foreignEligible = specsSource.foreignEligible;
       }
       if (specsSource.turnoverReq) {
         (bds as any).turnoverReq = specsSource.turnoverReq;
@@ -510,11 +523,23 @@ export async function getTenderDetailData(id: string | number, options: { useSto
         (bds as any).liquidAssetsReq = specsSource.liquidAssetsReq;
       }
 
+      const rawCandidateText = specsSource.fullScopeOfWork || specsSource.rawSpecText || '';
+      const cleanedSpecText = isGarbledPdfText(rawCandidateText) ? '' : cleanTechnicalSectionText(rawCandidateText);
+
       (technicalSpecs as any).extractedSpecs = specsSource;
-      (technicalSpecs as any).realSpecsText = specsSource.rawSpecText;
-      (technicalSpecs as any).extractedQualifications = specsSource.qualifications;
+      (technicalSpecs as any).realSpecsText = cleanedSpecText || undefined;
+      (technicalSpecs as any).extractedQualifications = specsSource.keyRequirements || specsSource.qualifications;
       (technicalSpecs as any).pdfPageCount = liveBundle?.pdfPageCount || rawData?.pdfPageCount;
-      (technicalSpecs as any).rawPdfText = liveBundle?.pdfText ? liveBundle.pdfText.substring(0, 30000) : undefined;
+      (technicalSpecs as any).rawPdfText = liveBundle?.pdfText && !isGarbledPdfText(liveBundle.pdfText)
+        ? liveBundle.pdfText.substring(0, 30000)
+        : undefined;
+
+      if (cleanedSpecText) {
+        tenderItem.full_scope_of_work = cleanedSpecText;
+      }
+      if (Array.isArray(specsSource.keyRequirements) && specsSource.keyRequirements.length > 0) {
+        tenderItem.eligibility_requirements = specsSource.keyRequirements;
+      }
 
       // Real Special Conditions of Contract (ГТН / SCC)
       if (specsSource.specialConditions && specsSource.specialConditions.length > 0) {

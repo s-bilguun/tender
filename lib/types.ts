@@ -1,7 +1,7 @@
 export type TenderType = 'PRODUCT' | 'JOB' | 'SERVICE' | 'ALL';
 
 // Increment when an extraction pipeline change makes previously stored bundles untrustworthy.
-export const LIVE_BUNDLE_SCHEMA_VERSION = 2;
+export const LIVE_BUNDLE_SCHEMA_VERSION = 3;
 
 export type IndustryVertical =
   | 'all'

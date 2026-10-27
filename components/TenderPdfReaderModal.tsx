@@ -42,17 +42,33 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
   const pageCount = rawData?.pdfPageCount || storedDoc?.pageCount || storedDoc?.totalPageCount;
   const fileSizeKb = storedDoc?.fileSize ? Math.round(storedDoc.fileSize / 1024) : null;
 
-  // Extracted scope & eligibility
-  const eligibilityReqs: string[] = 
+  // Extracted scope, structured BDS & BoQ items
+  const structuredSpecs = rawData?.structuredSpecs || liveBundle?.structuredSpecs || {};
+  const extractedItems: Array<{ name: string; qty?: string | number; quantity?: string | number; unit?: string; specs?: string }> =
+    (Array.isArray((tender as any).items) && (tender as any).items.length > 0 ? (tender as any).items : null) ||
+    (Array.isArray(structuredSpecs?.items) && structuredSpecs.items.length > 0 ? structuredSpecs.items : null) ||
+    (Array.isArray(structuredSpecs?.deliverySchedule) && structuredSpecs.deliverySchedule.length > 0 ? structuredSpecs.deliverySchedule : []);
+
+  const bidSecText = (tender as any).bidSecurityReq || structuredSpecs?.bidSecurityReq || tender.liveBundleSummary?.bidSecurityReq;
+  const turnoverText = (tender as any).turnoverReq || structuredSpecs?.turnoverReq || tender.liveBundleSummary?.turnoverReq;
+  const liquidText = (tender as any).liquidAssetsReq || structuredSpecs?.liquidAssetsReq;
+  const similarExpText = (tender as any).similarExpReq || structuredSpecs?.similarExpReq;
+  const deliveryPeriodText = structuredSpecs?.deliveryPeriod || structuredSpecs?.deliverySchedule?.[0]?.deadline;
+  const deliveryLocationText = structuredSpecs?.deliveryLocation || structuredSpecs?.deliverySchedule?.[0]?.location;
+  const warrantyText = structuredSpecs?.warrantyPeriod;
+
+  const eligibilityReqs: string[] =
     (tender as any).eligibility_requirements ||
-    rawData?.llmExtracted?.eligibility_requirements || 
-    liveBundle?.structuredSpecs?.keyRequirements || 
+    structuredSpecs?.keyRequirements ||
+    rawData?.llmExtracted?.eligibility_requirements ||
+    liveBundle?.structuredSpecs?.keyRequirements ||
     [];
 
-  const scopeOfWork: string = 
+  const scopeOfWork: string =
     (tender as any).full_scope_of_work ||
-    rawData?.llmExtracted?.full_scope_of_work || 
-    liveBundle?.structuredSpecs?.rawSpecText || 
+    structuredSpecs?.fullScopeOfWork ||
+    rawData?.llmExtracted?.full_scope_of_work ||
+    liveBundle?.structuredSpecs?.rawSpecText ||
     liveBundle?.fullScopeOfWork ||
     '';
 
@@ -256,6 +272,103 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                   </span>
                 </div>
               </div>
+
+              {/* Key BDS Executive Metrics Grid */}
+              {(bidSecText || turnoverText || liquidText || similarExpText || deliveryPeriodText || warrantyText || deliveryLocationText) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                  {bidSecText && (
+                    <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+                        {locale === 'zh' ? '投标保证金 (ТШЗ 24.1)' : 'Тендерийн баталгаа (ТШЗ)'}
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{bidSecText}</p>
+                    </div>
+                  )}
+                  {turnoverText && (
+                    <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/70">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">
+                        {locale === 'zh' ? '营业额要求 (ТШЗ 18.1)' : 'Борлуулалтын орлогын босго'}
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{turnoverText}</p>
+                    </div>
+                  )}
+                  {liquidText && (
+                    <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/70">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block">
+                        {locale === 'zh' ? '流动资金要求 (ТШЗ 18.1)' : 'Түргэн хөрвөх хөрөнгө'}
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{liquidText}</p>
+                    </div>
+                  )}
+                  {similarExpText && (
+                    <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+                        {locale === 'zh' ? '同类项目经验' : 'Ижил төстэй ажлын туршлага'}
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{similarExpText}</p>
+                    </div>
+                  )}
+                  {deliveryPeriodText && (
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                        {locale === 'zh' ? '交货/工期 (ТШЗ 17.3)' : 'Нийлүүлэх / Гүйцэтгэх хугацаа'}
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{deliveryPeriodText}</p>
+                    </div>
+                  )}
+                  {(warrantyText || deliveryLocationText) && (
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                        {locale === 'zh' ? '质保与交货条件' : 'Баталгаат хугацаа & Байршил'}
+                      </span>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">
+                        {[warrantyText && `Баталгаа: ${warrantyText}`, deliveryLocationText].filter(Boolean).join(' • ')}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Extracted BoQ / Goods & Works Table */}
+              {extractedItems.length > 0 && (
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Tag className="h-4 w-4 text-emerald-500" />
+                      <span>{locale === 'zh' ? '提取的采购清单 / 工程量清单 (BoQ)' : 'Задлагдсан бараа, ажлын тоо хэмжээний жагсаалт (BoQ)'}</span>
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                      {extractedItems.length} {locale === 'zh' ? '项' : 'нэр төрөл'}
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                        <tr>
+                          <th className="py-2 px-3 font-bold w-10">#</th>
+                          <th className="py-2 px-3 font-bold">{locale === 'zh' ? '名称 / 项目' : 'Бараа, ажлын нэр'}</th>
+                          <th className="py-2 px-3 font-bold whitespace-nowrap">{locale === 'zh' ? '数量与单位' : 'Тоо хэмжээ'}</th>
+                          <th className="py-2 px-3 font-bold">{locale === 'zh' ? '技术要求与交货期' : 'Техникийн үзүүлэлт / Нөхцөл'}</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                        {extractedItems.slice(0, 25).map((it, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/50">
+                            <td className="py-2 px-3 font-mono text-slate-400">{idx + 1}</td>
+                            <td className="py-2 px-3 font-semibold text-slate-900 dark:text-white">{it.name}</td>
+                            <td className="py-2 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                              {it.quantity || it.qty || '1'} {it.unit || 'ш'}
+                            </td>
+                            <td className="py-2 px-3 text-slate-600 dark:text-slate-300 max-w-md truncate" title={it.specs}>
+                              {it.specs || 'Техникийн тодорхойлолтын дагуу'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               {/* Eligibility Criteria */}
               {eligibilityReqs.length > 0 && (

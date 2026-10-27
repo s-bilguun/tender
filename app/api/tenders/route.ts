@@ -4,6 +4,7 @@ import { tenderStore } from '@/lib/tender-client';
 import { KEYWORDS_MAP, classifyIndustry } from '@/lib/taxonomy';
 import { LIVE_BUNDLE_SCHEMA_VERSION, TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
 import { analyzeChinaBidderEligibility } from '@/lib/china-bidder-analyzer';
+import { isBoilerplateSpecItem, cleanTechnicalSectionText, isGarbledPdfText } from '@/lib/live-fetcher';
 
 export const dynamic = 'force-dynamic';
 
@@ -172,15 +173,32 @@ export async function GET(request: NextRequest) {
           const liveBundle = rawData.liveBundle;
           const pdfUrl = rawData.pdfUrl || liveBundle?.documents?.find((d: any) => d.isStored || (typeof d.downloadUrl === 'string' && d.downloadUrl.includes('supabase.co')) || (typeof d.url === 'string' && d.url.includes('supabase.co')))?.downloadUrl;
           const pdfFileName = rawData.pdfFileName || liveBundle?.documents?.find((d: any) => d.isStored)?.fileName || liveBundle?.documents?.[0]?.fileName || `${row.tender_code || row.invitation_id}_ТШББ.pdf`;
-          const fullScope = rawData.full_scope_of_work || rawData.llmExtracted?.full_scope_of_work || liveBundle?.fullScopeOfWork || liveBundle?.structuredSpecs?.rawSpecText || liveBundle?.structuredSpecs?.fullScopeOfWork;
-          const eligReqs = rawData.eligibility_requirements || rawData.llmExtracted?.eligibility_requirements || liveBundle?.structuredSpecs?.keyRequirements;
+          const rawScope =
+            liveBundle?.structuredSpecs?.fullScopeOfWork ||
+            rawData.structuredSpecs?.fullScopeOfWork ||
+            rawData.full_scope_of_work ||
+            rawData.llmExtracted?.full_scope_of_work ||
+            liveBundle?.fullScopeOfWork ||
+            liveBundle?.structuredSpecs?.rawSpecText ||
+            '';
+          const fullScope = isGarbledPdfText(rawScope) ? '' : cleanTechnicalSectionText(rawScope);
+          const eligReqs =
+            liveBundle?.structuredSpecs?.keyRequirements ||
+            rawData.structuredSpecs?.keyRequirements ||
+            rawData.eligibility_requirements ||
+            rawData.llmExtracted?.eligibility_requirements;
+
+          const specs = liveBundle?.structuredSpecs || rawData.structuredSpecs;
+          const rawItems = specs?.items || specs?.deliverySchedule || rawData.items || [];
+          const cleanItems = Array.isArray(rawItems) ? rawItems.filter((it: any) => !isBoilerplateSpecItem(it)) : [];
+          const rawSched = specs?.deliverySchedule || [];
+          const cleanSched = Array.isArray(rawSched) ? rawSched.filter((it: any) => !isBoilerplateSpecItem(it)) : [];
 
           let liveBundleSummary = undefined;
           if (liveBundle || pdfUrl) {
-            const specs = liveBundle?.structuredSpecs;
-            const items = specs?.deliverySchedule || specs?.items || [];
             const bidSecReq = specs?.bidSecurityReq;
             const isBidSecExempt = typeof bidSecReq === 'string' && bidSecReq.includes('Шаардахгүй');
+            const summaryItems = cleanItems.length > 0 ? cleanItems : cleanSched;
             liveBundleSummary = {
               hasBundle: Boolean(liveBundle || pdfUrl),
               docCount: liveBundle?.documents?.length || (pdfUrl ? 1 : 0),
@@ -188,7 +206,7 @@ export async function GET(request: NextRequest) {
               bidSecurityReq: bidSecReq,
               isBidSecurityExempt: isBidSecExempt,
               turnoverReq: specs?.turnoverReq,
-              topItems: items.slice(0, 3).map((it: any) => ({
+              topItems: summaryItems.slice(0, 3).map((it: any) => ({
                 name: String(it.name || '').replace(/\s+/g, ' ').trim(),
                 qty: it.quantity || it.qty || '',
                 unit: it.unit || ''
@@ -220,15 +238,15 @@ export async function GET(request: NextRequest) {
             liveBundleSummary,
             full_scope_of_work: fullScope || undefined,
             eligibility_requirements: Array.isArray(eligReqs) ? eligReqs : undefined,
-            items: rawData.structuredSpecs?.items || liveBundle?.structuredSpecs?.items || rawData.items || undefined,
-            deliverySchedule: rawData.structuredSpecs?.deliverySchedule || liveBundle?.structuredSpecs?.deliverySchedule || undefined,
-            licenses: rawData.structuredSpecs?.licenses || liveBundle?.structuredSpecs?.licenses || undefined,
-            personnel: rawData.structuredSpecs?.personnel || liveBundle?.structuredSpecs?.personnel || undefined,
-            machinery: rawData.structuredSpecs?.machinery || liveBundle?.structuredSpecs?.machinery || undefined,
-            turnoverReq: rawData.structuredSpecs?.turnoverReq || liveBundle?.structuredSpecs?.turnoverReq || undefined,
-            liquidAssetsReq: rawData.structuredSpecs?.liquidAssetsReq || liveBundle?.structuredSpecs?.liquidAssetsReq || undefined,
-            similarExpReq: rawData.structuredSpecs?.similarExpReq || liveBundle?.structuredSpecs?.similarExpReq || undefined,
-            bidSecurityReq: rawData.structuredSpecs?.bidSecurityReq || liveBundle?.structuredSpecs?.bidSecurityReq || undefined,
+            items: cleanItems.length > 0 ? cleanItems : undefined,
+            deliverySchedule: cleanSched.length > 0 ? cleanSched : undefined,
+            licenses: specs?.licenses || undefined,
+            personnel: specs?.personnel || undefined,
+            machinery: specs?.machinery || undefined,
+            turnoverReq: specs?.turnoverReq || undefined,
+            liquidAssetsReq: specs?.liquidAssetsReq || undefined,
+            similarExpReq: specs?.similarExpReq || undefined,
+            bidSecurityReq: specs?.bidSecurityReq || undefined,
             raw_data: {
               pdfUrl,
               pdfFileName,
@@ -236,10 +254,10 @@ export async function GET(request: NextRequest) {
               pdfPageCount: rawData.pdfPageCount || liveBundle?.pdfPageCount,
               full_scope_of_work: fullScope,
               eligibility_requirements: eligReqs,
-              structuredSpecs: rawData.structuredSpecs || liveBundle?.structuredSpecs,
+              structuredSpecs: specs ? { ...specs, items: cleanItems, deliverySchedule: cleanSched } : undefined,
               liveBundle: liveBundle ? {
                 documents: liveBundle.documents,
-                structuredSpecs: liveBundle.structuredSpecs || rawData.structuredSpecs,
+                structuredSpecs: specs ? { ...specs, items: cleanItems, deliverySchedule: cleanSched } : undefined,
                 fullScopeOfWork: fullScope,
               } : (pdfUrl ? {
                 documents: [{
@@ -248,7 +266,7 @@ export async function GET(request: NextRequest) {
                   isStored: true,
                   isPrimary: true,
                 }],
-                structuredSpecs: rawData.structuredSpecs,
+                structuredSpecs: specs ? { ...specs, items: cleanItems, deliverySchedule: cleanSched } : undefined,
                 fullScopeOfWork: fullScope,
               } : undefined),
             },

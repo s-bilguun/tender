@@ -12,11 +12,18 @@ export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): Chin
 
   // Check specs / BDS / live bundle
   const bds = (tender as any).bds || {};
+  const rawSpecs = (tender as any).raw_data?.structuredSpecs || (tender as any).rawData?.structuredSpecs || {};
+  const explicitForeignEligible =
+    typeof bds.foreignEligible === 'boolean'
+      ? bds.foreignEligible
+      : typeof rawSpecs.foreignEligible === 'boolean'
+      ? rawSpecs.foreignEligible
+      : null;
   const liveBundle = tender.liveBundleSummary;
   const rawText = (liveBundle?.topItems?.map((i: any) => i.name).join(' ') || '') + ' ' + (bds.rawSpecText || '');
 
-  const licenses = bds.requiredLicenses || [];
-  const hasConstructionLicense = licenses.some((l: string) => /барилга|угсралт|зам|гүүр|цахилгаан|эрчим хүч|тусгай зөвшөөрөл/i.test(l)) ||
+  const licenses = bds.requiredLicenses || tender.licenses || [];
+  const hasConstructionLicense = licenses.some((l: string) => /барилга|угсралт|зам|гүүр|цахилгаан|эрчим хүч|тусгай зөвшөөрөл/i.test(l) && !/шаардахгүй/i.test(l)) ||
     /барилга|угсралт|их засвар|зам гүүр/i.test(title);
 
   // Determine eligibility status
@@ -32,8 +39,24 @@ export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): Chin
   const licenseReqsMn: string[] = [];
   const takeawaysZh: string[] = [];
 
-  // Check if domestic-only or small comparison tender
-  if (ruleName.includes('харьцуулалт') && budget < 100_000_000) {
+  // 1. Check explicit ТШЗ 12.2 / Invitation Notice #5 foreign eligibility from PDF
+  if (explicitForeignEligible === false) {
+    status = 'domestic_only';
+    titleMn = 'Зөвхөн дотоодын ААН (ТШЗ 12.2: Гадаадын этгээд оролцох эрхгүй)';
+    titleZh = '仅限蒙古国本土注册企业 (招标文件第12.2条明确限制外企直投)';
+    explMn = 'Тендерийн өгөгдлийн хүснэгт (ТШЗ 12.2) болон урилга дээр "Гадаадын этгээд тендер ирүүлэх эрхгүй" гэж заасан тул гадаадын хуулийн этгээд бие даан оролцох боломжгүй. Монгол Улсад бүртгэлтэй охин компани эсвэл дотоодын дистрибьютер ААН-ээр дамжуулан бараа нийлүүлэх боломжтой.';
+    explZh = '根据官方招标文件《投标人须知前附表》(ТШЗ 12.2)及招标公告第5条规定，本项目不允许境外法人直接独立投标。中国企业如需参与供货，需通过蒙古国当地注册的子公司或授权蒙古本土合作伙伴作为投标主体申报。';
+    takeawaysZh.push('招标文件明确规定：仅限蒙古国境内注册法人直接投标');
+    takeawaysZh.push('中国厂家可作为设备/物资供应商，授权蒙古本土代理商投标');
+  } else if (explicitForeignEligible === true && typeCode === 'PRODUCT') {
+    status = 'direct_allowed';
+    titleMn = 'Бие даан оролцох боломжтой (ТШЗ 12.2: Гадаадын этгээд оролцох эрхтэй)';
+    titleZh = '中国企业可独立参与投标 (招标文件明确允许外资直投)';
+    explMn = 'Тендерийн баримт бичигт гадаадын этгээд оролцох эрхтэй гэж заасан тул БНХАУ-ын үйлдвэрлэгч, экспортлогч компаниуд шууд санал өгөх боломжтой.';
+    explZh = '官方招标文件明确允许外国法人参与竞标。中国制造商、外贸公司可以作为境外合格法人直接提交投标文件。';
+    takeawaysZh.push('中国企业法人营业执照需经公证及海牙认证(Apostille)');
+    takeawaysZh.push('支持出具中国银行乌兰巴托分行或国际认可银行的保函');
+  } else if (ruleName.includes('харьцуулалт') && budget < 100_000_000) {
     status = 'domestic_only';
     titleMn = 'Зөвхөн дотоодын ААН (Монгол Улсад бүртгэлтэй)';
     titleZh = '仅限蒙古国本土注册企业 (小额比选)';
