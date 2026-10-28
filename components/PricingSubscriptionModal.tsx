@@ -219,7 +219,7 @@ export const PricingSubscriptionModal: React.FC<PricingSubscriptionModalProps> =
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
-                    <span>{isZh ? '官方标书 PDF 极速直连下载（免翻墙、不惧蒙古官网拦截）' : isMn ? 'Албан ёсны ТШББ PDF шууд татах болон BoQ хүснэгт задлах' : 'Direct CDN PDF downloads & full BoQ table extraction'}</span>
+                    <span>{isZh ? '从已获取的招标文件中提取物料清单 (BoQ)' : isMn ? 'Байгаа ТШББ баримтаас бараа, ажлын (BoQ) хүснэгт задлах' : 'BoQ table extraction from available tender documents'}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
@@ -227,7 +227,7 @@ export const PricingSubscriptionModal: React.FC<PricingSubscriptionModalProps> =
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
-                    <span>{isZh ? '微信/邮箱每日新标精准推送（按品类如电缆、矿机、医疗订阅）' : isMn ? 'Салбар, түлхүүр үгээр шинэ тендерийн мэдэгдэл хүлээн авах' : 'Real-time WeChat & Email tender alerts by keyword'}</span>
+                    <span>{isZh ? '按品类与关键词的新标邮件提醒（即将推出）' : isMn ? 'Салбар, түлхүүр үгээр шинэ тендерийн мэдэгдэл (удахгүй)' : 'New-tender email alerts by sector and keyword (coming soon)'}</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle2 className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
