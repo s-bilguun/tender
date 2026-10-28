@@ -231,6 +231,7 @@ Return ONLY valid JSON without markdown fences.`,
 }
 
 export async function POST(request: NextRequest) {
+  const requestStartedAt = Date.now();
   try {
     const body = await request.json();
     const { tenderContext, locale = 'mn' } = body;
@@ -783,8 +784,12 @@ ${JSON.stringify(relevantTenders)}`;
     const attemptDeadline = Date.now() + 52_000;
 
     let lastErrorStatus = 502;
+    const attempts: { model: string; status: number | string; ms: number }[] = [];
+    const promptChars = systemPrompt.length;
+    const prepMs = Date.now() - requestStartedAt;
     for (const modelToAttempt of candidateModels) {
       if (Date.now() > attemptDeadline) break;
+      const attemptStart = Date.now();
       try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
@@ -805,6 +810,7 @@ ${JSON.stringify(relevantTenders)}`;
 
         if (!response.ok) {
           lastErrorStatus = response.status;
+          attempts.push({ model: modelToAttempt, status: response.status, ms: Date.now() - attemptStart });
           console.warn(`OpenRouter model ${modelToAttempt} failed (${response.status}), trying next fallback...`);
           continue;
         }
@@ -815,11 +821,12 @@ ${JSON.stringify(relevantTenders)}`;
           return NextResponse.json({ reply, text: reply, structured: structuredInfo });
         }
       } catch (modelErr: any) {
+        attempts.push({ model: modelToAttempt, status: modelErr?.name || 'error', ms: Date.now() - attemptStart });
         console.warn(`OpenRouter model ${modelToAttempt} error:`, modelErr?.message);
       }
     }
 
-    return NextResponse.json({ error: 'AI үйлчилгээ түр ажиллахгүй байна. Дараа дахин оролдоно уу.' }, { status: lastErrorStatus || 502 });
+    return NextResponse.json({ error: 'AI үйлчилгээ түр ажиллахгүй байна. Дараа дахин оролдоно уу.', diagnostics: { prepMs, promptChars, attempts } }, { status: lastErrorStatus || 502 });
   } catch (error: any) {
     console.error('Chat error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
