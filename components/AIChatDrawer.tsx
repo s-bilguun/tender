@@ -41,13 +41,13 @@ const renderInline = (text: string, isUser: boolean): React.ReactNode => {
 
     if (token.startsWith('***') && token.endsWith('***') && token.length >= 6) {
       parts.push(
-        <strong key={key} className={`font-black italic ${isUser ? 'text-white' : 'text-slate-950'}`}>
+        <strong key={key} className={`font-black italic ${isUser ? 'text-white' : 'text-slate-950 dark:text-zinc-100'}`}>
           {token.slice(3, -3)}
         </strong>
       );
     } else if (token.startsWith('**') && token.endsWith('**') && token.length >= 4) {
       parts.push(
-        <strong key={key} className={`font-bold ${isUser ? 'text-white' : 'text-slate-950'}`}>
+        <strong key={key} className={`font-bold ${isUser ? 'text-white' : 'text-slate-950 dark:text-zinc-100'}`}>
           {token.slice(2, -2)}
         </strong>
       );
@@ -68,7 +68,7 @@ const renderInline = (text: string, isUser: boolean): React.ReactNode => {
         <code
           key={key}
           className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
-            isUser ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 text-slate-800 border border-slate-200'
+            isUser ? 'bg-blue-700 text-blue-100' : 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-zinc-700'
           }`}
         >
           {token.slice(1, -1)}
@@ -83,7 +83,7 @@ const renderInline = (text: string, isUser: boolean): React.ReactNode => {
             href={linkMatch[2]}
             target="_blank"
             rel="noopener noreferrer"
-            className={`underline hover:opacity-80 font-medium ${isUser ? 'text-white' : 'text-blue-600'}`}
+            className={`underline hover:opacity-80 font-medium ${isUser ? 'text-white' : 'text-blue-600 dark:text-blue-400'}`}
           >
             {linkMatch[1]}
           </a>
@@ -124,12 +124,12 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
         key={`list-${elements.length}`}
         className={`my-2 space-y-1.5 ${
           currentList.type === 'ul'
-            ? `pl-5 list-disc ${isUser ? 'marker:text-blue-200' : 'marker:text-amber-500'}`
+            ? `pl-5 list-disc ${isUser ? 'marker:text-blue-200' : 'marker:text-zinc-400'}`
             : `pl-5 list-decimal ${isUser ? 'marker:text-blue-200' : 'marker:text-blue-600 font-semibold'}`
         }`}
       >
         {items.map((item, idx) => (
-          <li key={idx} className={`leading-relaxed pl-1 ${isUser ? 'text-white' : 'text-slate-800'}`}>
+          <li key={idx} className={`leading-relaxed pl-1 ${isUser ? 'text-white' : 'text-slate-800 dark:text-zinc-100'}`}>
             {renderInline(item, isUser)}
           </li>
         ))}
@@ -155,10 +155,10 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
       elements.push(
         <div
           key={`table-${elements.length}`}
- className="my-3 overflow-x-auto rounded-lg border border-slate-200 shadow-2xs"
+ className="my-3 overflow-x-auto rounded-lg border border-slate-200 dark:border-zinc-700 shadow-2xs"
  >
- <table className="min-w-full divide-y divide-slate-200 text-xs">
- <thead className={isUser ? 'bg-blue-800/80 text-white' : 'bg-slate-100 text-slate-900 font-bold'}>
+ <table className="min-w-full divide-y divide-slate-200 dark:divide-zinc-700 text-xs">
+ <thead className={isUser ? 'bg-blue-800/80 text-white' : 'bg-slate-100 dark:bg-zinc-800 text-slate-900 dark:text-zinc-100 font-bold'}>
  <tr>
  {headerRow.map((cell, cIdx) => (
  <th key={cIdx} className="px-3 py-2 text-left font-bold">
@@ -167,11 +167,11 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  ))}
  </tr>
  </thead>
- <tbody className="divide-y divide-slate-100 bg-white">
+ <tbody className="divide-y divide-slate-100 dark:divide-zinc-700 bg-white dark:bg-zinc-900">
  {bodyRows.map((row, rIdx) => (
- <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+ <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white dark:bg-zinc-900' : 'bg-slate-50/70 dark:bg-zinc-900'}>
  {row.map((cell, cIdx) => (
- <td key={cIdx} className="px-3 py-2 text-slate-800">
+ <td key={cIdx} className="px-3 py-2 text-slate-800 dark:text-zinc-100">
  {renderInline(cell, isUser)}
  </td>
  ))}
@@ -237,7 +237,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  elements.push(
  <hr
  key={`hr-${i}`}
- className={`my-3 border-t ${isUser ? 'border-blue-400' : 'border-slate-200'}`}
+ className={`my-3 border-t ${isUser ? 'border-blue-400' : 'border-slate-200 dark:border-zinc-700'}`}
  />
  );
  continue;
@@ -256,7 +256,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  <div
  key={`h-${i}`}
  className={`text-base font-semibold tracking-tight mt-4 mb-2 pb-1 border-b flex items-center gap-2 ${
- isUser ? 'text-white border-blue-400' : 'text-slate-900 border-slate-200'
+ isUser ? 'text-white border-blue-400' : 'text-slate-900 dark:text-zinc-100 border-slate-200 dark:border-zinc-700'
  }`}
  >
  {renderInline(hText, isUser)}
@@ -267,7 +267,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  <div
  key={`h-${i}`}
  className={`text-sm sm:text-base font-bold tracking-tight mt-3.5 mb-1.5 flex items-center gap-1.5 ${
- isUser ? 'text-white' : 'text-slate-900 font-extrabold'
+ isUser ? 'text-white' : 'text-slate-900 dark:text-zinc-100 font-extrabold'
  }`}
  >
  {renderInline(hText, isUser)}
@@ -280,7 +280,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  className={`text-xs sm:text-sm font-bold mt-3 mb-1.5 px-3 py-1.5 rounded-lg border flex items-center gap-2 ${
  isUser
  ? 'bg-blue-700/60 border-blue-400/80 text-white'
-                : 'bg-amber-50/80 border-amber-200/90 text-amber-950 shadow-2xs'
+                : 'bg-amber-50/80 dark:bg-zinc-800 border-amber-200/90 dark:border-zinc-700 text-amber-950 dark:text-zinc-100 shadow-2xs'
  }`}
  >
  <Sparkles className="h-3.5 w-3.5 text-amber-600 shrink-0" />
@@ -292,7 +292,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  <div
  key={`h-${i}`}
  className={`text-xs font-bold mt-2.5 mb-1 ${
- isUser ? 'text-blue-100' : 'text-slate-800'
+ isUser ? 'text-blue-100' : 'text-slate-800 dark:text-zinc-100'
             }`}
           >
             {renderInline(hText, isUser)}
@@ -310,7 +310,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  <blockquote
  key={`quote-${i}`}
  className={`border-l-3 pl-3 py-1 my-2 rounded-r-md text-xs sm:text-[13px] leading-relaxed italic ${
- isUser ? 'border-blue-300 bg-blue-700/30 text-blue-100' : 'border-amber-500 bg-amber-50/50 text-slate-800'
+ isUser ? 'border-blue-300 bg-blue-700/30 text-blue-100' : 'border-amber-500 bg-amber-50/50 dark:bg-zinc-800 text-slate-800 dark:text-zinc-100'
           }`}
         >
           {renderInline(trimmed.slice(2), isUser)}
@@ -355,7 +355,7 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
  flushList();
  flushTable();
  elements.push(
- <p key={`p-${i}`} className={`leading-relaxed text-xs sm:text-[13px] ${isUser ? 'text-white' : 'text-slate-800'} my-1`}>
+ <p key={`p-${i}`} className={`leading-relaxed text-xs sm:text-[13px] ${isUser ? 'text-white' : 'text-slate-800 dark:text-zinc-100'} my-1`}>
  {renderInline(trimmed, isUser)}
  </p>
  );
@@ -387,7 +387,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
   initialPrompt,
 }) => {
   const t = getTranslation(locale);
-  const [selectedModel, setSelectedModel] = useState<string>('google/gemma-4-26b-a4b-it:free');
+  const [selectedModel, setSelectedModel] = useState<string>('auto');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -545,6 +545,9 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  onChange={(e) => setSelectedModel(e.target.value)}
  className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-slate-900 dark:focus:border-zinc-500 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
  >
+ <option value="auto">
+ {locale === 'zh' ? '自动（推荐，自动选用当前最佳免费模型）' : locale === 'en' ? 'Auto (best free model available)' : 'Автомат (боломжит хамгийн сайн үнэгүй загвар)'}
+ </option>
  <option value="google/gemma-4-26b-a4b-it:free">
  {locale === 'zh' ? 'Google Gemma 4 26B (极速中蒙双语标书解析)' : 'Google Gemma 4 26B (Хурдан, Монгол/Хятад хэл)'}
  </option>

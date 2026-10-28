@@ -13,13 +13,54 @@ export const dynamic = 'force-dynamic';
 const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 const globalPdfTextCache = new Map<string, string>();
 
+export const maxDuration = 60;
+
 const ALLOWED_CHAT_MODELS = new Set([
+  'auto',
+  'nvidia/nemotron-3.5-super-vl:free',
   'google/gemma-4-26b-a4b-it:free',
   'google/gemma-4-31b-it:free',
   'nvidia/nemotron-3-ultra-550b-a55b:free',
   'nvidia/nemotron-3.5-lightning:free',
   'openrouter/free',
 ]);
+
+/** PostgREST filter for tenders that are still open: deadline ahead, or no deadline and published in the last 21 days. */
+function openTenderFilter(): string {
+  const now = new Date().toISOString();
+  const since = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
+  return `receive_date.gte.${now},and(receive_date.is.null,publish_date.gte.${since})`;
+}
+
+// Best-first free models for Mongolian/Chinese tender Q&A (checked live against OpenRouter's catalogue).
+const PREFERRED_FREE_MODELS = [
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'google/gemma-4-31b-it:free',
+  'nvidia/nemotron-3.5-super-vl:free',
+];
+
+let freeModelCache: { at: number; ids: Set<string> | null } = { at: 0, ids: null };
+
+/** IDs of free models OpenRouter currently lists (cached 6 h). Null when the catalogue can't be read. */
+async function listLiveFreeModels(): Promise<Set<string> | null> {
+  if (Date.now() - freeModelCache.at < 6 * 60 * 60 * 1000) return freeModelCache.ids;
+  try {
+    const res = await fetch('https://openrouter.ai/api/v1/models', { signal: AbortSignal.timeout(6000), cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const ids = new Set<string>(
+      (json?.data || [])
+        .filter((m: any) => String(m.id).endsWith(':free') || Number(m?.pricing?.prompt) === 0)
+        .map((m: any) => String(m.id)),
+    );
+    freeModelCache = { at: Date.now(), ids };
+    return ids;
+  } catch {
+    freeModelCache = { at: Date.now() - 5 * 60 * 60 * 1000, ids: freeModelCache.ids }; // retry in ~1 h
+    return freeModelCache.ids;
+  }
+}
 
 function formatBudget(amount: number): string {
   if (!amount) return '0 ₮';
@@ -193,7 +234,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { tenderContext, locale = 'mn' } = body;
-    const configuredModel = process.env.OPENROUTER_MODEL || 'openrouter/free';
+    const configuredModel = process.env.OPENROUTER_MODEL || 'auto';
     const requestedModel = typeof body.model === 'string' ? body.model.trim() : '';
     const model = requestedModel && ALLOWED_CHAT_MODELS.has(requestedModel) ? requestedModel : configuredModel;
     if (!ALLOWED_CHAT_MODELS.has(model)) {
@@ -350,7 +391,7 @@ export async function POST(request: NextRequest) {
               .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date, publish_date');
 
             if (plan.isReceivingOnly) {
-              query = query.ilike('doc_status_name', '%хүлээн авч%');
+              query = query.or(openTenderFilter());
             }
             if (plan.agency) {
               const agency = sanitizeFilterTerm(plan.agency);
@@ -376,13 +417,13 @@ export async function POST(request: NextRequest) {
               }
             }
             if (plan.sortBy === 'budget_asc') {
-              query = query.order('total_budget', { ascending: true });
+              query = query.order('total_budget', { ascending: true, nullsFirst: false });
             } else if (plan.sortBy === 'deadline_asc') {
-              query = query.order('receive_date', { ascending: true });
+              query = query.order('receive_date', { ascending: true, nullsFirst: false });
             } else if (plan.sortBy === 'date_desc') {
               query = query.order('publish_date', { ascending: false });
             } else {
-              query = query.order('total_budget', { ascending: false });
+              query = query.order('total_budget', { ascending: false, nullsFirst: false });
             }
 
             const { data } = await query.limit(10);
@@ -416,7 +457,7 @@ export async function POST(request: NextRequest) {
             const { data } = await supabase
               .from('tenders')
               .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
-              .order('total_budget', { ascending: false })
+              .order('total_budget', { ascending: false, nullsFirst: false })
               .limit(10);
             if (data) relevantTenders = data.map(mapRowToTender);
           } else if (isLowBudget) {
@@ -425,7 +466,7 @@ export async function POST(request: NextRequest) {
               .from('tenders')
               .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
               .gt('total_budget', 100000)
-              .order('total_budget', { ascending: true })
+              .order('total_budget', { ascending: true, nullsFirst: false })
               .limit(10);
             if (data) relevantTenders = data.map(mapRowToTender);
           } else if (isActiveTenders) {
@@ -433,8 +474,8 @@ export async function POST(request: NextRequest) {
             const { data } = await supabase
               .from('tenders')
               .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
-              .ilike('doc_status_name', '%хүлээн авч%')
-              .order('receive_date', { ascending: true })
+              .or(openTenderFilter())
+              .order('receive_date', { ascending: true, nullsFirst: false })
               .limit(10);
             if (data) relevantTenders = data.map(mapRowToTender);
           } else if (isRecentTenders) {
@@ -452,7 +493,7 @@ export async function POST(request: NextRequest) {
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .or('tender_name.ilike.%программ%,tender_name.ilike.%програм%,tender_name.ilike.%мэдээллийн технологи%,tender_name.ilike.%өгөгдлийн сан%,tender_name.ilike.%лиценз%,tender_name.ilike.%кибер%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else if (/(эмнэлэг|эрүүл\s*мэнд|эм\s*бэлдмэл|эмнэлгийн|оношилгоо|урвалж|тоног\s*төхөөрөмж|рентген|мэс\s*засал)/i.test(message)) {
@@ -462,7 +503,7 @@ export async function POST(request: NextRequest) {
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .or('tender_name.ilike.%эмнэлэг%,tender_name.ilike.%эрүүл мэнд%,tender_name.ilike.%тоног төхөөрөмж%,tender_name.ilike.%оношилгоо%,tender_name.ilike.%эм бэлдмэл%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else if (/(барилга|их\s*засвар|барилга\s*угсралт|өргөтгөл|дулаалга|дээвэр)/i.test(message)) {
@@ -473,7 +514,7 @@ export async function POST(request: NextRequest) {
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .eq('tender_type_code', 'JOB')
             .or('tender_name.ilike.%барилга%,tender_name.ilike.%их засвар%,tender_name.ilike.%өргөтгөл%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else if (/(авто\s*зам|замын\s*засвар|гүүр|нийтийн\s*тээвэр|автобус)/i.test(message)) {
@@ -483,7 +524,7 @@ export async function POST(request: NextRequest) {
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .or('tender_name.ilike.%авто зам%,tender_name.ilike.%гүүр%,tender_name.ilike.%тээвэр%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else if (/(сургууль|цэцэрлэг|дотуур\s*байр|боловсрол|сургалт)/i.test(message)) {
@@ -493,7 +534,7 @@ export async function POST(request: NextRequest) {
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .or('tender_name.ilike.%сургууль%,tender_name.ilike.%цэцэрлэг%,tender_name.ilike.%дотуур байр%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else if (/(шатахуун|түлш|дизель|нүүрс|уурхай|өрөмдлөг|тэсэлгээ)/i.test(message)) {
@@ -503,7 +544,7 @@ export async function POST(request: NextRequest) {
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .or('tender_name.ilike.%шатахуун%,tender_name.ilike.%түлш%,tender_name.ilike.%дизель%,tender_name.ilike.%нүүрс%,tender_name.ilike.%өрөмдлөг%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else if (/(камер|хяналтын\s*камер|дохиолол|хамгаалалт)/i.test(message)) {
@@ -513,7 +554,7 @@ export async function POST(request: NextRequest) {
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .or('tender_name.ilike.%камер%,tender_name.ilike.%хяналтын камер%,tender_name.ilike.%дохиолол%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else if (/(хүнс|хоол|мах|гурил|сүү)/i.test(message)) {
@@ -523,7 +564,7 @@ export async function POST(request: NextRequest) {
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
             .or('tender_name.ilike.%хүнс%,tender_name.ilike.%хоол%,tender_name.ilike.%мах%')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
         } else {
@@ -541,7 +582,7 @@ export async function POST(request: NextRequest) {
               .from('tenders')
               .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
               .ilike('budget_entity_name', `%${matchedAgency}%`)
-              .order('total_budget', { ascending: false })
+              .order('total_budget', { ascending: false, nullsFirst: false })
               .limit(10);
             if (data && data.length > 0) relevantTenders = data.map(mapRowToTender);
           }
@@ -576,7 +617,7 @@ export async function POST(request: NextRequest) {
                 .from('tenders')
                 .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
                 .or(conditions)
-                .order('total_budget', { ascending: false })
+                .order('total_budget', { ascending: false, nullsFirst: false })
                 .limit(10);
 
               if (data && data.length > 0) {
@@ -597,7 +638,7 @@ export async function POST(request: NextRequest) {
           const { data } = await supabase
             .from('tenders')
             .select('invitation_id, tender_code, tender_name, total_budget, budget_entity_name, tender_type_name, doc_status_name, receive_date')
-            .order('total_budget', { ascending: false })
+            .order('total_budget', { ascending: false, nullsFirst: false })
             .limit(10);
           if (data) relevantTenders = data.map(mapRowToTender);
         } catch (e) {
@@ -715,6 +756,7 @@ ${JSON.stringify(structuredInfo)}
 ${evidence.length ? evidence.join('\n\n') : fullScopeOfWork ? `[Баримтаас задлан авсан техникийн даалгавар]\n${fullScopeOfWork.slice(0, 1500)}` : 'Энэ асуултад хамаарах уншигдсан эх баримтын эшлэл алга. Энэ нь шаардлага байхгүй гэсэн үг биш; PDF-ийг эх сурвалжаас нягтална уу.'}`
       : `You answer questions about Mongolian tenders using only the search result rows below. Respond in ${responseLanguage}. If the user asks in Chinese, respond in Chinese.
 Доорх тендерийн мөрүүд нь системийн хайлтаас ирсэн мэдээлэл. Эдгээрээс гадуур тендерийн баримт, ялагч, шаардлагыг зохиож болохгүй. Тохирох мөр олдоогүй бол тэгж шууд хэл. Хэрэглэгч PDF-ийн тодорхой нөхцөл асуувал тендерийн ID-г тодруулж, баримтыг шалгах шаардлагатайг хэл.
+Тэмдэглэл: totalBudget=null бол төсөв зарын мэдээлэлд байхгүй (tender.gov.mn дээр харна уу) гэсэн утга, 0 ₮ биш. receiveDate=null бол эцсийн хугацаа мэдэгдэхгүй.
 Хайлтын тайлбар: ${queryContextDescription || 'Хайлтын үр дүн'}
 ${JSON.stringify(relevantTenders)}`;
 
@@ -728,26 +770,25 @@ ${JSON.stringify(relevantTenders)}`;
       chatHistory.push({ role: 'user', content: message });
     }
 
-    const effectivePrimaryModel =
-      model === 'openrouter/free' || model === 'nvidia/nemotron-3.5-lightning:free'
-        ? 'google/gemma-4-26b-a4b-it:free'
-        : model;
-
+    const live = await listLiveFreeModels();
+    const available = (id: string) => !live || live.has(id);
+    const requestedPrimary = model === 'auto' || model === 'openrouter/free' || model === 'nvidia/nemotron-3.5-lightning:free' ? null : model;
     const candidateModels = Array.from(
       new Set([
-        effectivePrimaryModel,
-        'google/gemma-4-26b-a4b-it:free',
-        'google/gemma-4-31b-it:free',
-        'nvidia/nemotron-3-ultra-550b-a55b:free',
-      ].filter(Boolean))
+        ...(requestedPrimary ? [requestedPrimary] : []),
+        ...PREFERRED_FREE_MODELS,
+      ].filter((id) => available(id))),
     );
+    if (candidateModels.length === 0) candidateModels.push('openrouter/free');
+    const attemptDeadline = Date.now() + 52_000;
 
     let lastErrorStatus = 502;
     for (const modelToAttempt of candidateModels) {
+      if (Date.now() > attemptDeadline) break;
       try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
-          signal: AbortSignal.timeout(22_000),
+          signal: AbortSignal.timeout(Math.max(8_000, Math.min(22_000, attemptDeadline - Date.now()))),
           headers: {
             Authorization: `Bearer ${openRouterKey}`,
             'Content-Type': 'application/json',
@@ -790,9 +831,10 @@ function mapRowToTender(d: any): Partial<TenderItem> {
     invitationId: d.invitation_id,
     tenderCode: d.tender_code,
     tenderName: d.tender_name,
-    totalBudget: Number(d.total_budget) || 0,
+    totalBudget: (d.total_budget ? Number(d.total_budget) : null) as any,
     budgetEntityName: d.budget_entity_name,
     receiveDate: d.receive_date || d.open_date,
+    publishDate: d.publish_date || undefined,
     tenderTypeName: d.tender_type_name,
     ruleName: d.rule_name,
     docStatusName: d.doc_status_name,
