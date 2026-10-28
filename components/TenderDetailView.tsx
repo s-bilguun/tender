@@ -1478,7 +1478,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
                 <div className=" bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-10 w-10 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="h-10 w-10 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center justify-center shrink-0">
                       <Layers className="h-5 w-5" />
                     </div>
                     <div>

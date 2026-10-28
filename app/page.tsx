@@ -476,16 +476,7 @@ export default function Home() {
               }}
             />
 
-            {/* Buyer Intelligence, Industry Verticals & Foreign Routes Hub */}
-            <div id="buyers">
-              <DiscoveryCardsHub
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                locale={locale}
-                totalFound={totalCount}
-                stats={stats}
-              />
-            </div>
+
           </section>
 
           {/* Section: Tender Database Feed & Search Center */}
@@ -617,6 +608,19 @@ export default function Home() {
               </div>
             )}
 
+          </section>
+
+          <section className="pt-2">
+            {/* Buyer Intelligence, Industry Verticals & Foreign Routes Hub */}
+            <div id="buyers">
+              <DiscoveryCardsHub
+                filters={filters}
+                onFilterChange={handleFilterChange}
+                locale={locale}
+                totalFound={totalCount}
+                stats={stats}
+              />
+            </div>
           </section>
 
           {/* Footer */}
