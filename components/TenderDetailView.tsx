@@ -784,11 +784,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight leading-tight">
             {locale === 'zh' ? (
               <span className="flex flex-col gap-1">
-                <span className="text-blue-700 dark:text-blue-400 block font-semibold">
+                <span className="block font-semibold">
                   {bilingual.titleZh}
                 </span>
-                <span className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
+                <span className="text-sm font-medium text-slate-500 dark:text-zinc-400">
                   {tender.tenderName}
+                  <span className="ml-2 text-xs font-normal text-slate-400 dark:text-zinc-500">（中文标题为自动归类，以蒙文原文为准）</span>
                 </span>
               </span>
             ) : (
@@ -1313,10 +1314,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 ? formatCurrency(tender.yearBudget)
                 : (technicalSpecs.paymentTerms?.advancePaymentPct != null
                   ? `${technicalSpecs.paymentTerms.advancePaymentPct}%`
-                  : (locale === 'zh' ? '按合同节点' : '—'))}
+                  : '—')}
             </span>
             <span className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 block">
-              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? (locale === 'zh' ? '本年度拨款' : locale === 'en' ? 'Scheduled for this year' : 'Энэ оны хуваарьт санхүүжилт') : (locale === 'zh' ? '依据招标文件进度拨付' : locale === 'en' ? 'Check the official document' : 'Албан ёсны эх баримтаас шалгана уу')}
+              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? (locale === 'zh' ? '本年度拨款' : locale === 'en' ? 'Scheduled for this year' : 'Энэ оны хуваарьт санхүүжилт') : (locale === 'zh' ? '请以官方文件为准' : locale === 'en' ? 'Check the official document' : 'Албан ёсны эх баримтаас шалгана уу')}
             </span>
           </div>
 
