@@ -768,10 +768,12 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                 <div className="p-4 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <ListChecks className="h-4 w-4 text-blue-500" />
-                      <span>{locale === 'mn' ? 'Шалгуур үзүүлэлт & Шаардлага' : locale === 'zh' ? '资格与证明' : 'Eligibility & Clearances'}</span>
+                      <ListChecks className="h-4 w-4 text-slate-400" />
+                      <span>{eligibilityReqs.length === 0
+                        ? (locale === 'mn' ? 'Ихэнх тендерт шаардагддаг баримтууд' : locale === 'zh' ? '多数招标通常要求的文件' : 'Documents most tenders ask for')
+                        : (locale === 'mn' ? 'Шалгуур үзүүлэлт & Шаардлага' : locale === 'zh' ? '资格与证明' : 'Eligibility & Clearances')}</span>
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
+                    <span className="text-[11px] text-slate-500 dark:text-zinc-400 tabular-nums">
                       {finalEligibilityList.length} {locale === 'zh' ? '项要求' : locale === 'en' ? 'requirements' : 'шаардлага'}
                     </span>
                   </div>
