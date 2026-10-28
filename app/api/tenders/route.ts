@@ -315,9 +315,14 @@ export async function GET(request: NextRequest) {
         // Strict post-filtering to guarantee search term and industry intersection
         if (search && search.length > 0) {
           const terms = search.toLowerCase().split(/\s+/).filter(Boolean);
+          // English/Chinese queries are expanded to Mongolian terms; accept a row that matches
+          // all the typed words, or any of the Mongolian equivalents.
+          const expanded = expandMultilingualSearchTerms(search)
+            .map((t) => t.toLowerCase())
+            .filter((t) => !terms.includes(t));
           mappedItems = mappedItems.filter((item) => {
             const combinedText = `${item.tenderName} ${item.budgetEntityName} ${item.positionName} ${item.tenderCode} ${item.clientCode} ${item.invitationNumber}`.toLowerCase();
-            return terms.every((t) => combinedText.includes(t));
+            return terms.every((t) => combinedText.includes(t)) || expanded.some((t) => combinedText.includes(t));
           });
         }
 
