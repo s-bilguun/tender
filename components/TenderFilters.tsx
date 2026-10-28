@@ -341,43 +341,30 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     Boolean(filters.dateFrom || filters.dateTo)
   );
 
-  const tabMetrics = useMemo(() => {
+  // Tab counts are shown only when they are known; never guessed.
+  const tabMetrics = useMemo((): { all: number | null; active: number | null; result: number | null; closing: number | null } => {
+    const known = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? n : null);
     if (hasSubFilters) {
-      const allCount = totalFound;
-      const activeCount = filters.status === 'receiving' || filters.tabMode === 'active' 
-        ? totalFound 
-        : Math.min(totalFound, stats?.activeTendersCount || totalFound);
-      const resultCount = filters.status === 'result' || filters.tabMode === 'result'
-        ? totalFound
-        : Math.max(0, totalFound - activeCount);
-      const closingCount = Math.max(0, Math.min(activeCount, Math.round(activeCount * 0.2)));
-
       return {
-        all: allCount,
-        active: activeCount,
-        result: resultCount,
-        closing: closingCount,
+        all: currentTab === 'all' ? totalFound : null,
+        active: currentTab === 'active' ? totalFound : null,
+        result: currentTab === 'result' ? totalFound : null,
+        closing: currentTab === 'closing_soon' ? totalFound : null,
       };
     }
-
-    if (activeIndustryInfo || activeIndustryStats) {
-      const total = activeIndustryStats?.totalCount || activeIndustryInfo?.totalCount || 3120;
-      const active = activeIndustryStats?.activeCount || (stats?.industryCounts ? stats.industryCounts[currentIndustry] : undefined) || activeIndustryInfo?.activeCount || 28;
-      const result = activeIndustryStats?.resultCount || Math.max(0, total - active);
-      const closing = activeIndustryStats?.closingSoonCount || Math.max(1, Math.round(active * 0.15));
+    if (currentIndustry !== 'all') {
       return {
-        all: total,
-        active,
-        result,
-        closing,
+        all: known(activeIndustryStats?.totalCount),
+        active: known(activeIndustryStats?.activeCount ?? stats?.industryCounts?.[currentIndustry]),
+        result: known(activeIndustryStats?.resultCount),
+        closing: known(activeIndustryStats?.closingSoonCount),
       };
     }
-
     return {
-      all: stats?.totalCount || totalFound || 22785,
-      active: stats?.activeTendersCount || 736,
-      result: stats?.resultCount || 21320,
-      closing: stats?.closingSoonCount || 42,
+      all: known(stats?.totalCount),
+      active: known(stats?.activeTendersCount),
+      result: known(stats?.resultCount),
+      closing: known(stats?.closingSoonCount),
     };
   }, [hasSubFilters, currentIndustry, filters.status, filters.tabMode, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
 
@@ -412,7 +399,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
             <span>{locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '正在招投标' : 'Live Bids'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.active.toLocaleString()}
+              {tabMetrics.active != null ? tabMetrics.active.toLocaleString() : ''}
             </span>
           </button>
 
@@ -428,11 +415,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <Flame className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : locale === 'zh' ? '即将截标' : 'Closing Soon'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.closing.toLocaleString()}
+              {tabMetrics.closing != null ? tabMetrics.closing.toLocaleString() : ''}
             </span>
           </button>
 
-          {/* No Bid Security Tab */}
+          {/* No Bid Security Tab (hidden while no tender is confirmed to need no bid security) */}
+          {(stats?.noGuaranteeCount !== 0 || currentTab === 'no_guarantee') && (
           <button
             onClick={() => handleTabSelect('no_guarantee')}
             className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
@@ -444,6 +432,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : locale === 'zh' ? '免投标保函' : 'No Bid Bond'}</span>
           </button>
+          )}
 
           {/* Awarded / Concluded Winners Tab */}
           <button
@@ -457,7 +446,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <Trophy className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : locale === 'zh' ? '已定标 / 中标结果' : 'Awarded'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.result.toLocaleString()}
+              {tabMetrics.result != null ? tabMetrics.result.toLocaleString() : ''}
             </span>
           </button>
 
@@ -473,7 +462,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <Database className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Бүх сан' : locale === 'zh' ? '全部标段' : 'All Tenders'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.all.toLocaleString()}
+              {tabMetrics.all != null ? tabMetrics.all.toLocaleString() : ''}
             </span>
           </button>
 
