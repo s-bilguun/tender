@@ -1,5 +1,6 @@
 'use client';
 
+import { SpecCell } from './SpecText';
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Locale } from '@/lib/types';
@@ -1919,7 +1920,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                     </>
                                   )}
                                   <td className="py-2.5 px-4 text-slate-600 dark:text-zinc-300 leading-relaxed text-pretty text-[11px] sm:text-xs">
-                                    {item.spec || item.specs}
+                                    <SpecCell text={item.spec || item.specs} />
                                   </td>
                                 </tr>
                               );

@@ -1,5 +1,6 @@
 'use client';
 
+import { SpecCell, ScopeText } from './SpecText';
 import React, { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { 
@@ -789,8 +790,8 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                   </div>
                   
                   {scopeOfWork ? (
-                    <div className="p-3.5 bg-slate-50 dark:bg-zinc-950/80 rounded-lg border border-slate-200 dark:border-zinc-800 text-xs text-slate-700 dark:text-zinc-300 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap font-sans">
-                      {scopeOfWork}
+                    <div className="p-4 bg-slate-50 dark:bg-zinc-950/80 rounded-lg border border-slate-200 dark:border-zinc-800 text-xs text-slate-700 dark:text-zinc-300 leading-relaxed max-h-80 overflow-y-auto">
+                      <ScopeText text={String(scopeOfWork)} />
                     </div>
                   ) : hasStoredPdf ? (
                     <div className="p-3.5 bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 text-xs text-slate-700 dark:text-zinc-300 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
@@ -976,7 +977,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                                     </>
                                   )}
                                   <td className="py-2.5 px-3 text-slate-600 dark:text-zinc-300 leading-relaxed text-pretty">
-                                    {it.specs || (it as any).spec || '—'}
+                                    <SpecCell text={it.specs || (it as any).spec} />
                                   </td>
                                 </tr>
                               );
