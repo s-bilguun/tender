@@ -116,6 +116,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   const [previewModalDoc, setPreviewModalDoc] = useState<{ name: string; text: string } | null>(null);
   const [copiedPreviewText, setCopiedPreviewText] = useState(false);
   const [manualPdfSecret, setManualPdfSecret] = useState('');
+  useEffect(() => {
+    try { const k = localStorage.getItem('tenderhub_admin_key'); if (k) setManualPdfSecret(k); } catch {}
+  }, []);
   const [manualPdfFile, setManualPdfFile] = useState<File | null>(null);
   const [manualPdfBusy, setManualPdfBusy] = useState(false);
   const [manualPdfMessage, setManualPdfMessage] = useState('');
@@ -174,7 +177,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             : 'Файл хадгалагдлаа, уншигдах текст олдсонгүй.';
       const refreshed = await fetch(`/api/tenders/${data.tender.invitationId}?source=stored`, { cache: 'no-store' });
       if (refreshed.ok) setData(await refreshed.json());
-      setManualPdfSecret('');
+      try { localStorage.setItem('tenderhub_admin_key', manualPdfSecret); } catch {}
       setManualPdfBusy(false);
       setManualPdfMessage(outcome);
     } catch (error: any) {
@@ -833,6 +836,51 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               {locale === 'zh' ? '打开官方源网页' : locale === 'en' ? 'Open original' : 'Эх тендерийг нээх'}
             </a>
           </div>
+
+          {!hasPdfTextEvidence && (
+            <div className="rounded-lg border border-dashed border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 space-y-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {locale === 'zh' ? '添加招标文件 PDF（管理员）' : locale === 'en' ? 'Add the tender PDF (admin)' : 'Тендерийн PDF нэмэх (админ)'}
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                  {locale === 'zh'
+                    ? '在 tender.gov.mn 打开此招标并下载 ТШЗ/PDF，然后在此上传。系统会读取文本并生成摘要，所有访客都能看到。'
+                    : locale === 'en'
+                    ? 'Open this tender on tender.gov.mn, download the bidding document (PDF), then upload it here. The text is read and summarised for every visitor.'
+                    : 'Энэ тендерийг tender.gov.mn дээр нээж ТШБ/PDF-ийг татаад энд оруулна уу. Текстийг уншиж, хураангуйг бүх хэрэглэгчид харуулна.'}
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => setManualPdfFile(e.target.files?.[0] || null)}
+                  className="flex-1 text-xs text-slate-600 dark:text-zinc-300 file:mr-3 file:h-8 file:px-3 file:rounded-md file:border-0 file:bg-slate-100 dark:file:bg-zinc-800 file:text-slate-700 dark:file:text-zinc-200 file:text-xs file:font-medium"
+                />
+                <input
+                  type="password"
+                  value={manualPdfSecret}
+                  onChange={(e) => setManualPdfSecret(e.target.value)}
+                  placeholder={locale === 'zh' ? '管理员密钥' : locale === 'en' ? 'Admin key' : 'Админ түлхүүр'}
+                  autoComplete="off"
+                  className="h-8 sm:w-44 px-2.5 rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-xs text-slate-900 dark:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={handleManualPdfImport}
+                  disabled={!manualPdfFile || !manualPdfSecret || manualPdfBusy}
+                  className="h-8 px-3 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 text-xs font-medium disabled:opacity-40 inline-flex items-center gap-1.5 cursor-pointer"
+                >
+                  {manualPdfBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                  {locale === 'zh' ? '上传并读取' : locale === 'en' ? 'Upload & read' : 'Оруулж унших'}
+                </button>
+              </div>
+              {manualPdfMessage && (
+                <p className={`text-xs ${manualPdfError ? 'text-rose-600 dark:text-rose-400' : 'text-slate-600 dark:text-zinc-300'}`}>{manualPdfMessage}</p>
+              )}
+            </div>
+          )}
 
           {isTelegramOnly && data?.budgetEstimate && (
             <div className="rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5">

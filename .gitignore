@@ -43,3 +43,6 @@ next-env.d.ts
 /scratch/browser-worker/
 /.env.tender-worker
 /scratch/*.js
+
+# PDFs downloaded for import (kept locally)
+pdf-inbox/
