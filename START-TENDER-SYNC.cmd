@@ -11,7 +11,7 @@ if errorlevel 1 (
   exit /b 1
 )
 echo Starting a sync right now...
-powershell -NoProfile -Command "Start-ScheduledTask -TaskName TenderMN daily browser sync"
+powershell -NoProfile -Command "Start-ScheduledTask -TaskName 'TenderMN daily browser sync'"
 echo.
 echo Done. Edge will open shortly and sync tenders. Logs: scratch\browser-worker
 echo You can close this window.
