@@ -229,7 +229,7 @@ async function findSimilarTenders(tenderItem: any, currentId: string | number) {
     }
 
     const matchReason = matchedKws.length > 0
-      ? `Түлхүүр үг: ${matchedKws.slice(0, 3).join(', ')}`
+      ? matchedKws.slice(0, 3).join(', ')
       : 'Ижил төрлийн худалдан авалт';
 
     return {

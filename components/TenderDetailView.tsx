@@ -757,7 +757,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </div>
             )}
             <span className="font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-zinc-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-zinc-800">
-              {tender.tenderTypeName || 'Тендер'}
+              {locale === 'mn' ? (tender.tenderTypeName || 'Тендер') : tender.tenderTypeCode === 'JOB' ? (locale === 'zh' ? '工程' : 'Works') : tender.tenderTypeCode === 'SERVICE' ? (locale === 'zh' ? '服务' : 'Services') : (locale === 'zh' ? '货物' : 'Goods')}
             </span>
             <span className={`font-semibold px-2 py-0.5 rounded border ${
  isFailed
@@ -766,7 +766,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
  ? 'bg-amber-50 dark:bg-zinc-900 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-zinc-800'
  : 'bg-emerald-50 dark:bg-zinc-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-zinc-800'
  }`}>
-              {isFailed ? (locale === 'zh' ? '流标 / 终止' : 'Амжилтгүй болсон') : (locale === 'zh' ? (isConcluded ? '已公示' : '投标进行中') : (tender.docStatusName || 'Идэвхтэй'))}
+              {isFailed ? (locale === 'zh' ? '流标 / 终止' : locale === 'en' ? 'Failed' : 'Амжилтгүй болсон') : locale === 'zh' ? (isConcluded ? '已公示' : '投标进行中') : locale === 'en' ? (isConcluded ? 'Concluded' : 'Accepting bids') : (tender.docStatusName || 'Идэвхтэй')}
             </span>
             {tender.receiveDate && (
               <span className="text-slate-500 dark:text-zinc-400 font-medium ml-auto flex items-center gap-1">
@@ -824,7 +824,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <p className="mt-0.5 text-[11px] leading-relaxed opacity-80">{pdfCoverageNotice.message}</p>
             </div>
             <a href={publicLink} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[11px] font-semibold underline underline-offset-2">
-              {locale === 'zh' ? '打开官方源网页 ' : 'Эх тендерийг нээх '}
+              {locale === 'zh' ? '打开官方源网页' : locale === 'en' ? 'Open original' : 'Эх тендерийг нээх'}
             </a>
           </div>
 
@@ -926,7 +926,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-zinc-800">
             <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 flex items-center gap-1.5 shrink-0">
               <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-              <span>{locale === 'zh' ? 'AI 专家快速提问:' : 'AI Шинжээчээс асуух:'}</span>
+              <span>{locale === 'zh' ? 'AI 快速提问:' : locale === 'en' ? 'Ask AI:' : 'AI-аас асуух:'}</span>
             </span>
             <button
               onClick={() => handleRunAiAnalysis(
@@ -942,7 +942,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
  }`}
             >
               {aiAnalyzingTarget === 'quick-license' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />}
-              <span>Тусгай зөвшөөрөл & Шалгуур</span>
+              <span>{locale === 'zh' ? '许可与资格' : locale === 'en' ? 'Licences & criteria' : 'Тусгай зөвшөөрөл & Шалгуур'}</span>
             </button>
             <button
               onClick={() => handleRunAiAnalysis(
@@ -958,7 +958,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
  }`}
             >
               {aiAnalyzingTarget === 'quick-finance' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <Tag className="h-3.5 w-3.5 text-blue-600" />}
-              <span>Санхүүгийн босго & Баталгаа</span>
+              <span>{locale === 'zh' ? '财务门槛与保函' : locale === 'en' ? 'Financial thresholds & bonds' : 'Санхүүгийн босго & Баталгаа'}</span>
             </button>
             <button
               onClick={() => handleRunAiAnalysis(
@@ -974,7 +974,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
  }`}
             >
               {aiAnalyzingTarget === 'quick-tech' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <FileText className="h-3.5 w-3.5 text-blue-600" />}
-              <span>Техникийн үзүүлэлтийн эрсдэл</span>
+              <span>{locale === 'zh' ? '技术规格风险' : locale === 'en' ? 'Technical spec risks' : 'Техникийн үзүүлэлтийн эрсдэл'}</span>
             </button>
             <button
               onClick={() => handleRunAiAnalysis(
@@ -990,7 +990,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
  }`}
             >
               {aiAnalyzingTarget === 'quick-docs' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <CheckSquare className="h-3.5 w-3.5 text-blue-600" />}
-              <span>Баримт бичгийн хяналт</span>
+              <span>{locale === 'zh' ? '文件核查' : locale === 'en' ? 'Document checklist' : 'Баримт бичгийн хяналт'}</span>
             </button>
           </div>
         </div>
@@ -1246,10 +1246,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </div>
                 <div>
                   <h4 className="text-xs sm:text-sm font-bold text-slate-900">
-                    Тендерийн AI Шинжээчтэй ярилцах
+                    {locale === 'zh' ? '就此招标询问 AI' : locale === 'en' ? 'Ask AI about this tender' : 'Тендерийн AI Шинжээчтэй ярилцах'}
                   </h4>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    AI нь уншсан эх баримтын эшлэлээр хариулна. Эшлэл байхгүй үед таамаглахгүй гэдгээ шууд хэлнэ.
+                    {locale === 'zh' ? 'AI 依据已读取的文件作答；没有依据时会直接说明，不做猜测。' : locale === 'en' ? 'Answers cite the documents it has read. Without a source it says so instead of guessing.' : 'AI нь уншсан эх баримтын эшлэлээр хариулна. Эшлэл байхгүй үед таамаглахгүй гэдгээ шууд хэлнэ.'}
                   </p>
                 </div>
               </div>
@@ -1267,7 +1267,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     type="text"
                     value={followupInput}
                     onChange={(e) => setFollowupInput(e.target.value)}
-                    placeholder="Асуултаа энд бичнэ үү..."
+                    placeholder={locale === 'zh' ? '在此输入问题…' : locale === 'en' ? 'Type your question…' : 'Асуултаа энд бичнэ үү...'}
                     className="flex-1 bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 shadow-2xs"
                   />
                   <button
@@ -1276,7 +1276,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     className="px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 disabled:opacity-50 text-white font-bold text-xs flex items-center gap-1 transition-all shadow-2xs cursor-pointer shrink-0"
                   >
                     <Send className="h-3.5 w-3.5" />
-                    <span>Асуух</span>
+                    <span>{locale === 'zh' ? '提问' : locale === 'en' ? 'Ask' : 'Асуух'}</span>
                   </button>
                 </form>
               </div>
@@ -2926,10 +2926,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Briefcase className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  <span>Түүхэн Холбоотой Тендерүүд ба Өмнөх Оны Харьцуулалт</span>
+                  <span>{locale === 'zh' ? '相关招标' : locale === 'en' ? 'Related tenders' : 'Холбоотой тендерүүд'}</span>
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
-                  {tender.budgetEntityName} байгууллагын өмнөх онд зарласан тендерүүд болон салбарын зах зээлийн үнийн харьцуулалт.
+                  {locale === 'zh' ? `${tender.budgetEntityName || ''} 的其他招标及同类招标。` : locale === 'en' ? `Other tenders by ${tender.budgetEntityName || 'this buyer'} and similar tenders elsewhere.` : `${tender.budgetEntityName || ''} байгууллагын бусад тендер болон ижил төстэй тендерүүд.`}
                 </p>
               </div>
 
@@ -2937,7 +2937,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <div className="space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                   <Building2 className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
-                  <span>Тус захиалагчийн бусад тендерүүд ({(relatedByEntity || []).length})</span>
+                  <span>{locale === 'zh' ? '该采购单位的其他招标' : locale === 'en' ? 'Other tenders by this buyer' : 'Тус захиалагчийн бусад тендерүүд'} ({(relatedByEntity || []).length})</span>
                 </h4>
 
                 {(relatedByEntity || []).length > 0 ? (
@@ -2966,7 +2966,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             href={`/tender/${r.invitationId}`}
                             className="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold text-xs"
                           >
-                            <span>Үзэх</span>
+                            <span>{locale === 'zh' ? '查看' : locale === 'en' ? 'View' : 'Үзэх'}</span>
                             <Eye className="h-3.5 w-3.5" />
                           </Link>
                         </div>
@@ -2974,7 +2974,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">Энэ байгууллагын өөр тендер олдсонгүй.</p>
+                  <p className="text-xs text-slate-400 italic">{locale === 'zh' ? '未找到该单位的其他招标。' : locale === 'en' ? 'No other tenders from this buyer.' : 'Энэ байгууллагын өөр тендер олдсонгүй.'}</p>
                 )}
               </div>
 
@@ -2983,10 +2983,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                     <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span>Салбарын ижил төстэй & Зөвлөмж болгох тендерүүд ({(similarTenders || []).length})</span>
+                    <span>{locale === 'zh' ? '同类招标' : locale === 'en' ? 'Similar tenders' : 'Ижил төстэй тендерүүд'} ({(similarTenders || []).length})</span>
                   </h4>
                   <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-medium">
-                    Ухаалаг семантик тохирол
+                    {locale === 'zh' ? '按名称匹配' : locale === 'en' ? 'Matched by title' : 'Нэрийн төстэй байдлаар'}
                   </span>
                 </div>
 
@@ -3019,7 +3019,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         </div>
                         <div className="flex items-center justify-between pt-2.5 border-t border-slate-100 dark:border-zinc-800">
                           <div>
-                            <span className="text-[10px] text-slate-400 dark:text-zinc-500 block font-sans">Төсөвт өртөг</span>
+                            <span className="text-[10px] text-slate-400 dark:text-zinc-500 block font-sans">{locale === 'zh' ? '预算' : locale === 'en' ? 'Budget' : 'Төсөвт өртөг'}</span>
                             <span className="font-mono text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                               {formatCurrency(s.totalBudget)}
                             </span>
@@ -3028,7 +3028,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             href={`/tender/${s.invitationId}`}
                             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-zinc-900 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-bold transition-colors shadow-2xs"
                           >
-                            <span>Дэлгэрэнгүй</span>
+                            <span>{locale === 'zh' ? '详情' : locale === 'en' ? 'Details' : 'Дэлгэрэнгүй'}</span>
                             <Eye className="h-3.5 w-3.5" />
                           </Link>
                         </div>
@@ -3036,7 +3036,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400 italic">Ижил төстэй тендер олдсонгүй.</p>
+                  <p className="text-xs text-slate-400 italic">{locale === 'zh' ? '未找到同类招标。' : locale === 'en' ? 'No similar tenders found.' : 'Ижил төстэй тендер олдсонгүй.'}</p>
                 )}
               </div>
             </div>
@@ -3856,10 +3856,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           setTimeout(() => chatInputRef.current?.focus(), 250);
         }}
         className="fixed bottom-6 right-6 z-40 bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 text-white px-4 py-3 rounded-full shadow-sm hover:shadow-xl transition-all flex items-center gap-2.5 text-xs sm:text-sm font-bold cursor-pointer ring-2 ring-white/80 active:scale-95 group"
-        title="Тендерийн AI Шинжээчээс асуух"
+        title={locale === 'zh' ? '询问 AI' : locale === 'en' ? 'Ask AI' : 'AI-аас асуух'}
       >
         <Sparkles className="h-4 w-4 text-amber-200 group-hover:rotate-12 transition-transform" />
-        <span>AI Шинжээчээс асуух</span>
+        <span>{locale === 'zh' ? '询问 AI' : locale === 'en' ? 'Ask AI' : 'AI-аас асуух'}</span>
         {aiMessages.length > 0 && (
           <span className="h-5 min-w-[20px] px-1.5 rounded-full bg-white text-amber-800 text-[11px] font-semibold flex items-center justify-center shadow-xs">
             {aiMessages.length}
