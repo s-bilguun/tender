@@ -252,6 +252,79 @@ async function findSimilarTenders(tenderItem: any, currentId: string | number) {
   return scored.slice(0, 5);
 }
 
+export interface BudgetEstimate {
+  median: number;
+  low: number;
+  high: number;
+  count: number;
+  basis: 'same_buyer' | 'similar_titles';
+  examples: { invitationId: string; tenderName: string; totalBudget: number; publishDate: string | null }[];
+}
+
+function quantile(sorted: number[], q: number): number {
+  const pos = (sorted.length - 1) * q;
+  const lo = Math.floor(pos);
+  const hi = Math.ceil(pos);
+  return Math.round(sorted[lo] + (sorted[hi] - sorted[lo]) * (pos - lo));
+}
+
+/**
+ * For tenders whose budget we don't have (announcement-only), estimate a range
+ * from past tenders with budgets: same buyer + overlapping title words first,
+ * otherwise tenders with similar titles. Returns null when evidence is thin.
+ */
+async function estimateBudgetFromHistory(title: string, buyer: string | null, excludeId: string): Promise<BudgetEstimate | null> {
+  const keywords = Array.from(new Set(extractSubstantiveKeywords(title))).slice(0, 4);
+  if (keywords.length === 0) return null;
+  const titleFilter = keywords.map((k) => `tender_name.ilike.%${k}%`).join(',');
+  const columns = 'invitation_id, tender_name, total_budget, publish_date';
+
+  const summarize = (rows: any[], basis: BudgetEstimate['basis']): BudgetEstimate | null => {
+    const usable = rows.filter((r) => Number(r.total_budget) > 0 && String(r.invitation_id) !== excludeId);
+    if (usable.length < (basis === 'same_buyer' ? 2 : 3)) return null;
+    const budgets = usable.map((r) => Number(r.total_budget)).sort((a, b) => a - b);
+    return {
+      median: quantile(budgets, 0.5),
+      low: quantile(budgets, 0.25),
+      high: quantile(budgets, 0.75),
+      count: usable.length,
+      basis,
+      examples: usable.slice(0, 3).map((r) => ({
+        invitationId: String(r.invitation_id),
+        tenderName: r.tender_name,
+        totalBudget: Number(r.total_budget),
+        publishDate: r.publish_date || null,
+      })),
+    };
+  };
+
+  try {
+    if (buyer) {
+      const { data } = await supabase
+        .from('tenders')
+        .select(columns)
+        .eq('budget_entity_name', buyer)
+        .gt('total_budget', 0)
+        .or(titleFilter)
+        .order('publish_date', { ascending: false })
+        .limit(20);
+      const byBuyer = summarize(data || [], 'same_buyer');
+      if (byBuyer) return byBuyer;
+    }
+    const { data } = await supabase
+      .from('tenders')
+      .select(columns)
+      .gt('total_budget', 0)
+      .or(titleFilter)
+      .order('publish_date', { ascending: false })
+      .limit(40);
+    return summarize(data || [], 'similar_titles');
+  } catch (e) {
+    console.warn('Budget estimate failed:', e);
+    return null;
+  }
+}
+
 export async function getTenderDetailData(id: string | number, options: { useStoredLiveBundle?: boolean } = {}) {
   if (!id) return null;
 
@@ -868,9 +941,14 @@ export async function getTenderDetailData(id: string | number, options: { useSto
   });
   (tenderItem as any).chinaBidderAnalysis = chinaBidderAnalysis;
 
+  const budgetEstimate = rawData?.source === 'telegram' && !(Number(tenderItem.totalBudget) > 0)
+    ? await estimateBudgetFromHistory(tenderItem.tenderName, tenderItem.budgetEntityName || null, String(tenderItem.invitationId || id))
+    : null;
+
   return {
     success: true,
     tender: tenderItem,
+    budgetEstimate,
     bds,
     technicalSpecs,
     results,

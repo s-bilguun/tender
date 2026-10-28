@@ -376,7 +376,7 @@ async function run() {
       return;
     }
 
-    const maxPages = Math.max(1, Number(process.env.TENDER_MAX_SYNC_PAGES) || 3000);
+    const maxPages = Math.max(1, Number(process.env.TENDER_MAX_SYNC_PAGES) || 30);
     if (process.env.TENDER_SKIP_LISTING_SYNC === 'true') {
       console.log('Skipping tender listing sync because TENDER_SKIP_LISTING_SYNC=true.');
     } else {

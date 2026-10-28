@@ -821,6 +821,39 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </a>
           </div>
 
+          {isTelegramOnly && data?.budgetEstimate && (
+            <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h2 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  {locale === 'zh' ? '预算估算（非官方）' : locale === 'en' ? 'Estimated budget (not official)' : 'Төсвийн урьдчилсан тооцоо (албан бус)'}
+                </h2>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  {data.budgetEstimate.basis === 'same_buyer'
+                    ? (locale === 'zh' ? `依据该采购单位 ${data.budgetEstimate.count} 个类似往期标段` : locale === 'en' ? `From ${data.budgetEstimate.count} similar past tenders by this buyer` : `Энэ захиалагчийн ${data.budgetEstimate.count} төстэй өмнөх тендерээс`)
+                    : (locale === 'zh' ? `依据 ${data.budgetEstimate.count} 个名称相似的往期标段` : locale === 'en' ? `From ${data.budgetEstimate.count} past tenders with similar titles` : `Төстэй нэртэй ${data.budgetEstimate.count} өмнөх тендерээс`)}
+                </span>
+              </div>
+              <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">
+                  ≈ ₮{data.budgetEstimate.median.toLocaleString()}
+                </span>
+                <span className="text-sm text-slate-500 dark:text-slate-400 tabular-nums">
+                  {locale === 'zh' ? '常见区间' : locale === 'en' ? 'typical range' : 'ихэвчлэн'} ₮{data.budgetEstimate.low.toLocaleString()} – ₮{data.budgetEstimate.high.toLocaleString()}
+                </span>
+              </div>
+              <ul className="mt-3 divide-y divide-slate-100 dark:divide-slate-800 border-t border-slate-100 dark:border-slate-800">
+                {data.budgetEstimate.examples.map((ex: any) => (
+                  <li key={ex.invitationId}>
+                    <a href={`/tender/${ex.invitationId}`} className="flex items-baseline justify-between gap-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                      <span className="min-w-0 truncate text-slate-700 dark:text-slate-300">{ex.tenderName}</span>
+                      <span className="shrink-0 tabular-nums text-slate-900 dark:text-white">₮{ex.totalBudget.toLocaleString()}{ex.publishDate ? ` · ${String(ex.publishDate).slice(0, 4)}` : ''}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* 10-Second Executive Summary Fact Sheet */}
           {!isTelegramOnly && (
           <div className=" bg-slate-900 text-white rounded-lg p-5 shadow-sm border border-indigo-900/60 space-y-4">
