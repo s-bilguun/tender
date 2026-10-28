@@ -20,7 +20,9 @@ function inferTypeCode(title: string): 'PRODUCT' | 'JOB' | 'SERVICE' {
 function toRow(post: TelegramTenderPost) {
   const typeCode = inferTypeCode(post.title);
   const industry = classifyIndustry(post.title, typeCode, post.buyer || undefined).id;
-  const publishDate = post.announcedDate ? `${post.announcedDate}T00:00:00${UB_OFFSET}` : post.postedAt;
+  // Post time is the real announcement moment; fall back to noon UB on the stated date
+  // (midnight would render as the previous day in UTC).
+  const publishDate = post.postedAt || (post.announcedDate ? `${post.announcedDate}T12:00:00${UB_OFFSET}` : null);
   return {
     invitation_id: post.invitationId,
     tender_name: post.title,
@@ -71,6 +73,7 @@ export async function GET(request: NextRequest) {
   let pages = 0;
   let seen = 0;
   let inserted = 0;
+  let repaired = 0;
   const errors: string[] = [];
 
   while (pages < maxPages && Date.now() - startedAt < 50_000) {
@@ -96,6 +99,20 @@ export async function GET(request: NextRequest) {
         break;
       }
       const known = new Set((existing || []).map((r: any) => String(r.invitation_id)));
+
+      // ?repair=1: re-apply the publish time to rows this feed created earlier.
+      if (searchParams.get('repair')) {
+        for (const post of posts) {
+          if (!known.has(post.invitationId) || !post.postedAt) continue;
+          const { error: repairError } = await supabaseAdmin
+            .from('tenders')
+            .update({ publish_date: post.postedAt })
+            .eq('invitation_id', post.invitationId)
+            .eq('raw_data->>source', 'telegram');
+          if (repairError) errors.push(`repair: ${repairError.message}`);
+          else repaired += 1;
+        }
+      }
       const fresh = new Map<string, ReturnType<typeof toRow>>();
       for (const post of posts) {
         if (!known.has(post.invitationId) && !fresh.has(post.invitationId)) fresh.set(post.invitationId, toRow(post));
@@ -127,6 +144,7 @@ export async function GET(request: NextRequest) {
     pages,
     postsSeen: seen,
     inserted,
+    repaired,
     nextBefore: before ?? null,
     errors,
   });
