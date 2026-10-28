@@ -615,11 +615,14 @@ export async function POST(request: NextRequest) {
     let liveBundle = targetRawData?.liveBundle?.schemaVersion === LIVE_BUNDLE_SCHEMA_VERSION
       ? targetRawData.liveBundle
       : null;
+    let budgetEstimateNote = '';
     if (targetTender?.invitationId) {
       try {
         const useStoredLiveBundle = targetRawData?.liveBundle?.documents?.some((doc: any) => doc.source === 'manual_upload');
         const detail = await getTenderDetailData(String(targetTender.invitationId), { useStoredLiveBundle });
         if (detail?.liveBundle) liveBundle = detail.liveBundle;
+        const est: any = (detail as any)?.budgetEstimate;
+        if (est?.median) budgetEstimateNote = `Ижил төрлийн өмнөх ${est.count ?? ''} тендерийн төсвөөс гаргасан албан бус тооцоо: median ₮${Math.round(est.median).toLocaleString()} (хүрээ ₮${Math.round(est.low ?? est.median).toLocaleString()}–₮${Math.round(est.high ?? est.median).toLocaleString()}). Үүнийг албан ёсны төсөв гэж бүү хэл.`;
       } catch (error) {
         console.warn('Tender document refresh failed; using the last stored source data:', error);
       }
@@ -692,6 +695,7 @@ export async function POST(request: NextRequest) {
 
 МЭДЭЭЛЛИЙН САНГИЙН ТЕНДЕРИЙН ТАЛБАРУУД:
 ${JSON.stringify(targetTender)}
+${activePdfText ? '' : 'АНХААР: Энэ тендерийн ТШБ/PDF баримтыг систем уншаагүй; зөвхөн зарын мэдээлэл (нэр, захиалагч, огноо) байна. Техникийн шаардлага, баталгаа, эцсийн хугацааны талаар таамаглахгүй, эдгээрийг tender.gov.mn дээрх албан ёсны баримтаас шалгахыг хэл. ' + budgetEstimateNote}
 
 БАТАЛГААЖСАН ТЕХНИКИЙН ҮЗҮҮЛЭЛТ & АЖЛЫН ДААЛГАВАР (Scope of Work):
 ${fullScopeOfWork || 'Дэлгэрэнгүй техникийн даалгаврыг хавсаргасан ТШЗ баримтаас нягтална уу.'}
