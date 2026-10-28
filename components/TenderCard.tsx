@@ -362,12 +362,16 @@ export const TenderCard: React.FC<TenderCardProps> = ({
             {locale === 'zh' ? '采购总预算与折合' : locale === 'mn' ? 'Төсөвт өртөг' : 'Total Budget'}
           </span>
           <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
-            {locale === 'zh' ? `保函1%: ~${bilingual.guaranteeRmbFormatted}` : (currency === 'CNY' ? `≈ ¥${budgetRmb.toLocaleString()} CNY` : `≈ $${budgetUsd.toLocaleString()} USD`)}
+            {budgetMnt > 0 ? (locale === 'zh' ? `保函1%: ~${bilingual.guaranteeRmbFormatted}` : (currency === 'CNY' ? `≈ ¥${budgetRmb.toLocaleString()} CNY` : `≈ $${budgetUsd.toLocaleString()} USD`)) : ''}
           </span>
         </div>
 
         <div className="flex items-baseline justify-between flex-wrap gap-1">
-          {locale === 'zh' ? (
+          {budgetMnt <= 0 ? (
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              {locale === 'zh' ? '预算见 tender.gov.mn' : locale === 'en' ? 'Budget on tender.gov.mn' : 'Төсвийг tender.gov.mn-ээс харна уу'}
+            </div>
+          ) : locale === 'zh' ? (
             <div className="flex items-baseline gap-2 flex-wrap">
               <div className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white tabular-nums">
                 {bilingual.budgetRmbFormatted}

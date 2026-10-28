@@ -91,7 +91,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const formatCurrency = (amount: number) => {
-    if (!amount) return '0 ₮';
+    if (!amount) return '—';
     return `${amount.toLocaleString()} ₮`;
   };
 
@@ -822,6 +822,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           </div>
 
           {/* 10-Second Executive Summary Fact Sheet */}
+          {!isTelegramOnly && (
           <div className=" bg-slate-900 text-white rounded-lg p-5 shadow-sm border border-indigo-900/60 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-800/60 pb-3">
               <div className="flex items-center gap-2">
@@ -919,6 +920,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
             </div>
           </div>
+          )}
 
           {/* Interactive AI Quick Prompts based on Structured PDF Data */}
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
