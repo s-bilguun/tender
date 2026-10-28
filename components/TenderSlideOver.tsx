@@ -412,7 +412,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                 </span>
                 <span className="flex items-center gap-1.5">
                   <IndustryIcon id={tender.industry || 'all'} className="h-3.5 w-3.5" />
-                  <span>{tender.industryName || tender.tenderTypeName || (locale === 'zh' ? '一般采购' : locale === 'en' ? 'General procurement' : 'Ерөнхий')}</span>
+                  <span>{(locale === 'mn' ? tender.industryName : null) || (locale === 'mn' ? tender.tenderTypeName : null) || (locale !== 'mn' && tender.tenderTypeCode ? (tender.tenderTypeCode === 'JOB' ? (locale === 'zh' ? '工程' : 'Works') : tender.tenderTypeCode === 'SERVICE' ? (locale === 'zh' ? '服务' : 'Services') : (locale === 'zh' ? '货物' : 'Goods')) : null) || (locale === 'zh' ? '一般采购' : locale === 'en' ? 'General procurement' : 'Ерөнхий')}</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className={`h-1.5 w-1.5 rounded-full ${timeLeft?.isExpired ? 'bg-slate-400' : 'bg-emerald-500'}`} />
@@ -730,13 +730,13 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end pt-1">
                     <div className="space-y-1">
                       <label className="text-[11px] font-bold text-slate-700 dark:text-zinc-300 block">
-                        Байгууллагын жилийн борлуулалт (₮):
+                        {locale === 'zh' ? '贵公司年营业收入 (₮)：' : locale === 'en' ? 'Your annual revenue (₮):' : 'Байгууллагын жилийн борлуулалт (₮):'}
                       </label>
                       <input
                         type="text"
                         value={userAnnualTurnover}
                         onChange={(e) => setUserAnnualTurnover(e.target.value)}
-                        placeholder={parsedTurnoverReqMnt ? `Босго: ₮${parsedTurnoverReqMnt.toLocaleString()}` : 'Жишээ: 150000000'}
+                        placeholder={parsedTurnoverReqMnt ? `Босго: ₮${parsedTurnoverReqMnt.toLocaleString()}` : (locale === 'zh' ? '例如：150000000' : locale === 'en' ? 'e.g. 150000000' : 'Жишээ: 150000000')}
                         className="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
                       />
                     </div>
@@ -772,7 +772,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                       <span>{locale === 'mn' ? 'Шалгуур үзүүлэлт & Шаардлага' : locale === 'zh' ? '资格与证明' : 'Eligibility & Clearances'}</span>
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
-                      {finalEligibilityList.length} шаардлага
+                      {finalEligibilityList.length} {locale === 'zh' ? '项要求' : locale === 'en' ? 'requirements' : 'шаардлага'}
                     </span>
                   </div>
 
