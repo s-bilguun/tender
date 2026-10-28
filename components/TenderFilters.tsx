@@ -10,8 +10,7 @@ import {
   Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, 
   Flame, Star, Calendar, Trophy, Database, 
   SlidersHorizontal, RotateCcw, ShieldCheck, Sparkles,
-  FileSpreadsheet, Layers, Building2, ChevronDown, ChevronLeft, ChevronRight
-} from 'lucide-react';
+  FileSpreadsheet, Layers, Building2, ChevronDown, ChevronLeft, ChevronRight, List } from 'lucide-react';
 
 interface TenderFiltersProps {
   filters: TenderFilterParams;
@@ -514,10 +513,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
  viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
  }`}
-              title={locale === 'mn' ? 'Карт' : locale === 'zh' ? '卡片视图' : 'Grid view'}
+              title={locale === 'mn' ? 'Жагсаалт' : locale === 'zh' ? '列表' : 'List'}
             >
-              <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === 'mn' ? 'Карт' : locale === 'zh' ? '卡片' : 'Cards'}</span>
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{locale === 'mn' ? 'Жагсаалт' : locale === 'zh' ? '列表' : 'List'}</span>
             </button>
           </div>
         </div>

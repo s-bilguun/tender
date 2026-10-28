@@ -9,7 +9,7 @@ import { DashboardKPICards } from '@/components/DashboardKPICards';
 import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { DiscoveryCardsHub } from '@/components/DiscoveryCardsHub';
 import { TenderTable } from '@/components/TenderTable';
-import { TenderCard } from '@/components/TenderCard';
+import { TenderRow } from '@/components/TenderRow';
 import { TenderFilters } from '@/components/TenderFilters';
 import { TenderDocAuditModal } from '@/components/TenderDocAuditModal';
 import { TenderFinanceModal } from '@/components/TenderFinanceModal';
@@ -540,13 +540,12 @@ export default function Home() {
                 onAskAI={handleAskAI}
               />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-5">
+              <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden divide-y divide-slate-200 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
                 {displayedTenders.map((tender) => (
-                  <TenderCard
+                  <TenderRow
                     key={String(tender.invitationId)}
                     tender={tender}
                     locale={locale}
-                    currency={currency}
                     isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
                     onToggleSave={handleToggleSave}
                     onAskAI={handleAskAI}
