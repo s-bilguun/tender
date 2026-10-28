@@ -193,7 +193,7 @@ export const Header: React.FC<HeaderProps> = ({
         {onOpenPricing && (
           <button
             onClick={onOpenPricing}
-            className="h-8 px-2.5 sm:px-3 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+            className="hidden sm:flex h-8 px-2.5 sm:px-3 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
           >
             <Crown className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400 shrink-0" />
             <span className="hidden md:inline whitespace-nowrap">

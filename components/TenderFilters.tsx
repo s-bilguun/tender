@@ -381,19 +381,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     activeAdvancedCount > 0;
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-md border border-slate-200/90 dark:border-zinc-800 shadow-2xs overflow-hidden transition-all">
+    <div className="bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
       {/* 1. Primary Workflow Status Tabs & Utility Controls */}
-      <div className="px-3 sm:px-4 pt-3 pb-2.5 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 border-b border-slate-100 dark:border-zinc-800">
+      <div className="px-3 sm:px-4 flex flex-col xl:flex-row xl:items-center justify-between gap-x-4 border-b border-slate-200 dark:border-zinc-800">
         {/* Status Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 min-w-0">
+        <div className="flex items-center gap-5 overflow-x-auto no-scrollbar -mx-1 px-1 min-w-0">
           {/* Active Live Tab */}
           <button
             onClick={() => handleTabSelect('active')}
-            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
- currentTab === 'active'
- ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900'
- : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white'
- }`}
+            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'active' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
             <span>{locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '正在招投标' : 'Live Bids'}</span>
@@ -405,11 +401,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Closing Soon Tab */}
           <button
             onClick={() => handleTabSelect('closing_soon')}
-            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
- currentTab === 'closing_soon'
- ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900'
- : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white'
- }`}
+            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'closing_soon' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Flame className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : locale === 'zh' ? '即将截标' : 'Closing Soon'}</span>
@@ -422,11 +414,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {(stats?.noGuaranteeCount !== 0 || currentTab === 'no_guarantee') && (
           <button
             onClick={() => handleTabSelect('no_guarantee')}
-            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
- currentTab === 'no_guarantee'
- ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900'
- : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white'
- }`}
+            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'no_guarantee' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <ShieldCheck className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : locale === 'zh' ? '免投标保函' : 'No Bid Bond'}</span>
@@ -436,11 +424,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Awarded / Concluded Winners Tab */}
           <button
             onClick={() => handleTabSelect('result')}
-            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
- currentTab === 'result'
- ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900'
- : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white'
- }`}
+            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'result' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Trophy className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : locale === 'zh' ? '已定标 / 中标结果' : 'Awarded'}</span>
@@ -452,11 +436,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* All Historical Archive Tab */}
           <button
             onClick={() => handleTabSelect('all')}
-            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
- currentTab === 'all'
- ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900'
- : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white'
- }`}
+            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'all' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Database className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Бүх сан' : locale === 'zh' ? '全部标段' : 'All Tenders'}</span>
@@ -468,11 +448,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Watchlist Tab */}
           <button
             onClick={() => handleTabSelect('watchlist')}
-            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
- currentTab === 'watchlist'
- ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900'
- : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white'
- }`}
+            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'watchlist' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Star className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Миний хянаж буй' : locale === 'zh' ? '关注收藏' : 'Watchlist'}</span>
@@ -485,7 +461,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         </div>
 
         {/* Right Tools: Export & View Mode */}
-        <div className="flex items-center gap-2 shrink-0 self-end xl:self-auto">
+        <div className="flex items-center gap-2 shrink-0 self-end xl:self-auto py-2">
           {onExportCSV && (
             <button
               onClick={onExportCSV}

@@ -519,6 +519,16 @@ export default function Home() {
             <div id="watchlist" />
 
             {/* Tender Result Cards / Table */}
+            {!isLoading && displayedTenders.length > 0 && (
+              <p className="px-1 text-sm text-slate-600 dark:text-zinc-400">
+                {locale === 'zh'
+                  ? `共找到 ${totalCount.toLocaleString('en-US')} 个招标`
+                  : locale === 'en'
+                  ? `${totalCount.toLocaleString('en-US')} tenders found`
+                  : `${totalCount.toLocaleString('en-US')} тендер олдлоо`}
+                {filters.search ? <span className="text-slate-400 dark:text-zinc-500"> · “{filters.search}”</span> : null}
+              </p>
+            )}
             {isLoading ? (
               viewMode === 'table' ? (
                 <TenderSkeleton count={8} viewMode="table" />
