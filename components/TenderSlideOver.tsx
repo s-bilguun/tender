@@ -143,6 +143,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
   const portalUrl = `https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`;
   const rawData = detailData?.tender?.raw_data || detailData?.tender?.rawData || tender.raw_data || (tender as any).rawData;
   const liveBundle = detailData?.liveBundle || rawData?.liveBundle;
+  const isFeedOnly = rawData?.source === 'telegram' && !(liveBundle?.documents?.length);
   const structuredSpecs = detailData?.technicalSpecs?.extractedSpecs || detailData?.technicalSpecs || liveBundle?.structuredSpecs || rawData?.structuredSpecs;
   const bds = detailData?.bds;
 
@@ -405,46 +406,42 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
             
             {/* Top Left: Title, Code, & Buyer */}
             <div className="space-y-2.5 min-w-0 flex-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 px-2.5 py-1 rounded-lg font-bold border border-blue-200 dark:border-blue-500/30">
+              <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-xs text-slate-500 dark:text-zinc-400">
+                <span className="font-mono text-slate-700 dark:text-zinc-300">
                   {tender.tenderCode || tender.invitationNumber || `INV-${tender.invitationId}`}
                 </span>
-                
-                <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300 bg-white dark:bg-zinc-800 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-zinc-700 flex items-center gap-1.5 shadow-2xs">
-                  <IndustryIcon id={tender.industry || 'all'} className="h-3.5 w-3.5 text-blue-500" />
-                  <span>{tender.industryName || tender.tenderTypeName || 'Ерөнхий бараа нийлүүлэлт'}</span>
+                <span className="flex items-center gap-1.5">
+                  <IndustryIcon id={tender.industry || 'all'} className="h-3.5 w-3.5" />
+                  <span>{tender.industryName || tender.tenderTypeName || (locale === 'zh' ? '一般采购' : locale === 'en' ? 'General procurement' : 'Ерөнхий')}</span>
                 </span>
-
-                <span className="text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 px-2.5 py-1 rounded-lg font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 " />
-                  {tender.docStatusName || (locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '接受投标' : 'Open for Bidding')}
+                <span className="flex items-center gap-1.5">
+                  <span className={`h-1.5 w-1.5 rounded-full ${timeLeft?.isExpired ? 'bg-slate-400' : 'bg-emerald-500'}`} />
+                  {timeLeft?.isExpired
+                    ? (locale === 'zh' ? '已截止' : locale === 'en' ? 'Closed' : 'Хугацаа дууссан')
+                    : (locale === 'zh' ? '接受投标' : locale === 'en' ? 'Accepting bids' : 'Санал авч буй')}
                 </span>
-
                 {hasStoredPdf && (
                   <button
                     onClick={() => setIsPdfReaderOpen(true)}
-                    className="text-xs text-purple-700 dark:text-purple-400 bg-slate-50 dark:bg-purple-500/15 hover:bg-purple-100 dark:hover:bg-purple-500/25 px-2.5 py-1 rounded-lg font-bold border border-purple-200 dark:border-purple-500/30 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                    title="PDF баримтыг вебсайт дээрээс шууд унших"
+                    className="flex items-center gap-1 text-slate-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
                   >
-                    <BookOpen className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                    <span>{locale === 'zh' ? '标书已归档 (点击阅读)' : locale === 'mn' ? 'ТШЗ PDF (Унших)' : 'Read PDF'}</span>
+                    <BookOpen className="h-3.5 w-3.5" />
+                    <span>{locale === 'zh' ? '阅读 PDF' : locale === 'mn' ? 'PDF унших' : 'Read PDF'}</span>
                   </button>
                 )}
-
                 <Link
                   href={`/tender/${tender.invitationId}`}
-                  className="text-xs text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/15 hover:bg-blue-100 dark:hover:bg-blue-500/25 px-2.5 py-1 rounded-lg font-bold border border-blue-200 dark:border-blue-500/30 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ml-auto sm:ml-0"
-                  title="Бүрэн хуудас руу шилжих"
+                  className="flex items-center gap-1 text-slate-700 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400"
                 >
-                  <ExternalLink className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>{locale === 'zh' ? '完整页面 ' : locale === 'mn' ? 'Бүрэн хуудас ' : 'Full Page '}</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>{locale === 'zh' ? '完整页面' : locale === 'mn' ? 'Бүрэн хуудас' : 'Full page'}</span>
                 </Link>
               </div>
 
               <h1 className="text-base sm:text-xl font-semibold text-slate-900 dark:text-white leading-snug tracking-tight">
                 {locale === 'zh' && bilingual ? (
                   <span className="flex flex-col gap-0.5">
-                    <span className="text-blue-600 dark:text-blue-400 font-bold block text-base sm:text-lg">
+                    <span className="font-semibold block text-base sm:text-lg">
                       {bilingual.titleZh}
                     </span>
                     <span className="text-xs text-slate-500 dark:text-zinc-400 font-normal">
@@ -457,7 +454,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
               </h1>
 
               <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
-                <Building2 className="h-4 w-4 text-blue-500 shrink-0" />
+                <Building2 className="h-4 w-4 text-slate-400 shrink-0" />
                 <span className="text-slate-700 dark:text-zinc-200 font-semibold">
                   {locale === 'zh' && bilingual ? bilingual.entityZh : tender.budgetEntityName}
                 </span>
@@ -467,20 +464,14 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
             {/* Top Right: Countdown & Close Button */}
             <div className="flex items-start gap-3 shrink-0">
               {timeLeft && (
-                <div className={`px-3.5 py-2 rounded-md border flex flex-col items-center justify-center min-w-[150px] shadow-2xs ${
- timeLeft.isExpired
- ? 'bg-rose-50 dark:bg-zinc-900 border-rose-200 dark:border-zinc-800 text-rose-700 dark:text-rose-300'
- : timeLeft.days <= 2
- ? 'bg-amber-50 dark:bg-zinc-900 border-amber-300 dark:border-amber-500/50 text-amber-800 dark:text-amber-200 '
- : 'bg-white dark:bg-zinc-900 border-blue-200 dark:border-blue-500/40 text-blue-700 dark:text-blue-200'
- }`}>
+                <div className="px-3.5 py-2 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center min-w-[150px]">
                   <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-0.5">
-                    <Clock className={`h-3 w-3 ${timeLeft.isExpired ? 'text-rose-500' : 'text-amber-500 animate-spin'}`} />
-                    <span>{locale === 'mn' ? 'Хугацаа дуусахад:' : locale === 'zh' ? '截标倒计时:' : 'Deadline Remaining:'}</span>
+                    <Clock className="h-3 w-3" />
+                    <span>{timeLeft.isExpired ? (locale === 'mn' ? 'Эцсийн хугацаа' : locale === 'zh' ? '截止时间' : 'Deadline') : (locale === 'mn' ? 'Хугацаа дуусахад' : locale === 'zh' ? '距截标' : 'Time left')}</span>
                   </div>
 
                   {timeLeft.isExpired ? (
-                    <span className="text-xs font-bold font-mono text-rose-600 dark:text-rose-400">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-zinc-300">
                       {locale === 'mn' ? 'Хугацаа дууссан' : locale === 'zh' ? '已截止' : 'Bidding Closed'}
                     </span>
                   ) : (
@@ -491,7 +482,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                       <span className="text-slate-400 dark:text-zinc-500">:</span>
                       <span>{String(timeLeft.minutes).padStart(2, '0')}m</span>
                       <span className="text-slate-400 dark:text-zinc-500">:</span>
-                      <span className="text-amber-600 dark:text-amber-400">{String(timeLeft.seconds).padStart(2, '0')}s</span>
+                      <span className="text-slate-500 dark:text-zinc-400">{String(timeLeft.seconds).padStart(2, '0')}s</span>
                     </div>
                   )}
 
@@ -513,31 +504,23 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
           </div>
 
           {/* Interactive Navigation Tabs */}
-          <div className="flex items-center gap-1.5 px-4 sm:px-6 py-2.5 bg-slate-100/90 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 shrink-0 overflow-x-auto">
+          <div className="flex items-center gap-5 px-4 sm:px-6 border-b border-slate-200 dark:border-zinc-800 shrink-0 overflow-x-auto no-scrollbar bg-white dark:bg-zinc-950">
             <button
               onClick={() => setActiveTab('bds')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
- activeTab === 'bds'
- ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200 dark:border-zinc-700'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
- }`}
+              className={`h-11 -mb-px border-b-2 text-xs font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'bds' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
-              <ListChecks className="h-3.5 w-3.5 text-blue-500" />
+              <ListChecks className="h-3.5 w-3.5" />
               <span>{locale === 'mn' ? 'Шалгуур & ТШЗ' : locale === 'zh' ? '资格与标书' : 'BDS Criteria'}</span>
             </button>
 
             <button
               onClick={() => setActiveTab('items')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
- activeTab === 'items'
- ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200 dark:border-zinc-700'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
- }`}
+              className={`h-11 -mb-px border-b-2 text-xs font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'items' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
-              <Layers className="h-3.5 w-3.5 text-indigo-500" />
+              <Layers className="h-3.5 w-3.5" />
               <span>{locale === 'mn' ? 'Бараа, ажлын хүснэгт' : locale === 'zh' ? '采购物料清单' : 'BoQ Items Table'}</span>
               {(items.length > 0 || deliverySchedule.length > 0) && (
-                <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-100 dark:bg-zinc-800 text-indigo-700 dark:text-indigo-300 font-mono font-bold">
+                <span className="text-[11px] tabular-nums text-slate-400 dark:text-zinc-500">
                   {items.length || deliverySchedule.length}
                 </span>
               )}
@@ -545,13 +528,9 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
 
             <button
               onClick={() => setActiveTab('ai')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
- activeTab === 'ai'
- ? 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 shadow-xs border border-slate-200 dark:border-zinc-700'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
- }`}
+              className={`h-11 -mb-px border-b-2 text-xs font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'ai' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
             >
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <Sparkles className="h-3.5 w-3.5" />
               <span>{locale === 'mn' ? 'AI Шинжилгээ' : locale === 'zh' ? 'AI 智库分析' : 'AI Intelligence'}</span>
             </button>
           </div>
@@ -562,7 +541,49 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
             {/* TAB 1: BDS CRITERIA & SPECS */}
             {activeTab === 'bds' && (
               <div className="space-y-6">
+                {isFeedOnly && (
+                  <div className="p-4 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          {locale === 'zh' ? '仅有公告信息' : locale === 'en' ? 'Announcement only' : 'Зөвхөн зарын мэдээлэл'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                          {locale === 'zh'
+                            ? '此标段来自官方公告频道。预算、截止日期和招标文件请在 tender.gov.mn 查看。'
+                            : locale === 'en'
+                            ? 'This tender comes from the official announcement feed. Budget, deadline and documents are on tender.gov.mn.'
+                            : 'Албан ёсны зарын сувгаас авсан тендер. Төсөв, эцсийн хугацаа, баримт бичгийг tender.gov.mn-ээс харна уу.'}
+                        </p>
+                      </div>
+                      <a
+                        href={`https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 h-8 px-3 rounded-md border border-slate-300 dark:border-zinc-700 text-xs font-medium text-slate-700 dark:text-zinc-200 hover:bg-slate-50 dark:hover:bg-zinc-800 inline-flex items-center gap-1.5"
+                      >
+                        tender.gov.mn
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                    {detailData?.budgetEstimate && (
+                      <div className="pt-3 border-t border-slate-100 dark:border-zinc-800">
+                        <p className="text-[11px] text-slate-500 dark:text-zinc-400">
+                          {locale === 'zh' ? '预算估算（非官方，依据往期类似标段）' : locale === 'en' ? 'Estimated budget (not official, from similar past tenders)' : 'Төсвийн урьдчилсан тооцоо (албан бус, төстэй өмнөх тендерээс)'}
+                        </p>
+                        <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-white tabular-nums">
+                          ≈ ₮{Number(detailData.budgetEstimate.median).toLocaleString()}
+                          <span className="ml-2 text-xs font-normal text-slate-500 dark:text-zinc-400">
+                            ₮{Number(detailData.budgetEstimate.low).toLocaleString()} – ₮{Number(detailData.budgetEstimate.high).toLocaleString()}
+                          </span>
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Budget Box */}
+                {budgetMnt > 0 && (
                 <div className="p-4 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-2 shadow-2xs">
                   <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 block">
                     {locale === 'mn' ? 'Зарлагдсан төсөвт өртөг (Total Budget)' : locale === 'zh' ? '公布的预算总额' : 'Declared Total Budget'}
@@ -576,6 +597,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                     <span className="text-amber-600 dark:text-amber-400 font-semibold">≈ ¥{budgetCny.toLocaleString()} CNY</span>
                   </div>
                 </div>
+                )}
 
                 {/* Key BDS Financial & Experience Cards */}
                 {(turnoverReq || liquidAssetsReq || similarExpReq || bidSecurityReq) && (
@@ -1223,7 +1245,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                   if (onOpenChinaSupplier) onOpenChinaSupplier(tender);
                   else if (onOpenFinance) onOpenFinance(tender);
                 }}
-                className="flex-1 sm:flex-initial h-11 px-5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all cursor-pointer border border-blue-400/40"
+                className="flex-1 sm:flex-initial h-11 px-5 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all cursor-pointer border border-blue-400/40"
               >
                 <ShieldCheck className="h-4 w-4" />
                 <span>{locale === 'zh' ? '跨境联合投标' : locale === 'mn' ? 'Төсөлд хамтран оролцох' : 'Bid Consortium'}</span>

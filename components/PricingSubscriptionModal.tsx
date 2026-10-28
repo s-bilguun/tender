@@ -241,7 +241,7 @@ export const PricingSubscriptionModal: React.FC<PricingSubscriptionModalProps> =
                   setSelectedPlan('VIP Pro');
                   setSubmitted(false);
                 }}
-                className="mt-6 w-full py-3 rounded-md bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                className="mt-6 w-full py-3 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white text-xs font-bold shadow-sm transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
                 <span>{isZh ? '立即开通 VIP 会员' : isMn ? 'VIP эрх идэвхжүүлэх' : 'Upgrade to VIP Pro'}</span>
                 <ArrowRight className="h-4 w-4" />
@@ -370,7 +370,7 @@ export const PricingSubscriptionModal: React.FC<PricingSubscriptionModalProps> =
                     <button
                       type="submit"
                       disabled={isSubmitting}
-                      className="px-4 py-2.5 rounded-md bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-wait text-white text-xs font-bold shadow-sm cursor-pointer transition-colors"
+                      className="px-4 py-2.5 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 disabled:opacity-60 disabled:cursor-wait text-white text-xs font-bold shadow-sm cursor-pointer transition-colors"
                     >
                       {isSubmitting
                         ? (isZh ? '提交中…' : isMn ? 'Илгээж байна…' : 'Submitting…')

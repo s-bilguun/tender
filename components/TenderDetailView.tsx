@@ -726,7 +726,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             href={supplierLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-8 px-3.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 flex items-center gap-1.5 transition-colors shadow-xs"
+            className="h-8 px-3.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 flex items-center gap-1.5 transition-colors shadow-xs"
           >
             <span>{locale === 'mn' ? 'Оролцох' : locale === 'zh' ? '参与投标' : 'Participate'}</span>
             <ExternalLink className="h-3 w-3 text-slate-300" />
@@ -1483,7 +1483,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   </div>
                   <button
                     onClick={() => setActiveTab('tech')}
-                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shrink-0 shadow-2xs cursor-pointer flex items-center gap-1.5 transition-colors self-start sm:self-auto"
+                    className="px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white text-xs font-bold shrink-0 shadow-2xs cursor-pointer flex items-center gap-1.5 transition-colors self-start sm:self-auto"
                   >
                     <span>Хүснэгт үзэх & CSV татах</span>
                     <ExternalLink className="h-3.5 w-3.5" />
@@ -2516,7 +2516,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                     href={downloadHref}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs font-semibold transition-colors"
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white rounded-md text-xs font-semibold transition-colors"
                                   >
                                     <Download className="h-3 w-3" />
                                     <span>Эх файлыг шууд татах ({doc.type || 'PDF'})</span>
@@ -2853,7 +2853,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           href={publicLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors shadow-2xs"
+                          className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-lg transition-colors shadow-2xs"
                         >
                           <Users className="h-4 w-4" />
                           <span>tender.gov.mn дээрх албан ёсны үр дүн & протокол үзэх</span>
@@ -2901,7 +2901,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       href={supplierLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 rounded-md transition-colors shadow-2xs"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-md transition-colors shadow-2xs"
                     >
                       <span>Тендерт санал илгээх (user.tender.gov.mn)</span>
                       <ExternalLink className="h-3 w-3" />
@@ -3723,7 +3723,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           target="_blank"
                           rel="noopener noreferrer"
                           download={selectedDoc.name || 'tender.pdf'}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs font-semibold transition-colors shadow-2xs"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white rounded text-xs font-semibold transition-colors shadow-2xs"
                         >
                           <Download className="h-3.5 w-3.5" />
                           <span>Эх баримтыг татах</span>
@@ -3777,7 +3777,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 )}
                 <button
                   onClick={() => handleDownloadDocument(selectedDoc)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-2xs transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white text-xs font-semibold shadow-2xs transition-colors"
                 >
                   <Download className="h-3.5 w-3.5" />
                   <span>Задлалыг татах (.txt)</span>
@@ -3830,7 +3830,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </button>
                 <button
                   onClick={() => setPreviewModalDoc(null)}
-                  className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+                  className="px-4 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 text-white text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
                 >
                   Хаах
                 </button>
