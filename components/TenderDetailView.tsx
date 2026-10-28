@@ -886,10 +886,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   <span>{locale === 'zh' ? '交付周期与地点' : 'Нийлүүлэлтийн хугацаа'}</span>
                 </span>
                 <span className="text-sm font-bold text-white block">
-                  {technicalSpecs.deliveryPeriodText || (locale === 'zh' ? '合同签订后 21-30 天' : '21-30 хоног')}
+                  {technicalSpecs.deliveryPeriodText || (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
                 </span>
                 <span className="text-[11px] text-amber-200/80 block truncate">
-                  {locale === 'zh' ? (bilingual.entityZh || technicalSpecs.deliveryLocation) : (technicalSpecs.deliveryLocation || 'Улаанбаатар хот')}
+                  {locale === 'zh' ? (bilingual.entityZh || technicalSpecs.deliveryLocation) : (technicalSpecs.deliveryLocation || '—')}
                 </span>
               </div>
 
@@ -1311,11 +1311,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               ) : bds.bidSecurityReq ? (
                 <span className="text-sm">{bds.bidSecurityReq}</span>
               ) : (
-                locale === 'zh' ? `预算 1% (~${bilingual.guaranteeRmbFormatted})` : '—'
+                '—'
               )}
             </span>
             <span className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 block truncate">
-              {bds.bidSecurityReq ? (locale === 'zh' ? '从 ТШЗ 招标文件解析' : 'PDF текстээс автоматаар илрүүлсэн') : '1% 法定参考'}
+              {bds.bidSecurityReq ? (locale === 'zh' ? '从 ТШЗ 招标文件解析' : 'PDF текстээс автоматаар илрүүлсэн') : (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
             </span>
           </div>
 
@@ -1324,10 +1324,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               {locale === 'zh' ? '履约保证金' : locale === 'mn' ? 'Гүйцэтгэлийн баталгаа' : 'Performance Bond'}
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-emerald-950 dark:text-emerald-200 block">
-              {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : '5% (Стандарт)'}
+              {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : '—'}
             </span>
             <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 block">
-              {locale === 'zh' ? '中标签约时缴纳' : 'Гэрээ байгуулахад гаргах баталгаа'}
+              {bds.performanceBondPct != null ? (locale === 'zh' ? '中标签约时缴纳' : 'Гэрээ байгуулахад гаргах баталгаа') : (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
             </span>
           </div>
         </div>
@@ -3217,13 +3217,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-700">
                       <span className="text-slate-400 block">{locale === 'zh' ? '交付地点' : 'Нийлүүлэх газар'}</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-200 block truncate">
-                        {locale === 'zh' ? (bilingual.entityZh || technicalSpecs.deliveryLocation) : (technicalSpecs.deliveryLocation || 'Улаанбаатар хот')}
+                        {locale === 'zh' ? (bilingual.entityZh || technicalSpecs.deliveryLocation) : (technicalSpecs.deliveryLocation || '—')}
                       </span>
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-700">
                       <span className="text-slate-400 block">{locale === 'zh' ? '交付期限' : 'Нийлүүлэх хугацаа'}</span>
                       <span className="font-semibold text-slate-800 dark:text-slate-200 block">
-                        {technicalSpecs.deliveryPeriodText || (locale === 'zh' ? '合同签订后 21-30 天' : '21-30 хоног')}
+                        {technicalSpecs.deliveryPeriodText || (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
                       </span>
                     </div>
                     <div className="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-200/80 dark:border-slate-700">
