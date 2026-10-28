@@ -274,13 +274,19 @@ function quantile(sorted: number[], q: number): number {
  * otherwise tenders with similar titles. Returns null when evidence is thin.
  */
 async function estimateBudgetFromHistory(title: string, buyer: string | null, excludeId: string): Promise<BudgetEstimate | null> {
-  const keywords = Array.from(new Set(extractSubstantiveKeywords(title))).slice(0, 4);
+  const GENERIC = /^(үйлчилгээ|үзүүлэх|үзүүл|худалдан|авах|нийлүүлэх|нийлүүл|ажил|хийх|материал|бараа|төхөөрөмж|тоног|хэрэгсэл|хэрэгцээт|шаардлагатай|зориулалт|зориулалтт|зориулалттай|байгууллага|төв|газар|сум|аймаг|дүүрэг|хот|оны|онд|2025|2026)$/;
+  const keywords = Array.from(new Set(extractSubstantiveKeywords(title).filter((k) => !GENERIC.test(k)))).slice(0, 5);
   if (keywords.length === 0) return null;
+  const needed = Math.min(2, keywords.length);
+  const matchCount = (name: string) => {
+    const n = (name || '').toLowerCase();
+    return keywords.filter((k) => n.includes(k)).length;
+  };
   const titleFilter = keywords.map((k) => `tender_name.ilike.%${k}%`).join(',');
   const columns = 'invitation_id, tender_name, total_budget, publish_date';
 
   const summarize = (rows: any[], basis: BudgetEstimate['basis']): BudgetEstimate | null => {
-    const usable = rows.filter((r) => Number(r.total_budget) > 0 && String(r.invitation_id) !== excludeId);
+    const usable = rows.filter((r) => Number(r.total_budget) > 0 && String(r.invitation_id) !== excludeId && matchCount(r.tender_name) >= needed);
     if (usable.length < (basis === 'same_buyer' ? 2 : 3)) return null;
     const budgets = usable.map((r) => Number(r.total_budget)).sort((a, b) => a - b);
     return {
@@ -307,7 +313,7 @@ async function estimateBudgetFromHistory(title: string, buyer: string | null, ex
         .gt('total_budget', 0)
         .or(titleFilter)
         .order('publish_date', { ascending: false })
-        .limit(20);
+        .limit(40);
       const byBuyer = summarize(data || [], 'same_buyer');
       if (byBuyer) return byBuyer;
     }
@@ -317,7 +323,7 @@ async function estimateBudgetFromHistory(title: string, buyer: string | null, ex
       .gt('total_budget', 0)
       .or(titleFilter)
       .order('publish_date', { ascending: false })
-      .limit(40);
+      .limit(80);
     return summarize(data || [], 'similar_titles');
   } catch (e) {
     console.warn('Budget estimate failed:', e);
