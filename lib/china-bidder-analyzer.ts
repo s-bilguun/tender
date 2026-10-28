@@ -118,15 +118,21 @@ export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): Chin
   // Bank guarantee explanation
   const guaranteeAmount = tender.bidRequirements?.estimatedGuaranteeMin || (budget * 0.01);
   const guaranteeRMB = Math.round(guaranteeAmount / MNT_TO_RMB_RATE);
-  const isExempt = tender.liveBundleSummary?.isBidSecurityExempt || budget < 50_000_000;
+  // Only state an exemption when the tender documents say so; otherwise describe the usual range.
+  const isExempt = Boolean(tender.liveBundleSummary?.isBidSecurityExempt);
+  const hasBudget = budget > 0;
 
   const bankGuaranteePolicyZh = isExempt
-    ? '本项目根据蒙古国法律免交投标保证金 (0₮ 投标保函豁免)。'
-    : `要求提供约 1% 的投标保函 (约 ${guaranteeAmount.toLocaleString('en-US')} ₮ / 折合约 ¥${guaranteeRMB.toLocaleString('en-US')} 人民币)。接受中国银行乌兰巴托分行、中国进出口银行出具的国际保函或蒙古国商业银行对开保函。`;
+    ? '招标文件注明无需投标保证金。'
+    : hasBudget
+    ? `投标保证金金额以招标文件为准，通常不超过预算的 1%（约 ${guaranteeAmount.toLocaleString('en-US')} ₮ / 约 ¥${guaranteeRMB.toLocaleString('en-US')}）。可咨询中资或蒙古商业银行开立保函。`
+    : '投标保证金要求以招标文件为准。';
 
   const bankGuaranteePolicyMn = isExempt
-    ? 'Хуулийн дагуу тендерийн баталгаа шаардахгүй (0₮ БҮ чөлөөлөлт).'
-    : `Төсвийн 1%-ийн тендерийн баталгаа шаардлагатай (${guaranteeAmount.toLocaleString('en-US')} ₮). Гадаадын банкны олон улсын баталгаа эсвэл Монголын арилжааны банкаар гаргуулсан баталгааг хүлээн авна.`;
+    ? 'Баримтад тендерийн баталгаа шаардахгүй гэж заасан.'
+    : hasBudget
+    ? `Тендерийн баталгааны хэмжээг ТШБ-аас шалгана уу; ихэвчлэн төсвийн 1% хүртэл (≈ ${guaranteeAmount.toLocaleString('en-US')} ₮) байдаг. Монголын арилжааны банк эсвэл гадаадын банкны баталгаа гаргуулж болно.`
+    : 'Тендерийн баталгааны шаардлагыг ТШБ-аас шалгана уу.';
 
   // Tender type in Chinese
   let tenderTypeZh = '货物采购 (Product)';
