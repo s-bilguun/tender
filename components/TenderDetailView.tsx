@@ -77,7 +77,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   const t = getTranslation(locale);
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'bds' | 'tech' | 'results' | 'history' | 'china'>(
-    initialLocale === 'zh' ? 'china' : 'bds'
+    initialLocale === 'zh'
+      ? 'china'
+      : (initialData as any)?.tender?.raw_data?.source === 'telegram' && !((initialData as any)?.liveBundle?.documents?.length)
+        ? 'history'
+        : 'bds'
   );
 
   // Interactive AI chat question states
@@ -740,6 +744,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         {/* Header Hero Banner */}
         <div className="bg-white dark:bg-zinc-900 rounded-md border border-slate-200 dark:border-zinc-800 p-6 shadow-xs space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs">
+            {(tender.tenderCode || tender.invitationNumber) && (
             <div className="flex items-center gap-1 font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300">
               <span>{tender.tenderCode || tender.invitationNumber}</span>
               <button
@@ -750,6 +755,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
               </button>
             </div>
+            )}
             <span className="font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-zinc-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-zinc-800">
               {tender.tenderTypeName || 'Тендер'}
             </span>
@@ -1279,6 +1285,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         </div>
 
         {/* Financial Metrics Cards */}
+        {!isTelegramOnly && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
             <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
@@ -1338,6 +1345,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </span>
           </div>
         </div>
+        )}
 
         {/* Responsive Segmented Tab Controls (Zero horizontal scroll) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 p-1.5 bg-slate-100/90 dark:bg-zinc-900/90 rounded-lg border border-slate-200/80 dark:border-zinc-800">
