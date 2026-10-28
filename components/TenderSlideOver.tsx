@@ -34,7 +34,16 @@ interface TimeLeft {
   isExpired: boolean;
 }
 
-export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
+// Mount the panel only while it is open. The panel body uses hooks below an
+// early return; rendering it only when open keeps the hook order stable
+// (fixes React error #310 when a tender is clicked), and keying by tender
+// resets estimator inputs between tenders.
+export const TenderSlideOver: React.FC<TenderSlideOverProps> = (props) =>
+  props.isOpen && props.tender ? (
+    <TenderSlideOverPanel key={props.tender.invitationId} {...props} />
+  ) : null;
+
+const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
   tender,
   isOpen,
   onClose,
