@@ -506,7 +506,7 @@ export default function AdminIngestPage() {
                             </p>
                             <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
                               <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded">
-                                {log.data.estimated_budget_mnt?.toLocaleString()} ₮
+                                {log.data.estimated_budget_mnt?.toLocaleString('en-US')} ₮
                               </span>
                               {winnersCount > 0 && (
                                 <span className="inline-flex items-center gap-1 font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded text-[10px]">
@@ -611,7 +611,7 @@ export default function AdminIngestPage() {
                       {selectedLog.data.project_title || selectedLog.data.project_title_mn}
                     </h4>
                     <p className="text-[11px] text-slate-600 mt-0.5">
-                      Захиалагч: <span className="font-semibold text-slate-800">{selectedLog.data.buyer_name}</span> | Төсөвт өртөг: <span className="font-bold text-emerald-700">{selectedLog.data.estimated_budget_mnt?.toLocaleString()} ₮</span>
+                      Захиалагч: <span className="font-semibold text-slate-800">{selectedLog.data.buyer_name}</span> | Төсөвт өртөг: <span className="font-bold text-emerald-700">{selectedLog.data.estimated_budget_mnt?.toLocaleString('en-US')} ₮</span>
                     </p>
                   </div>
                   <Link
@@ -661,7 +661,7 @@ export default function AdminIngestPage() {
                                 {sim.tenderName}
                               </h5>
                               <p className="text-[11px] text-slate-500 mt-0.5">
-                                Захиалагч: <span className="text-slate-700 font-medium">{sim.budgetEntityName}</span> | Нийт төсөв: <strong className="text-slate-900">{sim.totalBudget?.toLocaleString()} ₮</strong>
+                                Захиалагч: <span className="text-slate-700 font-medium">{sim.budgetEntityName}</span> | Нийт төсөв: <strong className="text-slate-900">{sim.totalBudget?.toLocaleString('en-US')} ₮</strong>
                               </p>
                             </div>
 
@@ -697,7 +697,7 @@ export default function AdminIngestPage() {
 
                               <div className="text-right shrink-0">
                                 <div className="text-xs font-semibold text-emerald-800">
-                                  {sim.winner.winningAmount > 0 ? `${sim.winner.winningAmount.toLocaleString()} ₮` : 'Гэрээ байгуулсан'}
+                                  {sim.winner.winningAmount > 0 ? `${sim.winner.winningAmount.toLocaleString('en-US')} ₮` : 'Гэрээ байгуулсан'}
                                 </div>
                                 {sim.winner.discountPercent > 0 && (
                                   <div className="text-[10px] font-bold text-emerald-600">
@@ -833,7 +833,7 @@ export default function AdminIngestPage() {
                                     <span className="font-bold text-slate-900">{w.name}</span>
                                   </div>
                                   <div className="text-right text-[11px]">
-                                    <span className="font-bold text-emerald-700">{w.totalWonAmount > 0 ? `${w.totalWonAmount.toLocaleString()} ₮` : `${w.winCount} удаа ялсан`}</span>
+                                    <span className="font-bold text-emerald-700">{w.totalWonAmount > 0 ? `${w.totalWonAmount.toLocaleString('en-US')} ₮` : `${w.winCount} удаа ялсан`}</span>
                                   </div>
                                 </div>
                               ))}

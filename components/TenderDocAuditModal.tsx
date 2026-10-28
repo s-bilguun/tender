@@ -64,8 +64,8 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
           status: userTurnover >= requiredTurnover ? 'pass' : 'warn',
           title: 'Борлуулалтын орлогын хэмжээ',
           detail: userTurnover >= requiredTurnover
-            ? `Сүүлийн 2 жилийн борлуулалтын орлого (₮${userTurnover.toLocaleString()}) нь шаардлагатай доод хэмжээ (₮${requiredTurnover.toLocaleString()})-г хангаж байна.`
-            : `Борлуулалтын орлого дутуу байна. Шаардлагатай: ₮${requiredTurnover.toLocaleString()}, оруулсан: ₮${userTurnover.toLocaleString()}. Түншлэл (JV) байгуулахыг зөвлөж байна.`,
+            ? `Сүүлийн 2 жилийн борлуулалтын орлого (₮${userTurnover.toLocaleString('en-US')}) нь шаардлагатай доод хэмжээ (₮${requiredTurnover.toLocaleString('en-US')})-г хангаж байна.`
+            : `Борлуулалтын орлого дутуу байна. Шаардлагатай: ₮${requiredTurnover.toLocaleString('en-US')}, оруулсан: ₮${userTurnover.toLocaleString('en-US')}. Түншлэл (JV) байгуулахыг зөвлөж байна.`,
         },
         {
           category: 'Тендерийн баталгаа (Bid Security)',

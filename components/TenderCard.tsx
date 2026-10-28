@@ -407,7 +407,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
             {locale === 'zh' ? '采购总预算与折合' : locale === 'mn' ? 'Төсөвт өртөг' : 'Total Budget'}
           </span>
           <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">
-            {budgetMnt > 0 ? (locale === 'zh' ? `保函1%: ~${bilingual.guaranteeRmbFormatted}` : (currency === 'CNY' ? `≈ ¥${budgetRmb.toLocaleString()} CNY` : `≈ $${budgetUsd.toLocaleString()} USD`)) : ''}
+            {budgetMnt > 0 ? (locale === 'zh' ? `保函1%: ~${bilingual.guaranteeRmbFormatted}` : (currency === 'CNY' ? `≈ ¥${budgetRmb.toLocaleString('en-US')} CNY` : `≈ $${budgetUsd.toLocaleString('en-US')} USD`)) : ''}
           </span>
         </div>
 
@@ -422,12 +422,12 @@ export const TenderCard: React.FC<TenderCardProps> = ({
                 {bilingual.budgetRmbFormatted}
               </div>
               <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 font-mono">
-                (₮{budgetMnt.toLocaleString()})
+                (₮{budgetMnt.toLocaleString('en-US')})
               </div>
             </div>
           ) : (
             <div className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white tabular-nums">
-              ₮ {budgetMnt.toLocaleString()}
+              ₮ {budgetMnt.toLocaleString('en-US')}
             </div>
           )}
           <div className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">

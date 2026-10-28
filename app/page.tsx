@@ -525,8 +525,8 @@ export default function Home() {
                 
                 <div className="text-xs text-slate-500 dark:text-zinc-400 font-medium">
                   {locale === 'mn'
-                    ? `Нийт ${totalCount.toLocaleString()} тендерээс ${displayedTenders.length}-ийг харуулж байна`
-                    : `Showing ${displayedTenders.length} of ${totalCount.toLocaleString()} tenders`}
+                    ? `Нийт ${totalCount.toLocaleString('en-US')} тендерээс ${displayedTenders.length}-ийг харуулж байна`
+                    : `Showing ${displayedTenders.length} of ${totalCount.toLocaleString('en-US')} tenders`}
                 </div>
 
                 <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">

@@ -148,7 +148,7 @@ export function formatCurrencyMulti(amountMnt: number, currency: 'MNT' | 'CNY' |
     if (rmb >= 10000) {
       return `¥ ${(rmb / 10000).toFixed(1)}万 人民币`;
     }
-    return `¥ ${Math.round(rmb).toLocaleString()}`;
+    return `¥ ${Math.round(rmb).toLocaleString('en-US')}`;
   }
   
   if (currency === 'USD') {
@@ -156,8 +156,8 @@ export function formatCurrencyMulti(amountMnt: number, currency: 'MNT' | 'CNY' |
     if (usd >= 10000) {
       return `$ ${(usd / 1000).toFixed(0)}k USD`;
     }
-    return `$ ${Math.round(usd).toLocaleString()}`;
+    return `$ ${Math.round(usd).toLocaleString('en-US')}`;
   }
 
-  return `₮ ${amountMnt.toLocaleString()}`;
+  return `₮ ${amountMnt.toLocaleString('en-US')}`;
 }

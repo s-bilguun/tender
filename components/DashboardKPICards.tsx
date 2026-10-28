@@ -17,11 +17,11 @@ function formatMoney(amount: number | null | undefined, locale: Locale): string 
   if (!num || Number.isNaN(num)) return '—';
   if (locale === 'zh') {
     const rmb = num / MNT_PER_RMB;
-    return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString()} 万`;
+    return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString('en-US')} 万`;
   }
   if (num >= 1e12) return `₮${(num / 1e12).toFixed(2)}${locale === 'mn' ? ' их наяд' : 'T'}`;
   if (num >= 1e9) return `₮${(num / 1e9).toFixed(1)}${locale === 'mn' ? ' тэрбум' : 'B'}`;
-  return `₮${Math.round(num / 1e6).toLocaleString()}${locale === 'mn' ? ' сая' : 'M'}`;
+  return `₮${Math.round(num / 1e6).toLocaleString('en-US')}${locale === 'mn' ? ' сая' : 'M'}`;
 }
 
 const t = (locale: Locale, mn: string, en: string, zh: string) => (locale === 'zh' ? zh : locale === 'en' ? en : mn);
@@ -40,24 +40,24 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, loc
   }[] = [
     {
       label: t(locale, 'Нээлттэй тендер', 'Open tenders', '正在招标'),
-      value: active != null ? active.toLocaleString() : '—',
+      value: active != null ? active.toLocaleString('en-US') : '—',
       note: t(locale, 'Санал хүлээн авч буй', 'Accepting bids now', '正在接受投标'),
       filter: { status: 'receiving', tabMode: 'active', urgency: 'all', page: 1 },
     },
     {
       label: t(locale, 'Сүүлийн 4 хоногт нийтэлсэн', 'Published in last 4 days', '近 4 天新发布'),
-      value: stats?.newCount != null ? stats.newCount.toLocaleString() : '—',
+      value: stats?.newCount != null ? stats.newCount.toLocaleString('en-US') : '—',
       note: t(locale, 'Шинэ зар', 'New announcements', '新公告'),
     },
     {
       label: t(locale, '48 цагт хаагдах', 'Closing within 48 h', '48 小时内截标'),
-      value: stats?.closingSoonCount != null ? stats.closingSoonCount.toLocaleString() : '—',
+      value: stats?.closingSoonCount != null ? stats.closingSoonCount.toLocaleString('en-US') : '—',
       note: t(locale, 'Яаралтай бэлтгэх', 'Prepare bids now', '需尽快准备'),
       filter: { status: 'receiving', tabMode: 'active', urgency: 'urgent_48h', page: 1 },
     },
     {
       label: t(locale, 'Нийт бүртгэлтэй тендер', 'Tenders on record', '库内招标总数'),
-      value: stats?.totalCount != null ? stats.totalCount.toLocaleString() : '—',
+      value: stats?.totalCount != null ? stats.totalCount.toLocaleString('en-US') : '—',
       note: t(locale, 'Түүхэн архивтай', 'Searchable history', '可检索历史'),
     },
   ];

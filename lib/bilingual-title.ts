@@ -324,11 +324,11 @@ export function getBilingualTenderInfo(
 
   const budgetRmbFormatted = budgetRmb >= 10000
     ? `¥${(budgetRmb / 10000).toFixed(1)} 万元`
-    : `¥${budgetRmb.toLocaleString()} 元`;
+    : `¥${budgetRmb.toLocaleString('en-US')} 元`;
 
   const guaranteeRmbFormatted = guaranteeRmb >= 10000
     ? `¥${(guaranteeRmb / 10000).toFixed(2)} 万元`
-    : `¥${guaranteeRmb.toLocaleString()} 元`;
+    : `¥${guaranteeRmb.toLocaleString('en-US')} 元`;
 
   // 1. Entity Translation
   let entityZh = '';

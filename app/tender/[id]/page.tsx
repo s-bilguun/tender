@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const budget = Number(data.tender.totalBudget) || 0;
   const description = [
     data.tender.budgetEntityName,
-    budget > 0 ? `Төсөвт өртөг: ${budget.toLocaleString()} ₮` : null,
+    budget > 0 ? `Төсөвт өртөг: ${budget.toLocaleString('en-US')} ₮` : null,
     data.tender.receiveDate ? `Эцсийн хугацаа: ${String(data.tender.receiveDate).slice(0, 10)}` : null,
   ].filter(Boolean).join(' · ');
   const title = `${data.tender.tenderName} | TenderHub`;

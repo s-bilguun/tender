@@ -188,7 +188,7 @@ export function CommandPalette({
         items.unshift({
           id: `tender-${tender.invitationId}`,
           title: tender.tenderName,
-          subtitle: `${tender.tenderCode} • ${tender.budgetEntityName || 'Захиалагч'} • ₮${(tender.totalBudget || 0).toLocaleString()}`,
+          subtitle: `${tender.tenderCode} • ${tender.budgetEntityName || 'Захиалагч'} • ₮${(tender.totalBudget || 0).toLocaleString('en-US')}`,
           category: 'tender',
           icon: <ArrowRight className="h-4 w-4 text-blue-600" />,
           onSelect: () => {

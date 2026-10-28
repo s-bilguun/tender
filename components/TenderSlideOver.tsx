@@ -347,7 +347,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
         '',
         '',
         totalEstimatedBid,
-        `"Төсөвт өртөг: ₮${budgetMnt.toLocaleString()} (Зөрүү: ${budgetDiffPercent > 0 ? '+' : ''}${budgetDiffPercent.toFixed(1)}%)"`
+        `"Төсөвт өртөг: ₮${budgetMnt.toLocaleString('en-US')} (Зөрүү: ${budgetDiffPercent > 0 ? '+' : ''}${budgetDiffPercent.toFixed(1)}%)"`
       ]);
       const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\r\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -577,9 +577,9 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                           {locale === 'zh' ? '预算估算（非官方，依据往期类似标段）' : locale === 'en' ? 'Estimated budget (not official, from similar past tenders)' : 'Төсвийн урьдчилсан тооцоо (албан бус, төстэй өмнөх тендерээс)'}
                         </p>
                         <p className="mt-1 text-lg font-semibold text-slate-900 dark:text-white tabular-nums">
-                          ≈ ₮{Number(detailData.budgetEstimate.median).toLocaleString()}
+                          ≈ ₮{Number(detailData.budgetEstimate.median).toLocaleString('en-US')}
                           <span className="ml-2 text-xs font-normal text-slate-500 dark:text-zinc-400">
-                            ₮{Number(detailData.budgetEstimate.low).toLocaleString()} – ₮{Number(detailData.budgetEstimate.high).toLocaleString()}
+                            ₮{Number(detailData.budgetEstimate.low).toLocaleString('en-US')} – ₮{Number(detailData.budgetEstimate.high).toLocaleString('en-US')}
                           </span>
                         </p>
                       </div>
@@ -594,12 +594,12 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                     {locale === 'mn' ? 'Зарлагдсан төсөвт өртөг (Total Budget)' : locale === 'zh' ? '公布的预算总额' : 'Declared Total Budget'}
                   </span>
                   <div className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white font-mono tracking-tight">
-                    ₮ {budgetMnt.toLocaleString()}
+                    ₮ {budgetMnt.toLocaleString('en-US')}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-zinc-400 font-mono border-t border-slate-100 dark:border-zinc-800/80 pt-2">
-                    <span>≈ ${(budgetUsd).toLocaleString()} USD</span>
+                    <span>≈ ${(budgetUsd).toLocaleString('en-US')} USD</span>
                     <span>•</span>
-                    <span className="text-amber-600 dark:text-amber-400 font-semibold">≈ ¥{budgetCny.toLocaleString()} CNY</span>
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold">≈ ¥{budgetCny.toLocaleString('en-US')} CNY</span>
                   </div>
                 </div>
                 )}
@@ -736,13 +736,13 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                         type="text"
                         value={userAnnualTurnover}
                         onChange={(e) => setUserAnnualTurnover(e.target.value)}
-                        placeholder={parsedTurnoverReqMnt ? `Босго: ₮${parsedTurnoverReqMnt.toLocaleString()}` : (locale === 'zh' ? '例如：150000000' : locale === 'en' ? 'e.g. 150000000' : 'Жишээ: 150000000')}
+                        placeholder={parsedTurnoverReqMnt ? `Босго: ₮${parsedTurnoverReqMnt.toLocaleString('en-US')}` : (locale === 'zh' ? '例如：150000000' : locale === 'en' ? 'e.g. 150000000' : 'Жишээ: 150000000')}
                         className="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
                       />
                     </div>
                     {parsedTurnoverReqMnt && (
                       <div className="text-[11px] text-slate-500 dark:text-zinc-400 pb-1">
-                        Шаардагдах босго: <strong className="text-slate-800 dark:text-zinc-200 font-mono">₮{parsedTurnoverReqMnt.toLocaleString()}</strong>
+                        Шаардагдах босго: <strong className="text-slate-800 dark:text-zinc-200 font-mono">₮{parsedTurnoverReqMnt.toLocaleString('en-US')}</strong>
                         {userTurnoverNum > 0 && (
                           <span className={`ml-2 font-bold ${userTurnoverNum >= parsedTurnoverReqMnt ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                             {userTurnoverNum >= parsedTurnoverReqMnt ? 'Хангаж байна' : 'Хүрэхгүй байна'}
@@ -917,19 +917,19 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                               onClick={() => handleAutoDistributeBudget(0.90)}
                               className="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-zinc-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 cursor-pointer shadow-2xs"
                             >
-                              -10% (₮{Math.round(budgetMnt * 0.9).toLocaleString()})
+                              -10% (₮{Math.round(budgetMnt * 0.9).toLocaleString('en-US')})
                             </button>
                             <button
                               onClick={() => handleAutoDistributeBudget(0.95)}
                               className="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-zinc-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 cursor-pointer shadow-2xs"
                             >
-                              -5% (₮{Math.round(budgetMnt * 0.95).toLocaleString()})
+                              -5% (₮{Math.round(budgetMnt * 0.95).toLocaleString('en-US')})
                             </button>
                             <button
                               onClick={() => handleAutoDistributeBudget(1.0)}
                               className="px-2 py-0.5 rounded bg-white dark:bg-zinc-900 border border-indigo-200 dark:border-zinc-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 cursor-pointer shadow-2xs"
                             >
-                              100% (₮{budgetMnt.toLocaleString()})
+                              100% (₮{budgetMnt.toLocaleString('en-US')})
                             </button>
                           </div>
                         </div>
@@ -993,7 +993,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-[10px]">₮</span>
                                           <input
                                             type="text"
-                                            value={itemPrices[idx] != null && itemPrices[idx] > 0 ? itemPrices[idx].toLocaleString() : ''}
+                                            value={itemPrices[idx] != null && itemPrices[idx] > 0 ? itemPrices[idx].toLocaleString('en-US') : ''}
                                             onChange={(e) => handlePriceChange(idx, e.target.value)}
                                             placeholder="0"
                                             className="w-full pl-5 pr-2 py-1 text-xs bg-white dark:bg-zinc-950 border border-indigo-200 dark:border-zinc-800 rounded font-mono font-bold text-right text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -1001,7 +1001,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                                         </div>
                                       </td>
                                       <td className="py-2.5 px-3 font-mono font-bold text-right text-slate-900 dark:text-white">
-                                        ₮ {lineTotal.toLocaleString()}
+                                        ₮ {lineTotal.toLocaleString('en-US')}
                                       </td>
                                     </>
                                   )}
@@ -1023,7 +1023,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                           <div>
                             <span className="text-[10px] font-bold text-slate-400 block ">Нийт санал болгох дүн:</span>
                             <span className="text-base sm:text-lg font-semibold font-mono text-emerald-400">
-                              ₮ {totalEstimatedBid.toLocaleString()}
+                              ₮ {totalEstimatedBid.toLocaleString('en-US')}
                             </span>
                           </div>
                           {budgetMnt > 0 && totalEstimatedBid > 0 && (
@@ -1140,10 +1140,10 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
 
                   <p className="text-xs text-slate-700 dark:text-zinc-300 leading-relaxed">
                     {locale === 'zh'
-                      ? `蒙古国本级采购预算为 ₮${(budgetMnt / 1e6).toFixed(1)}M (约 ¥${budgetCny.toLocaleString()} CNY / $${budgetUsd.toLocaleString()} USD)。具备完整官方采购清单，支持工厂直接供货与技术对接。`
+                      ? `蒙古国本级采购预算为 ₮${(budgetMnt / 1e6).toFixed(1)}M (约 ¥${budgetCny.toLocaleString('en-US')} CNY / $${budgetUsd.toLocaleString('en-US')} USD)。具备完整官方采购清单，支持工厂直接供货与技术对接。`
                       : locale === 'mn'
-                      ? `Энэхүү төсөл нь нийт ₮${budgetMnt.toLocaleString()} өртөгтэй бөгөөд албан ёсны техникийн шаардлагын дагуу шууд нийлүүлэх болон түншлэлээр оролцох бүрэн боломжтой.`
-                      : `Total procurement budget volume is ₮${budgetMnt.toLocaleString()} (~$${budgetUsd.toLocaleString()} USD / ~¥${budgetCny.toLocaleString()} CNY) with complete official specifications.`}
+                      ? `Энэхүү төсөл нь нийт ₮${budgetMnt.toLocaleString('en-US')} өртөгтэй бөгөөд албан ёсны техникийн шаардлагын дагуу шууд нийлүүлэх болон түншлэлээр оролцох бүрэн боломжтой.`
+                      : `Total procurement budget volume is ₮${budgetMnt.toLocaleString('en-US')} (~$${budgetUsd.toLocaleString('en-US')} USD / ~¥${budgetCny.toLocaleString('en-US')} CNY) with complete official specifications.`}
                   </p>
 
                   <div className="grid grid-cols-2 gap-2 pt-1 text-xs">

@@ -399,7 +399,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
             <span>{locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '正在招投标' : 'Live Bids'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.active != null ? tabMetrics.active.toLocaleString() : ''}
+              {tabMetrics.active != null ? tabMetrics.active.toLocaleString('en-US') : ''}
             </span>
           </button>
 
@@ -415,7 +415,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <Flame className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : locale === 'zh' ? '即将截标' : 'Closing Soon'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.closing != null ? tabMetrics.closing.toLocaleString() : ''}
+              {tabMetrics.closing != null ? tabMetrics.closing.toLocaleString('en-US') : ''}
             </span>
           </button>
 
@@ -446,7 +446,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <Trophy className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : locale === 'zh' ? '已定标 / 中标结果' : 'Awarded'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.result != null ? tabMetrics.result.toLocaleString() : ''}
+              {tabMetrics.result != null ? tabMetrics.result.toLocaleString('en-US') : ''}
             </span>
           </button>
 
@@ -462,7 +462,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <Database className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Бүх сан' : locale === 'zh' ? '全部标段' : 'All Tenders'}</span>
             <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.all != null ? tabMetrics.all.toLocaleString() : ''}
+              {tabMetrics.all != null ? tabMetrics.all.toLocaleString('en-US') : ''}
             </span>
           </button>
 

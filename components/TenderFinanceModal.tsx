@@ -49,7 +49,7 @@ export const TenderFinanceModal: React.FC<TenderFinanceModalProps> = ({
     estimatedFee = guaranteeAmount * (0.014 * durationMonths);
   }
 
-  const formatMNT = (amount: number) => `₮ ${Math.round(amount).toLocaleString()}`;
+  const formatMNT = (amount: number) => `₮ ${Math.round(amount).toLocaleString('en-US')}`;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

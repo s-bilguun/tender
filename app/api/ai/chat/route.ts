@@ -80,7 +80,7 @@ function formatBudget(amount: number): string {
   if (amount >= 1_000_000) {
     return `${(amount / 1_000_000).toFixed(1)} сая ₮`;
   }
-  return `${amount.toLocaleString()} ₮`;
+  return `${amount.toLocaleString('en-US')} ₮`;
 }
 
 interface TargetTenderInfo {
@@ -671,7 +671,7 @@ export async function POST(request: NextRequest) {
         const detail = await getTenderDetailData(String(targetTender.invitationId), { useStoredLiveBundle });
         if (detail?.liveBundle) liveBundle = detail.liveBundle;
         const est: any = (detail as any)?.budgetEstimate;
-        if (est?.median) budgetEstimateNote = `Ижил төрлийн өмнөх ${est.count ?? ''} тендерийн төсвөөс гаргасан албан бус тооцоо: median ₮${Math.round(est.median).toLocaleString()} (хүрээ ₮${Math.round(est.low ?? est.median).toLocaleString()}–₮${Math.round(est.high ?? est.median).toLocaleString()}). Үүнийг албан ёсны төсөв гэж бүү хэл.`;
+        if (est?.median) budgetEstimateNote = `Ижил төрлийн өмнөх ${est.count ?? ''} тендерийн төсвөөс гаргасан албан бус тооцоо: median ₮${Math.round(est.median).toLocaleString('en-US')} (хүрээ ₮${Math.round(est.low ?? est.median).toLocaleString('en-US')}–₮${Math.round(est.high ?? est.median).toLocaleString('en-US')}). Үүнийг албан ёсны төсөв гэж бүү хэл.`;
       } catch (error) {
         console.warn('Tender document refresh failed; using the last stored source data:', error);
       }

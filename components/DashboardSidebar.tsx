@@ -81,7 +81,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       labelEn: 'Tender Database',
       labelZh: '招标项目全库',
       icon: Database,
-      badge: activeCount ? activeCount.toLocaleString() : undefined,
+      badge: activeCount ? activeCount.toLocaleString('en-US') : undefined,
       badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
       href: '#database',
     },

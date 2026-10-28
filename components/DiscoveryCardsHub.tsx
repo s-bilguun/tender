@@ -306,11 +306,11 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
     if (n <= 0) return '—';
     if (locale === 'zh') {
       const rmb = n / 470;
-      return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString()} 万`;
+      return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString('en-US')} 万`;
     }
     if (n >= 1e12) return `₮${(n / 1e12).toFixed(2)}${locale === 'en' ? 'T' : ' их наяд'}`;
     if (n >= 1e9) return `₮${(n / 1e9).toFixed(1)}${locale === 'en' ? 'B' : ' тэрбум'}`;
-    return `₮${Math.round(n / 1e6).toLocaleString()}${locale === 'en' ? 'M' : ' сая'}`;
+    return `₮${Math.round(n / 1e6).toLocaleString('en-US')}${locale === 'en' ? 'M' : ' сая'}`;
   };
   const currentSearch = (filters.search || '').trim().toLowerCase();
 
@@ -446,7 +446,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                           <>
                             <span className="block text-sm text-slate-900 dark:text-white">{money(st.yearBudget)}</span>
                             <span className="block text-[11px] text-slate-500 dark:text-zinc-400">
-                              {st.yearCount.toLocaleString()} {t('тендер', 'tenders', '个招标')}
+                              {st.yearCount.toLocaleString('en-US')} {t('тендер', 'tenders', '个招标')}
                               {st.openCount > 0 && <> · <span className="text-emerald-700 dark:text-emerald-400">{st.openCount} {t('нээлттэй', 'open', '在招')}</span></>}
                             </span>
                           </>
@@ -511,7 +511,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                       {pending ? (
                         <span className="inline-block h-3.5 w-10 rounded bg-slate-100 dark:bg-zinc-800 animate-pulse" />
                       ) : (
-                        liveSector(sector.id)?.openCount?.toLocaleString() ?? '—'
+                        liveSector(sector.id)?.openCount?.toLocaleString('en-US') ?? '—'
                       )}
                     </span>
                     <span className="hidden md:flex justify-end">

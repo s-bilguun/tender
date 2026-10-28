@@ -97,7 +97,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
   const formatCurrency = (amount: number) => {
     if (!amount) return '—';
-    return `${amount.toLocaleString()} ₮`;
+    return `${amount.toLocaleString('en-US')} ₮`;
   };
 
   const handleCopyCode = (text: string) => {
@@ -457,7 +457,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         '',
         '',
         totalEstimatedBid,
-        `"Зарлагдсан төсөвт өртөг: ₮${budgetMnt.toLocaleString()} (Зөрүү: ${budgetDiffPercent > 0 ? '+' : ''}${budgetDiffPercent.toFixed(1)}%)"`
+        `"Зарлагдсан төсөвт өртөг: ₮${budgetMnt.toLocaleString('en-US')} (Зөрүү: ${budgetDiffPercent > 0 ? '+' : ''}${budgetDiffPercent.toFixed(1)}%)"`
       ]);
       const csvContent = '\uFEFF' + [headers.join(','), ...rows.map((r: any) => r.join(','))].join('\r\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -776,7 +776,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             {tender.receiveDate && (
               <span className="text-slate-500 dark:text-zinc-400 font-medium ml-auto flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5 text-slate-400" />
-                <span>{locale === 'zh' ? '截止时间: ' : locale === 'en' ? 'Deadline: ' : 'Эцсийн хугацаа: '}{(() => { const d = new Date(tender.receiveDate); return Number.isNaN(d.getTime()) ? String(tender.receiveDate) : d.toLocaleString(locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-GB' : 'mn-MN', { timeZone: 'Asia/Ulaanbaatar', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }); })()}</span>
+                <span>{locale === 'zh' ? '截止时间: ' : locale === 'en' ? 'Deadline: ' : 'Эцсийн хугацаа: '}{(() => { const t = Date.parse(tender.receiveDate); if (Number.isNaN(t)) return String(tender.receiveDate); const ub = new Date(t + 8 * 3600 * 1000).toISOString(); return `${ub.slice(0, 10)} ${ub.slice(11, 16)}`; })()}</span>
               </span>
             )}
           </div>
@@ -848,10 +848,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
               <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
                 <span className="text-2xl font-semibold text-slate-900 dark:text-white tabular-nums">
-                  ≈ ₮{data.budgetEstimate.median.toLocaleString()}
+                  ≈ ₮{data.budgetEstimate.median.toLocaleString('en-US')}
                 </span>
                 <span className="text-sm text-slate-500 dark:text-zinc-400 tabular-nums">
-                  {locale === 'zh' ? '常见区间' : locale === 'en' ? 'typical range' : 'ихэвчлэн'} ₮{data.budgetEstimate.low.toLocaleString()} – ₮{data.budgetEstimate.high.toLocaleString()}
+                  {locale === 'zh' ? '常见区间' : locale === 'en' ? 'typical range' : 'ихэвчлэн'} ₮{data.budgetEstimate.low.toLocaleString('en-US')} – ₮{data.budgetEstimate.high.toLocaleString('en-US')}
                 </span>
               </div>
               <ul className="mt-3 divide-y divide-slate-100 dark:divide-zinc-800 border-t border-slate-100 dark:border-zinc-800">
@@ -859,7 +859,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   <li key={ex.invitationId}>
                     <a href={`/tender/${ex.invitationId}`} className="flex items-baseline justify-between gap-3 py-2 text-xs hover:bg-slate-50 dark:hover:bg-zinc-800/50">
                       <span className="min-w-0 truncate text-slate-700 dark:text-zinc-300">{ex.tenderName}</span>
-                      <span className="shrink-0 tabular-nums text-slate-900 dark:text-white">₮{ex.totalBudget.toLocaleString()}{ex.publishDate ? ` · ${String(ex.publishDate).slice(0, 4)}` : ''}</span>
+                      <span className="shrink-0 tabular-nums text-slate-900 dark:text-white">₮{ex.totalBudget.toLocaleString('en-US')}{ex.publishDate ? ` · ${String(ex.publishDate).slice(0, 4)}` : ''}</span>
                     </a>
                   </li>
                 ))}
@@ -909,7 +909,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <div className="px-4 py-3.5">
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400">{locale === 'zh' ? '项目预算' : locale === 'en' ? 'Budget' : 'Төсөвт өртөг'}</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-zinc-100 font-mono">
-                  {locale === 'zh' ? bilingual.budgetRmbFormatted : `₮ ${Number(tender.totalBudget).toLocaleString()}`}
+                  {locale === 'zh' ? bilingual.budgetRmbFormatted : `₮ ${Number(tender.totalBudget).toLocaleString('en-US')}`}
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400 font-mono">
                   {locale === 'zh' ? `投标保函(1%): ~${bilingual.guaranteeRmbFormatted}` : `≈ ${bilingual.budgetRmbFormatted}`}
@@ -1322,10 +1322,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           </div>
 
           <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-blue-800 dark:text-blue-300 block mb-1">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
               {locale === 'zh' ? '投标保函要求' : locale === 'mn' ? 'Тендерийн баталгаа' : 'Bid Bond'}
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-blue-950 dark:text-blue-200 block">
+            <span className="text-base sm:text-lg font-bold font-mono text-slate-950 dark:text-white block">
               {bds.bidSecurityReq?.includes('Шаардахгүй') ? (
                 <span className="text-emerald-700 dark:text-emerald-400">{locale === 'zh' ? '免保函 (0₮)' : 'Шаардахгүй'}</span>
               ) : bds.bidSecurityReq ? (
@@ -1334,19 +1334,19 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 '—'
               )}
             </span>
-            <span className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 block truncate">
+            <span className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1 block truncate">
               {bds.bidSecurityReq ? (locale === 'zh' ? '从 ТШЗ 招标文件解析' : locale === 'en' ? 'Detected in the PDF text' : 'PDF текстээс автоматаар илрүүлсэн') : (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
             </span>
           </div>
 
           <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 block mb-1">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
               {locale === 'zh' ? '履约保证金' : locale === 'mn' ? 'Гүйцэтгэлийн баталгаа' : 'Performance Bond'}
             </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-emerald-950 dark:text-emerald-200 block">
+            <span className="text-base sm:text-lg font-bold font-mono text-slate-950 dark:text-white block">
               {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : '—'}
             </span>
-            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 mt-1 block">
+            <span className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1 block">
               {bds.performanceBondPct != null ? (locale === 'zh' ? '中标签约时缴纳' : 'Гэрээ байгуулахад гаргах баталгаа') : (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
             </span>
           </div>
@@ -1354,31 +1354,23 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         )}
 
         {/* Responsive Segmented Tab Controls (Zero horizontal scroll) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 p-1.5 bg-slate-100/90 dark:bg-zinc-900/90 rounded-lg border border-slate-200/80 dark:border-zinc-800">
+        <div className="flex items-center gap-6 border-b border-slate-200 dark:border-zinc-800 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('bds')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
- activeTab === 'bds'
- ? 'bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-zinc-700 font-bold'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50'
- }`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'bds' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <FileSpreadsheet className="h-4 w-4 shrink-0" />
-            <span className="truncate">{locale === 'zh' ? '准入与资质 (BDS)' : locale === 'mn' ? 'Шалгуур (ТШӨХ)' : 'BDS Criteria'}</span>
+            <span>{locale === 'zh' ? '准入与资质 (BDS)' : locale === 'mn' ? 'Шалгуур (ТШӨХ)' : 'BDS Criteria'}</span>
           </button>
 
           <button
             onClick={() => setActiveTab('tech')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
- activeTab === 'tech'
- ? 'bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-zinc-700 font-bold'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50'
- }`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'tech' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Layers className="h-4 w-4 shrink-0" />
-            <span className="truncate">{locale === 'zh' ? '采购清单与规格' : locale === 'mn' ? 'Техникийн тодорхойлолт & Бараа' : 'Tech Specs & BoQ'}</span>
+            <span>{locale === 'zh' ? '采购清单与规格' : locale === 'mn' ? 'Техникийн тодорхойлолт & Бараа' : 'Tech Specs & BoQ'}</span>
             {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-blue-100 dark:bg-zinc-800 text-blue-800 dark:text-blue-300 font-mono font-bold shrink-0">
+              <span className="text-[11px] tabular-nums text-slate-400 dark:text-zinc-500">
                 {technicalSpecs.sampleItems.length}
               </span>
             )}
@@ -1386,14 +1378,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('results')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
- activeTab === 'results'
- ? 'bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-zinc-700 font-bold'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50'
- }`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'results' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Trophy className="h-4 w-4 shrink-0" />
-            <span className="truncate">{locale === 'zh' ? '中标结果与投标商' : locale === 'mn' ? 'Үр дүн & Оролцогчид' : 'Results & Bidders'}</span>
+            <span>{locale === 'zh' ? '中标结果与投标商' : locale === 'mn' ? 'Үр дүн & Оролцогчид' : 'Results & Bidders'}</span>
             {isFailed ? (
               <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-semibold shrink-0">
                 {locale === 'zh' ? '流标' : 'Амжилтгүй'}
@@ -1407,41 +1395,24 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
- activeTab === 'history'
- ? 'bg-white dark:bg-zinc-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-zinc-700 font-bold'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50'
- }`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'history' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Briefcase className="h-4 w-4 shrink-0" />
-            <span className="truncate">{locale === 'zh' ? '历史同类项目' : locale === 'mn' ? 'Холбоотой' : 'Similar & Related'}</span>
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-200/70 dark:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-mono shrink-0">
+            <span>{locale === 'zh' ? '历史同类项目' : locale === 'mn' ? 'Холбоотой' : 'Similar & Related'}</span>
+            <span className="text-[11px] tabular-nums text-slate-400 dark:text-zinc-500">
               {relatedByEntity.length + similarTenders.length}
             </span>
           </button>
 
           <button
             onClick={() => setActiveTab('china')}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
- activeTab === 'china'
- ? locale === 'zh'
- ? 'bg-slate-900 dark:bg-zinc-700 text-white shadow-xs font-bold'
- : 'bg-slate-900 dark:bg-zinc-700 text-white shadow-xs font-bold'
- : locale === 'zh'
- ? 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50 bg-red-50/70 dark:bg-zinc-900 border border-red-200/60 dark:border-zinc-800'
- : 'text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-zinc-800/50 bg-indigo-50/70 dark:bg-zinc-900 border border-indigo-200/60 dark:border-zinc-800'
- }`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'china' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
-            <span>{locale === 'zh' ? '' : ''}</span>
-            <span className="truncate">
+            <span>
               {locale === 'zh' ? '中企投标指南' : locale === 'mn' ? 'Гадаад ААН-ийн заавар' : 'Foreign Bidder Guide'}
             </span>
             {chinaAnalysis && (
-              <span className={`hidden xl:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${
- activeTab === 'china'
- ? locale === 'zh' ? 'bg-red-800 text-white' : 'bg-indigo-800 text-white'
- : locale === 'zh' ? 'bg-red-100 dark:bg-zinc-800 text-red-800 dark:text-red-300' : 'bg-indigo-100 dark:bg-zinc-800 text-indigo-800 dark:text-indigo-300'
- }`}>
+              <span className="hidden xl:inline text-[11px] text-slate-400 dark:text-zinc-500">
                 {locale === 'zh'
                   ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '独立投标' : chinaAnalysis.eligibilityStatus === 'joint_venture_required' ? '需联合体' : '仅限本土')
                   : locale === 'mn'
@@ -1574,13 +1545,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       type="text"
                       value={userAnnualTurnover}
                       onChange={(e) => setUserAnnualTurnover(e.target.value)}
-                      placeholder={parsedTurnoverReqMnt ? `Босго: ₮${parsedTurnoverReqMnt.toLocaleString()}` : (locale === 'zh' ? '例如：150000000' : locale === 'en' ? 'e.g. 150000000' : 'Жишээ: 150000000')}
+                      placeholder={parsedTurnoverReqMnt ? `Босго: ₮${parsedTurnoverReqMnt.toLocaleString('en-US')}` : (locale === 'zh' ? '例如：150000000' : locale === 'en' ? 'e.g. 150000000' : 'Жишээ: 150000000')}
                       className="w-full px-3 py-1.5 text-xs bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 rounded-lg text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"
                     />
                   </div>
                   {parsedTurnoverReqMnt && (
                     <div className="text-xs text-slate-500 dark:text-zinc-400 pb-1">
-                      Шаардагдах доод босго: <strong className="text-slate-800 dark:text-zinc-200 font-mono">₮{parsedTurnoverReqMnt.toLocaleString()}</strong>
+                      Шаардагдах доод босго: <strong className="text-slate-800 dark:text-zinc-200 font-mono">₮{parsedTurnoverReqMnt.toLocaleString('en-US')}</strong>
                       {userTurnoverNum > 0 && (
                         <span className={`ml-2 font-bold ${userTurnoverNum >= parsedTurnoverReqMnt ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                           {userTurnoverNum >= parsedTurnoverReqMnt ? 'Хангаж байна' : 'Хүрэхгүй байна'}
@@ -1846,19 +1817,19 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               onClick={() => handleAutoDistributeBudget(0.90)}
                               className="px-2 py-0.5 rounded bg-white dark:bg-zinc-800 border border-indigo-200 dark:border-zinc-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs"
                             >
-                              -10% (₮{Math.round(budgetMnt * 0.9).toLocaleString()})
+                              -10% (₮{Math.round(budgetMnt * 0.9).toLocaleString('en-US')})
                             </button>
                             <button
                               onClick={() => handleAutoDistributeBudget(0.95)}
                               className="px-2 py-0.5 rounded bg-white dark:bg-zinc-800 border border-indigo-200 dark:border-zinc-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs"
                             >
-                              -5% (₮{Math.round(budgetMnt * 0.95).toLocaleString()})
+                              -5% (₮{Math.round(budgetMnt * 0.95).toLocaleString('en-US')})
                             </button>
                             <button
                               onClick={() => handleAutoDistributeBudget(1.0)}
                               className="px-2 py-0.5 rounded bg-white dark:bg-zinc-800 border border-indigo-200 dark:border-zinc-800 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-zinc-700 cursor-pointer shadow-2xs"
                             >
-                              100% (₮{budgetMnt.toLocaleString()})
+                              100% (₮{budgetMnt.toLocaleString('en-US')})
                             </button>
                           </div>
                         </div>
@@ -1921,7 +1892,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                           <span className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 font-mono text-[10px]">₮</span>
                                           <input
                                             type="text"
-                                            value={itemPrices[idx] != null && itemPrices[idx] > 0 ? itemPrices[idx].toLocaleString() : ''}
+                                            value={itemPrices[idx] != null && itemPrices[idx] > 0 ? itemPrices[idx].toLocaleString('en-US') : ''}
                                             onChange={(e) => handlePriceChange(idx, e.target.value)}
                                             placeholder="0"
                                             className="w-full pl-5 pr-2 py-1 text-xs bg-white dark:bg-zinc-950 border border-indigo-200 dark:border-zinc-800 rounded font-mono font-bold text-right text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
@@ -1929,7 +1900,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                         </div>
                                       </td>
                                       <td className="py-2.5 px-3 font-mono font-bold text-right text-slate-900 dark:text-white">
-                                        ₮ {lineTotal.toLocaleString()}
+                                        ₮ {lineTotal.toLocaleString('en-US')}
                                       </td>
                                     </>
                                   )}
@@ -1951,7 +1922,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           <div>
                             <span className="text-[10px] font-bold text-slate-400 block ">Нийт санал болгох дүн:</span>
                             <span className="text-base sm:text-lg font-semibold font-mono text-emerald-400">
-                              ₮ {totalEstimatedBid.toLocaleString()}
+                              ₮ {totalEstimatedBid.toLocaleString('en-US')}
                             </span>
                           </div>
                           {budgetMnt > 0 && totalEstimatedBid > 0 && (
@@ -2051,7 +2022,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             <td className="py-3 px-3 text-center font-mono text-slate-400 dark:text-zinc-500 font-bold">{row.number || rIdx + 1}</td>
                             <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{row.name}</td>
                             <td className="py-3 px-4 text-right font-mono font-bold text-blue-700 dark:text-blue-400 tabular-nums">
-                              {Number(row.quantity).toLocaleString()}
+                              {Number(row.quantity).toLocaleString('en-US')}
                             </td>
                             <td className="py-3 px-3 text-center font-semibold text-slate-600 dark:text-zinc-400">{row.unit}</td>
                             <td className="py-3 px-4 text-slate-700 dark:text-zinc-300">{row.location}</td>
@@ -3152,7 +3123,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         <span className="text-lg sm:text-xl font-bold font-mono text-slate-900 dark:text-white block text-red-600 dark:text-red-400">
                           ~¥{chinaAnalysis.estimatedBudgetRMB! >= 10000 
                             ? (chinaAnalysis.estimatedBudgetRMB! / 10000).toFixed(1) + ' 万元' 
-                            : chinaAnalysis.estimatedBudgetRMB!.toLocaleString() + ' 元'}
+                            : chinaAnalysis.estimatedBudgetRMB!.toLocaleString('en-US') + ' 元'}
                         </span>
                         <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
                           汇率参考 1 CNY ≈ 485 MNT
@@ -3828,7 +3799,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
             <div className="px-5 py-3 bg-slate-50 dark:bg-zinc-850 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2">
               <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
-                {previewModalDoc.text.length.toLocaleString()} тэмдэгт
+                {previewModalDoc.text.length.toLocaleString('en-US')} тэмдэгт
               </span>
               <div className="flex items-center gap-2">
                 <button

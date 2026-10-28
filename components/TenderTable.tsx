@@ -40,7 +40,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
               ? `${(amount / 100_000_000).toFixed(2)} 亿 ₮` 
               : `${(amount / 1_000_000_000).toFixed(2)} ${locale === 'mn' ? 'тэрбум ₮' : 'B ₮'}`}
           </div>
-          <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString()} ₮</div>
+          <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString('en-US')} ₮</div>
         </div>
       );
     }
@@ -49,16 +49,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
         <div className="text-right">
           <div className="font-bold text-slate-900 dark:text-white text-xs tabular-nums font-mono">
             {locale === 'zh' 
-              ? `${(amount / 10_000).toLocaleString()} 万 ₮` 
+              ? `${(amount / 10_000).toLocaleString('en-US')} 万 ₮` 
               : `${(amount / 1_000_000).toFixed(1)} ${locale === 'mn' ? 'сая ₮' : 'M ₮'}`}
           </div>
-          <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString()} ₮</div>
+          <div className="text-[10px] text-slate-400 font-mono tabular-nums">{amount.toLocaleString('en-US')} ₮</div>
         </div>
       );
     }
     return (
       <div className="font-bold text-slate-900 dark:text-white text-xs text-right font-mono tabular-nums">
-        {amount.toLocaleString()} ₮
+        {amount.toLocaleString('en-US')} ₮
       </div>
     );
   };
@@ -237,7 +237,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                               <span className="text-emerald-700 dark:text-emerald-300 font-mono font-bold">
                                 ~¥{tender.chinaBidderAnalysis.estimatedBudgetRMB! >= 10_000 
                                   ? (tender.chinaBidderAnalysis.estimatedBudgetRMB! / 10_000).toFixed(1) + '万' 
-                                  : tender.chinaBidderAnalysis.estimatedBudgetRMB!.toLocaleString()}
+                                  : tender.chinaBidderAnalysis.estimatedBudgetRMB!.toLocaleString('en-US')}
                               </span>
                             )}
                           </span>
@@ -254,7 +254,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                               <span className="text-amber-700 dark:text-amber-300 font-mono font-bold">
                                 ~¥{tender.chinaBidderAnalysis.estimatedBudgetRMB! >= 10_000 
                                   ? (tender.chinaBidderAnalysis.estimatedBudgetRMB! / 10_000).toFixed(1) + '万' 
-                                  : tender.chinaBidderAnalysis.estimatedBudgetRMB!.toLocaleString()}
+                                  : tender.chinaBidderAnalysis.estimatedBudgetRMB!.toLocaleString('en-US')}
                               </span>
                             )}
                           </span>

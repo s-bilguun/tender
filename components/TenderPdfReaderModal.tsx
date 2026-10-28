@@ -268,7 +268,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                   <span>{tender.budgetEntityName}</span>
                   <span>•</span>
                   <span className="font-mono font-bold text-slate-900 dark:text-white">
-                    ₮ {Number(tender.totalBudget || 0).toLocaleString()}
+                    ₮ {Number(tender.totalBudget || 0).toLocaleString('en-US')}
                   </span>
                 </div>
               </div>

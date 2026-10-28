@@ -122,11 +122,11 @@ export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): Chin
 
   const bankGuaranteePolicyZh = isExempt
     ? '本项目根据蒙古国法律免交投标保证金 (0₮ 投标保函豁免)。'
-    : `要求提供约 1% 的投标保函 (约 ${guaranteeAmount.toLocaleString()} ₮ / 折合约 ¥${guaranteeRMB.toLocaleString()} 人民币)。接受中国银行乌兰巴托分行、中国进出口银行出具的国际保函或蒙古国商业银行对开保函。`;
+    : `要求提供约 1% 的投标保函 (约 ${guaranteeAmount.toLocaleString('en-US')} ₮ / 折合约 ¥${guaranteeRMB.toLocaleString('en-US')} 人民币)。接受中国银行乌兰巴托分行、中国进出口银行出具的国际保函或蒙古国商业银行对开保函。`;
 
   const bankGuaranteePolicyMn = isExempt
     ? 'Хуулийн дагуу тендерийн баталгаа шаардахгүй (0₮ БҮ чөлөөлөлт).'
-    : `Төсвийн 1%-ийн тендерийн баталгаа шаардлагатай (${guaranteeAmount.toLocaleString()} ₮). Гадаадын банкны олон улсын баталгаа эсвэл Монголын арилжааны банкаар гаргуулсан баталгааг хүлээн авна.`;
+    : `Төсвийн 1%-ийн тендерийн баталгаа шаардлагатай (${guaranteeAmount.toLocaleString('en-US')} ₮). Гадаадын банкны олон улсын баталгаа эсвэл Монголын арилжааны банкаар гаргуулсан баталгааг хүлээн авна.`;
 
   // Tender type in Chinese
   let tenderTypeZh = '货物采购 (Product)';
