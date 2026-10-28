@@ -26,8 +26,7 @@ export async function GET() {
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true }).eq('tender_type_code', 'JOB'),
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true }).eq('tender_type_code', 'SERVICE'),
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true })
-        .or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%')
-        .gte('receive_date', now.toISOString()),
+        .or(`receive_date.gte.${now.toISOString()},and(receive_date.is.null,is_receiving.eq.1,publish_date.gte.${new Date(now.getTime() - 21 * 24 * 60 * 60 * 1000).toISOString()})`),
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true })
         .or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%')
         .gte('receive_date', now.toISOString())

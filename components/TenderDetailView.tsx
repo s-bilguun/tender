@@ -516,7 +516,18 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   const hasPdfTextEvidence = typeof data?.liveBundle?.pdfText === 'string'
     ? data.liveBundle.pdfText.trim().length > 0
     : readablePdfDocuments.length > 0;
-  const pdfCoverageNotice = pdfDocuments.length === 0
+  const isTelegramOnly = tenderRawData?.source === 'telegram' && pdfDocuments.length === 0;
+  const pdfCoverageNotice = isTelegramOnly
+    ? {
+        title: locale === 'zh' ? '仅有公告信息' : locale === 'en' ? 'Announcement only' : 'Зөвхөн зарын мэдээлэл',
+        message: locale === 'zh'
+          ? '此标段来自官方公告频道（标题、采购单位、发布日期）。预算、截止日期和招标文件请在 tender.gov.mn 查看。'
+          : locale === 'en'
+          ? 'This tender comes from the official announcement feed (title, buyer, publish date). Budget, deadline and documents are on tender.gov.mn.'
+          : 'Энэ тендерийг албан ёсны зарын сувгаас авсан (нэр, захиалагч, зарласан огноо). Төсөв, эцсийн хугацаа, баримт бичгийг tender.gov.mn-ээс харна уу.',
+        tone: 'blue',
+      }
+    : pdfDocuments.length === 0
     ? {
         title: 'Эх баримтын файлууд татагдаагүй байна',
         message: 'Энэ тендерийн PDF файлын жагсаалтыг эх сурвалжаас авч чадсангүй. “—” нь шаардлага байхгүй гэсэн үг биш; эх тендерийн баримтаар нягтална уу.',

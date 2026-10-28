@@ -1,8 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/cron/sync?limit=5",
-      "schedule": "0 0 * * *"
+      "path": "/api/cron/telegram-sync",
+      "schedule": "0 22 * * *"
+    },
+    {
+      "path": "/api/cron/telegram-sync",
+      "schedule": "0 6 * * *"
     }
   ]
 }

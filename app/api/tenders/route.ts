@@ -9,6 +9,8 @@ import { expandMultilingualSearchTerms } from '@/lib/bilingual-title';
 
 export const dynamic = 'force-dynamic';
 
+const OPEN_WINDOW_MS = 21 * 24 * 60 * 60 * 1000;
+
 // The tender list reads `tenders_list` (a view without full PDF text, see
 // supabase/migrations/20261028_live_only_pdfs.sql) to keep responses small.
 // Falls back to the full table until that migration has been applied.
@@ -139,9 +141,10 @@ export async function GET(request: NextRequest) {
         const endsAt = new Date(startsAt.getTime() + 48 * 60 * 60 * 1000);
         query = query.gte('receive_date', startsAt.toISOString()).lte('receive_date', endsAt.toISOString());
       } else if (tabMode === 'active' || status === 'receiving') {
-        query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
-        // Status flags go stale between syncs; a passed deadline means the tender is closed.
-        query = query.gte('receive_date', new Date().toISOString());
+        // Status flags go stale between syncs, so "open" is decided by dates: the
+        // deadline has not passed, or (no deadline known yet, e.g. tenders picked
+        // up from the Telegram feed) it was announced within the last 21 days.
+        query = query.or(`receive_date.gte.${new Date().toISOString()},and(receive_date.is.null,is_receiving.eq.1,publish_date.gte.${new Date(Date.now() - OPEN_WINDOW_MS).toISOString()})`);
       } else if (status && status !== 'all') {
         if (status === 'opened') {
           query = query.ilike('doc_status_name', '%нээгдсэн%');

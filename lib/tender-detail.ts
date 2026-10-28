@@ -395,6 +395,9 @@ export async function getTenderDetailData(id: string | number, options: { useSto
     liveBundle = rawData.liveBundle;
   } else if (hasStoredBundle) {
     liveBundle = rawData.liveBundle;
+  } else if (rawData?.source === 'telegram') {
+    // Announcement-only rows: tender.gov.mn blocks automated detail fetches.
+    liveBundle = null;
   } else {
     try {
       const timeoutPromise = new Promise((_, reject) =>
