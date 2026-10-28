@@ -451,7 +451,10 @@ export async function upsertTenderToDatabase(
   let storagePath: string | undefined = undefined;
 
   // If we have Supabase and a valid PDF buffer, upload it to Supabase Storage bucket 'tender-documents'
-  if (supabase && pdfBuffer && pdfBuffer.length > 500) {
+  // Store PDFs only for live tenders (deadline not passed).
+  const deadlineMs = discovered.receive_date ? new Date(discovered.receive_date).getTime() : NaN;
+  const isLiveTender = Number.isNaN(deadlineMs) || deadlineMs >= Date.now() - 24 * 60 * 60 * 1000;
+  if (supabase && pdfBuffer && pdfBuffer.length > 500 && isLiveTender) {
     try {
       const safeDocName = (pdfFileName || `${discovered.tender_id}.pdf`).replace(/[^a-zA-Z0-9._-]/g, '_');
       storagePath = `tenders/${discovered.invitation_id}/${safeDocName}`;

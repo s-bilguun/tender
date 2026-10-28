@@ -61,8 +61,9 @@ export async function GET(request: NextRequest) {
       try {
         const { data: missingTenders } = await supabase
           .from('tenders')
-          .select('invitation_id, invitation_number, tender_code, tender_name, raw_data')
+          .select('invitation_id, invitation_number, tender_code, tender_name, receive_date, raw_data')
           .eq('is_receiving', 1)
+          .gte('receive_date', new Date().toISOString())
           .order('publish_date', { ascending: false })
           .limit(10);
 

@@ -9,6 +9,23 @@ import { expandMultilingualSearchTerms } from '@/lib/bilingual-title';
 
 export const dynamic = 'force-dynamic';
 
+// The tender list reads `tenders_list` (a view without full PDF text, see
+// supabase/migrations/20261028_live_only_pdfs.sql) to keep responses small.
+// Falls back to the full table until that migration has been applied.
+let cachedListSource: { name: 'tenders_list' | 'tenders'; checkedAt: number } | null = null;
+async function resolveListSource(reader: any): Promise<'tenders_list' | 'tenders'> {
+  if (cachedListSource && Date.now() - cachedListSource.checkedAt < 10 * 60 * 1000) return cachedListSource.name;
+  let name: 'tenders_list' | 'tenders' = 'tenders';
+  try {
+    const { error } = await reader.from('tenders_list').select('id', { head: true }).limit(1);
+    if (!error) name = 'tenders_list';
+  } catch {
+    // keep full table
+  }
+  cachedListSource = { name, checkedAt: Date.now() };
+  return name;
+}
+
 function sanitizePostgrestSearch(str?: string | null): string {
   if (!str) return '';
   return str.replace(/[,()%.\\/]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -40,7 +57,8 @@ export async function GET(request: NextRequest) {
     // Try querying Supabase first
     try {
       const tenderReader = supabaseAdmin || supabase;
-      let query = tenderReader.from('tenders').select('*', { count: 'exact' });
+      const listSource = await resolveListSource(tenderReader);
+      let query = tenderReader.from(listSource).select('*', { count: 'exact' });
 
       if (category && category !== 'ALL' && category !== 'all') {
         query = query.eq('tender_type_code', category);

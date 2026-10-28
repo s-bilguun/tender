@@ -111,6 +111,12 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
   const invId = String(tender.invitation_id || tender.invitationId);
   const tenderCode = tender.tender_code || tender.tenderCode || invId;
 
+  // Store PDFs only for live tenders (deadline not passed).
+  const receiveDate = tender.receive_date || tender.receiveDate;
+  if (receiveDate && new Date(receiveDate).getTime() < Date.now() - 24 * 60 * 60 * 1000) {
+    return { success: false, invitationId: invId, tenderCode, error: 'Tender closed; PDF not stored' };
+  }
+
   try {
     // 1. Discover tenderDocumentId
     let tenderDocId = tender.raw_data?.tenderDocumentId || tender.raw_data?.liveBundle?.tenderDocumentId;
