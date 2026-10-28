@@ -586,6 +586,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
   const isConcluded = isFailed || tender.docStatusName?.includes('Үр дүн') || tender.docStatusName?.includes('Дууссан');
   const deadlinePassed = Boolean(tender.receiveDate && Date.parse(tender.receiveDate) < Date.now());
+  const hasEvaluationData = bds.validityDays != null || bds.clarificationDays != null || bds.evaluationCriteria?.priceWeight != null || bds.evaluationCriteria?.qualityWeight != null;
+  const missingBdsSections: string[] = [
+    !(bds.requiredLicenses && bds.requiredLicenses.length > 0) && (locale === 'zh' ? '许可要求' : locale === 'en' ? 'licences' : 'тусгай зөвшөөрөл'),
+    !(bds.keyPersonnel && bds.keyPersonnel.length > 0) && (locale === 'zh' ? '关键人员' : locale === 'en' ? 'key personnel' : 'түлхүүр боловсон хүчин'),
+    !(bds.machinery && bds.machinery.length > 0) && (locale === 'zh' ? '设备' : locale === 'en' ? 'equipment' : 'тоног төхөөрөмж'),
+    !hasEvaluationData && (locale === 'zh' ? '有效期与评审权重' : locale === 'en' ? 'validity & evaluation weights' : 'хүчинтэй хугацаа, үнэлгээний жин'),
+  ].filter(Boolean) as string[];
 
   const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
   const [docModalOpen, setDocModalOpen] = useState(false);
@@ -1638,7 +1645,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* 1. Тусгай зөвшөөрөл */}
-              <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-2.5">
+              {bds.requiredLicenses && bds.requiredLicenses.length > 0 && (<div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-2.5">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -1660,7 +1667,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     </div>
                   )}
                 </div>
-              </div>
+              </div>)}
 
               {/* 2. Санхүүгийн шалгуур үзүүлэлт */}
               <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
@@ -1700,16 +1707,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     </span>
                   </div>
 
-                  <div className="p-3 bg-slate-50 dark:bg-zinc-800/60 rounded-lg border border-slate-100 dark:border-zinc-800">
-                    <span className="text-slate-500 dark:text-zinc-400 text-[11px] block">{locale === 'zh' ? '材料要求：' : locale === 'en' ? 'Document requirements:' : 'Бүрдүүлэх материалын шалгуур:'}</span>
-                    <span className="text-sm font-bold text-slate-700 dark:text-zinc-300 mt-1 block">{locale === 'zh' ? '未从 PDF 确认' : locale === 'en' ? 'Not confirmed from the PDF' : 'PDF-ээс баталгаажаагүй'}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5 block">{locale === 'zh' ? '请在官方招标文件中核对要求。' : locale === 'en' ? 'Check the requirements in the official bidding document.' : 'ТШББ-ийн шаардлагуудыг эх баримтаас шалгана уу.'}</span>
-                  </div>
+                  
                 </div>
               </div>
 
               {/* 3. Түлхүүр боловсон хүчин */}
-              <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
+              {bds.keyPersonnel && bds.keyPersonnel.length > 0 && (<div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -1741,10 +1744,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     PDF-ээс түлхүүр ажилтны шаардлага баталгаажаагүй байна. Энэ нь шаардлага байхгүй гэсэн үг биш.
                   </div>
                 )}
-              </div>
+              </div>)}
 
               {/* 4. Машин механизм, техник тоног төхөөрөмж */}
-              <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
+              {bds.machinery && bds.machinery.length > 0 && (<div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                   <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>{locale === 'zh' ? '所需设备' : locale === 'en' ? 'Required equipment' : 'Шаардагдах машин механизм, тоног төхөөрөмж'}</span>
@@ -1763,10 +1766,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     PDF-ээс техник, тоног төхөөрөмжийн шаардлага баталгаажаагүй байна. Эх баримтыг шалгана уу.
                   </div>
                 )}
-              </div>
+              </div>)}
 
               {/* 5. Хуулийн ерөнхий нөхцөлүүд */}
-              <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
+              {hasEvaluationData && (<div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                   <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>{locale === 'zh' ? '有效期与评审权重' : locale === 'en' ? 'Validity & evaluation weights' : 'Хугацаа ба Үнэлгээний жин'}</span>
@@ -1790,7 +1793,15 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     <span className="font-bold text-blue-700 dark:text-blue-400 mt-1 block">{bds.evaluationCriteria?.qualityWeight != null ? `${bds.evaluationCriteria.qualityWeight}%` : '—'}</span>
                   </div>
                 </div>
-              </div>
+              </div>)}
+
+              {missingBdsSections.length > 0 && (
+                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed px-1">
+                  {locale === 'zh' ? '未在文件中找到：' : locale === 'en' ? 'Not found in the documents: ' : 'Баримтаас олдоогүй: '}
+                  <span className="text-slate-700 dark:text-zinc-300">{missingBdsSections.join(', ')}</span>
+                  {locale === 'zh' ? '。这不代表没有要求，请以官方文件为准。' : locale === 'en' ? '. This does not mean there is no requirement; check the official document.' : '. Энэ нь шаардлага байхгүй гэсэн үг биш; албан ёсны баримтаас шалгана уу.'}
+                </p>
+              )}
             </div>
           )}
 
