@@ -47,7 +47,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#f5f6f8] dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white transition-colors duration-150">
+      <body className="min-h-screen bg-[#f5f6f8] dark:bg-[#0f0f11] text-slate-900 dark:text-zinc-100 antialiased selection:bg-blue-600 selection:text-white transition-colors duration-150">
         <ThemeProvider>
           <Suspense fallback={null}>
             <NavigationProgressBar />

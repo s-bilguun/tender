@@ -500,18 +500,18 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  className="fixed inset-0 z-50 bg-slate-950/60 transition-opacity animate-in fade-in duration-200"
  />
 
- <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 text-slate-900 dark:text-slate-100">
+ <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 text-slate-900 dark:text-zinc-100">
  {/* Header */}
- <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 bg-white dark:bg-slate-950">
+ <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2 bg-white dark:bg-zinc-950">
  <div className="flex items-center gap-2 min-w-0">
- <div className="h-8 w-8 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/40 shrink-0">
+ <div className="h-8 w-8 rounded-md bg-blue-50 dark:bg-zinc-900 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-zinc-800 shrink-0">
  <Sparkles className="h-4 w-4" />
  </div>
  <div className="min-w-0">
  <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
  {locale === 'zh' ? '蒙古国标书 AI 专家 (支持中文问PDF)' : locale === 'mn' ? 'Тендерийн AI Шинжээч' : 'AI Tender & PDF Analyst'}
  </h3>
- <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+ <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
  {locale === 'zh' ? '实时解析官方蒙文 ТШББ 标书 • 中企合规评估' : locale === 'mn' ? 'Худалдан авалтын зөвлөх туслах' : ' Official ТШББ PDF & procurement intelligence'}
  </p>
  </div>
@@ -520,14 +520,14 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  <div className="flex items-center gap-1 shrink-0">
  <button
  onClick={clearChat}
- className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+ className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
  title="Цэвэрлэх"
  >
  <Trash2 className="h-4 w-4" />
  </button>
  <button
  onClick={onClose}
- className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+ className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
  title="Хаах"
  >
  <X className="h-5 w-5" />
@@ -536,14 +536,14 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  </div>
 
  {/* Model Selector Bar */}
- <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
- <span className="text-slate-500 dark:text-slate-400 text-[11px] shrink-0">
+ <div className="px-4 py-2 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-xs">
+ <span className="text-slate-500 dark:text-zinc-400 text-[11px] shrink-0">
  {locale === 'mn' ? 'AI Загвар:' : 'Model:'}
  </span>
  <select
  value={selectedModel}
  onChange={(e) => setSelectedModel(e.target.value)}
- className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
+ className="bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-zinc-200 focus:outline-none focus:border-slate-900 dark:focus:border-zinc-500 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
  >
  <option value="google/gemma-4-26b-a4b-it:free">
  {locale === 'zh' ? 'Google Gemma 4 26B (极速中蒙双语标书解析)' : 'Google Gemma 4 26B (Хурдан, Монгол/Хятад хэл)'}
@@ -559,18 +559,18 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
 
  {/* Selected tender banner */}
  {selectedTender && (
- <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
- <div className="flex items-center gap-2 truncate text-slate-700 dark:text-slate-300 min-w-0">
+ <div className="px-4 py-2.5 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-xs">
+ <div className="flex items-center gap-2 truncate text-slate-700 dark:text-zinc-300 min-w-0">
  <Tag className="h-3.5 w-3.5 text-blue-500 shrink-0" />
  <div className="truncate flex items-center gap-1.5">
- <span className="text-slate-400 dark:text-slate-500 mr-1 font-medium shrink-0">
+ <span className="text-slate-400 dark:text-zinc-500 mr-1 font-medium shrink-0">
  {locale === 'zh' ? '当前标段:' : locale === 'mn' ? 'Сонгосон:' : 'Selected:'}
  </span>
  <span className="font-semibold text-slate-900 dark:text-white truncate">
  {selectedTender.tenderName}
  </span>
  {Boolean((selectedTender as any).raw_data?.pdfUrl || (selectedTender as any).rawData?.pdfUrl || (selectedTender as any).hasStoredPdf) && (
- <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 flex items-center gap-1 shrink-0">
+ <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-purple-200 dark:border-zinc-800 flex items-center gap-1 shrink-0">
  <FileText className="h-3 w-3 text-purple-500" />
  <span>{locale === 'zh' ? '已挂载官方PDF' : locale === 'mn' ? 'ТШЗ PDF холбогдсон' : 'PDF Attached'}</span>
  </span>
@@ -580,14 +580,14 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  <div className="flex items-center gap-2 shrink-0">
  <Link
  href={`/tender/${selectedTender.invitationId}`}
- className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 transition-colors"
+ className="text-[11px] font-semibold text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600 px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 transition-colors"
  >
  <span>Дэлгэрэнгүй</span>
  <ExternalLink className="h-3 w-3" />
  </Link>
  <button
  onClick={onClearSelectedTender}
- className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-0.5 transition-colors cursor-pointer"
+ className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 p-0.5 transition-colors cursor-pointer"
  title="Сонголтыг арилгах"
  >
  <X className="h-3.5 w-3.5" />
@@ -607,7 +607,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
               className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 text-xs ${
                 msg.sender === 'user'
                   ? 'bg-blue-600 text-white font-semibold'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                  : 'bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700'
               }`}
             >
               {msg.sender === 'user' ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
@@ -617,13 +617,13 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
               className={`max-w-[85%] rounded-lg p-3 leading-relaxed ${
                 msg.sender === 'user'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800'
+                  : 'bg-slate-50 dark:bg-zinc-900 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800'
               }`}
             >
               <FormattedChatMessage text={msg.text} isUser={msg.sender === 'user'} />
               <div
                 className={`mt-1 text-[10px] text-right font-mono ${
-                  msg.sender === 'user' ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'
+                  msg.sender === 'user' ? 'text-blue-200' : 'text-slate-400 dark:text-zinc-500'
                 }`}
               >
                 {msg.timestamp}
@@ -633,7 +633,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         ))}
 
         {isLoading && (
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 p-2">
+          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 p-2">
             <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
             <span>{locale === 'mn' ? 'Шинжилгээ хийж байна...' : 'Analyzing tender data...'}</span>
           </div>
@@ -642,7 +642,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       </div>
 
       {/* Quick Prompts */}
-      <div className="p-2.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 overflow-x-auto whitespace-nowrap no-scrollbar flex gap-1.5 text-[11px]">
+      <div className="p-2.5 border-t border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-900 overflow-x-auto whitespace-nowrap no-scrollbar flex gap-1.5 text-[11px]">
         {selectedTender ? (
           <>
             <button
@@ -651,7 +651,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
                   ? '请把这份标书第三章（III БҮЛЭГ）的采购货物/工程量清单、数量单位、技术参数要求以及交货期完整翻译成中文表格。'
                   : 'Энэ тендерийн III бүлгийн бараа/ажлын тоо хэмжээний жагсаалт болон техникийн гол үзүүлэлтүүдийг Хятад/Монгол хэлээр дэлгэрэнгүй гаргаж өгнө үү.'
               )}
-              className="h-7 px-2.5 rounded-full bg-rose-600 text-white border border-rose-500 hover:bg-rose-500 transition-colors shrink-0 shadow-2xs font-bold cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-slate-900 dark:bg-zinc-700 text-white border border-rose-500 hover:bg-rose-500 transition-colors shrink-0 shadow-2xs font-bold cursor-pointer"
             >
               {locale === 'zh' ? '一键中文精译采购清单与技术规格' : 'Хятад/Монгол техникийн задаргаа'}
             </button>
@@ -661,7 +661,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
                   ? '请提取该标书的交货时间表、最终交货期、交货地点（ТШЗ 17.3 / III БҮЛЭГ）以及质保要求。'
                   : 'Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.'
               )}
-              className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
               {locale === 'zh' ? '交货期与交货地点?' : 'Нийлүүлэлтийн хуваарь?'}
             </button>
@@ -671,7 +671,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
                   ? '请告诉我这份标书的投标保证金金额、有效期（ТШЗ 24.1），以及中国企业如何开立银行投标保函？'
                   : 'Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?'
               )}
-              className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
               {locale === 'zh' ? '投标保证金与银行保函?' : 'Тендерийн баталгаа?'}
             </button>
@@ -681,14 +681,14 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
                   ? '请分析第二章（ТШЗ 18.1）对营业额、流动资金、同类业绩及特种资质的要求，中国企业能否独立直投？有哪些废标风险点？'
                   : 'Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?'
               )}
-              className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
               {locale === 'zh' ? '资质门槛与废标风险?' : 'Өрсөлдөхөд анхаарах эрсдэл?'}
             </button>
             {(selectedTender.docStatusName?.includes('Амжилтгүй') || selectedTender.docStatusCode === 'TENDER_FAILED') && (
               <button
                 onClick={() => handleSend('Энэхүү амжилтгүй болсон тендер яагаад цуцлагдсан бэ, дараа нь дахин зарлагдах уу, оролцоход юуг анхаарах вэ?')}
-                className="h-7 px-2.5 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+                className="h-7 px-2.5 rounded-full bg-rose-50 dark:bg-zinc-900 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-zinc-800 hover:bg-rose-100 dark:hover:bg-rose-900 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
               >
                 Яагаад амжилтгүй болсон бэ?
               </button>
@@ -698,19 +698,19 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
           <>
             <button
               onClick={() => handleSend(t.aiPromptQuick1)}
-              className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
               {t.aiPromptQuick1}
             </button>
             <button
               onClick={() => handleSend(t.aiPromptQuick2)}
-              className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
               {t.aiPromptQuick2}
             </button>
             <button
               onClick={() => handleSend(t.aiPromptQuick3)}
-              className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              className="h-7 px-2.5 rounded-full bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
               {t.aiPromptQuick3}
             </button>
@@ -724,7 +724,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
           e.preventDefault();
           handleSend();
         }}
-        className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center gap-2"
+        className="p-3 border-t border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 flex items-center gap-2"
       >
         <input
           type="text"
@@ -732,7 +732,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
           onChange={(e) => setInput(e.target.value)}
           placeholder={t.aiInputPlaceholder}
           disabled={isLoading}
-          className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-750 hover:border-slate-300 dark:hover:border-slate-600 focus:border-blue-600 focus:bg-white dark:focus:bg-slate-850 focus:outline-none rounded-md text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500"
+          className="flex-1 px-3 py-2 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-750 hover:border-slate-300 dark:hover:border-zinc-600 focus:border-blue-600 focus:bg-white dark:focus:bg-zinc-850 focus:outline-none rounded-md text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500"
         />
         <button
           type="submit"

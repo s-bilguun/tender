@@ -333,7 +333,7 @@ export default function AdminIngestPage() {
 
             <button
               onClick={handleRunSampleDemo}
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 bg-slate-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Play className="h-3.5 w-3.5" />
               <span>Жишээ туршиж үзэх</span>
@@ -543,14 +543,14 @@ export default function AdminIngestPage() {
                   onClick={() => setInspectorTab('winners')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
  inspectorTab === 'winners'
- ? 'bg-amber-500 text-white shadow-2xs'
+ ? 'bg-slate-900 dark:bg-zinc-700 text-white shadow-2xs'
  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
  }`}
                 >
                   <Trophy className="h-3.5 w-3.5" />
                   <span>Төстэй тендер & Ялагчид</span>
                   {selectedLog?.similarTenders && selectedLog.similarTenders.length > 0 && (
-                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${inspectorTab === 'winners' ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${inspectorTab === 'winners' ? 'bg-slate-900 dark:bg-zinc-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {selectedLog.similarTenders.length}
                     </span>
                   )}
@@ -572,7 +572,7 @@ export default function AdminIngestPage() {
                   onClick={() => setInspectorTab('market')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
  inspectorTab === 'market'
- ? 'bg-indigo-600 text-white shadow-2xs'
+ ? 'bg-slate-900 dark:bg-zinc-700 text-white shadow-2xs'
  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
  }`}
                 >
@@ -754,7 +754,7 @@ export default function AdminIngestPage() {
 
                     {/* Historical Comparison Notes */}
                     {(selectedLog.data.historical_comparison_flags || selectedLog.data.historical_comparison_notes) && (
-                      <div className="p-3.5 rounded-md bg-indigo-50/60 border border-indigo-100 space-y-1">
+                      <div className="p-3.5 rounded-md bg-slate-50 border border-indigo-100 space-y-1">
                         <span className="text-[10px] font-bold text-indigo-900 ">
                           Түүхэн харьцуулалтын тэмдэглэл (LLM Insight)
                         </span>
@@ -797,7 +797,7 @@ export default function AdminIngestPage() {
                             <span className="text-[9px] text-blue-600 block">төсвөөс доогуур</span>
                           </div>
 
-                          <div className="p-3 rounded-md bg-purple-50 border border-purple-200 text-center">
+                          <div className="p-3 rounded-md bg-slate-50 border border-purple-200 text-center">
                             <span className="text-[10px] font-bold text-purple-700 block">Өрсөлдөгчид</span>
                             <span className="text-lg font-semibold text-purple-950">
                               ~{selectedLog.marketIntelligence.avgBiddersCount}

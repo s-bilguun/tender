@@ -40,7 +40,7 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
   const active = value.trim().toLowerCase();
   return (
     <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-      <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0 mr-1">
+      <span className="text-xs text-slate-500 dark:text-zinc-400 shrink-0 mr-1">
         {locale === 'zh' ? '常用搜索' : locale === 'en' ? 'Common searches' : 'Түгээмэл хайлт'}
       </span>
       {QUICK_SEARCHES.map((item) => {
@@ -61,8 +61,8 @@ export const GlobalSearchBar: React.FC<GlobalSearchBarProps> = ({
             }}
             className={`h-7 px-2.5 rounded-md text-xs shrink-0 whitespace-nowrap border transition-colors cursor-pointer inline-flex items-center gap-1 ${
               selected
-                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-slate-900 dark:border-white'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
+                ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-900 dark:border-white'
+                : 'bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-800 hover:border-slate-400 dark:hover:border-zinc-600'
             }`}
           >
             {locale === 'zh' ? item.zh : locale === 'en' ? item.en : item.mn}

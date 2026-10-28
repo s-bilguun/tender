@@ -11,15 +11,15 @@ module.exports = {
       colors: {
         page: {
           DEFAULT: '#F8FAFC',
-          dark: '#0B0F17',
+          dark: '#0f0f11',
         },
         surface: {
           DEFAULT: '#FFFFFF',
           subtle: '#F1F5F9',
           border: '#E2E8F0',
-          dark: '#111827',
-          'dark-subtle': '#1E293B',
-          'dark-border': '#334155',
+          dark: '#18181b',
+          'dark-subtle': '#27272a',
+          'dark-border': '#3f3f46',
         },
         brand: {
           50: '#eff6ff',

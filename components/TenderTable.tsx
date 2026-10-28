@@ -84,11 +84,11 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-md shadow-2xs overflow-hidden">
+    <div className="bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 rounded-md shadow-2xs overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs table-auto">
           <thead>
-            <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-[11px]">
+            <tr className="bg-slate-50/90 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 font-semibold text-[11px]">
               <th className="py-2.5 px-2 w-[36px] text-center"></th>
               <th className="py-2.5 px-3 min-w-[280px]">{locale === 'mn' ? 'Тендерийн нэр & Код' : 'Tender Title & Code'}</th>
               <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity'}</th>
@@ -99,7 +99,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
               <th className="py-2.5 px-3 text-center w-[90px]">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
             {tenders.map((tender) => {
               const badge = getCategoryBadge(tender.tenderTypeCode, tender.tenderTypeName);
               const days = calculateDaysLeft(tender.receiveDate || tender.openDate);
@@ -107,7 +107,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
               return (
                 <tr
                   key={String(tender.invitationId)}
-                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group cursor-pointer"
+                  className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/50 transition-colors group cursor-pointer"
                   onClick={() => router.push(`/tender/${tender.invitationId}`)}
                 >
                   {/* Star Watchlist */}
@@ -117,8 +117,8 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         onClick={() => onToggleSave(tender.invitationId)}
                         className={`p-1 rounded transition-colors cursor-pointer ${
  savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId))
- ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40'
- : 'text-slate-300 dark:text-slate-600 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+ ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-zinc-900'
+ : 'text-slate-300 dark:text-zinc-600 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
  }`}
                         title={locale === 'mn' ? 'Хяналтад авах' : 'Save to watchlist'}
                       >
@@ -133,13 +133,13 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   <td className="py-2.5 px-3">
                     <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                       <span
-                        className="font-mono text-[10px] text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/80 dark:border-slate-700 shrink-0 font-medium"
+                        className="font-mono text-[10px] text-slate-600 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-slate-200/80 dark:border-zinc-700 shrink-0 font-medium"
                         title={tender.tenderCode}
                       >
                         {tender.tenderCode || tender.invitationNumber}
                       </span>
                       {tender.positionName && (
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 truncate max-w-[220px]">
+                        <span className="text-[10px] text-slate-400 dark:text-zinc-500 truncate max-w-[220px]">
                           {tender.positionName}
                         </span>
                       )}
@@ -161,7 +161,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                               <span className="text-blue-600 dark:text-blue-400 font-bold block text-xs sm:text-sm">
                                 {bilingual.titleZh}
                               </span>
-                              <span className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 font-normal">
+                              <span className="text-[11px] text-slate-500 dark:text-zinc-400 line-clamp-1 font-normal">
                                 {tender.tenderName}
                               </span>
                             </span>
@@ -185,7 +185,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       return (
                         <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
                           {itemCount > 0 && (
-                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 inline-flex items-center gap-1 max-w-[340px] truncate">
+                            <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-indigo-200 dark:border-zinc-800 inline-flex items-center gap-1 max-w-[340px] truncate">
                               <Package className="h-3 w-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
                               <span className="font-semibold">{itemCount} бараа:</span>
                               <span className="truncate">{items[0].name}</span>
@@ -197,23 +197,23 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                             </span>
                           )}
                           {licenses.length > 0 ? (
-                            <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800 inline-flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-amber-200 dark:border-zinc-800 inline-flex items-center gap-1 shrink-0">
                               <ShieldCheck className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
                               <span>{licenses.length} зөвшөөрөл</span>
                             </span>
                           ) : tender.raw_data?.structuredSpecs ? (
-                            <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 inline-flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-zinc-800 inline-flex items-center gap-1 shrink-0">
                               <ShieldCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
                               <span>Зөвшөөрөлгүй</span>
                             </span>
                           ) : null}
                           {isNoBond && (
-                            <span className="text-[10px] font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200 dark:border-teal-800 inline-flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-teal-200 dark:border-zinc-800 inline-flex items-center gap-1 shrink-0">
                               <span>Баталгаагүй</span>
                             </span>
                           )}
                           {hasStoredPdf && (
-                            <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold bg-purple-50 dark:bg-purple-950/50 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 inline-flex items-center gap-1 shrink-0">
+                            <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold bg-purple-50 dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-purple-200 dark:border-zinc-800 inline-flex items-center gap-1 shrink-0">
                               <FileText className="h-3 w-3 text-purple-500 shrink-0" />
                               <span>ТШЗ PDF</span>
                             </span>
@@ -227,7 +227,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                         {tender.chinaBidderAnalysis.eligibilityStatus === 'direct_allowed' && (
                           <span
-                            className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-300 dark:border-emerald-800 inline-flex items-center gap-1 shrink-0"
+                            className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-emerald-300 dark:border-zinc-800 inline-flex items-center gap-1 shrink-0"
                             title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
                             <span>
@@ -244,7 +244,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         )}
                         {tender.chinaBidderAnalysis.eligibilityStatus === 'joint_venture_required' && (
                           <span
-                            className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800 inline-flex items-center gap-1 shrink-0"
+                            className="text-[10px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-amber-300 dark:border-zinc-800 inline-flex items-center gap-1 shrink-0"
                             title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
                             <span>
@@ -261,7 +261,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         )}
                         {tender.chinaBidderAnalysis.eligibilityStatus === 'domestic_only' && (
                           <span
-                            className="text-[10px] font-medium text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700 inline-flex items-center gap-1 shrink-0"
+                            className="text-[10px] font-medium text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-zinc-700 inline-flex items-center gap-1 shrink-0"
                             title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
                             <span>
@@ -273,13 +273,13 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     )}
 
                     {/* On mobile, show entity under title */}
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1 md:hidden">
+                    <div className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5 line-clamp-1 md:hidden">
                       {tender.budgetEntityName}
                     </div>
                   </td>
 
                   {/* Procuring Entity */}
-                  <td className="py-2.5 px-3 text-slate-600 dark:text-slate-400 text-[11px] hidden md:table-cell">
+                  <td className="py-2.5 px-3 text-slate-600 dark:text-zinc-400 text-[11px] hidden md:table-cell">
                     <span className="line-clamp-2 leading-snug">{tender.budgetEntityName}</span>
                   </td>
 
@@ -296,7 +296,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                   </td>
 
                   {/* Deadline */}
-                  <td className="py-2.5 px-3 whitespace-nowrap text-slate-600 dark:text-slate-400 font-mono text-[11px] tabular-nums hidden sm:table-cell">
+                  <td className="py-2.5 px-3 whitespace-nowrap text-slate-600 dark:text-zinc-400 font-mono text-[11px] tabular-nums hidden sm:table-cell">
                     <div>{tender.receiveDate ? tender.receiveDate.substring(0, 10) : 'Тодорхойгүй'}</div>
                     {days !== null && days > 0 ? (
                       <div
@@ -327,16 +327,16 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       const isConcluded = s.includes('үр дүн');
 
                       const style = isFailed
-                        ? { dot: 'bg-slate-400', cls: 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700' }
+                        ? { dot: 'bg-slate-400', cls: 'text-slate-700 dark:text-zinc-300 bg-slate-100 dark:bg-zinc-800 border-slate-300 dark:border-zinc-700' }
                         : s.includes('хүлээн авч')
-                        ? { dot: 'bg-emerald-500', cls: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800' }
+                        ? { dot: 'bg-emerald-500', cls: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-zinc-900 border-emerald-200 dark:border-zinc-800' }
                         : s.includes('нээгдсэн')
-                        ? { dot: 'bg-amber-500', cls: 'text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/50 border-amber-200 dark:border-amber-800' }
+                        ? { dot: 'bg-slate-900 dark:bg-zinc-700', cls: 'text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-zinc-900 border-amber-200 dark:border-zinc-800' }
                         : s.includes('үр дүн')
-                        ? { dot: 'bg-blue-500', cls: 'text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800' }
+                        ? { dot: 'bg-blue-500', cls: 'text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-zinc-900 border-blue-200 dark:border-zinc-800' }
                         : s.includes('хүчингүй')
-                        ? { dot: 'bg-rose-500', cls: 'text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800' }
-                        : { dot: 'bg-slate-400', cls: 'text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700' };
+                        ? { dot: 'bg-slate-900 dark:bg-zinc-700', cls: 'text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-zinc-900 border-rose-200 dark:border-zinc-800' }
+                        : { dot: 'bg-slate-400', cls: 'text-slate-700 dark:text-zinc-300 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700' };
 
                       const fallbackStatus = tender.receiveDate && new Date(tender.receiveDate) < new Date() ? 'Хугацаа дууссан' : 'Хүлээн авч буй';
                       const label = isFailed
@@ -360,7 +360,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       {/* Direct Details Page Link */}
                       <Link
                         href={`/tender/${tender.invitationId}`}
-                        className="h-6 px-2 rounded bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700 border border-slate-900 dark:border-slate-700 text-[11px] font-semibold transition-all shadow-2xs flex items-center justify-center cursor-pointer"
+                        className="h-6 px-2 rounded bg-slate-900 dark:bg-zinc-800 text-white hover:bg-slate-800 dark:hover:bg-zinc-700 border border-slate-900 dark:border-zinc-700 text-[11px] font-semibold transition-all shadow-2xs flex items-center justify-center cursor-pointer"
                         title={locale === 'mn' ? 'Тендерийн дэлгэрэнгүйг үзэх' : 'View tender details'}
                       >
                         {locale === 'mn' ? 'Үзэх' : 'View'}
@@ -371,7 +371,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         href={`https://www.tender.gov.mn/mn/invitation/detail/${tender.invitationId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="h-6 w-6 rounded bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-colors"
+                        className="h-6 w-6 rounded bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-700 flex items-center justify-center transition-colors"
                         title={locale === 'mn' ? 'tender.gov.mn дээр нээх' : 'Open in tender.gov.mn'}
                       >
                         <ExternalLink className="h-3 w-3" />
@@ -380,7 +380,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       {/* AI Audit */}
                       <button
                         onClick={() => onAskAI(tender)}
-                        className="h-6 w-6 rounded bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-slate-700 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 flex items-center justify-center transition-colors cursor-pointer"
+                        className="h-6 w-6 rounded bg-white dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-zinc-700 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-zinc-700 flex items-center justify-center transition-colors cursor-pointer"
                         title={locale === 'mn' ? 'AI шинжилгээ' : 'AI Analysis'}
                       >
                         <Sparkles className="h-3 w-3" />

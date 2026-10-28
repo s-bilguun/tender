@@ -106,11 +106,11 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-lg shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden text-slate-900 dark:text-slate-100">
+      <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-lg shadow-2xl border border-slate-200 dark:border-zinc-800 flex flex-col max-h-[90vh] overflow-hidden text-slate-900 dark:text-zinc-100">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-purple-900 text-white">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-purple-900 text-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-md bg-purple-500/20 border border-purple-400/30 text-purple-300">
+            <div className="p-2 rounded-md bg-slate-100 dark:bg-zinc-800 border border-purple-400/30 text-purple-300">
               <FileCheck className="h-5 w-5" />
             </div>
             <div>
@@ -137,7 +137,7 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-5">
           {!auditResult ? (
             <>
-              <div className="bg-purple-50 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-900/60 rounded-lg p-4 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-3">
+              <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-4 text-xs text-purple-900 dark:text-purple-200 flex items-start gap-3">
                 <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold block mb-1">Яагаад ТББ-аа урьдчилан шалгах ёстой вэ?</span>
@@ -148,7 +148,7 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
               {/* Form inputs */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
                     Оролцогч Компанийн Нэр
                   </label>
                   <input
@@ -156,13 +156,13 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="Жишээ: Монгол Констракшн ХХК"
-                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
                       Сүүлийн 2 жилийн борлуулалтын орлого (₮)
                     </label>
                     <input
@@ -170,18 +170,18 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
                       value={turnoverAmount}
                       onChange={(e) => setTurnoverAmount(e.target.value)}
                       placeholder="Жишээ: 1,500,000,000"
-                      className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
+                      className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
                       Тусгай зөвшөөрөл хүчинтэй эсэх
                     </label>
                     <select
                       value={hasSpecialLicense ? 'yes' : 'no'}
                       onChange={(e) => setHasSpecialLicense(e.target.value === 'yes')}
-                      className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 cursor-pointer"
+                      className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:border-purple-600 cursor-pointer"
                     >
                       <option value="yes">Тийм, шаардлагатай тусгай зөвшөөрөлтэй</option>
                       <option value="no">Үгүй / Тусгай зөвшөөрөлгүй</option>
@@ -191,15 +191,15 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
 
                 {/* Upload Draft Bid Simulation */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
                     Тендерийн материал хавсаргах (PDF / Zip)
                   </label>
                   <div
                     onClick={() => setUploadedFiles(['Бэлтгэсэн_Тендерийн_Материал_v1.pdf', 'Санхүүгийн_Аудит_2025.pdf'])}
-                    className="border-2 border-dashed border-slate-200 dark:border-slate-700 hover:border-purple-500 dark:hover:border-purple-500 rounded-lg p-4 text-center cursor-pointer transition-colors bg-slate-50/60 dark:bg-slate-800/50"
+                    className="border-2 border-dashed border-slate-200 dark:border-zinc-700 hover:border-purple-500 dark:hover:border-purple-500 rounded-lg p-4 text-center cursor-pointer transition-colors bg-slate-50/60 dark:bg-zinc-800/50"
                   >
                     <Upload className="h-6 w-6 text-slate-400 mx-auto mb-1" />
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 block">
+                    <span className="text-xs font-semibold text-slate-700 dark:text-zinc-200 block">
                       {uploadedFiles.length > 0 ? `${uploadedFiles.length} файл хавсаргагдлаа` : 'Файлаа энд чирч оруулна уу'}
                     </span>
                     <span className="text-[11px] text-slate-400">
@@ -215,10 +215,10 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
               {/* Score header */}
               <div className={`rounded-lg p-5 border flex items-center justify-between gap-4 ${
  auditResult.status === 'passed'
- ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-100'
+ ? 'bg-emerald-50 dark:bg-zinc-900 border-emerald-200 dark:border-zinc-800 text-emerald-950 dark:text-emerald-100'
  : auditResult.status === 'warning'
- ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-100'
- : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-950 dark:text-rose-100'
+ ? 'bg-amber-50 dark:bg-zinc-900 border-amber-200 dark:border-zinc-800 text-amber-950 dark:text-amber-100'
+ : 'bg-rose-50 dark:bg-zinc-900 border-rose-200 dark:border-zinc-800 text-rose-950 dark:text-rose-100'
  }`}>
                 <div>
                   <div className="text-xs font-bold opacity-75 mb-1">
@@ -231,8 +231,8 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
 
                 <div className={`text-3xl font-semibold font-mono px-4 py-2 rounded-lg border ${
  auditResult.status === 'passed' 
- ? 'bg-emerald-100/80 dark:bg-emerald-900/80 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' 
- : 'bg-amber-100/80 dark:bg-amber-900/80 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200'
+ ? 'bg-emerald-100/80 dark:bg-zinc-800 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-200' 
+ : 'bg-amber-100/80 dark:bg-zinc-800 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200'
  }`}>
                   {auditResult.overallScore}%
                 </div>
@@ -240,11 +240,11 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
 
               {/* Checks list */}
               <div className="space-y-2.5">
-                <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 ">
+                <h3 className="text-xs font-bold text-slate-800 dark:text-zinc-200 ">
                   Шалгуур үзүүлэлтүүдийн нийцэл:
                 </h3>
                 {auditResult.checks.map((c, i) => (
-                  <div key={i} className="p-3 rounded-md border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-800/80 flex items-start gap-3 text-xs">
+                  <div key={i} className="p-3 rounded-md border border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-800/80 flex items-start gap-3 text-xs">
                     {c.status === 'pass' ? (
                       <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                     ) : c.status === 'warn' ? (
@@ -254,19 +254,19 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
                     )}
                     <div>
                       <div className="font-bold text-slate-900 dark:text-white">{c.title}</div>
-                      <div className="text-slate-600 dark:text-slate-300 mt-0.5">{c.detail}</div>
+                      <div className="text-slate-600 dark:text-zinc-300 mt-0.5">{c.detail}</div>
                     </div>
                   </div>
                 ))}
               </div>
 
               {/* Recommendations */}
-              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-850/80 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="p-4 rounded-lg bg-slate-50 dark:bg-zinc-850/80 border border-slate-200 dark:border-zinc-800 space-y-2">
                 <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                   <span>AI Зөвлөмж & Засах алхмууд:</span>
                 </div>
-                <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+                <ul className="space-y-1.5 text-xs text-slate-700 dark:text-zinc-300">
                   {auditResult.recommendations.map((r, i) => (
                     <li key={i} className="flex items-start gap-2">
                       <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
@@ -280,18 +280,18 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 flex items-center justify-between gap-3">
+        <div className="px-6 py-4 border-t border-slate-100 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/80 flex items-center justify-between gap-3">
           {auditResult ? (
             <button
               onClick={() => setAuditResult(null)}
-              className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               Дахин шалгах
             </button>
           ) : (
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="px-4 py-2 rounded-md text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
               Болих
             </button>
@@ -301,7 +301,7 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
             <button
               onClick={handleRunAudit}
               disabled={isAuditing}
-              className="px-5 py-2.5 rounded-md text-xs font-bold bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-5 py-2.5 rounded-md text-xs font-bold bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 text-white flex items-center gap-2 transition-all shadow-sm cursor-pointer disabled:opacity-50"
             >
               {isAuditing ? (
                 <>
@@ -318,7 +318,7 @@ export const TenderDocAuditModal: React.FC<TenderDocAuditModalProps> = ({
           ) : (
             <button
               onClick={onClose}
-              className="px-5 py-2.5 rounded-md text-xs font-bold bg-slate-900 dark:bg-slate-700 hover:bg-slate-800 dark:hover:bg-slate-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
+              className="px-5 py-2.5 rounded-md text-xs font-bold bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
             >
               <span>Тайланг хаах</span>
             </button>

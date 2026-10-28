@@ -52,42 +52,42 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       case 'it':
         return { 
           label: locale === 'zh' ? '电脑与软件IT' : 'Мэдээллийн технологи', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'construction':
         return { 
           label: locale === 'zh' ? '工程建筑与机械' : 'Барилга, дэд бүтэц', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'medical':
         return { 
           label: locale === 'zh' ? '医疗器械与药品' : 'Эрүүл мэнд, эм', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'mining':
         return { 
           label: locale === 'zh' ? '矿山重型设备' : 'Уул уурхай', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'food':
         return { 
           label: locale === 'zh' ? '粮油肉类食品' : 'Хүнс, хоол', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'transport':
         return { 
           label: locale === 'zh' ? '交通车辆与燃油' : 'Тээвэр, шатахуун', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'facility':
         return { 
           label: locale === 'zh' ? '安防安保设施' : 'Харуул, цэвэрлэгээ', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'stationery':
         return { 
           label: locale === 'zh' ? '办公桌椅与文教' : 'Боловсрол, бичиг хэрэг', 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       default:
         return { 
@@ -96,7 +96,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
             : typeCode === 'JOB' 
             ? (locale === 'zh' ? '工程承包' : 'Ажил гүйцэтгэл') 
             : (locale === 'zh' ? '服务采购' : 'Үйлчилгээ'), 
-          color: 'text-slate-600 dark:text-slate-400 border-transparent !px-0' 
+          color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
     }
   };
@@ -116,7 +116,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       return { 
         status: 'closed', 
         label: locale === 'zh' ? '已截标' : locale === 'mn' ? 'Хугацаа дууссан' : 'Closed', 
-        color: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700', 
+        color: 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 border-slate-200 dark:border-zinc-700', 
         iconColor: 'text-slate-400',
         isUrgent: false,
       };
@@ -125,7 +125,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       return {
         status: 'critical',
         label: locale === 'zh' ? `仅剩 ${diffHours} 小时截标` : locale === 'mn' ? `${diffHours} цаг үлдсэн` : `${diffHours}h left`,
-        color: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-rose-800 font-bold ring-1 ring-rose-300/60 dark:ring-rose-800/60 ',
+        color: 'bg-rose-50 dark:bg-zinc-900 text-rose-700 dark:text-rose-300 border-rose-300 dark:border-zinc-800 font-bold ring-1 ring-rose-300/60 dark:ring-rose-800/60 ',
         iconColor: 'text-rose-600 dark:text-rose-400',
         isUrgent: true,
       };
@@ -134,7 +134,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       return {
         status: 'urgent',
         label: locale === 'zh' ? `剩 ${diffDays} 天截标` : locale === 'mn' ? `${diffDays} хоног үлдсэн` : `${diffDays}d left`,
-        color: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 font-bold',
+        color: 'bg-rose-50 dark:bg-zinc-900 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-zinc-800 font-bold',
         iconColor: 'text-rose-600 dark:text-rose-400',
         isUrgent: true,
       };
@@ -142,7 +142,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
     return {
       status: 'active',
       label: locale === 'zh' ? `还剩 ${diffDays} 天` : locale === 'mn' ? `${diffDays} хоног үлдсэн` : `${diffDays} days left`,
-      color: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 font-medium',
+      color: 'bg-emerald-50 dark:bg-zinc-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-zinc-800 font-medium',
       iconColor: 'text-emerald-600 dark:text-emerald-400',
       isUrgent: false,
     };
@@ -203,15 +203,15 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
-      className={`bg-white dark:bg-slate-900 border rounded-lg p-4 sm:p-5 shadow-2xs transition-colors flex flex-col justify-between gap-3.5 group relative cursor-pointer ${
+      className={`bg-white dark:bg-zinc-900 border rounded-lg p-4 sm:p-5 shadow-2xs transition-colors flex flex-col justify-between gap-3.5 group relative cursor-pointer ${
  urgency?.isUrgent 
- ? 'border-rose-300/80 dark:border-rose-900/60 hover:border-rose-400 dark:hover:border-rose-700' 
- : 'border-slate-200 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-600'
+ ? 'border-rose-300/80 dark:border-zinc-800 hover:border-rose-400 dark:hover:border-rose-700' 
+ : 'border-slate-200 dark:border-zinc-800 hover:border-slate-400 dark:hover:border-zinc-600'
  }`}
     >
       {/* Loading Overlay */}
       {isNavigating && (
-        <div className="absolute inset-0 bg-white/80 dark:bg-slate-900/80 rounded-lg z-20 flex items-center justify-center gap-2 text-xs font-medium text-slate-900 dark:text-white shadow-sm animate-in fade-in duration-150">
+        <div className="absolute inset-0 bg-white/80 dark:bg-zinc-900/80 rounded-lg z-20 flex items-center justify-center gap-2 text-xs font-medium text-slate-900 dark:text-white shadow-sm animate-in fade-in duration-150">
           <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
           <span>Тендерийн дэлгэрэнгүйг нээж байна...</span>
         </div>
@@ -229,7 +229,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
             {isDirectAllowed ? (
               <span
-                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0"
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title={locale === 'zh' ? '企业可使用法人资格独立参与' : 'Eligible for direct foreign bidding'}
               >
                 <Globe2 className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
@@ -237,7 +237,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               </span>
             ) : (
               <span
-                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0"
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title={locale === 'zh' ? '需与蒙古国持有特许资质的企业组建联合体' : 'Eligible via Mongolian JV partnership'}
               >
                 <Handshake className="h-3 w-3 text-amber-600 dark:text-amber-400" />
@@ -247,7 +247,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
             {hasStoredPdf && (
               <span
-                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0"
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title={locale === 'zh' ? '已提取官方 ТШЗ 招标文件' : 'ТШЗ Баримт хадгалагдсан'}
               >
                 <FileText className="h-3 w-3 text-slate-400" />
@@ -257,7 +257,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
             {itemCount > 0 && (
               <span
-                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0"
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title={locale === 'zh' ? `已解析 ${itemCount} 项采购物料` : `${itemCount} нэр төрлийн барааны хүснэгт бэлэн`}
               >
                 <Layers className="h-3 w-3 text-slate-400" />
@@ -267,7 +267,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
             {licenseCount > 0 ? (
               <span
-                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0"
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title={licenses.join(', ')}
               >
                 <ShieldCheck className="h-3 w-3 text-slate-400" />
@@ -275,7 +275,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               </span>
             ) : rawData?.structuredSpecs ? (
               <span
-                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0"
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title="Тусгай зөвшөөрөл шаардагдахгүй"
               >
                 <CheckCircle2 className="h-3 w-3 text-slate-400" />
@@ -285,7 +285,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
             {isNoBidSecurity && (
               <span
-                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center gap-1 shrink-0"
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title="Тендерийн баталгаа шаардахгүй"
               >
                 <span>{locale === 'zh' ? '免保证金' : locale === 'mn' ? 'Баталгаагүй' : 'No Bond'}</span>
@@ -307,7 +307,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
                 <button
                   onClick={() => onToggleSave(tender.invitationId)}
                   className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
- isSaved ? 'text-amber-500 bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+ isSaved ? 'text-amber-500 bg-amber-50 dark:bg-zinc-900 hover:bg-amber-100 dark:hover:bg-amber-900/60' : 'text-slate-400 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
  }`}
                   title={locale === 'zh' ? '加入监控' : locale === 'mn' ? 'Хадгалах' : 'Save to watchlist'}
                   aria-label="Bookmark tender"
@@ -320,7 +320,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
                 href={portalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800 transition-colors"
                 title="Open tender.gov.mn official source"
                 aria-label="Open on tender.gov.mn"
               >
@@ -337,7 +337,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               <span className="text-slate-900 dark:text-white font-semibold block text-sm sm:text-base leading-snug">
                 {bilingual.titleZh}
               </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1 font-normal">
+              <span className="text-xs text-slate-500 dark:text-zinc-400 line-clamp-1 font-normal">
                 {tender.tenderName}
               </span>
             </span>
@@ -347,8 +347,8 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         </h3>
 
         {/* Procuring Entity / Buyer */}
-        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
-          <Building2 className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
+        <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-400">
+          <Building2 className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 shrink-0" />
           <span className="truncate font-medium">
             {locale === 'zh' ? bilingual.entityZh : (tender.budgetEntityName || (locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity'))}
           </span>
@@ -356,19 +356,19 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       </div>
 
       {/* 3. Budget & Financial Metrics Box */}
-      <div className="bg-slate-50 dark:bg-slate-950/60 p-3 rounded-md border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+      <div className="bg-slate-50 dark:bg-zinc-950/60 p-3 rounded-md border border-slate-200/80 dark:border-zinc-800/80 space-y-2">
         <div className="flex items-baseline justify-between">
-          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 ">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 ">
             {locale === 'zh' ? '采购总预算与折合' : locale === 'mn' ? 'Төсөвт өртөг' : 'Total Budget'}
           </span>
-          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400">
+          <span className="text-[10px] font-mono text-slate-500 dark:text-zinc-400">
             {budgetMnt > 0 ? (locale === 'zh' ? `保函1%: ~${bilingual.guaranteeRmbFormatted}` : (currency === 'CNY' ? `≈ ¥${budgetRmb.toLocaleString()} CNY` : `≈ $${budgetUsd.toLocaleString()} USD`)) : ''}
           </span>
         </div>
 
         <div className="flex items-baseline justify-between flex-wrap gap-1">
           {budgetMnt <= 0 ? (
-            <div className="text-sm text-slate-500 dark:text-slate-400">
+            <div className="text-sm text-slate-500 dark:text-zinc-400">
               {locale === 'zh' ? '预算见 tender.gov.mn' : locale === 'en' ? 'Budget on tender.gov.mn' : 'Төсвийг tender.gov.mn-ээс харна уу'}
             </div>
           ) : locale === 'zh' ? (
@@ -376,7 +376,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               <div className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white tabular-nums">
                 {bilingual.budgetRmbFormatted}
               </div>
-              <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 font-mono">
+              <div className="text-xs font-semibold text-slate-500 dark:text-zinc-400 font-mono">
                 (₮{budgetMnt.toLocaleString()})
               </div>
             </div>
@@ -385,15 +385,15 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               ₮ {budgetMnt.toLocaleString()}
             </div>
           )}
-          <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400">
+          <div className="text-[11px] font-mono text-slate-500 dark:text-zinc-400">
             {tender.tenderCode || `INV-${tender.invitationId}`}
           </div>
         </div>
 
         {/* Dates */}
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-200/70 dark:border-slate-800/70 pt-1.5 font-mono">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-0.5 text-[11px] text-slate-500 dark:text-zinc-400 border-t border-slate-200/70 dark:border-zinc-800/70 pt-1.5 font-mono">
           <span className="whitespace-nowrap">{locale === 'zh' ? '发布日期' : locale === 'mn' ? 'Нийтэлсэн' : 'Published'}: {fmtDate(tender.publishDate)}</span>
-          <span className={`whitespace-nowrap ${urgency?.isUrgent ? 'text-rose-700 dark:text-rose-400 font-semibold' : 'text-slate-700 dark:text-slate-300'}`}>
+          <span className={`whitespace-nowrap ${urgency?.isUrgent ? 'text-rose-700 dark:text-rose-400 font-semibold' : 'text-slate-700 dark:text-zinc-300'}`}>
             {locale === 'zh' ? '截标日期' : locale === 'mn' ? 'Эцсийн хугацаа' : 'Deadline'}: {fmtDate(tender.receiveDate)}
           </span>
         </div>
@@ -401,15 +401,15 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
       {/* 4. Extracted PDF Highlight (hidden when we only have the generic fallback line) */}
       {!isGenericHighlight && (
-      <div className="p-2.5 rounded-md bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60 flex items-start gap-2">
+      <div className="p-2.5 rounded-md bg-slate-50/80 dark:bg-zinc-950/40 border border-slate-200/60 dark:border-zinc-800/60 flex items-start gap-2">
         <FileText className="h-3.5 w-3.5 shrink-0 mt-0.5 text-slate-400" />
         <div className="flex-1 min-w-0">
           {hasStoredPdf && (
-            <span className="text-[11px] font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded mr-1.5 inline-block">
+            <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-300 bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded mr-1.5 inline-block">
               {locale === 'zh' ? '官方标书' : locale === 'mn' ? 'ТШЗ Бэлэн' : 'Official Spec'}
             </span>
           )}
-          <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+          <span className="text-xs text-slate-600 dark:text-zinc-400 line-clamp-2 leading-relaxed">
             {extractedHighlight}
           </span>
         </div>
@@ -417,10 +417,10 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       )}
 
       {/* 5. Footer Actions */}
-      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={handleCardClick}
-          className="flex-1 h-9 px-3 rounded-md text-xs font-medium bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-300 dark:border-slate-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          className="flex-1 h-9 px-3 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-900 dark:text-white border border-slate-300 dark:border-zinc-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
         >
           <span>{locale === 'zh' ? '查看详情' : locale === 'mn' ? 'Дэлгэрэнгүй' : 'View details'}</span>
           <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
@@ -429,7 +429,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           <button
             onClick={() => onAskAI(tender)}
             title={locale === 'zh' ? '用中文向此标书PDF提问并翻译技术规格' : 'Энэ тендерийн ТШББ PDF-ийг AI-аар шинжлэх'}
-            className="h-9 px-3 rounded-md text-xs font-medium bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
+            className="h-9 px-3 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-300 dark:border-zinc-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
           >
             <Sparkles className="h-3.5 w-3.5 text-slate-400" />
             <span>{locale === 'zh' ? 'AI 解读' : locale === 'mn' ? 'AI шинжилгээ' : 'Ask AI'}</span>

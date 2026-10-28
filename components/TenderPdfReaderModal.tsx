@@ -92,7 +92,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
       
       {/* Modal Container */}
       <div 
-        className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden transition-all duration-200 ${
+        className={`bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col overflow-hidden transition-all duration-200 ${
  isFullscreen 
  ? 'fixed inset-2 sm:inset-4 rounded-md z-50' 
  : 'w-full max-w-5xl h-[88vh] rounded-lg'
@@ -100,26 +100,26 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
       >
         
         {/* Top Navigation Bar */}
-        <div className="px-4 sm:px-6 py-3.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-3 shrink-0">
           
           {/* File Title & Status */}
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800 shrink-0">
+            <div className="p-2 rounded-lg bg-purple-50 dark:bg-zinc-900 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-zinc-800 shrink-0">
               <FileText className="h-5 w-5" />
             </div>
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                <span className="font-mono text-[11px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-blue-200 dark:border-zinc-800">
                   {tender.tenderCode || tender.invitationNumber || `INV-${tender.invitationId}`}
                 </span>
                 {pageCount && (
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
                     • {pageCount} хуудас
                   </span>
                 )}
                 {fileSizeKb && (
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  <span className="text-[11px] text-slate-500 dark:text-zinc-400 font-mono">
                     • {fileSizeKb > 1024 ? `${(fileSizeKb / 1024).toFixed(1)} MB` : `${fileSizeKb} KB`}
                   </span>
                 )}
@@ -131,13 +131,13 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
           </div>
 
           {/* Mode Switcher Tabs */}
-          <div className="hidden md:flex items-center bg-slate-200/70 dark:bg-slate-800 p-1 rounded-md text-xs font-semibold shrink-0">
+          <div className="hidden md:flex items-center bg-slate-200/70 dark:bg-zinc-800 p-1 rounded-md text-xs font-semibold shrink-0">
             <button
               onClick={() => setActiveTab('pdf')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
  activeTab === 'pdf'
- ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
- : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
  }`}
             >
               <BookOpen className="h-3.5 w-3.5 text-purple-500" />
@@ -148,8 +148,8 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
               onClick={() => setActiveTab('text')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
  activeTab === 'text'
- ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
- : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
  }`}
             >
               <ListChecks className="h-3.5 w-3.5 text-blue-500" />
@@ -160,8 +160,8 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
               onClick={() => setActiveTab('ai')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
  activeTab === 'ai'
- ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
- : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
  }`}
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-500" />
@@ -177,7 +177,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                 download={effectiveFileName}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-8.5 px-2.5 sm:px-3 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                className="h-8.5 px-2.5 sm:px-3 rounded-lg text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-zinc-900 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-zinc-800 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                 title="PDF файлыг татаж авах"
               >
                 <Download className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
@@ -187,7 +187,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
 
             <button
               onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-1.5 sm:p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               title={isFullscreen ? 'Багасгах' : 'Бүтэн дэлгэц'}
             >
               {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -195,7 +195,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
 
             <button
               onClick={onClose}
-              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
               title="Хаах"
             >
               <X className="h-5 w-5" />
@@ -204,29 +204,29 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
         </div>
 
         {/* Mobile View Mode Tabs */}
-        <div className="md:hidden flex items-center border-b border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-xs font-semibold p-1">
+        <div className="md:hidden flex items-center border-b border-slate-200 dark:border-zinc-800 bg-slate-100 dark:bg-zinc-900 text-xs font-semibold p-1">
           <button
             onClick={() => setActiveTab('pdf')}
-            className={`flex-1 py-1.5 text-center rounded-lg ${activeTab === 'pdf' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-slate-400'}`}
+            className={`flex-1 py-1.5 text-center rounded-lg ${activeTab === 'pdf' ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-zinc-400'}`}
           >
             Эх PDF
           </button>
           <button
             onClick={() => setActiveTab('text')}
-            className={`flex-1 py-1.5 text-center rounded-lg ${activeTab === 'text' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-slate-400'}`}
+            className={`flex-1 py-1.5 text-center rounded-lg ${activeTab === 'text' ? 'bg-white dark:bg-zinc-800 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-zinc-400'}`}
           >
             Текст
           </button>
           <button
             onClick={() => setActiveTab('ai')}
-            className={`flex-1 py-1.5 text-center rounded-lg ${activeTab === 'ai' ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-slate-400'}`}
+            className={`flex-1 py-1.5 text-center rounded-lg ${activeTab === 'ai' ? 'bg-white dark:bg-zinc-800 text-amber-600 dark:text-amber-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-zinc-400'}`}
           >
             AI Шинжээч
           </button>
         </div>
 
         {/* Modal Main Content Area */}
-        <div className="flex-1 overflow-hidden relative bg-slate-100 dark:bg-slate-950 flex flex-col">
+        <div className="flex-1 overflow-hidden relative bg-slate-100 dark:bg-zinc-950 flex flex-col">
           
           {/* TAB 1: Original PDF Viewer (Iframe Native Embed) */}
           {activeTab === 'pdf' && (
@@ -235,12 +235,12 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                 <iframe
                   src={`${effectivePdfUrl}#toolbar=1&navpanes=1`}
                   title={effectiveFileName}
-                  className="w-full h-full border-0 bg-slate-200 dark:bg-slate-900"
+                  className="w-full h-full border-0 bg-slate-200 dark:bg-zinc-900"
                 />
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-500">
                   <AlertCircle className="h-10 w-10 text-amber-500 mb-2" />
-                  <p className="font-bold text-slate-700 dark:text-slate-300">
+                  <p className="font-bold text-slate-700 dark:text-zinc-300">
                     Энэ тендерийн PDF баримт ачаалагдаагүй байна
                   </p>
                   <p className="text-xs text-slate-500 mt-1 max-w-md">
@@ -253,17 +253,17 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
 
           {/* TAB 2: Extracted Text & Specifications */}
           {activeTab === 'text' && (
-            <div className="w-full h-full overflow-y-auto p-4 sm:p-6 space-y-6 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+            <div className="w-full h-full overflow-y-auto p-4 sm:p-6 space-y-6 bg-white dark:bg-zinc-950 text-slate-900 dark:text-zinc-100">
               
               {/* Tender Quick Summary Header */}
-              <div className="p-4 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="p-4 rounded-md bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-2">
                 <span className="text-[10px] font-bold text-slate-400 block">
                   Тендерийн нэр & Захиалагч
                 </span>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
                   {tender.tenderName}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 font-medium pt-1">
+                <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-zinc-400 font-medium pt-1">
                   <Building2 className="h-4 w-4 text-blue-500 shrink-0" />
                   <span>{tender.budgetEntityName}</span>
                   <span>•</span>
@@ -277,7 +277,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
               {(bidSecText || turnoverText || liquidText || similarExpText || deliveryPeriodText || warrantyText || deliveryLocationText) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {bidSecText && (
-                    <div className="p-3 rounded-md bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70">
+                    <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
                       <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 block">
                         {locale === 'zh' ? '投标保证金 (ТШЗ 24.1)' : 'Тендерийн баталгаа (ТШЗ)'}
                       </span>
@@ -285,7 +285,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                     </div>
                   )}
                   {turnoverText && (
-                    <div className="p-3 rounded-md bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/70">
+                    <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
                       <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block">
                         {locale === 'zh' ? '营业额要求 (ТШЗ 18.1)' : 'Борлуулалтын орлогын босго'}
                       </span>
@@ -293,7 +293,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                     </div>
                   )}
                   {liquidText && (
-                    <div className="p-3 rounded-md bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/70">
+                    <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
                       <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 block">
                         {locale === 'zh' ? '流动资金要求 (ТШЗ 18.1)' : 'Түргэн хөрвөх хөрөнгө'}
                       </span>
@@ -301,7 +301,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                     </div>
                   )}
                   {similarExpText && (
-                    <div className="p-3 rounded-md bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70">
+                    <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
                       <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block">
                         {locale === 'zh' ? '同类项目经验' : 'Ижил төстэй ажлын туршлага'}
                       </span>
@@ -309,16 +309,16 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                     </div>
                   )}
                   {deliveryPeriodText && (
-                    <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">
+                    <div className="p-3 rounded-md bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block">
                         {locale === 'zh' ? '交货/工期 (ТШЗ 17.3)' : 'Нийлүүлэх / Гүйцэтгэх хугацаа'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{deliveryPeriodText}</p>
                     </div>
                   )}
                   {(warrantyText || deliveryLocationText) && (
-                    <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">
+                    <div className="p-3 rounded-md bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-zinc-400 block">
                         {locale === 'zh' ? '质保与交货条件' : 'Баталгаат хугацаа & Байршил'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">
@@ -337,13 +337,13 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                       <Tag className="h-4 w-4 text-emerald-500" />
                       <span>{locale === 'zh' ? '提取的采购清单 / 工程量清单 (BoQ)' : 'Задлагдсан бараа, ажлын тоо хэмжээний жагсаалт (BoQ)'}</span>
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-zinc-800">
                       {extractedItems.length} {locale === 'zh' ? '项' : 'нэр төрөл'}
                     </span>
                   </div>
-                  <div className="overflow-x-auto rounded-md border border-slate-200 dark:border-slate-800">
+                  <div className="overflow-x-auto rounded-md border border-slate-200 dark:border-zinc-800">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                      <thead className="bg-slate-50 dark:bg-zinc-900 text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-zinc-800">
                         <tr>
                           <th className="py-2 px-3 font-bold w-10">#</th>
                           <th className="py-2 px-3 font-bold">{locale === 'zh' ? '名称 / 项目' : 'Бараа, ажлын нэр'}</th>
@@ -351,15 +351,15 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                           <th className="py-2 px-3 font-bold">{locale === 'zh' ? '技术要求与交货期' : 'Техникийн үзүүлэлт / Нөхцөл'}</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      <tbody className="divide-y divide-slate-200 dark:divide-zinc-800">
                         {extractedItems.slice(0, 25).map((it, idx) => (
-                          <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/50">
+                          <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-zinc-900/50">
                             <td className="py-2 px-3 font-mono text-slate-400">{idx + 1}</td>
                             <td className="py-2 px-3 font-semibold text-slate-900 dark:text-white">{it.name}</td>
                             <td className="py-2 px-3 font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
                               {it.quantity || it.qty || '1'} {it.unit || 'ш'}
                             </td>
-                            <td className="py-2 px-3 text-slate-600 dark:text-slate-300 max-w-md truncate" title={it.specs}>
+                            <td className="py-2 px-3 text-slate-600 dark:text-zinc-300 max-w-md truncate" title={it.specs}>
                               {it.specs || 'Техникийн тодорхойлолтын дагуу'}
                             </td>
                           </tr>
@@ -378,14 +378,14 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                       <ListChecks className="h-4 w-4 text-blue-500" />
                       <span>Шалгуур үзүүлэлт & Шаардагдах тусгай зөвшөөрөл</span>
                     </span>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-zinc-900 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-zinc-800">
                       {eligibilityReqs.length} үзүүлэлт
                     </span>
                   </div>
 
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {eligibilityReqs.map((req, i) => (
-                      <li key={i} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/60 p-3 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <li key={i} className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-zinc-300 bg-slate-50 dark:bg-zinc-900/60 p-3 rounded-lg border border-slate-200 dark:border-zinc-800">
                         <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                         <span>{req}</span>
                       </li>
@@ -405,7 +405,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                   {scopeOfWork && (
                     <button
                       onClick={() => handleCopyText(scopeOfWork)}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer border border-slate-300 dark:border-slate-700"
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer border border-slate-300 dark:border-zinc-700"
                     >
                       {copiedText ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                       <span>{copiedText ? 'Хуулагдлаа' : 'Текст хуулах'}</span>
@@ -418,7 +418,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                     {scopeOfWork}
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-md border border-dashed border-slate-200 dark:border-slate-800">
+                  <div className="p-8 text-center text-xs text-slate-400 italic bg-slate-50 dark:bg-zinc-900/50 rounded-md border border-dashed border-slate-200 dark:border-zinc-800">
                     Техникийн дэлгэрэнгүй үзүүлэлтийг зүүн талын "Эх PDF" цонхоор бүтнээр нь гүйлгэн харна уу.
                   </div>
                 )}
@@ -429,10 +429,10 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
 
           {/* TAB 3: AI PDF Analyst */}
           {activeTab === 'ai' && (
-            <div className="w-full h-full overflow-y-auto p-4 sm:p-8 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-center">
+            <div className="w-full h-full overflow-y-auto p-4 sm:p-8 bg-slate-50 dark:bg-zinc-950 flex flex-col items-center justify-center text-center">
               <div className="max-w-md w-full space-y-4">
                 
-                <div className="inline-flex p-3 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400">
+                <div className="inline-flex p-3 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-amber-600 dark:text-amber-400">
                   <Sparkles className="h-8 w-8" />
                 </div>
 
@@ -440,7 +440,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                   {locale === 'zh' ? '关于此标书的 AI 深度问答' : locale === 'mn' ? 'Энэхүү ТШЗ PDF-ийн талаар AI-аас асуух' : 'Ask AI About This Specification'}
                 </h3>
 
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
                   {locale === 'zh'
                     ? 'AI 已经分析了该官方招标文件的核心条款，您可以直接提问关于供货要求、资质以及跨境参与资格。'
                     : 'AI шинжээч уг тендерийн албан ёсны PDF баримт бичгийг бүрэн задлан уншсан бөгөөд таны асуултад шууд хариулна.'}
@@ -454,7 +454,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                         ? '请把这份标书第三章（III БҮЛЭГ）的技术规格书、采购货物/工程量清单（名称、数量、单位、核心技术参数）完整翻译成中文表格。'
                         : 'Энэ тендерийн техникийн гол шаардлага, нийлүүлэх бараа ажлын хэмжээ юу вэ?'
                     )}
-                    className="w-full p-3 rounded-md bg-rose-50/80 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-xs text-rose-900 dark:text-rose-200 font-bold flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+                    className="w-full p-3 rounded-md bg-white dark:bg-zinc-900 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-slate-200 dark:border-zinc-800 text-xs text-rose-900 dark:text-rose-200 font-bold flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
                   >
                     <span>
                       {locale === 'zh'
@@ -470,7 +470,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                         ? '请提取第二章投标人须知（ТШЗ 18.1 / 24.1）中的营业额门槛、流动资金、投标保证金金额及有效期要求。'
                         : 'Оролцогчдод тавигдах тусгай зөвшөөрөл, борлуулалтын орлого ямар хэмжээтэй заасан бэ?'
                     )}
-                    className="w-full p-3 rounded-md bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-blue-300 text-xs text-slate-800 dark:text-slate-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+                    className="w-full p-3 rounded-md bg-white dark:bg-zinc-900 hover:bg-blue-50 dark:hover:bg-zinc-850 border border-slate-200 dark:border-zinc-800 hover:border-blue-300 text-xs text-slate-800 dark:text-zinc-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
                   >
                     <span>
                       {locale === 'zh'
@@ -486,7 +486,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                         ? '中国企业可以独立参加这个标段吗？还是必须找蒙古国本地持证公司组成联合体（JV）？银行投标保函如何开具？'
                         : 'Гадаад эсвэл Хятад компани энэ тендерт бие даан оролцох боломжтой юу, эсвэл Монголын компанитай түншлэл (JV) байгуулах ёстой юу?'
                     )}
-                    className="w-full p-3 rounded-md bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-blue-300 text-xs text-slate-800 dark:text-slate-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+                    className="w-full p-3 rounded-md bg-white dark:bg-zinc-900 hover:bg-blue-50 dark:hover:bg-zinc-850 border border-slate-200 dark:border-zinc-800 hover:border-blue-300 text-xs text-slate-800 dark:text-zinc-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
                   >
                     <span>
                       {locale === 'zh'
@@ -504,7 +504,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
         </div>
 
         {/* Modal Bottom Footer */}
-        <div className="px-4 sm:px-6 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
+        <div className="px-4 sm:px-6 py-3 bg-slate-50 dark:bg-zinc-900 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400 shrink-0">
           <div className="flex items-center gap-1.5 font-medium">
             <span className="h-2 w-2 rounded-full bg-emerald-500 " />
             <span>Supabase Storage CDN • Албан ёсны ТШББ файл</span>

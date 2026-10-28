@@ -62,9 +62,9 @@ export const TenderFinanceModal: React.FC<TenderFinanceModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-lg shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden text-slate-900 dark:text-slate-100">
+      <div className="bg-white dark:bg-zinc-900 w-full max-w-xl rounded-lg shadow-2xl border border-slate-200 dark:border-zinc-800 flex flex-col max-h-[90vh] overflow-hidden text-slate-900 dark:text-zinc-100">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-emerald-900 text-white">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between bg-emerald-900 text-white">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-md bg-emerald-500/20 border border-emerald-400/30 text-emerald-300">
               <ShieldCheck className="h-5 w-5" />
@@ -95,7 +95,7 @@ export const TenderFinanceModal: React.FC<TenderFinanceModalProps> = ({
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Type Selection Tabs */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-2">
                   Үйлчилгээний Төрөл
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -111,8 +111,8 @@ export const TenderFinanceModal: React.FC<TenderFinanceModalProps> = ({
                       onClick={() => setGuaranteeType(t.id as any)}
                       className={`p-2.5 rounded-md border text-xs font-semibold text-center transition-all cursor-pointer ${
  guaranteeType === t.id
- ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20'
- : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
+ ? 'bg-emerald-50 dark:bg-zinc-900 border-emerald-500 text-emerald-900 dark:text-emerald-300 ring-2 ring-emerald-500/20'
+ : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 hover:border-slate-300 dark:hover:border-zinc-600'
  }`}
                     >
                       {t.label}
@@ -123,14 +123,14 @@ export const TenderFinanceModal: React.FC<TenderFinanceModalProps> = ({
 
               {/* Budget amount input */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
                   Тендерийн Төсөвт Өртөг (₮)
                 </label>
                 <input
                   type="number"
                   value={tenderBudget}
                   onChange={(e) => setTenderBudget(Number(e.target.value) || 0)}
-                  className="w-full h-11 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-base font-bold font-mono focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  className="w-full h-11 px-3.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white text-base font-bold font-mono focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                 />
               </div>
 
@@ -159,25 +159,25 @@ export const TenderFinanceModal: React.FC<TenderFinanceModalProps> = ({
               {/* Company contact input */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
                     Утасны дугаар
                   </label>
                   <input
                     type="tel"
                     required
                     placeholder="9911-XXXX"
-                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300 mb-1">
                     Байгууллагын регистр
                   </label>
                   <input
                     type="text"
                     required
                     placeholder="1234567"
-                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                   />
                 </div>
               </div>
@@ -204,18 +204,18 @@ export const TenderFinanceModal: React.FC<TenderFinanceModalProps> = ({
           ) : (
             /* Success confirmation */
             <div className="text-center py-6 space-y-4 animate-in zoom-in-95 duration-200">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+              <div className="w-14 h-14 rounded-full bg-emerald-100 dark:bg-zinc-900 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
                 <CheckCircle2 className="h-8 w-8" />
               </div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                 Хүсэлт амжилттай бүртгэгдлээ!
               </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto leading-relaxed">
+              <p className="text-xs text-slate-600 dark:text-zinc-300 max-w-md mx-auto leading-relaxed">
                 Таны баталгаа гаргуулах хүсэлтийг манай санхүүгийн хамтрагч байгууллага хүлээн авлаа. Мэргэжилтэн 15 минутын дотор холбогдож баримт бичгийг цахимаар баталгаажуулна.
               </p>
               <button
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-md text-xs font-bold bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+                className="px-6 py-2.5 rounded-md text-xs font-bold bg-slate-900 dark:bg-zinc-700 text-white hover:bg-slate-800 dark:hover:bg-zinc-600 transition-colors cursor-pointer"
               >
                 Ойлголоо
               </button>

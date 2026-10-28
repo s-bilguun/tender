@@ -64,7 +64,7 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, loc
   ];
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-slate-200 dark:divide-slate-800 [&>*]:border-slate-200 dark:[&>*]:border-slate-800">
+    <div className="grid grid-cols-2 xl:grid-cols-4 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-slate-200 dark:divide-zinc-800 [&>*]:border-slate-200 dark:[&>*]:border-slate-800">
       {cells.map((cell, i) => {
         const clickable = Boolean(cell.filter && onApplyFilter);
         const Tag = clickable ? 'button' : 'div';
@@ -74,18 +74,18 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, loc
             {...(clickable ? { type: 'button' as const, onClick: () => onApplyFilter!(cell.filter!) } : {})}
             className={`group text-left px-4 py-3.5 sm:px-5 sm:py-4 min-w-0
               ${i % 2 === 1 ? 'border-l' : ''} ${i >= 2 ? 'border-t xl:border-t-0' : ''} ${i === 2 ? 'xl:border-l' : ''}
-              ${clickable ? 'hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors' : ''}`}
+              ${clickable ? 'hover:bg-slate-50 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors' : ''}`}
           >
-            <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-zinc-400">
               <span className="truncate">{cell.label}</span>
               {clickable && (
-                <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-slate-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+                <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-zinc-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
               )}
             </div>
             <div className="mt-1.5 text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tabular-nums whitespace-nowrap">
               {cell.value}
             </div>
-            {cell.note && <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 truncate">{cell.note}</div>}
+            {cell.note && <div className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400 truncate">{cell.note}</div>}
           </Tag>
         );
       })}
