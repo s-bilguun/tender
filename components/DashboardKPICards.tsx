@@ -32,7 +32,6 @@ const t = (locale: Locale, mn: string, en: string, zh: string) => (locale === 'z
  */
 export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, locale, onApplyFilter }) => {
   const active = stats?.activeTendersCount;
-  const activeBudget = stats?.activeBudgetSum ?? stats?.totalActiveBudget ?? null;
   const cells: {
     label: string;
     value: string;
@@ -46,9 +45,9 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, loc
       filter: { status: 'receiving', tabMode: 'active', urgency: 'all', page: 1 },
     },
     {
-      label: t(locale, 'Нээлттэй тендерийн төсөв', 'Budget of open tenders', '在招项目预算'),
-      value: formatMoney(activeBudget, locale),
-      note: locale === 'zh' ? `按 1 元 ≈ ${MNT_PER_RMB} ₮ 折算` : t(locale, 'Төсөвт өртгийн нийлбэр', 'Sum of estimated budgets', ''),
+      label: t(locale, 'Сүүлийн 4 хоногт нийтэлсэн', 'Published in last 4 days', '近 4 天新发布'),
+      value: stats?.newCount != null ? stats.newCount.toLocaleString() : '—',
+      note: t(locale, 'Шинэ зар', 'New announcements', '新公告'),
     },
     {
       label: t(locale, '48 цагт хаагдах', 'Closing within 48 h', '48 小时内截标'),
@@ -57,14 +56,14 @@ export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, loc
       filter: { status: 'receiving', tabMode: 'active', urgency: 'urgent_48h', page: 1 },
     },
     {
-      label: t(locale, 'Баталгаа шаардахгүй', 'No bid security', '无需投标保证金'),
-      value: stats?.noGuaranteeCount != null ? stats.noGuaranteeCount.toLocaleString() : '—',
-      note: t(locale, 'Тендерийн баталгаагүй оролцох', 'Bid without a guarantee', '可免保函参与'),
+      label: t(locale, 'Нийт бүртгэлтэй тендер', 'Tenders on record', '库内招标总数'),
+      value: stats?.totalCount != null ? stats.totalCount.toLocaleString() : '—',
+      note: t(locale, 'Түүхэн архивтай', 'Searchable history', '可检索历史'),
     },
   ];
 
   return (
-    <div className="grid grid-cols-2 xl:grid-cols-4 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-slate-200 dark:divide-zinc-800 [&>*]:border-slate-200 dark:[&>*]:border-slate-800">
+    <div className="grid grid-cols-2 xl:grid-cols-4 rounded-lg border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-slate-200 dark:divide-zinc-800 [&>*]:border-slate-200 dark:[&>*]:border-zinc-800">
       {cells.map((cell, i) => {
         const clickable = Boolean(cell.filter && onApplyFilter);
         const Tag = clickable ? 'button' : 'div';

@@ -379,6 +379,7 @@ export default function Home() {
       {/* 1. Fixed Left Sidebar Navigation Panel (w-[260px]) */}
       <DashboardSidebar
         activeCount={stats?.activeTendersCount}
+        lastUpdatedAt={stats?.lastUpdatedAt}
         activeSection={activeSection}
         onSelectSection={handleSidebarSelectSection}
         savedCount={savedIds.size}

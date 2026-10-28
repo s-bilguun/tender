@@ -25,9 +25,11 @@ interface DashboardSidebarProps {
   onOpenChinaSupplier?: () => void;
   onOpenPricing?: () => void;
   activeCount?: number;
+  lastUpdatedAt?: string | null;
 }
 
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
+  lastUpdatedAt,
   activeSection = 'dashboard',
   onSelectSection,
   savedCount = 0,
@@ -344,9 +346,13 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div className="px-3 py-2 rounded-md bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800/80 flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-2">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span className="text-slate-500 dark:text-zinc-400">{locale === 'zh' ? '数据来源' : locale === 'en' ? 'Source' : 'Эх сурвалж'}</span>
+                <span className="text-slate-500 dark:text-zinc-400">{locale === 'zh' ? '数据更新' : locale === 'en' ? 'Updated' : 'Шинэчлэгдсэн'}</span>
               </div>
-              <span className="text-slate-700 dark:text-zinc-300 font-medium">tender.gov.mn</span>
+              <span className="text-slate-700 dark:text-zinc-300 font-medium tabular-nums">
+                {lastUpdatedAt && !Number.isNaN(Date.parse(lastUpdatedAt))
+                  ? new Date(lastUpdatedAt).toLocaleString(locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-GB' : 'mn-MN', { timeZone: 'Asia/Ulaanbaatar', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })
+                  : 'tender.gov.mn'}
+              </span>
             </div>
           )}
 

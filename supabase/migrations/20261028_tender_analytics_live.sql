@@ -18,7 +18,10 @@ as $$
       lower(coalesce(doc_status_name, '')) as status_name,
       coalesce(doc_status_code, '') as status_code,
       (coalesce(is_receiving, 0) = 1 or lower(coalesce(doc_status_name, '')) like '%хүлээн авч%')
-        and (receive_date is null or receive_date >= now()) as is_receiving,
+        and (
+          receive_date >= now()
+          or (receive_date is null and publish_date >= now() - interval '21 days')
+        ) as is_receiving,
       coalesce(raw_data #>> '{liveBundle,schemaVersion}', '') = '2'
         and lower(coalesce(raw_data #>> '{liveBundle,structuredSpecs,bidSecurityReq}', '')) like '%шаардахгүй%' as pdf_confirms_no_bid_security,
       receive_date,

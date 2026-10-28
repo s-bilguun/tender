@@ -679,7 +679,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             ) : (
               <>
                 <Sparkles className="h-3.5 w-3.5 text-slate-600" />
-                <span>{locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 专家分析' : 'AI Analysis'}</span>
+                <span className="hidden sm:inline">{locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 专家分析' : 'AI Analysis'}</span>
               </>
             )}
           </button>
@@ -693,10 +693,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   });
                   setIsPdfReaderOpen(true);
                 }}
-                className="h-8 px-3 rounded-md text-xs font-bold text-purple-800 bg-slate-50 hover:bg-purple-100 border border-purple-300 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                className="hidden sm:flex h-8 px-3 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-700 items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
                 title="ТШЗ PDF баримтыг вебсайт дээрээс шууд унших"
               >
-                <BookOpen className="h-3.5 w-3.5 text-purple-600" />
+                <BookOpen className="h-3.5 w-3.5 text-slate-500" />
                 <span>ТШЗ Унших</span>
               </button>
               <a
@@ -704,10 +704,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 target="_blank"
                 rel="noopener noreferrer"
                 download={storedPrimaryPdf.name || 'ТШББ.pdf'}
-                className="h-8 px-3 rounded-md text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 flex items-center gap-1.5 transition-colors shadow-2xs"
+                className="hidden sm:flex h-8 px-3 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-700 items-center gap-1.5 transition-colors shadow-2xs"
                 title="Supabase CDN-ээс ТШЗ PDF-ийг шууд татах"
               >
-                <Download className="h-3.5 w-3.5 text-emerald-600" />
+                <Download className="h-3.5 w-3.5 text-slate-500" />
                 <span>ТШЗ Татах</span>
               </a>
             </>
@@ -716,7 +716,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             href={publicLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-8 px-3 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-700 flex items-center gap-1.5 transition-colors shadow-2xs"
+            className="hidden sm:flex h-8 px-3 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-300 dark:border-zinc-700 flex items-center gap-1.5 transition-colors shadow-2xs"
           >
             <span>tender.gov.mn</span>
             <ExternalLink className="h-3 w-3 text-slate-400 dark:text-zinc-400" />
@@ -727,7 +727,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             rel="noopener noreferrer"
             className="h-8 px-3.5 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 flex items-center gap-1.5 transition-colors shadow-xs"
           >
-            <span>Оролцох</span>
+            <span>{locale === 'mn' ? 'Оролцох' : locale === 'zh' ? '参与投标' : 'Participate'}</span>
             <ExternalLink className="h-3 w-3 text-slate-300" />
           </a>
         </div>
