@@ -1306,7 +1306,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
             <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
-              {locale === 'zh' ? '当年度预算 / 预付款' : (tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Тухайн онд санхүүжих' : 'Урьдчилгаа төлбөр')}
+              {locale === 'zh' ? '当年度预算 / 预付款' : (tender.yearBudget && tender.yearBudget !== tender.totalBudget ? (locale === 'en' ? 'Funded this year' : 'Тухайн онд санхүүжих') : (locale === 'en' ? 'Advance payment' : 'Урьдчилгаа төлбөр'))}
             </span>
             <span className="text-lg sm:text-xl font-bold font-mono text-slate-800 dark:text-zinc-200 block">
               {tender.yearBudget && tender.yearBudget !== tender.totalBudget
@@ -1316,7 +1316,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   : (locale === 'zh' ? '按合同节点' : '—'))}
             </span>
             <span className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 block">
-              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Энэ оны хуваарьт санхүүжилт' : (locale === 'zh' ? '依据招标文件进度拨付' : 'Албан ёсны эх баримтаас шалгана уу')}
+              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? (locale === 'zh' ? '本年度拨款' : locale === 'en' ? 'Scheduled for this year' : 'Энэ оны хуваарьт санхүүжилт') : (locale === 'zh' ? '依据招标文件进度拨付' : locale === 'en' ? 'Check the official document' : 'Албан ёсны эх баримтаас шалгана уу')}
             </span>
           </div>
 
