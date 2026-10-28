@@ -865,7 +865,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <div className="flex items-center gap-3">
                 {chinaAnalysis && (
                   <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-zinc-300">
-                    <span className={`h-1.5 w-1.5 rounded-full ${chinaAnalysis.eligibilityStatus === 'direct_allowed' ? 'bg-emerald-500' : 'bg-slate-900 dark:bg-zinc-700'}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${chinaAnalysis.eligibilityStatus === 'direct_allowed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                     {locale === 'zh' ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '允许外企独立直投' : '建议组建联合体投标') : locale === 'en' ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? 'Foreign bidders may apply directly' : 'Joint venture required') : (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? 'Шууд оролцох боломжтой' : 'Түншлэл (JV) шаардлагатай')}
                   </span>
                 )}

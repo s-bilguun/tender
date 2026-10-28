@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Locale, TenderFilterParams, IndustryVertical, TenderStats } from '@/lib/types';
 import { Building2, Layers, Globe2, ChevronRight, Check } from 'lucide-react';
 import { IndustryIcon } from '@/components/IndustryIcon';
@@ -60,7 +60,7 @@ export const DISCOVERY_BUYER_CARDS: DiscoveryEntityCard[] = [
     nameEn: 'Erdenes Tavan Tolgoi JSC',
     nameZh: '珍宝塔温陶勒盖煤炭股份公司 (ETT)',
     shortNameZh: '塔温陶勒盖煤矿',
-    query: 'Эрдэнэс тавантолгой',
+    query: 'Эрдэнэс Таван Толгой',
     industryId: 'mining',
     icon: '',
     activeTendersCount: 890,
@@ -152,7 +152,7 @@ export const DISCOVERY_BUYER_CARDS: DiscoveryEntityCard[] = [
     nameEn: 'Thermal Power Plant #4 JSC',
     nameZh: '乌兰巴托第四热电厂及国家电网',
     shortNameZh: '第四热电厂 / 能源部',
-    query: 'ДЦС',
+    query: 'Дулааны дөрөвдүгээр цахилгаан станц',
     industryId: 'mining',
     icon: '',
     activeTendersCount: 340,
@@ -265,6 +265,9 @@ export const DISCOVERY_SECTOR_CARDS: DiscoverySectorCard[] = [
   },
 ];
 
+type LiveCount = { openCount: number; yearCount: number; yearBudget: number };
+type LiveStats = { buyers: Record<string, LiveCount>; sectors: Record<string, LiveCount>; generatedAt: string };
+
 interface DiscoveryCardsHubProps {
   filters: TenderFilterParams;
   onFilterChange: (newFilters: Partial<TenderFilterParams>) => void;
@@ -279,6 +282,36 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
   locale,
 }) => {
   const [activeHubTab, setActiveHubTab] = useState<'buyers' | 'sectors' | 'foreign'>('buyers');
+  const [live, setLive] = useState<LiveStats | null | 'error'>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const params = new URLSearchParams({
+      buyers: DISCOVERY_BUYER_CARDS.map((b) => b.query).join('|'),
+      sectors: DISCOVERY_SECTOR_CARDS.map((s) => s.id).join('|'),
+    });
+    fetch(`/api/discovery-stats?${params.toString()}`)
+      .then((r) => r.json())
+      .then((d) => { if (!cancelled) setLive(d?.success ? d : 'error'); })
+      .catch(() => { if (!cancelled) setLive('error'); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const liveBuyer = (q: string) => (live && live !== 'error' ? live.buyers?.[q] : undefined);
+  const liveSector = (id: string) => (live && live !== 'error' ? live.sectors?.[id] : undefined);
+  const pending = live === null;
+
+  const money = (amount?: number) => {
+    const n = Number(amount) || 0;
+    if (n <= 0) return '—';
+    if (locale === 'zh') {
+      const rmb = n / 470;
+      return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString()} 万`;
+    }
+    if (n >= 1e12) return `₮${(n / 1e12).toFixed(2)}${locale === 'en' ? 'T' : ' их наяд'}`;
+    if (n >= 1e9) return `₮${(n / 1e9).toFixed(1)}${locale === 'en' ? 'B' : ' тэрбум'}`;
+    return `₮${Math.round(n / 1e6).toLocaleString()}${locale === 'en' ? 'M' : ' сая'}`;
+  };
   const currentSearch = (filters.search || '').trim().toLowerCase();
 
   const handleSelectBuyer = (buyer: DiscoveryEntityCard) => {
@@ -312,12 +345,6 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
   const t = (mn: string, en: string, zh: string) => (locale === 'zh' ? zh : locale === 'en' ? en : mn);
 
-  const budgetLabel = (mnValue: string, zhValue: string, usdValue?: string) => {
-    if (locale === 'zh') return `≈ ${zhValue.replace(/\s*RMB\s*$/i, '').replace(/\s*亿元/, ' 亿')}`;
-    if (locale === 'en' && usdValue) return `≈ ${usdValue.replace(/^~\s*/, '').replace(/\s*USD$/i, '')}`;
-    return `≈ ${mnValue}`;
-  };
-
   const tabs: { id: 'buyers' | 'sectors' | 'foreign'; label: string; Icon: typeof Building2 }[] = [
     { id: 'buyers', label: t('Захиалагчид', 'Buyers', '采购单位'), Icon: Building2 },
     { id: 'sectors', label: t('Салбарууд', 'Sectors', '行业'), Icon: Layers },
@@ -333,7 +360,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
   const Eligibility = ({ value }: { value: 'direct_allowed' | 'jv_required' }) => (
     <span className="inline-flex items-center gap-1.5 text-xs text-slate-700 dark:text-zinc-300 whitespace-nowrap">
-      <span className={`h-1.5 w-1.5 rounded-full ${value === 'direct_allowed' ? 'bg-emerald-500' : 'bg-slate-900 dark:bg-zinc-700'}`} />
+      <span className={`h-1.5 w-1.5 rounded-full ${value === 'direct_allowed' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
       {value === 'direct_allowed'
         ? t('Шууд оролцож болно', 'Can bid directly', '可独立投标')
         : t('Түншлэл шаардлагатай', 'Local partner needed', '需组建联合体')}
@@ -383,7 +410,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
           <div className={`hidden md:grid grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_9rem_11rem_1rem] gap-x-4 px-5 py-2 bg-slate-50 dark:bg-zinc-950/40 border-b border-slate-200 dark:border-zinc-800 ${headCell}`}>
             <span>{t('Захиалагч', 'Buyer', '采购单位')}</span>
             <span>{t('Гол худалдан авалт', 'Main purchases', '主要采购')}</span>
-            <span className="text-right">{t('Жилийн төсөв*', 'Annual budget*', '年度预算*')}</span>
+            <span className="text-right">{t('Сүүлийн 12 сар', 'Last 12 months', '近 12 个月')}</span>
             <span>{t('Гадаадын компани', 'Foreign companies', '外国企业')}</span>
             <span />
           </div>
@@ -410,8 +437,21 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                       </span>
                     </span>
                     <span className="hidden md:block text-xs text-slate-600 dark:text-zinc-300 truncate">{goods.join(', ')}</span>
-                    <span className="text-sm text-slate-900 dark:text-white tabular-nums text-right whitespace-nowrap">
-                      {budgetLabel(buyer.totalBudgetFormatted, buyer.totalBudgetZh, buyer.budgetUsdEst)}
+                    <span className="text-right whitespace-nowrap tabular-nums">
+                      {(() => {
+                        const st = liveBuyer(buyer.query);
+                        if (pending) return <span className="inline-block h-3.5 w-20 rounded bg-slate-100 dark:bg-zinc-800 animate-pulse" />;
+                        if (!st || !st.yearCount) return <span className="text-sm text-slate-400 dark:text-zinc-500">—</span>;
+                        return (
+                          <>
+                            <span className="block text-sm text-slate-900 dark:text-white">{money(st.yearBudget)}</span>
+                            <span className="block text-[11px] text-slate-500 dark:text-zinc-400">
+                              {st.yearCount.toLocaleString()} {t('тендер', 'tenders', '个招标')}
+                              {st.openCount > 0 && <> · <span className="text-emerald-700 dark:text-emerald-400">{st.openCount} {t('нээлттэй', 'open', '在招')}</span></>}
+                            </span>
+                          </>
+                        );
+                      })()}
                     </span>
                     <span className="hidden md:block"><Eligibility value={buyer.eligibility} /></span>
                     <span className="hidden md:flex justify-end">
@@ -432,9 +472,9 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
           </ul>
           <p className="px-5 py-2.5 text-[11px] text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-zinc-800">
             {t(
-              '* Өмнөх жилүүдийн зарласан тендерт үндэслэсэн урьдчилсан тооцоо.',
-              '* Indicative estimate based on tenders published in previous years.',
-              '* 根据往年已发布招标估算，仅供参考。'
+              'Сүүлийн 12 сард нийтлэгдсэн тендерүүдээс тооцов; төсөв нь зарласан төсөвтэй тендерүүдийн нийлбэр.',
+              'Computed from tenders published in the last 12 months; budget sums tenders with a published budget.',
+              '基于近 12 个月发布的招标统计；预算为已公布预算的招标合计。'
             )}
           </p>
         </div>
@@ -445,7 +485,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
           <div className={`hidden md:grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_9rem_1rem] gap-x-4 px-5 py-2 bg-slate-50 dark:bg-zinc-950/40 border-b border-slate-200 dark:border-zinc-800 ${headCell}`}>
             <span>{t('Салбар', 'Sector', '行业')}</span>
             <span>{t('Эрэлттэй бараа, ажил', 'In demand', '需求品类')}</span>
-            <span className="text-right">{t('Төсөв*', 'Budget*', '预算*')}</span>
+            <span className="text-right">{t('Нээлттэй', 'Open now', '在招')}</span>
             <span />
           </div>
           <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
@@ -468,7 +508,11 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
                     </span>
                     <span className="hidden md:block text-xs text-slate-600 dark:text-zinc-300 truncate">{items.join(', ')}</span>
                     <span className="text-sm text-slate-900 dark:text-white tabular-nums text-right whitespace-nowrap">
-                      {budgetLabel(sector.totalBudgetFormatted, sector.totalBudgetZh)}
+                      {pending ? (
+                        <span className="inline-block h-3.5 w-10 rounded bg-slate-100 dark:bg-zinc-800 animate-pulse" />
+                      ) : (
+                        liveSector(sector.id)?.openCount?.toLocaleString() ?? '—'
+                      )}
                     </span>
                     <span className="hidden md:flex justify-end">
                       {selected ? (
@@ -486,7 +530,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
             })}
           </ul>
           <p className="px-5 py-2.5 text-[11px] text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-zinc-800">
-            {t('* Урьдчилсан тооцоо.', '* Indicative estimate.', '* 估算值，仅供参考。')}
+            {t('Одоо санал хүлээн авч буй тендерийн тоо.', 'Tenders accepting bids right now.', '当前正在接受投标的招标数量。')}
           </p>
         </div>
       )}
