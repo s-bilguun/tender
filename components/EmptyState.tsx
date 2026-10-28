@@ -29,7 +29,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 
       <div className="space-y-1.5 max-w-md mx-auto">
         <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-          {title || (locale === 'mn' ? 'Таны хайсан шалгуурт тохирох тендер олдсонгүй.' : 'No tenders found matching your criteria.')}
+          {title || (locale === 'mn' ? 'Таны хайсан шалгуурт тохирох тендер олдсонгүй.' : locale === 'zh' ? '未找到符合条件的招标。' : 'No tenders found matching your criteria.')}
         </h3>
         <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 leading-relaxed">
           {description ||
@@ -46,7 +46,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
           className="w-full sm:w-auto min-h-[44px] sm:min-h-[40px] px-6 py-2.5 rounded-md text-xs sm:text-sm font-bold bg-slate-900 dark:bg-zinc-800 hover:bg-slate-800 dark:hover:bg-zinc-700 text-white flex items-center justify-center gap-2 transition-all shadow-xs active:scale-95 cursor-pointer border border-transparent dark:border-zinc-700"
         >
           <RotateCcw className="h-4 w-4" />
-          <span>{locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : 'Reset Filters'}</span>
+          <span>{locale === 'mn' ? 'Шүүлтүүр цэвэрлэх' : locale === 'zh' ? '重置筛选' : 'Reset Filters'}</span>
         </button>
       </div>
 
@@ -54,7 +54,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       {suggestedQueries.length > 0 && onSelectSuggestion && (
         <div className="pt-4 border-t border-slate-100 dark:border-zinc-800">
           <span className="text-[11px] font-semibold text-slate-400 dark:text-zinc-500 block mb-2">
-            {locale === 'mn' ? 'Эсвэл эдгээр түлхүүр үгээр хайж үзээрэй:' : 'Or try searching for:'}
+            {locale === 'mn' ? 'Эсвэл эдгээр түлхүүр үгээр хайж үзээрэй:' : locale === 'zh' ? '或试试这些关键词：' : 'Or try searching for:'}
           </span>
           <div className="flex flex-wrap items-center justify-center gap-1.5">
             {suggestedQueries.map((query, i) => (

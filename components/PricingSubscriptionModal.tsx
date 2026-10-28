@@ -70,7 +70,7 @@ export const PricingSubscriptionModal: React.FC<PricingSubscriptionModalProps> =
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/75 flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/75 flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
     >
       <div onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg max-w-5xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
         

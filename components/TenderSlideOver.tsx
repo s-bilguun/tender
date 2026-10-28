@@ -221,10 +221,10 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
     ].filter(Boolean) as string[];
 
   const finalEligibilityList: string[] = eligibilityReqs.length > 0 ? eligibilityReqs : [
-    locale === 'mn' ? 'Шүүхийн шийдвэрээр төлбөргүй байх (Цахим лавлагаа)' : 'No overdue court-ordered debts',
-    locale === 'mn' ? 'Татварын өр төлбөргүй байх (Татварын албаны цахим лавлагаа)' : 'Tax clearance compliance certificate',
-    locale === 'mn' ? 'Нийгмийн даатгалын шимтгэл төлөлтийн тайлан' : 'Social insurance clearance certificate',
-    locale === 'mn' ? 'Тендерийн баталгаа шаардсан тохиолдолд банкны батлан даалт ирүүлэх' : 'Bank bid guarantee if required'
+    locale === 'mn' ? 'Шүүхийн шийдвэрээр төлбөргүй байх (Цахим лавлагаа)' : locale === 'zh' ? '无法院判决欠款（电子证明）' : 'No overdue court-ordered debts',
+    locale === 'mn' ? 'Татварын өр төлбөргүй байх (Татварын албаны цахим лавлагаа)' : locale === 'zh' ? '无欠税（税务局电子证明）' : 'Tax clearance compliance certificate',
+    locale === 'mn' ? 'Нийгмийн даатгалын шимтгэл төлөлтийн тайлан' : locale === 'zh' ? '社会保险缴费证明' : 'Social insurance clearance certificate',
+    locale === 'mn' ? 'Тендерийн баталгаа шаардсан тохиолдолд банкны батлан даалт ирүүлэх' : locale === 'zh' ? '如要求投标保证，提交银行保函' : 'Bank bid guarantee if required'
   ];
 
   // Extract full scope of work
@@ -393,7 +393,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
       {/* Backdrop */}
       <div 
         onClick={onClose}
-        className="absolute inset-0 bg-slate-950/60 transition-opacity animate-in fade-in duration-200" 
+        className="absolute inset-0 bg-black/60 transition-opacity animate-in fade-in duration-200" 
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
@@ -416,7 +416,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
 
                 <span className="text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 px-2.5 py-1 rounded-lg font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 " />
-                  {tender.docStatusName || (locale === 'mn' ? 'Санал авч буй' : 'Open for Bidding')}
+                  {tender.docStatusName || (locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '接受投标' : 'Open for Bidding')}
                 </span>
 
                 {hasStoredPdf && (
@@ -480,7 +480,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
 
                   {timeLeft.isExpired ? (
                     <span className="text-xs font-bold font-mono text-rose-600 dark:text-rose-400">
-                      {locale === 'mn' ? 'Хугацаа дууссан' : 'Bidding Closed'}
+                      {locale === 'mn' ? 'Хугацаа дууссан' : locale === 'zh' ? '已截止' : 'Bidding Closed'}
                     </span>
                   ) : (
                     <div className="flex items-baseline gap-1 font-mono font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
@@ -564,7 +564,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                 {/* Budget Box */}
                 <div className="p-4 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-2 shadow-2xs">
                   <span className="text-[10px] font-bold text-slate-400 dark:text-zinc-500 block">
-                    {locale === 'mn' ? 'Зарлагдсан төсөвт өртөг (Total Budget)' : 'Declared Total Budget'}
+                    {locale === 'mn' ? 'Зарлагдсан төсөвт өртөг (Total Budget)' : locale === 'zh' ? '公布的预算总额' : 'Declared Total Budget'}
                   </span>
                   <div className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white font-mono tracking-tight">
                     ₮ {budgetMnt.toLocaleString()}
@@ -627,7 +627,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                   <div className="p-4 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-2.5 shadow-2xs">
                     <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                      <span>{locale === 'mn' ? 'Шаардагдах тусгай зөвшөөрөл (Licenses)' : 'Required Licenses'}</span>
+                      <span>{locale === 'mn' ? 'Шаардагдах тусгай зөвшөөрөл (Licenses)' : locale === 'zh' ? '所需许可证' : 'Required Licenses'}</span>
                     </span>
                     <div className="flex flex-wrap gap-2 pt-1">
                       {licenses.map((lic, idx) => (
@@ -648,7 +648,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                           {locale === 'mn' ? 'Шалгуурын үнэлгээ & Нийцлийн тооцоолуур' : locale === 'zh' ? '投标资质自查与匹配评估' : 'BDS Eligibility Self-Assessment'}
                         </h4>
                         <p className="text-[11px] text-slate-500 dark:text-zinc-400">
-                          {locale === 'mn' ? 'Танай байгууллага энэ тендерт тэнцэх боломжтой эсэхийг шалгах' : 'Verify if your enterprise meets minimum criteria'}
+                          {locale === 'mn' ? 'Танай байгууллага энэ тендерт тэнцэх боломжтой эсэхийг шалгах' : locale === 'zh' ? '核对贵公司是否具备投标资格' : 'Verify if your enterprise meets minimum criteria'}
                         </p>
                       </div>
                     </div>
@@ -741,7 +741,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <ListChecks className="h-4 w-4 text-blue-500" />
-                      <span>{locale === 'mn' ? 'Шалгуур үзүүлэлт & Шаардлага' : 'Eligibility & Clearances'}</span>
+                      <span>{locale === 'mn' ? 'Шалгуур үзүүлэлт & Шаардлага' : locale === 'zh' ? '资格与证明' : 'Eligibility & Clearances'}</span>
                     </span>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
                       {finalEligibilityList.length} шаардлага
@@ -763,7 +763,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <Tag className="h-4 w-4 text-purple-500" />
-                      <span>{locale === 'mn' ? 'Ажлын даалгавар / Техникийн үзүүлэлт' : 'Technical Specifications Scope'}</span>
+                      <span>{locale === 'mn' ? 'Ажлын даалгавар / Техникийн үзүүлэлт' : locale === 'zh' ? '工作范围 / 技术规格' : 'Technical Specifications Scope'}</span>
                     </span>
                     {hasStoredPdf && (
                       <div className="flex items-center gap-2">
@@ -772,7 +772,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                           className="text-[11px] font-semibold text-purple-700 dark:text-purple-300 hover:text-purple-900 bg-purple-50 dark:bg-zinc-900 px-2.5 py-1 rounded-md border border-purple-200 dark:border-zinc-800 flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
                         >
                           <BookOpen className="h-3 w-3 text-purple-600 dark:text-purple-400" />
-                          <span>{locale === 'mn' ? 'PDF Унших' : 'Read PDF'}</span>
+                          <span>{locale === 'mn' ? 'PDF Унших' : locale === 'zh' ? '阅读 PDF' : 'Read PDF'}</span>
                         </button>
                         <a
                           href={storedPdfUrl}
@@ -782,7 +782,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                           className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:emerald-500 flex items-center gap-1 transition-colors"
                         >
                           <Download className="h-3 w-3" />
-                          <span>{locale === 'mn' ? 'Татах' : 'Download'}</span>
+                          <span>{locale === 'mn' ? 'Татах' : locale === 'zh' ? '下载' : 'Download'}</span>
                         </a>
                       </div>
                     )}
@@ -801,7 +801,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                         <div className="min-w-0">
                           <div className="font-semibold text-slate-900 dark:text-white truncate text-xs">{storedPdfFileName}</div>
                           <div className="text-[11px] text-purple-700 dark:text-purple-400 font-medium">
-                            {locale === 'mn' ? 'Албан ёсны ТШББ баримт хадгалагдсан' : 'Official bidding PDF document ready'}
+                            {locale === 'mn' ? 'Албан ёсны ТШББ баримт хадгалагдсан' : locale === 'zh' ? '官方招标文件已就绪' : 'Official bidding PDF document ready'}
                           </div>
                         </div>
                       </div>
@@ -810,12 +810,12 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                         className="w-full sm:w-auto px-3.5 py-1.5 rounded-lg bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                       >
                         <BookOpen className="h-3.5 w-3.5" />
-                        <span>{locale === 'mn' ? 'ТШЗ Унших' : 'Read PDF'}</span>
+                        <span>{locale === 'mn' ? 'ТШЗ Унших' : locale === 'zh' ? '阅读 PDF' : 'Read PDF'}</span>
                       </button>
                     </div>
                   ) : (
                     <div className="p-3 bg-slate-50 dark:bg-zinc-950/60 rounded-lg border border-slate-200 dark:border-zinc-800 text-xs text-slate-500 dark:text-zinc-400 text-center italic">
-                      {locale === 'mn' ? 'Техникийн тодорхойлолтыг албан ёсны PDF баримтаас татаж үзнэ үү.' : 'Download technical specification document for complete details.'}
+                      {locale === 'mn' ? 'Техникийн тодорхойлолтыг албан ёсны PDF баримтаас татаж үзнэ үү.' : locale === 'zh' ? '请从官方 PDF 文件下载技术规格查看。' : 'Download technical specification document for complete details.'}
                     </div>
                   )}
                 </div>
@@ -1067,7 +1067,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                     </div>
                     <div className="space-y-1 max-w-md mx-auto">
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                        {locale === 'mn' ? 'Албан ёсны PDF эх баримт хадгалагдсан' : 'Official PDF Document Available'}
+                        {locale === 'mn' ? 'Албан ёсны PDF эх баримт хадгалагдсан' : locale === 'zh' ? '官方 PDF 文件可用' : 'Official PDF Document Available'}
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
                         {locale === 'mn'
@@ -1081,7 +1081,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                         className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 text-white font-bold text-xs shadow-md active:scale-95 transition-all cursor-pointer"
                       >
                         <BookOpen className="h-4 w-4" />
-                        <span>{locale === 'mn' ? 'ТШЗ PDF Уншигчаар үзэх' : 'Open PDF Reader'}</span>
+                        <span>{locale === 'mn' ? 'ТШЗ PDF Уншигчаар үзэх' : locale === 'zh' ? '用 PDF 阅读器打开' : 'Open PDF Reader'}</span>
                       </button>
                     )}
                   </div>
@@ -1104,7 +1104,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                       </span>
                     </div>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
-                      {locale === 'mn' ? 'Төрийн худалдан авалт' : 'Direct Gov Budget'}
+                      {locale === 'mn' ? 'Төрийн худалдан авалт' : locale === 'zh' ? '政府直接采购' : 'Direct Gov Budget'}
                     </span>
                   </div>
 
@@ -1132,7 +1132,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                 <div className="p-4 rounded-md bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-2.5 shadow-2xs">
                   <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Trophy className="h-4 w-4 text-amber-500" />
-                    <span>{locale === 'mn' ? 'Ялах стратеги & Зөвлөмж' : 'Recommended Bidding Strategy'}</span>
+                    <span>{locale === 'mn' ? 'Ялах стратеги & Зөвлөмж' : locale === 'zh' ? '投标策略与建议' : 'Recommended Bidding Strategy'}</span>
                   </span>
 
                   <div className="space-y-2 text-xs text-slate-700 dark:text-zinc-300">
@@ -1158,7 +1158,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-purple-500" />
-                      <span>{locale === 'mn' ? 'AI Шинжээчээр бичиг баримт шалгуулах' : 'Ask AI to analyze this bid in detail'}</span>
+                      <span>{locale === 'mn' ? 'AI Шинжээчээр бичиг баримт шалгуулах' : locale === 'zh' ? '让 AI 详细分析本标书' : 'Ask AI to analyze this bid in detail'}</span>
                     </div>
                     <ArrowRight className="h-3.5 w-3.5" />
                   </button>

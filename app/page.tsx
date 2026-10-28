@@ -145,15 +145,15 @@ export default function Home() {
         next.delete(strId);
         showToast({
           type: 'info',
-          title: locale === 'mn' ? 'Хяналтаас хаслаа' : 'Removed from watchlist',
-          description: locale === 'mn' ? 'Тендерийг таны хадгалсан жагсаалтаас хаслаа.' : 'Tender removed from your pinned watchlist.',
+          title: locale === 'mn' ? 'Хяналтаас хаслаа' : locale === 'zh' ? '已取消关注' : 'Removed from watchlist',
+          description: locale === 'mn' ? 'Тендерийг таны хадгалсан жагсаалтаас хаслаа.' : locale === 'zh' ? '已从关注列表移除。' : 'Tender removed from your pinned watchlist.',
         });
       } else {
         next.add(id);
         showToast({
           type: 'success',
-          title: locale === 'mn' ? 'Хяналтад хадгаллаа' : 'Saved to watchlist',
-          description: locale === 'mn' ? 'Тендерийг "Миний хянаж буй" хэсэгт нэмлээ.' : 'Tender pinned to your watchlist tab.',
+          title: locale === 'mn' ? 'Хяналтад хадгаллаа' : locale === 'zh' ? '已加入关注' : 'Saved to watchlist',
+          description: locale === 'mn' ? 'Тендерийг "Миний хянаж буй" хэсэгт нэмлээ.' : locale === 'zh' ? '已加入“我的关注”。' : 'Tender pinned to your watchlist tab.',
         });
       }
       try {
@@ -336,8 +336,8 @@ export default function Home() {
     exportTendersToCSV(displayedTenders, `tender_export_${new Date().toISOString().substring(0, 10)}.csv`);
     showToast({
       type: 'success',
-      title: locale === 'mn' ? 'CSV амжилттай татагдлаа' : 'CSV exported successfully',
-      description: locale === 'mn' ? `${displayedTenders.length} тендерийн өгөгдлийг Excel файлд хадгаллаа.` : `${displayedTenders.length} items exported to spreadsheet.`,
+      title: locale === 'mn' ? 'CSV амжилттай татагдлаа' : locale === 'zh' ? 'CSV 导出成功' : 'CSV exported successfully',
+      description: locale === 'mn' ? `${displayedTenders.length} тендерийн өгөгдлийг Excel файлд хадгаллаа.` : locale === 'zh' ? `已导出 ${displayedTenders.length} 条招标到表格。` : `${displayedTenders.length} items exported to spreadsheet.`,
     });
   };
 
@@ -415,9 +415,9 @@ export default function Home() {
           onSearchSubmit={handleGlobalSearchSubmit}
           activeSectionTitle={
             activeSection === 'watchlist'
-              ? (locale === 'mn' ? 'Хадгалсан төслүүд' : 'My Saved Bids')
+              ? (locale === 'mn' ? 'Хадгалсан төслүүд' : locale === 'zh' ? '我的收藏' : 'My Saved Bids')
               : activeSection === 'buyers'
-              ? (locale === 'mn' ? 'Захиалагч байгууллагууд' : 'Buyer Intelligence')
+              ? (locale === 'mn' ? 'Захиалагч байгууллагууд' : locale === 'zh' ? '采购单位' : 'Buyer Intelligence')
               : undefined
           }
         />
@@ -539,7 +539,7 @@ export default function Home() {
                     ) : (
                       <ArrowDown className="h-4 w-4 text-blue-500" />
                     )}
-                    <span>{locale === 'mn' ? 'Цааш үзэх (+15 нэмэх)' : 'Load More (+15)'}</span>
+                    <span>{locale === 'mn' ? 'Цааш үзэх (+15 нэмэх)' : locale === 'zh' ? '加载更多 (+15)' : 'Load More (+15)'}</span>
                   </button>
 
                   {totalPages > 1 && (
@@ -550,7 +550,7 @@ export default function Home() {
                         className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
                       >
                         <ChevronLeft className="h-4 w-4" />
-                        <span className="hidden sm:inline">{locale === 'mn' ? 'Өмнөх' : 'Prev'}</span>
+                        <span className="hidden sm:inline">{locale === 'mn' ? 'Өмнөх' : locale === 'zh' ? '上一页' : 'Prev'}</span>
                       </button>
 
                       <span className="px-2 text-xs font-semibold text-slate-700 dark:text-zinc-300 font-mono tabular-nums">
@@ -562,7 +562,7 @@ export default function Home() {
                         disabled={(filters.page || 1) >= totalPages}
                         className="h-8 px-2.5 rounded-lg text-xs font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 disabled:opacity-40 flex items-center gap-1 cursor-pointer"
                       >
-                        <span className="hidden sm:inline">{locale === 'mn' ? 'Дараах' : 'Next'}</span>
+                        <span className="hidden sm:inline">{locale === 'mn' ? 'Дараах' : locale === 'zh' ? '下一页' : 'Next'}</span>
                         <ChevronRight className="h-4 w-4" />
                       </button>
                     </div>

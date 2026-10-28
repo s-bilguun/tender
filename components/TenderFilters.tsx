@@ -175,19 +175,19 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   ];
 
   const fundSources = [
-    { id: 'all', label: locale === 'mn' ? 'Бүх санхүүжилт' : 'All Funds' },
-    { id: 'Улсын төсөв', label: locale === 'mn' ? 'Улсын төсөв' : 'State Budget' },
-    { id: 'Орон нутгийн төсөв', label: locale === 'mn' ? 'Орон нутгийн төсөв' : 'Local Budget' },
-    { id: 'Өөрийн хөрөнгө', label: locale === 'mn' ? 'Өөрийн хөрөнгө' : 'Own Capital' },
-    { id: 'Гадаадын зээл', label: locale === 'mn' ? 'Гадаадын зээл, тусламж' : 'Foreign Loan/Grant' },
+    { id: 'all', label: locale === 'mn' ? 'Бүх санхүүжилт' : locale === 'zh' ? '全部资金来源' : 'All Funds' },
+    { id: 'Улсын төсөв', label: locale === 'mn' ? 'Улсын төсөв' : locale === 'zh' ? '国家预算' : 'State Budget' },
+    { id: 'Орон нутгийн төсөв', label: locale === 'mn' ? 'Орон нутгийн төсөв' : locale === 'zh' ? '地方预算' : 'Local Budget' },
+    { id: 'Өөрийн хөрөнгө', label: locale === 'mn' ? 'Өөрийн хөрөнгө' : locale === 'zh' ? '自有资金' : 'Own Capital' },
+    { id: 'Гадаадын зээл', label: locale === 'mn' ? 'Гадаадын зээл, тусламж' : locale === 'zh' ? '外国贷款/援助' : 'Foreign Loan/Grant' },
   ];
 
   const procurementRules = [
-    { id: 'all', label: locale === 'mn' ? 'Бүх арга' : 'All Methods' },
-    { id: 'Нээлттэй', label: locale === 'mn' ? 'Нээлттэй тендер' : 'Open Bidding' },
-    { id: 'Харьцуулалт', label: locale === 'mn' ? 'Харьцуулалтын арга' : 'Comparison' },
-    { id: 'Зөвлөх', label: locale === 'mn' ? 'Зөвлөх үйлчилгээ' : 'Consulting' },
-    { id: 'Шууд', label: locale === 'mn' ? 'Шууд худалдан авалт' : 'Direct' },
+    { id: 'all', label: locale === 'mn' ? 'Бүх арга' : locale === 'zh' ? '全部方式' : 'All Methods' },
+    { id: 'Нээлттэй', label: locale === 'mn' ? 'Нээлттэй тендер' : locale === 'zh' ? '公开招标' : 'Open Bidding' },
+    { id: 'Харьцуулалт', label: locale === 'mn' ? 'Харьцуулалтын арга' : locale === 'zh' ? '对比方式' : 'Comparison' },
+    { id: 'Зөвлөх', label: locale === 'mn' ? 'Зөвлөх үйлчилгээ' : locale === 'zh' ? '咨询服务' : 'Consulting' },
+    { id: 'Шууд', label: locale === 'mn' ? 'Шууд худалдан авалт' : locale === 'zh' ? '直接采购' : 'Direct' },
   ];
 
   const popularSuggestions = [
@@ -515,7 +515,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
  viewMode === 'table' ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
  }`}
-              title={locale === 'mn' ? 'Хүснэгт' : 'Table view'}
+              title={locale === 'mn' ? 'Хүснэгт' : locale === 'zh' ? '表格视图' : 'Table view'}
             >
               <TableIcon className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{locale === 'mn' ? 'Хүснэгт' : locale === 'zh' ? '表格' : 'Table'}</span>
@@ -525,7 +525,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
  viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
  }`}
-              title={locale === 'mn' ? 'Карт' : 'Grid view'}
+              title={locale === 'mn' ? 'Карт' : locale === 'zh' ? '卡片视图' : 'Grid view'}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{locale === 'mn' ? 'Карт' : locale === 'zh' ? '卡片' : 'Cards'}</span>
@@ -614,7 +614,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
               >
                 <option value="date_desc" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : locale === 'zh' ? '最新发布' : 'Newest'}</option>
-                <option value="deadline_asc" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? 'Хугацаа ойртсоноор' : 'Ending Soon'}</option>
+                <option value="deadline_asc" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? 'Хугацаа ойртсоноор' : locale === 'zh' ? '即将截止' : 'Ending Soon'}</option>
                 <option value="budget_desc" className="dark:bg-zinc-850 dark:text-white">{t.sortOptions.budget_desc}</option>
                 <option value="budget_asc" className="dark:bg-zinc-850 dark:text-white">{t.sortOptions.budget_asc}</option>
               </select>

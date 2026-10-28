@@ -88,7 +88,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/75 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-2 sm:p-4 md:p-6 bg-black/75 animate-in fade-in duration-200">
       
       {/* Modal Container */}
       <div 
@@ -181,7 +181,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                 title="PDF файлыг татаж авах"
               >
                 <Download className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span className="hidden sm:inline">{locale === 'mn' ? 'Татах' : 'Download'}</span>
+                <span className="hidden sm:inline">{locale === 'mn' ? 'Татах' : locale === 'zh' ? '下载' : 'Download'}</span>
               </a>
             )}
 

@@ -123,7 +123,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       {/* Mobile Backdrop */}
       {isOpenMobile && (
         <div 
-          className="fixed inset-0 bg-slate-950/80 z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-black/80 z-40 lg:hidden transition-opacity"
           onClick={onCloseMobile}
         />
       )}
@@ -272,7 +272,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     onOpenDocAudit();
                     onCloseMobile();
                   }}
-                  title={isCollapsed ? (locale === 'mn' ? 'ТББ Шалгагч AI' : 'AI Tender Doc Audit') : undefined}
+                  title={isCollapsed ? (locale === 'mn' ? 'ТББ Шалгагч AI' : locale === 'zh' ? 'AI 标书审核' : 'AI Tender Doc Audit') : undefined}
                   className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-md text-xs font-medium text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-900/80 transition-colors group cursor-pointer`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -290,7 +290,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     onOpenFinance();
                     onCloseMobile();
                   }}
-                  title={isCollapsed ? (locale === 'mn' ? 'Баталгаа & Санхүүжилт' : 'Bank Guarantees') : undefined}
+                  title={isCollapsed ? (locale === 'mn' ? 'Баталгаа & Санхүүжилт' : locale === 'zh' ? '保函与融资' : 'Bank Guarantees') : undefined}
                   className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-md text-xs font-medium text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-900/80 transition-colors group cursor-pointer`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -308,7 +308,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     onOpenChinaSupplier();
                     onCloseMobile();
                   }}
-                  title={isCollapsed ? (locale === 'mn' ? 'Хятадаас нийлүүлэх' : 'Tender2China Sourcing') : undefined}
+                  title={isCollapsed ? (locale === 'mn' ? 'Хятадаас нийлүүлэх' : locale === 'zh' ? '从中国采购' : 'Tender2China Sourcing') : undefined}
                   className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-md text-xs font-medium text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-900/80 transition-colors group cursor-pointer`}
                 >
                   <div className="flex items-center gap-2.5">
@@ -332,7 +332,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               onOpenAI();
               onCloseMobile();
             }}
-            title={isCollapsed ? (locale === 'mn' ? 'AI Шинжээч' : 'Ask AI') : undefined}
+            title={isCollapsed ? (locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 分析' : 'Ask AI') : undefined}
             className={`w-full ${isCollapsed ? 'h-10 px-2' : 'h-10 px-3.5'} rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer`}
           >
             <Sparkles className="h-4 w-4 shrink-0" />

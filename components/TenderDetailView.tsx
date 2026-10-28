@@ -1499,7 +1499,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         {locale === 'mn' ? 'Шалгуурын үнэлгээ & Нийцлийн тооцоолуур' : locale === 'zh' ? '投标资质自查与匹配评估' : 'BDS Eligibility Self-Assessment'}
                       </h4>
                       <p className="text-xs text-slate-500 dark:text-zinc-400">
-                        {locale === 'mn' ? 'Танай байгууллага энэ тендерийн босго шаардлагыг хангаж буй эсэхийг шууд шалгах' : 'Verify if your enterprise meets minimum qualification criteria'}
+                        {locale === 'mn' ? 'Танай байгууллага энэ тендерийн босго шаардлагыг хангаж буй эсэхийг шууд шалгах' : locale === 'zh' ? '立即核对贵公司是否满足本标的资格门槛' : 'Verify if your enterprise meets minimum qualification criteria'}
                       </p>
                     </div>
                   </div>
@@ -3265,7 +3265,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     <ul className="list-disc pl-4 space-y-0.5">
                       {locale === 'zh' ? (
                         <>
-                          <li>由中国银行乌兰巴托分行 (Bank of China Ulaanbaatar) 协助直接出具当地保函。</li>
+                          <li>可咨询中国银行乌兰巴托分行 (Bank of China Ulaanbaatar) 等银行是否可出具当地保函（以银行实际政策为准）。</li>
                           <li>国内银行 (中行/工行/进出口银行) 开立对外转开保函(Counter-Guarantee)至蒙古国商业银行(Khan Bank, TDB)。</li>
                           <li>若标段预算低于5000万图格里克或特殊豁免标段，可享受 0₮ 免保函待遇。</li>
                         </>

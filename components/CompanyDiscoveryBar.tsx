@@ -725,7 +725,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
                   : 'Top Procuring Entities'}
               </h2>
               <span className="text-[11px] font-semibold px-2 py-0.2 rounded-full bg-slate-50 text-indigo-700 border border-indigo-200/60 shrink-0 font-mono">
-                {companyList.length} {locale === 'mn' ? 'байгууллага' : 'entities'}
+                {companyList.length} {locale === 'mn' ? 'байгууллага' : locale === 'zh' ? '家单位' : 'entities'}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
@@ -741,7 +741,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             onClick={() => onFilterChange({ search: undefined, sortBy: 'date_desc', page: 1 })}
             className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors self-start sm:self-auto flex items-center gap-1.5 cursor-pointer bg-slate-50 hover:bg-indigo-100 px-2.5 py-1 rounded-lg shrink-0"
           >
-            <span>{locale === 'mn' ? 'Бүгдийг харах' : 'View All'}</span>
+            <span>{locale === 'mn' ? 'Бүгдийг харах' : locale === 'zh' ? '查看全部' : 'View All'}</span>
             <X className="h-3.5 w-3.5 text-indigo-500" />
           </button>
         )}
@@ -752,7 +752,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
         <div className="flex items-center justify-between bg-slate-50 border border-indigo-200 rounded-md px-3.5 py-2 text-xs text-indigo-950 shadow-2xs">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-bold text-slate-700 shrink-0">
-              {locale === 'mn' ? 'Сонгосон:' : 'Selected:'}
+              {locale === 'mn' ? 'Сонгосон:' : locale === 'zh' ? '已选择：' : 'Selected:'}
             </span>
             <span className="inline-flex items-center gap-1.5 bg-slate-900 dark:bg-zinc-700 text-white font-semibold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs truncate">
               <IndustryIcon id={activeCompany.category} className="h-3 w-3 text-white shrink-0" />
@@ -763,7 +763,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             onClick={() => onFilterChange({ search: undefined, sortBy: 'date_desc', page: 1 })}
             className="text-[11px] font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 hover:underline cursor-pointer shrink-0 ml-2"
           >
-            <span>{locale === 'mn' ? 'Арилгах' : 'Clear'}</span>
+            <span>{locale === 'mn' ? 'Арилгах' : locale === 'zh' ? '清除' : 'Clear'}</span>
             <X className="h-3 w-3" />
           </button>
         </div>

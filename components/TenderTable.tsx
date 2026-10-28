@@ -66,13 +66,13 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   const getCategoryBadge = (code?: string, name?: string) => {
     switch (code) {
       case 'PRODUCT':
-        return { label: locale === 'mn' ? 'Бараа' : 'Goods', bg: 'bg-blue-50 text-blue-700 border-blue-200/80' };
+        return { label: locale === 'mn' ? 'Бараа' : locale === 'zh' ? '货物' : 'Goods', bg: 'bg-blue-50 text-blue-700 border-blue-200/80' };
       case 'JOB':
-        return { label: locale === 'mn' ? 'Ажил' : 'Works', bg: 'bg-amber-50 text-amber-700 border-amber-200/80' };
+        return { label: locale === 'mn' ? 'Ажил' : locale === 'zh' ? '工程' : 'Works', bg: 'bg-amber-50 text-amber-700 border-amber-200/80' };
       case 'SERVICE':
-        return { label: locale === 'mn' ? 'Үйлчилгээ' : 'Services', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' };
+        return { label: locale === 'mn' ? 'Үйлчилгээ' : locale === 'zh' ? '服务' : 'Services', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80' };
       default:
-        return { label: name || (locale === 'mn' ? 'Тендер' : 'Tender'), bg: 'bg-slate-50 text-slate-700 border-slate-200/80' };
+        return { label: name || (locale === 'mn' ? 'Тендер' : locale === 'zh' ? '招标' : 'Tender'), bg: 'bg-slate-50 text-slate-700 border-slate-200/80' };
     }
   };
 
@@ -90,13 +90,13 @@ export const TenderTable: React.FC<TenderTableProps> = ({
           <thead>
             <tr className="bg-slate-50/90 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-zinc-700 text-slate-600 dark:text-zinc-300 font-semibold text-[11px]">
               <th className="py-2.5 px-2 w-[36px] text-center"></th>
-              <th className="py-2.5 px-3 min-w-[280px]">{locale === 'mn' ? 'Тендерийн нэр & Код' : 'Tender Title & Code'}</th>
-              <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity'}</th>
-              <th className="py-2.5 px-3 w-[85px]">{locale === 'mn' ? 'Төрөл' : 'Category'}</th>
-              <th className="py-2.5 px-3 text-right w-[130px]">{locale === 'mn' ? 'Төсөвт өртөг' : 'Budget'}</th>
-              <th className="py-2.5 px-3 w-[125px] hidden sm:table-cell">{locale === 'mn' ? 'Эцсийн хугацаа' : 'Deadline'}</th>
-              <th className="py-2.5 px-3 w-[135px]">{locale === 'mn' ? 'Төлөв' : 'Status'}</th>
-              <th className="py-2.5 px-3 text-center w-[90px]">{locale === 'mn' ? 'Үйлдэл' : 'Action'}</th>
+              <th className="py-2.5 px-3 min-w-[280px]">{locale === 'mn' ? 'Тендерийн нэр & Код' : locale === 'zh' ? '招标名称与编号' : 'Tender Title & Code'}</th>
+              <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч байгууллага' : locale === 'zh' ? '采购单位' : 'Procuring Entity'}</th>
+              <th className="py-2.5 px-3 w-[85px]">{locale === 'mn' ? 'Төрөл' : locale === 'zh' ? '类别' : 'Category'}</th>
+              <th className="py-2.5 px-3 text-right w-[130px]">{locale === 'mn' ? 'Төсөвт өртөг' : locale === 'zh' ? '预算' : 'Budget'}</th>
+              <th className="py-2.5 px-3 w-[125px] hidden sm:table-cell">{locale === 'mn' ? 'Эцсийн хугацаа' : locale === 'zh' ? '截止时间' : 'Deadline'}</th>
+              <th className="py-2.5 px-3 w-[135px]">{locale === 'mn' ? 'Төлөв' : locale === 'zh' ? '状态' : 'Status'}</th>
+              <th className="py-2.5 px-3 text-center w-[90px]">{locale === 'mn' ? 'Үйлдэл' : locale === 'zh' ? '操作' : 'Action'}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
@@ -120,7 +120,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
  ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-zinc-900'
  : 'text-slate-300 dark:text-zinc-600 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-zinc-800'
  }`}
-                        title={locale === 'mn' ? 'Хяналтад авах' : 'Save to watchlist'}
+                        title={locale === 'mn' ? 'Хяналтад авах' : locale === 'zh' ? '加入关注' : 'Save to watchlist'}
                       >
                         <Star className={`h-3.5 w-3.5 ${
  savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId)) ? 'fill-amber-500' : ''
@@ -361,9 +361,9 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       <Link
                         href={`/tender/${tender.invitationId}`}
                         className="h-6 px-2 rounded bg-slate-900 dark:bg-zinc-800 text-white hover:bg-slate-800 dark:hover:bg-zinc-700 border border-slate-900 dark:border-zinc-700 text-[11px] font-semibold transition-all shadow-2xs flex items-center justify-center cursor-pointer"
-                        title={locale === 'mn' ? 'Тендерийн дэлгэрэнгүйг үзэх' : 'View tender details'}
+                        title={locale === 'mn' ? 'Тендерийн дэлгэрэнгүйг үзэх' : locale === 'zh' ? '查看招标详情' : 'View tender details'}
                       >
-                        {locale === 'mn' ? 'Үзэх' : 'View'}
+                        {locale === 'mn' ? 'Үзэх' : locale === 'zh' ? '查看' : 'View'}
                       </Link>
 
                       {/* Direct Official Link */}
@@ -372,7 +372,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         target="_blank"
                         rel="noopener noreferrer"
                         className="h-6 w-6 rounded bg-white dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-700 flex items-center justify-center transition-colors"
-                        title={locale === 'mn' ? 'tender.gov.mn дээр нээх' : 'Open in tender.gov.mn'}
+                        title={locale === 'mn' ? 'tender.gov.mn дээр нээх' : locale === 'zh' ? '在 tender.gov.mn 打开' : 'Open in tender.gov.mn'}
                       >
                         <ExternalLink className="h-3 w-3" />
                       </a>
@@ -381,7 +381,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       <button
                         onClick={() => onAskAI(tender)}
                         className="h-6 w-6 rounded bg-white dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-zinc-700 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200 dark:border-zinc-700 flex items-center justify-center transition-colors cursor-pointer"
-                        title={locale === 'mn' ? 'AI шинжилгээ' : 'AI Analysis'}
+                        title={locale === 'mn' ? 'AI шинжилгээ' : locale === 'zh' ? 'AI 分析' : 'AI Analysis'}
                       >
                         <Sparkles className="h-3 w-3" />
                       </button>

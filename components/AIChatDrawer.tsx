@@ -453,7 +453,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
       });
 
       const data = await res.json();
-      const rawReply = data.reply || data.text || data.error || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : 'Error generating reply.');
+      const rawReply = data.reply || data.text || data.error || (locale === 'mn' ? 'Хариу үүсгэхэд алдаа гарлаа.' : locale === 'zh' ? '生成回复时出错。' : 'Error generating reply.');
       const reply = cleanThoughtBlocks(rawReply);
 
       const assistantMsg: Message = {
@@ -470,7 +470,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         {
           id: `error-${Date.now()}`,
  sender: 'assistant',
- text: locale === 'mn' ? 'Сервертэй холбогдоход алдаа гарлаа.' : 'Network error connecting to AI engine.',
+ text: locale === 'mn' ? 'Сервертэй холбогдоход алдаа гарлаа.' : locale === 'zh' ? '连接 AI 服务时出错。' : 'Network error connecting to AI engine.',
  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
  },
  ]);
@@ -484,7 +484,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  {
  id: 'welcome',
  sender: 'assistant',
- text: locale === 'mn' ? 'Харилцан яриа цэвэрлэгдлээ. Та асуултаа бичнэ үү.' : 'Chat cleared. How can I help you?',
+ text: locale === 'mn' ? 'Харилцан яриа цэвэрлэгдлээ. Та асуултаа бичнэ үү.' : locale === 'zh' ? '对话已清空，请输入问题。' : 'Chat cleared. How can I help you?',
  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
  },
  ]);
@@ -497,7 +497,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  {/* Dimmed Backdrop */}
  <div
  onClick={onClose}
- className="fixed inset-0 z-50 bg-slate-950/60 transition-opacity animate-in fade-in duration-200"
+ className="fixed inset-0 z-50 bg-black/60 transition-opacity animate-in fade-in duration-200"
  />
 
  <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white dark:bg-zinc-950 border-l border-slate-200 dark:border-zinc-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 text-slate-900 dark:text-zinc-100">
@@ -538,7 +538,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
  {/* Model Selector Bar */}
  <div className="px-4 py-2 bg-slate-50 dark:bg-zinc-900 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-2 text-xs">
  <span className="text-slate-500 dark:text-zinc-400 text-[11px] shrink-0">
- {locale === 'mn' ? 'AI Загвар:' : 'Model:'}
+ {locale === 'mn' ? 'AI Загвар:' : locale === 'zh' ? 'AI 模型：' : 'Model:'}
  </span>
  <select
  value={selectedModel}
@@ -635,7 +635,7 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         {isLoading && (
           <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400 p-2">
             <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-500" />
-            <span>{locale === 'mn' ? 'Шинжилгээ хийж байна...' : 'Analyzing tender data...'}</span>
+            <span>{locale === 'mn' ? 'Шинжилгээ хийж байна...' : locale === 'zh' ? '正在分析招标数据…' : 'Analyzing tender data...'}</span>
           </div>
         )}
         <div ref={messagesEndRef} />
