@@ -36,8 +36,9 @@ function openTenderFilter(): string {
 const PREFERRED_FREE_MODELS = [
   'nvidia/nemotron-3-ultra-550b-a55b:free',
   'google/gemma-4-26b-a4b-it:free',
-  'google/gemma-4-31b-it:free',
   'nvidia/nemotron-3.5-super-vl:free',
+  'google/gemma-4-31b-it:free',
+  'openrouter/free',
 ];
 
 let freeModelCache: { at: number; ids: Set<string> | null } = { at: 0, ids: null };
@@ -60,6 +61,12 @@ async function listLiveFreeModels(): Promise<Set<string> | null> {
     freeModelCache = { at: Date.now() - 5 * 60 * 60 * 1000, ids: freeModelCache.ids }; // retry in ~1 h
     return freeModelCache.ids;
   }
+}
+
+/** Keep prompt sections bounded so free models answer within the time limit. */
+function clip(text: string, max: number): string {
+  if (!text) return '';
+  return text.length > max ? `${text.slice(0, max)}\n…[таслав]` : text;
 }
 
 function formatBudget(amount: number): string {
@@ -740,21 +747,21 @@ ${JSON.stringify(targetTender)}
 ${activePdfText ? '' : 'АНХААР: Энэ тендерийн ТШБ/PDF баримтыг систем уншаагүй; зөвхөн зарын мэдээлэл (нэр, захиалагч, огноо) байна. Техникийн шаардлага, баталгаа, эцсийн хугацааны талаар таамаглахгүй, эдгээрийг tender.gov.mn дээрх албан ёсны баримтаас шалгахыг хэл. ' + budgetEstimateNote}
 
 БАТАЛГААЖСАН ТЕХНИКИЙН ҮЗҮҮЛЭЛТ & АЖЛЫН ДААЛГАВАР (Scope of Work):
-${fullScopeOfWork || 'Дэлгэрэнгүй техникийн даалгаврыг хавсаргасан ТШЗ баримтаас нягтална уу.'}
+${fullScopeOfWork ? clip(fullScopeOfWork, 3500) : 'Дэлгэрэнгүй техникийн даалгаврыг хавсаргасан ТШЗ баримтаас нягтална уу.'}
 
 БАТАЛГААЖСАН ШАЛГУУР ҮЗҮҮЛЭЛТ БОЛОН ТУСГАЙ ЗӨВШӨӨРЛҮҮД (Eligibility & Requirements):
 ${Array.isArray(structuredRequirements) && structuredRequirements.length ? structuredRequirements.map((r: string) => `- ${r}`).join('\n') : 'Хуулийн ерөнхий шаардлага'}
 
-${structuredSpecs ? `НЭМЭЛТ БҮТЦЭЛСЭН ШААРДЛАГУУД:\n${JSON.stringify(structuredSpecs)}` : ''}
+${structuredSpecs ? `НЭМЭЛТ БҮТЦЭЛСЭН ШААРДЛАГУУД:\n${clip(JSON.stringify(structuredSpecs), 5000)}` : ''}
 
 ХЯТАД / ГАДААДЫН ААН-ИЙН ОРОЛЦООНЫ СТАТУС & ШИНЖИЛГЭЭ:
-${JSON.stringify(chinaBidderAnalysis)}
+${clip(JSON.stringify(chinaBidderAnalysis), 1500)}
 
 PDF БОЛОВСРУУЛАЛТЫН ТӨЛӨВ:
 ${JSON.stringify(structuredInfo)}
 
 АСУУЛТАД ХОЛБОГДОХ PDF-ИЙН ЭХ ТЕКСТИЙН ЭШЛЭЛҮҮД:
-${evidence.length ? evidence.join('\n\n') : fullScopeOfWork ? `[Баримтаас задлан авсан техникийн даалгавар]\n${fullScopeOfWork.slice(0, 1500)}` : 'Энэ асуултад хамаарах уншигдсан эх баримтын эшлэл алга. Энэ нь шаардлага байхгүй гэсэн үг биш; PDF-ийг эх сурвалжаас нягтална уу.'}`
+${evidence.length ? clip(evidence.join('\n\n'), 14000) : fullScopeOfWork ? `[Баримтаас задлан авсан техникийн даалгавар]\n${fullScopeOfWork.slice(0, 1500)}` : 'Энэ асуултад хамаарах уншигдсан эх баримтын эшлэл алга. Энэ нь шаардлага байхгүй гэсэн үг биш; PDF-ийг эх сурвалжаас нягтална уу.'}`
       : `You answer questions about Mongolian tenders using only the search result rows below. Respond in ${responseLanguage}. If the user asks in Chinese, respond in Chinese.
 Доорх тендерийн мөрүүд нь системийн хайлтаас ирсэн мэдээлэл. Эдгээрээс гадуур тендерийн баримт, ялагч, шаардлагыг зохиож болохгүй. Тохирох мөр олдоогүй бол тэгж шууд хэл. Хэрэглэгч PDF-ийн тодорхой нөхцөл асуувал тендерийн ID-г тодруулж, баримтыг шалгах шаардлагатайг хэл.
 Тэмдэглэл: totalBudget=null бол төсөв зарын мэдээлэлд байхгүй (tender.gov.mn дээр харна уу) гэсэн утга, 0 ₮ биш. receiveDate=null бол эцсийн хугацаа мэдэгдэхгүй.
@@ -793,7 +800,7 @@ ${JSON.stringify(relevantTenders)}`;
       try {
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
-          signal: AbortSignal.timeout(Math.max(8_000, Math.min(22_000, attemptDeadline - Date.now()))),
+          signal: AbortSignal.timeout(Math.max(8_000, Math.min(attempts.length === 0 ? 28_000 : 20_000, attemptDeadline - Date.now()))),
           headers: {
             Authorization: `Bearer ${openRouterKey}`,
             'Content-Type': 'application/json',
