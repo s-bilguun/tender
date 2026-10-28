@@ -282,6 +282,8 @@ export async function GET(request: NextRequest) {
             similarExpReq: specs?.similarExpReq || undefined,
             bidSecurityReq: specs?.bidSecurityReq || undefined,
             raw_data: {
+              source: rawData.source,
+              sourceUrl: rawData.sourceUrl,
               pdfUrl,
               pdfFileName,
               hasPdf: Boolean(pdfUrl),

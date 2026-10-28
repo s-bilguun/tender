@@ -1111,7 +1111,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         </div>
                         <div className="bg-white border border-slate-200 rounded-lg rounded-tl-none p-4 shadow-2xs space-y-2 max-w-md">
                           <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
-                            <span className="h-2 w-2 rounded-full bg-slate-900 dark:bg-zinc-700 animate-ping" />
+                            <span className="h-2 w-2 rounded-full bg-amber-600 animate-ping" />
                             <span>AI Шинжээч хариултыг боловсруулж байна...</span>
                           </div>
                           <p className="text-[11px] text-slate-500">

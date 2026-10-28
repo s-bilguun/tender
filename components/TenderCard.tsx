@@ -184,6 +184,21 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
   const fmtDate = (d?: string | null) =>
     d ? d.replace('T', ' ').slice(0, 16).replace(/ 00:00$/, '') : '—';
+  const isFeedOnly = rawData?.source === 'telegram' && !hasStoredPdf && itemCount === 0;
+  const publishedMs = tender.publishDate ? Date.parse(tender.publishDate) : NaN;
+  const ageHours = Number.isNaN(publishedMs) ? null : (Date.now() - publishedMs) / 3_600_000;
+  const isNew = ageHours != null && ageHours >= 0 && ageHours < 48;
+  const relativePublished = (() => {
+    if (ageHours == null || ageHours < 0) return fmtDate(tender.publishDate);
+    if (ageHours < 1) return locale === 'zh' ? '刚刚发布' : locale === 'en' ? 'just now' : 'дөнгөж сая';
+    if (ageHours < 24) {
+      const h = Math.floor(ageHours);
+      return locale === 'zh' ? `${h} 小时前` : locale === 'en' ? `${h}h ago` : `${h} цагийн өмнө`;
+    }
+    const d = Math.floor(ageHours / 24);
+    if (d < 14) return locale === 'zh' ? `${d} 天前` : locale === 'en' ? `${d}d ago` : `${d} хоногийн өмнө`;
+    return fmtDate(tender.publishDate);
+  })();
   const isGenericHighlight = /баримт бичигт бүрэн тусгагдсан|available in the attached/i.test(String(extractedHighlight || ''));
 
   const handleCardClick = () => {
@@ -227,7 +242,20 @@ export const TenderCard: React.FC<TenderCardProps> = ({
               <span>{industry.label}</span>
             </span>
 
-            {isDirectAllowed ? (
+            {isNew && (
+              <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-blue-50 dark:bg-zinc-800 text-blue-700 dark:text-blue-300 shrink-0">
+                {locale === 'zh' ? '新' : locale === 'en' ? 'New' : 'Шинэ'}
+              </span>
+            )}
+
+            {isFeedOnly ? (
+              <span
+                className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 shrink-0"
+                title={locale === 'zh' ? '仅有公告信息；预算与截止时间见 tender.gov.mn' : locale === 'en' ? 'Announcement only; budget and deadline are on tender.gov.mn' : 'Зөвхөн зарын мэдээлэл; төсөв, хугацааг tender.gov.mn-ээс харна'}
+              >
+                {locale === 'zh' ? '公告' : locale === 'en' ? 'Announcement' : 'Зар'}
+              </span>
+            ) : isDirectAllowed ? (
               <span
                 className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 flex items-center gap-1 shrink-0"
                 title={locale === 'zh' ? '企业可使用法人资格独立参与' : 'Eligible for direct foreign bidding'}
@@ -355,7 +383,24 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         </div>
       </div>
 
-      {/* 3. Budget & Financial Metrics Box */}
+      {/* 3. Budget & dates (announcement-only tenders get a compact source line instead) */}
+      {isFeedOnly && budgetMnt <= 0 ? (
+      <div className="flex items-center justify-between gap-3 text-xs text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-zinc-800 pt-3">
+        <span className="whitespace-nowrap" title={fmtDate(tender.publishDate)}>
+          {locale === 'zh' ? '发布于 ' : locale === 'en' ? 'Published ' : 'Нийтэлсэн: '}{relativePublished}
+        </span>
+        <a
+          href={portalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1 text-slate-600 dark:text-zinc-300 hover:text-blue-600 dark:hover:text-blue-400 truncate"
+        >
+          <span className="truncate">{locale === 'zh' ? '预算与截止时间' : locale === 'en' ? 'Budget & deadline' : 'Төсөв, хугацаа'}</span>
+          <ExternalLink className="h-3 w-3 shrink-0" />
+        </a>
+      </div>
+      ) : (
       <div className="bg-slate-50 dark:bg-zinc-950/60 p-3 rounded-md border border-slate-200/80 dark:border-zinc-800/80 space-y-2">
         <div className="flex items-baseline justify-between">
           <span className="text-[10px] font-semibold text-slate-500 dark:text-zinc-400 ">
@@ -398,6 +443,8 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           </span>
         </div>
       </div>
+
+      )}
 
       {/* 4. Extracted PDF Highlight (hidden when we only have the generic fallback line) */}
       {!isGenericHighlight && (

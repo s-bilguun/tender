@@ -754,7 +754,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             <span className="font-bold text-slate-700 shrink-0">
               {locale === 'mn' ? 'Сонгосон:' : locale === 'zh' ? '已选择：' : 'Selected:'}
             </span>
-            <span className="inline-flex items-center gap-1.5 bg-slate-900 dark:bg-zinc-700 text-white font-semibold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs truncate">
+            <span className="inline-flex items-center gap-1.5 bg-indigo-600 text-white font-semibold px-2.5 py-0.5 rounded-full text-[11px] shadow-2xs truncate">
               <IndustryIcon id={activeCompany.category} className="h-3 w-3 text-white shrink-0" />
               <span className="truncate">{activeCompany.name}</span>
             </span>

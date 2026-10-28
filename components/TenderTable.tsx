@@ -297,7 +297,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
 
                   {/* Deadline */}
                   <td className="py-2.5 px-3 whitespace-nowrap text-slate-600 dark:text-zinc-400 font-mono text-[11px] tabular-nums hidden sm:table-cell">
-                    <div>{tender.receiveDate ? tender.receiveDate.substring(0, 10) : 'Тодорхойгүй'}</div>
+                    <div>{tender.receiveDate ? tender.receiveDate.substring(0, 10) : '—'}</div>
                     {days !== null && days > 0 ? (
                       <div
                         className={`text-[10px] font-semibold flex items-center gap-1 ${
@@ -331,11 +331,11 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                         : s.includes('хүлээн авч')
                         ? { dot: 'bg-emerald-500', cls: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-zinc-900 border-emerald-200 dark:border-zinc-800' }
                         : s.includes('нээгдсэн')
-                        ? { dot: 'bg-slate-900 dark:bg-zinc-700', cls: 'text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-zinc-900 border-amber-200 dark:border-zinc-800' }
+                        ? { dot: 'bg-amber-500', cls: 'text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-zinc-900 border-amber-200 dark:border-zinc-800' }
                         : s.includes('үр дүн')
                         ? { dot: 'bg-blue-500', cls: 'text-blue-700 dark:text-blue-300 bg-blue-50/80 dark:bg-zinc-900 border-blue-200 dark:border-zinc-800' }
                         : s.includes('хүчингүй')
-                        ? { dot: 'bg-slate-900 dark:bg-zinc-700', cls: 'text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-zinc-900 border-rose-200 dark:border-zinc-800' }
+                        ? { dot: 'bg-rose-500', cls: 'text-rose-700 dark:text-rose-300 bg-rose-50/80 dark:bg-zinc-900 border-rose-200 dark:border-zinc-800' }
                         : { dot: 'bg-slate-400', cls: 'text-slate-700 dark:text-zinc-300 bg-slate-100 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700' };
 
                       const fallbackStatus = tender.receiveDate && new Date(tender.receiveDate) < new Date() ? 'Хугацаа дууссан' : 'Хүлээн авч буй';

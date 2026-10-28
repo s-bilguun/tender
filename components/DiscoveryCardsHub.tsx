@@ -510,7 +510,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
               key: 'jv',
               selected: filters.chinaEligibility === 'joint_venture',
               onClick: () => handleSelectEligibility('joint_venture'),
-              dot: 'bg-slate-900 dark:bg-zinc-700',
+              dot: 'bg-amber-500',
               title: t('Монгол түнш шаардлагатай тендер', 'Tenders that need a Mongolian partner', '需与蒙古企业组成联合体的标段'),
               body: t(
                 'Барилга, зам, угсралтын ажилд Монголын тусгай зөвшөөрөлтэй компанитай түншлэх шаардлагатай.',
@@ -522,7 +522,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
               key: 'urgent',
               selected: filters.tabMode === 'closing_soon',
               onClick: () => onFilterChange({ urgency: 'urgent', tabMode: 'closing_soon', page: 1 }),
-              dot: 'bg-slate-900 dark:bg-zinc-700',
+              dot: 'bg-amber-500',
               title: t('Удахгүй хаагдах тендер', 'Closing soon', '即将截标'),
               body: t(
                 'Санал хүлээн авах хугацаа дуусахад ойрхон тендерүүд.',
