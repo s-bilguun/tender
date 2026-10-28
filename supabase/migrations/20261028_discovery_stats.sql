@@ -1,6 +1,6 @@
 -- Live figures for the "Buyers and sectors" table on the dashboard.
--- For each buyer name pattern and each sector id: tenders open now, tenders in
--- the last 12 months, and the summed budget of those with a published budget.
+-- Buyers: tenders open now, tenders and published budget in the last 12 months.
+-- Sectors: tenders open now. raw_data (large) is only read for open rows.
 create or replace function public.get_discovery_stats(p_buyers text[], p_sectors text[])
 returns jsonb
 language sql
@@ -8,10 +8,10 @@ stable
 security invoker
 set search_path = public
 as $$
-  with recent as (
+  with recent as materialized (
     select
+      invitation_id,
       budget_entity_name,
-      lower(coalesce(raw_data ->> 'industry', '')) as industry,
       total_budget,
       (
         receive_date >= now()
@@ -20,19 +20,33 @@ as $$
     from public.tenders
     where publish_date >= now() - interval '365 days'
   ),
-  buyers as (
-    select coalesce(jsonb_object_agg(b.pattern, jsonb_build_object(
-      'openCount', (select count(*) from recent r where r.is_open and r.budget_entity_name ilike '%' || b.pattern || '%'),
-      'yearCount', (select count(*) from recent r where r.budget_entity_name ilike '%' || b.pattern || '%'),
-      'yearBudget', (select coalesce(sum(r.total_budget), 0) from recent r where r.budget_entity_name ilike '%' || b.pattern || '%' and r.total_budget > 0)
-    )), '{}'::jsonb) as value
+  buyer_rows as (
+    select b.pattern, r.total_budget, r.is_open
     from unnest(p_buyers) as b(pattern)
+    join recent r on r.budget_entity_name ilike '%' || b.pattern || '%'
+  ),
+  buyers as (
+    select coalesce(jsonb_object_agg(pattern, jsonb_build_object(
+      'openCount', open_count, 'yearCount', year_count, 'yearBudget', year_budget
+    )), '{}'::jsonb) as value
+    from (
+      select pattern,
+        count(*) filter (where is_open) as open_count,
+        count(*) as year_count,
+        coalesce(sum(total_budget) filter (where total_budget > 0), 0) as year_budget
+      from buyer_rows
+      group by pattern
+    ) g
+  ),
+  open_industry as (
+    select lower(coalesce(t.raw_data ->> 'industry', '')) as industry
+    from recent r
+    join public.tenders t on t.invitation_id = r.invitation_id
+    where r.is_open
   ),
   sectors as (
     select coalesce(jsonb_object_agg(s.id, jsonb_build_object(
-      'openCount', (select count(*) from recent r where r.is_open and r.industry = s.id),
-      'yearCount', (select count(*) from recent r where r.industry = s.id),
-      'yearBudget', (select coalesce(sum(r.total_budget), 0) from recent r where r.industry = s.id and r.total_budget > 0)
+      'openCount', (select count(*) from open_industry o where o.industry = s.id)
     )), '{}'::jsonb) as value
     from unnest(p_sectors) as s(id)
   )
