@@ -534,25 +534,25 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
       }
     : pdfDocuments.length === 0
     ? {
-        title: 'Эх баримтын файлууд татагдаагүй байна',
-        message: 'Энэ тендерийн PDF файлын жагсаалтыг эх сурвалжаас авч чадсангүй. “—” нь шаардлага байхгүй гэсэн үг биш; эх тендерийн баримтаар нягтална уу.',
+        title: (locale === 'zh' ? '尚未获取原始文件' : locale === 'en' ? 'Source documents not downloaded' : 'Эх баримтын файлууд татагдаагүй байна'),
+        message: locale === 'zh' ? '未能获取此招标的 PDF 文件列表。“—”不代表没有要求，请以原始招标文件为准。' : locale === 'en' ? 'The PDF list for this tender could not be fetched. “—” does not mean there is no requirement; check the original tender documents.' : 'Энэ тендерийн PDF файлын жагсаалтыг эх сурвалжаас авч чадсангүй. “—” нь шаардлага байхгүй гэсэн үг биш; эх тендерийн баримтаар нягтална уу.',
         tone: 'amber',
       }
     : readablePdfDocuments.length === 0
       ? {
-          title: 'PDF-ийн текст уншигдаагүй байна',
-          message: 'Баримт байгаа ч текстийг хараахан уншиж чадаагүй. “—” талбарууд баталгаажаагүй утгыг тэмдэглэнэ.',
+          title: (locale === 'zh' ? '尚未读取 PDF 文本' : locale === 'en' ? 'PDF text not read yet' : 'PDF-ийн текст уншигдаагүй байна'),
+          message: (locale === 'zh' ? '文件存在但尚未读取文本。“—”表示未确认的数值。' : locale === 'en' ? 'The document exists but its text has not been read yet. “—” marks values that are not confirmed.' : 'Баримт байгаа ч текстийг хараахан уншиж чадаагүй. “—” талбарууд баталгаажаагүй утгыг тэмдэглэнэ.'),
           tone: 'amber',
         }
       : data?.liveBundle?.stale || data?.liveBundle?.extractionStatus !== 'complete'
         ? {
-            title: 'PDF-ийн мэдээлэл хэсэгчлэн уншигдсан',
-            message: 'Зарим хуудас эсвэл баримт дутуу байж болно. “—” нь шаардлага байхгүй гэсэн үг биш; эх файлыг шалгана уу.',
+            title: (locale === 'zh' ? 'PDF 部分读取' : locale === 'en' ? 'PDF partly read' : 'PDF-ийн мэдээлэл хэсэгчлэн уншигдсан'),
+            message: (locale === 'zh' ? '部分页面或文件可能缺失。“—”不代表没有要求，请核对原文件。' : locale === 'en' ? 'Some pages or documents may be missing. “—” does not mean there is no requirement; check the original file.' : 'Зарим хуудас эсвэл баримт дутуу байж болно. “—” нь шаардлага байхгүй гэсэн үг биш; эх файлыг шалгана уу.'),
             tone: 'amber',
           }
         : {
-            title: 'PDF-ийн текст боловсруулагдсан',
-            message: 'Эдгээр нь автоматаар уншсан хураангуй. “—” талбаруудыг эх баримтын заалтаар нягтална уу.',
+            title: (locale === 'zh' ? 'PDF 文本已处理' : locale === 'en' ? 'PDF text processed' : 'PDF-ийн текст боловсруулагдсан'),
+            message: (locale === 'zh' ? '以下为自动摘要。“—”字段请对照原文件条款核实。' : locale === 'en' ? 'This is an automatic summary. Check “—” fields against the original clauses.' : 'Эдгээр нь автоматаар уншсан хураангуй. “—” талбаруудыг эх баримтын заалтаар нягтална уу.'),
             tone: 'blue',
           };
   const results = {
