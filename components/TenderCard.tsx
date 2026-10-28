@@ -234,14 +234,20 @@ export const TenderCard: React.FC<TenderCardProps> = ({
 
       {/* 1. Header: Sector, Foreign Bidder Status & Urgency */}
       <div className="space-y-2">
-        <div className="flex flex-col-reverse gap-2">
+        <div className="flex items-start justify-between gap-2">
           {/* Left: Sector & Foreign Bidder Badge */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             <span className={`text-xs font-medium px-2 py-0.5 rounded-md border flex items-center gap-1 shrink-0 ${industry.color}`}>
               <IndustryIcon id={tender.industry || 'all'} className="h-3 w-3" />
               <span>{industry.label}</span>
             </span>
 
+            {urgency && (
+              <span className={`inline-flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded border shrink-0 ${urgency.color}`}>
+                <Clock className={`h-3 w-3 ${urgency.iconColor}`} />
+                <span>{urgency.label}</span>
+              </span>
+            )}
             {isNew && (
               <span className="text-[11px] font-medium px-1.5 py-0.5 rounded bg-blue-50 dark:bg-zinc-800 text-blue-700 dark:text-blue-300 shrink-0">
                 {locale === 'zh' ? '新' : locale === 'en' ? 'New' : 'Шинэ'}
@@ -322,13 +328,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
           </div>
 
           {/* Right: Urgency Pill & Watchlist */}
-          <div className="flex items-center justify-between gap-1.5 w-full min-h-[28px]">
-            {urgency && (
-              <span className={`inline-flex items-center gap-1 text-[10px] sm:text-xs px-2 py-0.5 rounded-md border shrink-0 ${urgency.color}`}>
-                <Clock className={`h-3 w-3 ${urgency.iconColor}`} />
-                <span>{urgency.label}</span>
-              </span>
-            )}
+          <div className="flex items-center gap-1.5 shrink-0 -mt-1 -mr-1">
 
             <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
               {onToggleSave && (
