@@ -402,10 +402,10 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
         <div className="w-screen max-w-4xl bg-white dark:bg-zinc-950 shadow-2xl border-l border-slate-200 dark:border-zinc-800 flex flex-col justify-between animate-in slide-in-from-right duration-300 text-slate-900 dark:text-zinc-100">
           
           {/* 1. Top Header: Title, Code, Status & Prominent Countdown */}
-          <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-start justify-between gap-4 bg-slate-50 dark:bg-zinc-900/90 shrink-0">
+          <div className="relative p-4 sm:p-6 border-b border-slate-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-start justify-between gap-4 bg-white dark:bg-zinc-950 shrink-0">
             
             {/* Top Left: Title, Code, & Buyer */}
-            <div className="space-y-2.5 min-w-0 flex-1">
+            <div className="space-y-2.5 min-w-0 flex-1 pr-10 sm:pr-0">
               <div className="flex items-center gap-x-3 gap-y-1.5 flex-wrap text-xs text-slate-500 dark:text-zinc-400">
                 <span className="font-mono text-slate-700 dark:text-zinc-300">
                   {tender.tenderCode || tender.invitationNumber || `INV-${tender.invitationId}`}
@@ -420,6 +420,11 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
                     ? (locale === 'zh' ? '已截止' : locale === 'en' ? 'Closed' : 'Хугацаа дууссан')
                     : (locale === 'zh' ? '接受投标' : locale === 'en' ? 'Accepting bids' : 'Санал авч буй')}
                 </span>
+                {tender.receiveDate && (
+                  <span className="sm:hidden tabular-nums">
+                    {locale === 'zh' ? '截止 ' : locale === 'en' ? 'Due ' : 'Хугацаа: '}{String(tender.receiveDate).slice(0, 10)}
+                  </span>
+                )}
                 {hasStoredPdf && (
                   <button
                     onClick={() => setIsPdfReaderOpen(true)}
@@ -464,7 +469,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
             {/* Top Right: Countdown & Close Button */}
             <div className="flex items-start gap-3 shrink-0">
               {timeLeft && (
-                <div className="px-3.5 py-2 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center min-w-[150px]">
+                <div className="hidden sm:flex px-3.5 py-2 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center min-w-[150px]">
                   <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-zinc-400 mb-0.5">
                     <Clock className="h-3 w-3" />
                     <span>{timeLeft.isExpired ? (locale === 'mn' ? 'Эцсийн хугацаа' : locale === 'zh' ? '截止时间' : 'Deadline') : (locale === 'mn' ? 'Хугацаа дуусахад' : locale === 'zh' ? '距截标' : 'Time left')}</span>
@@ -494,7 +499,7 @@ const TenderSlideOverPanel: React.FC<TenderSlideOverProps> = ({
 
               <button
                 onClick={onClose}
-                className="p-2 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer border border-slate-200 dark:border-zinc-800"
+                className="absolute top-3 right-3 sm:static p-2 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer border border-slate-200 dark:border-zinc-800"
                 aria-label="Close slide-over"
               >
                 <X className="h-5 w-5" />
