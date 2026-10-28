@@ -1,0 +1,31 @@
+name: Hourly announcement sync
+
+# Vercel's free plan allows only two daily crons. This pings the same sync
+# endpoint every hour so new tender announcements appear within ~1 hour.
+# If CRON_SECRET is set in Vercel, add the same value as a repository secret.
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telegram-sync-hourly
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Trigger sync
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          auth=()
+          if [ -n "$CRON_SECRET" ]; then auth=(-H "Authorization: Bearer $CRON_SECRET"); fi
+          curl -sS --max-time 90 "${auth[@]}" "https://tender-mu-five.vercel.app/api/cron/telegram-sync?maxPages=4" | tee result.json
+          grep -q '"success":true' result.json
