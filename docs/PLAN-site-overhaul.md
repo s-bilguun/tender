@@ -1,5 +1,20 @@
 # TenderHub overhaul plan
 
+## Changelog (Oct 28, 2026)
+
+Done: graphite dark mode; detail page and slide-over restyle; dead components removed;
+zh/en strings across dashboard, cards, slide-over, detail page; analytics SQL applied
+(21-day rule); live buyers/sectors table (`get_discovery_stats`); honest KPIs and tab
+counts (no invented numbers); announcement-only cards, slide-over and detail page;
+readable spec/scope text; chat dark mode + automatic free-model selection with
+fallbacks; correct AI database queries; Vercel functions moved to bom1 (next to
+Supabase Mumbai); hourly GitHub Actions announcement sync; English/Chinese search
+expansion; sitemap/robots/OG metadata; pricing copy without undeliverable promises.
+
+Still open: official data access (§5.1, needs the owner); `CRON_SECRET`; splitting
+`TenderDetailView.tsx`; keyword email alerts (needs an email provider).
+
+
 Written for an executing agent. Work top to bottom. Each task lists files, exact
 changes, and how to check it. Don't skip the checks.
 
