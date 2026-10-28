@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { TenderItem, TenderFilterParams, TenderStats, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
-import { MOCK_MONGOLIAN_TENDERS } from '@/lib/mock-tenders';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { Header } from '@/components/Header';
 import { DashboardKPICards } from '@/components/DashboardKPICards';
@@ -12,7 +11,6 @@ import { DiscoveryCardsHub } from '@/components/DiscoveryCardsHub';
 import { TenderTable } from '@/components/TenderTable';
 import { TenderCard } from '@/components/TenderCard';
 import { TenderFilters } from '@/components/TenderFilters';
-import { TenderSlideOver } from '@/components/TenderSlideOver';
 import { TenderDocAuditModal } from '@/components/TenderDocAuditModal';
 import { TenderFinanceModal } from '@/components/TenderFinanceModal';
 import { ChinaSupplierModal } from '@/components/ChinaSupplierModal';
@@ -69,8 +67,8 @@ export default function Home() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   // Initial state populated with mock tenders for instant rich render
-  const [tenders, setTenders] = useState<TenderItem[]>(MOCK_MONGOLIAN_TENDERS);
-  const [totalCount, setTotalCount] = useState<number>(MOCK_MONGOLIAN_TENDERS.length);
+  const [tenders, setTenders] = useState<TenderItem[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [stats, setStats] = useState<TenderStats | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -80,8 +78,6 @@ export default function Home() {
   // Search Input State (Synchronized between Header and Main Filter Center)
   const [searchInputValue, setSearchInputValue] = useState<string>('');
 
-  // Selected Tender for Slide-over Detailed View
-  const [selectedTenderForSlideOver, setSelectedTenderForSlideOver] = useState<TenderItem | null>(null);
 
   // Multi-currency display (CNY, USD, MNT) for foreign & domestic suppliers
   const [currency, setCurrency] = useState<'CNY' | 'USD' | 'MNT'>('MNT');
@@ -228,38 +224,79 @@ export default function Home() {
         setTotalCount(data.totalCount);
         setTotalPages(data.totalPages || 1);
       } else if (!isLoadMore && (!data.items || data.items.length === 0)) {
-        // Fallback local search on mock data
-        let filtered = [...MOCK_MONGOLIAN_TENDERS];
-        if (currentFilters.search) {
-          const q = currentFilters.search.toLowerCase();
-          filtered = filtered.filter(t => 
-            t.tenderName.toLowerCase().includes(q) || 
-            t.budgetEntityName.toLowerCase().includes(q) ||
-            (t.tenderCode && t.tenderCode.toLowerCase().includes(q))
-          );
-        }
-        if (currentFilters.industry && currentFilters.industry !== 'all') {
-          filtered = filtered.filter(t => t.industry === currentFilters.industry);
-        }
-        if (currentFilters.urgency && currentFilters.urgency === 'urgent') {
-          filtered = filtered.filter(t => t.receiveDate && new Date(t.receiveDate).getTime() - Date.now() < 3 * 24 * 3600 * 1000);
-        }
-        setTenders(filtered);
-        setTotalCount(filtered.length);
+        setTenders([]);
+        setTotalCount(0);
+        setTotalPages(1);
       }
     } catch (err) {
-      console.warn('Live tender API fetch fallback to mock data:', err);
-      setTenders(MOCK_MONGOLIAN_TENDERS);
-      setTotalCount(MOCK_MONGOLIAN_TENDERS.length);
+      console.warn('Tender list could not be loaded:', err);
+      if (!isLoadMore) {
+        setTenders([]);
+        setTotalCount(0);
+      }
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
   }, []);
 
+  // Keep the list (filters, "load more" count, scroll) when the user opens a tender and comes back.
+  const mainRef = useRef<HTMLElement | null>(null);
+  const [listStateReady, setListStateReady] = useState(false);
+  const pendingScrollRef = useRef<number | null>(null);
+
   useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('tenderhub_list_state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.filters) {
+          setFilters((prev) => ({ ...prev, ...parsed.filters }));
+          if (parsed.filters.search) setSearchInputValue(parsed.filters.search);
+        }
+        if (typeof parsed?.scrollTop === 'number') pendingScrollRef.current = parsed.scrollTop;
+      }
+    } catch {}
+    setListStateReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!listStateReady) return;
+    try {
+      const prev = JSON.parse(sessionStorage.getItem('tenderhub_list_state') || '{}');
+      sessionStorage.setItem('tenderhub_list_state', JSON.stringify({ ...prev, filters }));
+    } catch {}
+  }, [filters, listStateReady]);
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onScroll = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        try {
+          const prev = JSON.parse(sessionStorage.getItem('tenderhub_list_state') || '{}');
+          sessionStorage.setItem('tenderhub_list_state', JSON.stringify({ ...prev, scrollTop: el.scrollTop }));
+        } catch {}
+      }, 150);
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => { el.removeEventListener('scroll', onScroll); if (timer) clearTimeout(timer); };
+  }, []);
+
+  useEffect(() => {
+    if (!listStateReady) return;
     loadTenders(filters, false);
-  }, [filters, loadTenders]);
+  }, [filters, loadTenders, listStateReady]);
+
+  useEffect(() => {
+    if (isLoading || pendingScrollRef.current == null || !mainRef.current) return;
+    const top = pendingScrollRef.current;
+    pendingScrollRef.current = null;
+    // Restore after layout settles (cards, KPI strip and buyer table load at different times).
+    [50, 400, 1000].forEach((ms) => setTimeout(() => { if (mainRef.current) mainRef.current.scrollTop = top; }, ms));
+  }, [isLoading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -424,7 +461,7 @@ export default function Home() {
         />
 
         {/* Independently Scrollable Main Viewport (Strict 8px Grid Multiples) */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
           
           {/* Section: Dashboard Overview / Top KPI Row */}
           <section id="dashboard" className="space-y-6">
@@ -512,7 +549,6 @@ export default function Home() {
                     currency={currency}
                     isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
                     onToggleSave={handleToggleSave}
-                    onSelect={(t) => setSelectedTenderForSlideOver(t)}
                     onAskAI={handleAskAI}
                   />
                 ))}
@@ -586,16 +622,7 @@ export default function Home() {
       </div>
 
       {/* Slide-over Full Detail View */}
-      <TenderSlideOver
-        tender={selectedTenderForSlideOver}
-        isOpen={Boolean(selectedTenderForSlideOver)}
-        onClose={() => setSelectedTenderForSlideOver(null)}
-        locale={locale}
-        onAskAI={handleAskAI}
-        onOpenDocAudit={(t) => handleOpenDocAudit(t)}
-        onOpenFinance={(t) => handleOpenFinance(t)}
-        onOpenChinaSupplier={(t) => handleOpenChinaSupplier(t)}
-      />
+
 
       {/* ТББ Шалгагч AI Modal */}
       <TenderDocAuditModal

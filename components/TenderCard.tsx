@@ -201,7 +201,11 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   })();
   const isGenericHighlight = /баримт бичигт бүрэн тусгагдсан|available in the attached/i.test(String(extractedHighlight || ''));
 
-  const handleCardClick = () => {
+  const handleCardClick = (e?: React.MouseEvent) => {
+    if (e && (e.metaKey || e.ctrlKey || e.button === 1)) {
+      window.open(`/tender/${tender.invitationId}`, '_blank', 'noopener');
+      return;
+    }
     if (onSelect) {
       onSelect(tender);
     } else {
@@ -218,6 +222,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   return (
     <div
       onClick={handleCardClick}
+      onAuxClick={(e) => { if (e.button === 1) handleCardClick(e); }}
       className={`bg-white dark:bg-zinc-900 border rounded-lg p-4 sm:p-5 shadow-2xs transition-colors flex flex-col justify-between gap-3.5 group relative cursor-pointer ${
  urgency?.isUrgent 
  ? 'border-rose-300/80 dark:border-zinc-800 hover:border-rose-400 dark:hover:border-rose-700' 
@@ -228,7 +233,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       {isNavigating && (
         <div className="absolute inset-0 bg-white/80 dark:bg-zinc-900/80 rounded-lg z-20 flex items-center justify-center gap-2 text-xs font-medium text-slate-900 dark:text-white shadow-sm animate-in fade-in duration-150">
           <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
-          <span>Тендерийн дэлгэрэнгүйг нээж байна...</span>
+          <span>{locale === 'zh' ? '正在打开…' : locale === 'en' ? 'Opening…' : 'Нээж байна…'}</span>
         </div>
       )}
 
@@ -467,16 +472,16 @@ export const TenderCard: React.FC<TenderCardProps> = ({
       <div className="pt-2 border-t border-slate-100 dark:border-zinc-800 flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={handleCardClick}
-          className="flex-1 h-9 px-3 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-900 dark:text-white border border-slate-300 dark:border-zinc-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          className="flex-1 h-10 px-3 rounded-md text-sm font-medium bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
         >
-          <span>{locale === 'zh' ? '查看详情' : locale === 'mn' ? 'Дэлгэрэнгүй' : 'View details'}</span>
-          <ArrowUpRight className="h-3.5 w-3.5 text-slate-400" />
+          <span>{locale === 'zh' ? '查看完整信息' : locale === 'mn' ? 'Дэлгэрэнгүй үзэх' : 'View full details'}</span>
+          <ArrowUpRight className="h-4 w-4" />
         </button>
         {onAskAI && (
           <button
             onClick={() => onAskAI(tender)}
             title={locale === 'zh' ? '用 AI 解读此招标' : locale === 'en' ? 'Ask AI about this tender' : 'Энэ тендерийг AI-аар шинжлэх'}
-            className="h-9 px-3 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-300 dark:border-zinc-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
+            className="h-10 px-3 rounded-md text-sm font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-300 dark:border-zinc-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
           >
             <Sparkles className="h-3.5 w-3.5 text-slate-400" />
             <span>{locale === 'zh' ? 'AI 解读' : locale === 'mn' ? 'AI шинжилгээ' : 'Ask AI'}</span>

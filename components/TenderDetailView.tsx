@@ -116,8 +116,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   const [previewModalDoc, setPreviewModalDoc] = useState<{ name: string; text: string } | null>(null);
   const [copiedPreviewText, setCopiedPreviewText] = useState(false);
   const [manualPdfSecret, setManualPdfSecret] = useState('');
+  const [showAdminTools, setShowAdminTools] = useState(false);
   useEffect(() => {
-    try { const k = localStorage.getItem('tenderhub_admin_key'); if (k) setManualPdfSecret(k); } catch {}
+    try {
+      const k = localStorage.getItem('tenderhub_admin_key');
+      if (k) setManualPdfSecret(k);
+      setShowAdminTools(Boolean(k) || new URLSearchParams(window.location.search).get('admin') === '1');
+    } catch {}
   }, []);
   const [manualPdfFile, setManualPdfFile] = useState<File | null>(null);
   const [manualPdfBusy, setManualPdfBusy] = useState(false);
@@ -608,12 +613,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         <div className="flex items-center gap-3">
           <Link
             href="/"
-            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-semibold"
+            className="h-9 px-3 rounded-md border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-800 dark:text-zinc-100 transition-colors flex items-center gap-1.5 text-sm font-medium"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">
-              {locale === 'mn' ? 'Бүх тендер рүү буцах' : locale === 'zh' ? '返回招标列表' : 'Back to Tenders'}
+              {locale === 'mn' ? 'Жагсаалт руу буцах' : locale === 'zh' ? '返回列表' : 'Back to list'}
             </span>
+            <span className="sm:hidden">{locale === 'mn' ? 'Буцах' : locale === 'zh' ? '返回' : 'Back'}</span>
           </Link>
           <div className="h-4 w-px bg-slate-200 dark:bg-zinc-700 hidden sm:block"></div>
           <span className="text-xs text-slate-500 dark:text-zinc-400 hidden md:inline font-mono">
@@ -625,7 +631,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           {/* Global Dark / Light Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="h-8 w-8 rounded-md flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 transition-all cursor-pointer shrink-0"
+            className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 transition-all cursor-pointer shrink-0"
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? (locale === 'mn' ? 'Гэгээлэг горим' : locale === 'zh' ? '浅色模式' : 'Light mode') : (locale === 'mn' ? 'Харанхуй горим' : locale === 'zh' ? '深色模式' : 'Dark mode')}
           >
@@ -837,7 +843,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </a>
           </div>
 
-          {!hasPdfTextEvidence && (
+          {!hasPdfTextEvidence && showAdminTools && (
             <div className="rounded-lg border border-dashed border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 space-y-3">
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">
