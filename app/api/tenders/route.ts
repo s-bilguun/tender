@@ -126,6 +126,7 @@ export async function GET(request: NextRequest) {
         query = query.or('doc_status_name.ilike.%үр дүн%,doc_status_name.ilike.%Үр дүн%,doc_status_name.ilike.%дууссан%,doc_status_code.ilike.%CLOSED%');
       } else if (tabMode === 'no_guarantee') {
         query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+        query = query.gte('receive_date', new Date().toISOString());
         query = query.filter(
           'raw_data->liveBundle->structuredSpecs->>bidSecurityReq',
           'ilike',
@@ -139,6 +140,8 @@ export async function GET(request: NextRequest) {
         query = query.gte('receive_date', startsAt.toISOString()).lte('receive_date', endsAt.toISOString());
       } else if (tabMode === 'active' || status === 'receiving') {
         query = query.or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%');
+        // Status flags go stale between syncs; a passed deadline means the tender is closed.
+        query = query.gte('receive_date', new Date().toISOString());
       } else if (status && status !== 'all') {
         if (status === 'opened') {
           query = query.ilike('doc_status_name', '%нээгдсэн%');

@@ -25,13 +25,16 @@ export async function GET() {
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true }).eq('tender_type_code', 'PRODUCT'),
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true }).eq('tender_type_code', 'JOB'),
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true }).eq('tender_type_code', 'SERVICE'),
-      supabase.from('tenders').select('invitation_id', { count: 'exact', head: true }).or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%'),
+      supabase.from('tenders').select('invitation_id', { count: 'exact', head: true })
+        .or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%')
+        .gte('receive_date', now.toISOString()),
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true })
         .or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%')
         .gte('receive_date', now.toISOString())
         .lte('receive_date', closingDeadline.toISOString()),
       supabase.from('tenders').select('invitation_id', { count: 'exact', head: true })
         .or('is_receiving.eq.1,doc_status_name.ilike.%хүлээн авч%')
+        .gte('receive_date', now.toISOString())
         .eq('raw_data->liveBundle->>schemaVersion', String(LIVE_BUNDLE_SCHEMA_VERSION))
         .filter('raw_data->liveBundle->structuredSpecs->>bidSecurityReq', 'ilike', '%Шаардахгүй%'),
     ]);
