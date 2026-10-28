@@ -17,7 +17,7 @@ async function resolveListSource(reader: any): Promise<'tenders_list' | 'tenders
   if (cachedListSource && Date.now() - cachedListSource.checkedAt < 10 * 60 * 1000) return cachedListSource.name;
   let name: 'tenders_list' | 'tenders' = 'tenders';
   try {
-    const { error } = await reader.from('tenders_list').select('id', { head: true }).limit(1);
+    const { error } = await reader.from('tenders_list').select('invitation_id', { head: true }).limit(1);
     if (!error) name = 'tenders_list';
   } catch {
     // keep full table

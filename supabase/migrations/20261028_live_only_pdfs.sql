@@ -92,7 +92,7 @@ begin
 
   if p_apply then
     with batch as (
-      select t.id
+      select t.invitation_id
       from public.tenders t
       where not public.tender_is_live(t.receive_date, t.is_receiving)
         and (
@@ -128,7 +128,7 @@ begin
     ) || jsonb_build_object('documentsPrunedAt', now()),
     updated_at = now()
     from batch
-    where t.id = batch.id;
+    where t.invitation_id = batch.invitation_id;
 
     get diagnostics updated_rows = row_count;
   end if;
@@ -147,35 +147,29 @@ grant execute on function public.prune_closed_tender_documents(boolean, integer)
 
 -- 4. Lightweight read model for the tender list: same columns, but raw_data
 --    without the full PDF text and announcement HTML. Respects table RLS.
-create or replace view public.tenders_list
+drop view if exists public.tenders_list;
+create view public.tenders_list
 with (security_invoker = true)
 as
 select
-  t.id,
   t.invitation_id,
   t.invitation_number,
-  t.tender_code,
   t.tender_name,
-  t.budget_entity_name,
-  t.position_name,
-  t.client_code,
-  t.registration_number,
-  t.total_budget,
-  t.year_budget,
+  t.tender_code,
   t.tender_type_code,
   t.tender_type_name,
-  t.rule_name,
+  t.total_budget,
+  t.budget_entity_name,
+  t.client_code,
+  t.position_name,
   t.fund_name,
+  t.rule_name,
   t.publish_date,
-  t.receive_date,
   t.open_date,
+  t.receive_date,
   t.doc_status_code,
   t.doc_status_name,
-  t.doc_status_color,
   t.is_receiving,
-  t.full_scope_of_work,
-  t.eligibility_requirements,
-  t.historical_flags,
   (t.raw_data #- '{liveBundle,pdfText}' #- '{liveBundle,announcementHtml}') as raw_data,
   t.created_at,
   t.updated_at
