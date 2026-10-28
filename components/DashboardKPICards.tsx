@@ -1,231 +1,94 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Locale } from '@/lib/types';
-import { 
-  TrendingUp, Building2, Globe2, ShieldCheck, 
-  ArrowUpRight, Sparkles, FileCheck, Layers, CheckCircle2
-} from 'lucide-react';
+import React from 'react';
+import { TenderStats, TenderFilterParams, Locale } from '@/lib/types';
+import { ArrowUpRight } from 'lucide-react';
 
 interface DashboardKPICardsProps {
+  stats?: TenderStats;
   locale: Locale;
-  onFilterActive?: () => void;
-  onOpenDocAudit?: () => void;
-  onOpenFinance?: () => void;
-  onOpenChinaSupplier?: () => void;
+  onApplyFilter?: (filters: Partial<TenderFilterParams>) => void;
 }
 
-export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({
-  locale,
-  onFilterActive,
-  onOpenDocAudit,
-  onOpenFinance,
-  onOpenChinaSupplier,
-}) => {
-  const [stats, setStats] = useState({
-    openTenderCount: 504,
-    openTenderAmount: 476966840488,
-    companyCount: 1493,
-    financeAmount: 20273607704,
-    chineseSuppliers: 19000,
-  });
+const MNT_PER_RMB = 470;
 
-  useEffect(() => {
-    fetch('/api/analytics')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data?.stats) {
-          setStats((prev) => ({
-            ...prev,
-            openTenderCount: data.stats.activeTendersCount || data.stats.totalCount || prev.openTenderCount,
-            openTenderAmount: data.stats.totalBudgetSum || prev.openTenderAmount,
-          }));
-        }
-      })
-      .catch(() => {});
-  }, []);
+function formatMoney(amount: number | null | undefined, locale: Locale): string {
+  const num = Number(amount);
+  if (!num || Number.isNaN(num)) return '—';
+  if (locale === 'zh') {
+    const rmb = num / MNT_PER_RMB;
+    return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString()} 万`;
+  }
+  if (num >= 1e12) return `₮${(num / 1e12).toFixed(2)}${locale === 'mn' ? ' их наяд' : 'T'}`;
+  if (num >= 1e9) return `₮${(num / 1e9).toFixed(1)}${locale === 'mn' ? ' тэрбум' : 'B'}`;
+  return `₮${Math.round(num / 1e6).toLocaleString()}${locale === 'mn' ? ' сая' : 'M'}`;
+}
 
-  const formatBillion = (amount: number) => {
-    if (locale === 'zh') {
-      const rmb = Math.round(amount / 485);
-      const rmbYi = rmb / 100_000_000;
-      return `约 ¥${rmbYi.toFixed(1)} 亿元`;
-    }
-    const billion = amount / 1_000_000_000;
-    return `₮ ${billion.toFixed(1)} тэрбум`;
-  };
+const t = (locale: Locale, mn: string, en: string, zh: string) => (locale === 'zh' ? zh : locale === 'en' ? en : mn);
 
-  const formatBillionShort = (amount: number) => {
-    if (locale === 'zh') {
-      const rmb = Math.round(amount / 485);
-      const rmbYi = rmb / 100_000_000;
-      return `¥${rmbYi.toFixed(1)}亿`;
-    }
-    const billion = amount / 1_000_000_000;
-    return `₮${billion.toFixed(1)}B`;
-  };
+/**
+ * One ruled strip of live figures from /api/analytics. Each figure is real;
+ * when a number isn't available yet it shows a dash rather than a guess.
+ */
+export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, locale, onApplyFilter }) => {
+  const active = stats?.activeTendersCount;
+  const activeBudget = stats?.activeBudgetSum ?? stats?.totalActiveBudget ?? null;
+  const cells: {
+    label: string;
+    value: string;
+    note: string;
+    filter?: Partial<TenderFilterParams>;
+  }[] = [
+    {
+      label: t(locale, 'Нээлттэй тендер', 'Open tenders', '正在招标'),
+      value: active != null ? active.toLocaleString() : '—',
+      note: t(locale, 'Санал хүлээн авч буй', 'Accepting bids now', '正在接受投标'),
+      filter: { status: 'receiving', tabMode: 'active', urgency: 'all', page: 1 },
+    },
+    {
+      label: t(locale, 'Нээлттэй тендерийн төсөв', 'Budget of open tenders', '在招项目预算'),
+      value: formatMoney(activeBudget, locale),
+      note: locale === 'zh' ? `按 1 元 ≈ ${MNT_PER_RMB} ₮ 折算` : t(locale, 'Төсөвт өртгийн нийлбэр', 'Sum of estimated budgets', ''),
+    },
+    {
+      label: t(locale, '48 цагт хаагдах', 'Closing within 48 h', '48 小时内截标'),
+      value: stats?.closingSoonCount != null ? stats.closingSoonCount.toLocaleString() : '—',
+      note: t(locale, 'Яаралтай бэлтгэх', 'Prepare bids now', '需尽快准备'),
+      filter: { status: 'receiving', tabMode: 'active', urgency: 'urgent_48h', page: 1 },
+    },
+    {
+      label: t(locale, 'Баталгаа шаардахгүй', 'No bid security', '无需投标保证金'),
+      value: stats?.noGuaranteeCount != null ? stats.noGuaranteeCount.toLocaleString() : '—',
+      note: t(locale, 'Тендерийн баталгаагүй оролцох', 'Bid without a guarantee', '可免保函参与'),
+    },
+  ];
 
   return (
-    <div className="w-full space-y-4">
-      {/* Top Bar: Live Pulse Header & Quick Action Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/60">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{locale === 'mn' ? 'Монголын Төрийн & B2B Худалдан Авалтын Шууд Самбар' : locale === 'zh' ? '蒙古国政府采购与B2B出海投标实时数据中心' : 'Mongolia Procurement & Sourcing Dashboard'}</span>
-          </div>
-          <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-mono text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-            <ShieldCheck className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
-            ISO 27001
-          </span>
-        </div>
-
-        {/* Quick Trigger Pills */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {onOpenDocAudit && (
-            <button
-              onClick={onOpenDocAudit}
-              className="h-8 px-3 rounded-lg text-xs font-semibold bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/80 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-800/60 flex items-center gap-1.5 transition-all cursor-pointer hover:border-purple-400"
-            >
-              <FileCheck className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-              <span>{locale === 'zh' ? '标书自测 AI' : 'ТББ Шалгагч AI'}</span>
-            </button>
-          )}
-
-          {onOpenFinance && (
-            <button
-              onClick={onOpenFinance}
-              className="h-8 px-3 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/70 hover:bg-emerald-100 dark:hover:bg-emerald-900/80 text-emerald-700 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1.5 transition-all cursor-pointer hover:border-emerald-400"
-            >
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span>{locale === 'zh' ? '保函与融资服务' : 'Баталгаа & Санхүүжилт'}</span>
-            </button>
-          )}
-
-          {onOpenChinaSupplier && (
-            <button
-              onClick={onOpenChinaSupplier}
-              className="h-8 px-3 rounded-lg text-xs font-semibold bg-rose-50 dark:bg-rose-950/70 hover:bg-rose-100 dark:hover:bg-rose-900/80 text-rose-700 dark:text-rose-200 border border-rose-200 dark:border-rose-800/60 flex items-center gap-1.5 transition-all cursor-pointer hover:border-rose-400"
-            >
-              <Globe2 className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
-              <span>{locale === 'zh' ? '🇨🇳 中企出海专区' : '🇨🇳 Хятад Нийлүүлэгч'}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* 4 Clean Horizontal KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
-        {/* KPI 1: Active Tenders */}
-        <div 
-          onClick={onFilterActive}
-          className="bg-white dark:bg-slate-900/90 hover:bg-slate-50/80 dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-blue-500/50 rounded-2xl p-4 transition-all duration-200 group cursor-pointer shadow-2xs"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              {locale === 'mn' ? 'Нээлттэй тендерүүд' : locale === 'zh' ? '正在招标中' : 'Active Tenders'}
-            </span>
-            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 group-hover:scale-105 transition-transform">
-              <TrendingUp className="h-4 w-4" />
+    <div className="grid grid-cols-2 xl:grid-cols-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-slate-200 dark:divide-slate-800 [&>*]:border-slate-200 dark:[&>*]:border-slate-800">
+      {cells.map((cell, i) => {
+        const clickable = Boolean(cell.filter && onApplyFilter);
+        const Tag = clickable ? 'button' : 'div';
+        return (
+          <Tag
+            key={cell.label}
+            {...(clickable ? { type: 'button' as const, onClick: () => onApplyFilter!(cell.filter!) } : {})}
+            className={`group text-left px-4 py-3.5 sm:px-5 sm:py-4 min-w-0
+              ${i % 2 === 1 ? 'border-l' : ''} ${i >= 2 ? 'border-t xl:border-t-0' : ''} ${i === 2 ? 'xl:border-l' : ''}
+              ${clickable ? 'hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors' : ''}`}
+          >
+            <div className="flex items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
+              <span className="truncate">{cell.label}</span>
+              {clickable && (
+                <ArrowUpRight className="h-3.5 w-3.5 shrink-0 text-slate-300 dark:text-slate-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors" />
+              )}
             </div>
-          </div>
-          
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {stats.openTenderCount.toLocaleString()}+
-            </span>
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              +18 өнөөдөр
-            </span>
-          </div>
-
-          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-2">
-            <span>Зарлагдсан төсөв:</span>
-            <span className="text-blue-600 dark:text-blue-400 font-bold font-mono">{formatBillionShort(stats.openTenderAmount)}</span>
-          </div>
-        </div>
-
-        {/* KPI 2: Total Budget Volume */}
-        <div className="bg-white dark:bg-slate-900/90 hover:bg-slate-50/80 dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 transition-all duration-200 group shadow-2xs">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              {locale === 'mn' ? 'Нийт төсөвт өртөг' : locale === 'zh' ? '招标总预算规模' : 'Total Budget Volume'}
-            </span>
-            <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 group-hover:scale-105 transition-transform">
-              <Building2 className="h-4 w-4" />
+            <div className="mt-1.5 text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tabular-nums whitespace-nowrap">
+              {cell.value}
             </div>
-          </div>
-          
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {formatBillion(stats.openTenderAmount)}
-            </span>
-          </div>
-
-          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-2">
-            <span>Байгууллагууд:</span>
-            <span className="text-emerald-600 dark:text-emerald-400 font-bold font-mono">{stats.companyCount.toLocaleString()}+ Захиалагч</span>
-          </div>
-        </div>
-
-        {/* KPI 3: Cross-Border Suppliers */}
-        <div 
-          onClick={onOpenChinaSupplier}
-          className="bg-white dark:bg-slate-900/90 hover:bg-slate-50/80 dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-rose-500/50 rounded-2xl p-4 transition-all duration-200 group cursor-pointer shadow-2xs"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              {locale === 'mn' ? 'Хятад Нийлүүлэгчид' : locale === 'zh' ? '跨境认证供应商' : 'Cross-Border Suppliers'}
-            </span>
-            <div className="p-2 rounded-xl bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 group-hover:scale-105 transition-transform">
-              <Globe2 className="h-4 w-4" />
-            </div>
-          </div>
-          
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {stats.chineseSuppliers.toLocaleString()}+
-            </span>
-            <span className="text-xs font-medium text-rose-600 dark:text-rose-400">
-              Tender2China
-            </span>
-          </div>
-
-          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-2">
-            <span>Шууд үнийн санал:</span>
-            <span className="text-rose-600 dark:text-rose-400 font-bold">🇨🇳 Үйлдвэрийн үнэ</span>
-          </div>
-        </div>
-
-        {/* KPI 4: Trade Finance & Guarantee */}
-        <div 
-          onClick={onOpenFinance}
-          className="bg-white dark:bg-slate-900/90 hover:bg-slate-50/80 dark:hover:bg-slate-900 border border-slate-200/90 dark:border-slate-800 hover:border-purple-500/50 rounded-2xl p-4 transition-all duration-200 group cursor-pointer shadow-2xs"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              {locale === 'mn' ? 'Баталгаа & Санхүүжилт' : locale === 'zh' ? '投标保函与融资' : 'Guarantees & Finance'}
-            </span>
-            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-500/20 group-hover:scale-105 transition-transform">
-              <ShieldCheck className="h-4 w-4" />
-            </div>
-          </div>
-          
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {formatBillion(stats.financeAmount)}
-            </span>
-          </div>
-
-          <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 pt-2">
-            <span>Шийдвэрлэх хугацаа:</span>
-            <span className="text-purple-600 dark:text-purple-400 font-bold font-mono">15 мин (Онлайн)</span>
-          </div>
-        </div>
-
-      </div>
+            {cell.note && <div className="mt-0.5 text-xs text-slate-500 dark:text-slate-400 truncate">{cell.note}</div>}
+          </Tag>
+        );
+      })}
     </div>
   );
 };

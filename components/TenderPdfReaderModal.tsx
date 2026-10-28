@@ -88,15 +88,15 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-950/75 animate-in fade-in duration-200">
       
       {/* Modal Container */}
       <div 
         className={`bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden transition-all duration-200 ${
-          isFullscreen 
-            ? 'fixed inset-2 sm:inset-4 rounded-xl z-50' 
-            : 'w-full max-w-5xl h-[88vh] rounded-2xl'
-        }`}
+ isFullscreen 
+ ? 'fixed inset-2 sm:inset-4 rounded-md z-50' 
+ : 'w-full max-w-5xl h-[88vh] rounded-lg'
+ }`}
       >
         
         {/* Top Navigation Bar */}
@@ -131,41 +131,41 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
           </div>
 
           {/* Mode Switcher Tabs */}
-          <div className="hidden md:flex items-center bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl text-xs font-semibold shrink-0">
+          <div className="hidden md:flex items-center bg-slate-200/70 dark:bg-slate-800 p-1 rounded-md text-xs font-semibold shrink-0">
             <button
               onClick={() => setActiveTab('pdf')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'pdf'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ activeTab === 'pdf'
+ ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             >
               <BookOpen className="h-3.5 w-3.5 text-purple-500" />
-              <span>{locale === 'zh' ? '📄 原版 PDF' : locale === 'mn' ? '📄 Эх PDF' : '📄 PDF View'}</span>
+              <span>{locale === 'zh' ? '原版 PDF' : locale === 'mn' ? 'Эх PDF' : 'PDF View'}</span>
             </button>
 
             <button
               onClick={() => setActiveTab('text')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'text'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ activeTab === 'text'
+ ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             >
               <ListChecks className="h-3.5 w-3.5 text-blue-500" />
-              <span>{locale === 'zh' ? '📋 提取文本' : locale === 'mn' ? '📋 Текст & Үзүүлэлт' : '📋 Extracted Text'}</span>
+              <span>{locale === 'zh' ? '提取文本' : locale === 'mn' ? 'Текст & Үзүүлэлт' : 'Extracted Text'}</span>
             </button>
 
             <button
               onClick={() => setActiveTab('ai')}
               className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-                activeTab === 'ai'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ activeTab === 'ai'
+ ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-              <span>{locale === 'zh' ? '🤖 AI 提问' : locale === 'mn' ? '🤖 AI Шинжээч' : '🤖 Ask AI'}</span>
+              <span>{locale === 'zh' ? 'AI 提问' : locale === 'mn' ? 'AI Шинжээч' : 'Ask AI'}</span>
             </button>
           </div>
 
@@ -256,8 +256,8 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
             <div className="w-full h-full overflow-y-auto p-4 sm:p-6 space-y-6 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
               
               {/* Tender Quick Summary Header */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+              <div className="p-4 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+                <span className="text-[10px] font-bold text-slate-400 block">
                   Тендерийн нэр & Захиалагч
                 </span>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
@@ -277,48 +277,48 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
               {(bidSecText || turnoverText || liquidText || similarExpText || deliveryPeriodText || warrantyText || deliveryLocationText) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {bidSecText && (
-                    <div className="p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+                    <div className="p-3 rounded-md bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/70">
+                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 block">
                         {locale === 'zh' ? '投标保证金 (ТШЗ 24.1)' : 'Тендерийн баталгаа (ТШЗ)'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{bidSecText}</p>
                     </div>
                   )}
                   {turnoverText && (
-                    <div className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/70">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">
+                    <div className="p-3 rounded-md bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/70">
+                      <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 block">
                         {locale === 'zh' ? '营业额要求 (ТШЗ 18.1)' : 'Борлуулалтын орлогын босго'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{turnoverText}</p>
                     </div>
                   )}
                   {liquidText && (
-                    <div className="p-3 rounded-xl bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/70">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400 block">
+                    <div className="p-3 rounded-md bg-purple-50/70 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/70">
+                      <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 block">
                         {locale === 'zh' ? '流动资金要求 (ТШЗ 18.1)' : 'Түргэн хөрвөх хөрөнгө'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{liquidText}</p>
                     </div>
                   )}
                   {similarExpText && (
-                    <div className="p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+                    <div className="p-3 rounded-md bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/70">
+                      <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 block">
                         {locale === 'zh' ? '同类项目经验' : 'Ижил төстэй ажлын туршлага'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{similarExpText}</p>
                     </div>
                   )}
                   {deliveryPeriodText && (
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                    <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">
                         {locale === 'zh' ? '交货/工期 (ТШЗ 17.3)' : 'Нийлүүлэх / Гүйцэтгэх хугацаа'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">{deliveryPeriodText}</p>
                     </div>
                   )}
                   {(warrantyText || deliveryLocationText) && (
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                    <div className="p-3 rounded-md bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">
                         {locale === 'zh' ? '质保与交货条件' : 'Баталгаат хугацаа & Байршил'}
                       </span>
                       <p className="text-xs font-bold text-slate-900 dark:text-white mt-1 leading-snug">
@@ -341,7 +341,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                       {extractedItems.length} {locale === 'zh' ? '项' : 'нэр төрөл'}
                     </span>
                   </div>
-                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div className="overflow-x-auto rounded-md border border-slate-200 dark:border-slate-800">
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                         <tr>
@@ -414,11 +414,11 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                 </div>
 
                 {scopeOfWork ? (
-                  <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto selection:bg-blue-600 selection:text-white border border-slate-800">
+                  <div className="p-4 rounded-md bg-slate-900 text-slate-100 font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-96 overflow-y-auto selection:bg-blue-600 selection:text-white border border-slate-800">
                     {scopeOfWork}
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                  <div className="p-8 text-center text-xs text-slate-400 italic bg-slate-50 dark:bg-slate-900/50 rounded-md border border-dashed border-slate-200 dark:border-slate-800">
                     Техникийн дэлгэрэнгүй үзүүлэлтийг зүүн талын "Эх PDF" цонхоор бүтнээр нь гүйлгэн харна уу.
                   </div>
                 )}
@@ -432,11 +432,11 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
             <div className="w-full h-full overflow-y-auto p-4 sm:p-8 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center text-center">
               <div className="max-w-md w-full space-y-4">
                 
-                <div className="inline-flex p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400">
+                <div className="inline-flex p-3 rounded-lg bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400">
                   <Sparkles className="h-8 w-8" />
                 </div>
 
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {locale === 'zh' ? '关于此标书的 AI 深度问答' : locale === 'mn' ? 'Энэхүү ТШЗ PDF-ийн талаар AI-аас асуух' : 'Ask AI About This Specification'}
                 </h3>
 
@@ -449,26 +449,50 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
                 {/* Quick Prompts */}
                 <div className="space-y-2 text-left pt-2">
                   <button
-                    onClick={() => handleQuickAsk('Энэ тендерийн техникийн гол шаардлага, нийлүүлэх бараа ажлын хэмжээ юу вэ?')}
-                    className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-blue-300 text-xs text-slate-800 dark:text-slate-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+                    onClick={() => handleQuickAsk(
+                      locale === 'zh'
+                        ? '请把这份标书第三章（III БҮЛЭГ）的技术规格书、采购货物/工程量清单（名称、数量、单位、核心技术参数）完整翻译成中文表格。'
+                        : 'Энэ тендерийн техникийн гол шаардлага, нийлүүлэх бараа ажлын хэмжээ юу вэ?'
+                    )}
+                    className="w-full p-3 rounded-md bg-rose-50/80 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-xs text-rose-900 dark:text-rose-200 font-bold flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
                   >
-                    <span>1. Техникийн гол шаардлага, тоо хэмжээ юу вэ?</span>
+                    <span>
+                      {locale === 'zh'
+                        ? '1. 一键把采购清单与技术规格全文翻译成中文表格'
+                        : '1. Техникийн гол шаардлага, тоо хэмжээ юу вэ?'}
+                    </span>
+                    <ArrowRight className="h-3.5 w-3.5 text-rose-500 group-hover:translate-x-1 transition-transform" />
+                  </button>
+
+                  <button
+                    onClick={() => handleQuickAsk(
+                      locale === 'zh'
+                        ? '请提取第二章投标人须知（ТШЗ 18.1 / 24.1）中的营业额门槛、流动资金、投标保证金金额及有效期要求。'
+                        : 'Оролцогчдод тавигдах тусгай зөвшөөрөл, борлуулалтын орлого ямар хэмжээтэй заасан бэ?'
+                    )}
+                    className="w-full p-3 rounded-md bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-blue-300 text-xs text-slate-800 dark:text-slate-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+                  >
+                    <span>
+                      {locale === 'zh'
+                        ? '2. 投标保证金、营业额门槛与特种资质要求是什么？'
+                        : '2. Тусгай зөвшөөрөл, борлуулалтын орлогын босго?'}
+                    </span>
                     <ArrowRight className="h-3.5 w-3.5 text-blue-500 group-hover:translate-x-1 transition-transform" />
                   </button>
 
                   <button
-                    onClick={() => handleQuickAsk('Оролцогчдод тавигдах тусгай зөвшөөрөл, борлуулалтын орлого ямар хэмжээтэй заасан бэ?')}
-                    className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-blue-300 text-xs text-slate-800 dark:text-slate-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
+                    onClick={() => handleQuickAsk(
+                      locale === 'zh'
+                        ? '中国企业可以独立参加这个标段吗？还是必须找蒙古国本地持证公司组成联合体（JV）？银行投标保函如何开具？'
+                        : 'Гадаад эсвэл Хятад компани энэ тендерт бие даан оролцох боломжтой юу, эсвэл Монголын компанитай түншлэл (JV) байгуулах ёстой юу?'
+                    )}
+                    className="w-full p-3 rounded-md bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-blue-300 text-xs text-slate-800 dark:text-slate-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
                   >
-                    <span>2. Тусгай зөвшөөрөл, борлуулалтын орлогын босго?</span>
-                    <ArrowRight className="h-3.5 w-3.5 text-blue-500 group-hover:translate-x-1 transition-transform" />
-                  </button>
-
-                  <button
-                    onClick={() => handleQuickAsk('Гадаад эсвэл Хятад компани энэ тендерт бие даан оролцох боломжтой юу, эсвэл Монголын компанитай түншлэл (JV) байгуулах ёстой юу?')}
-                    className="w-full p-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 hover:border-blue-300 text-xs text-slate-800 dark:text-slate-200 font-medium flex items-center justify-between transition-all cursor-pointer shadow-2xs group"
-                  >
-                    <span>3. Гадаад / Хятад компани оролцох боломж, банкны баталгаа?</span>
+                    <span>
+                      {locale === 'zh'
+                        ? '3. 中企可否独立直投？联合体(JV)与银行保函如何办理？'
+                        : '3. Гадаад / Хятад компани оролцох боломж, банкны баталгаа?'}
+                    </span>
                     <ArrowRight className="h-3.5 w-3.5 text-blue-500 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </div>
@@ -482,7 +506,7 @@ export const TenderPdfReaderModal: React.FC<TenderPdfReaderModalProps> = ({
         {/* Modal Bottom Footer */}
         <div className="px-4 sm:px-6 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 shrink-0">
           <div className="flex items-center gap-1.5 font-medium">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-emerald-500 " />
             <span>Supabase Storage CDN • Албан ёсны ТШББ файл</span>
           </div>
 

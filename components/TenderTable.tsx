@@ -84,11 +84,11 @@ export const TenderTable: React.FC<TenderTableProps> = ({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl shadow-2xs overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-md shadow-2xs overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs table-auto">
           <thead>
-            <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold uppercase tracking-wider text-[11px]">
+            <tr className="bg-slate-50/90 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold text-[11px]">
               <th className="py-2.5 px-2 w-[36px] text-center"></th>
               <th className="py-2.5 px-3 min-w-[280px]">{locale === 'mn' ? 'Тендерийн нэр & Код' : 'Tender Title & Code'}</th>
               <th className="py-2.5 px-3 w-[200px] hidden md:table-cell">{locale === 'mn' ? 'Захиалагч байгууллага' : 'Procuring Entity'}</th>
@@ -116,15 +116,15 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                       <button
                         onClick={() => onToggleSave(tender.invitationId)}
                         className={`p-1 rounded transition-colors cursor-pointer ${
-                          savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId))
-                            ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40'
-                            : 'text-slate-300 dark:text-slate-600 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
-                        }`}
+ savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId))
+ ? 'text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+ : 'text-slate-300 dark:text-slate-600 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800'
+ }`}
                         title={locale === 'mn' ? 'Хяналтад авах' : 'Save to watchlist'}
                       >
                         <Star className={`h-3.5 w-3.5 ${
-                          savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId)) ? 'fill-amber-500' : ''
-                        }`} />
+ savedIds?.has(tender.invitationId) || savedIds?.has(String(tender.invitationId)) ? 'fill-amber-500' : ''
+ }`} />
                       </button>
                     )}
                   </td>
@@ -187,7 +187,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                           {itemCount > 0 && (
                             <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 inline-flex items-center gap-1 max-w-[340px] truncate">
                               <Package className="h-3 w-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
-                              <span className="font-extrabold">{itemCount} бараа:</span>
+                              <span className="font-semibold">{itemCount} бараа:</span>
                               <span className="truncate">{items[0].name}</span>
                               {items[0].quantity && (
                                 <strong className="text-slate-900 dark:text-white font-bold shrink-0 font-mono tabular-nums">
@@ -231,7 +231,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                             title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
                             <span>
-                              {locale === 'zh' ? '🇨🇳 独立投标' : locale === 'mn' ? 'Шууд оролцох' : 'Direct Allowed'}
+                              {locale === 'zh' ? '独立投标' : locale === 'mn' ? 'Шууд оролцох' : 'Direct Allowed'}
                             </span>
                             {locale === 'zh' && Boolean((tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
                               <span className="text-emerald-700 dark:text-emerald-300 font-mono font-bold">
@@ -248,7 +248,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                             title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
                             <span>
-                              {locale === 'zh' ? '🤝 需联合体' : locale === 'mn' ? 'Түншлэлтэй' : 'JV Required'}
+                              {locale === 'zh' ? '需联合体' : locale === 'mn' ? 'Түншлэлтэй' : 'JV Required'}
                             </span>
                             {locale === 'zh' && Boolean((tender.chinaBidderAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
                               <span className="text-amber-700 dark:text-amber-300 font-mono font-bold">
@@ -265,7 +265,7 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                             title={locale === 'zh' ? tender.chinaBidderAnalysis.eligibilityExplanationZh : tender.chinaBidderAnalysis.eligibilityExplanationMn}
                           >
                             <span>
-                              {locale === 'zh' ? '🇲🇳 仅限本土' : locale === 'mn' ? 'Зөвхөн дотоодын' : 'Domestic Only'}
+                              {locale === 'zh' ? '仅限本土' : locale === 'mn' ? 'Зөвхөн дотоодын' : 'Domestic Only'}
                             </span>
                           </span>
                         )}
@@ -301,12 +301,12 @@ export const TenderTable: React.FC<TenderTableProps> = ({
                     {days !== null && days > 0 ? (
                       <div
                         className={`text-[10px] font-semibold flex items-center gap-1 ${
-                          days <= 3
-                            ? 'text-rose-600 dark:text-rose-400'
-                            : days <= 7
-                            ? 'text-amber-600 dark:text-amber-400'
-                            : 'text-emerald-600 dark:text-emerald-400'
-                        }`}
+ days <= 3
+ ? 'text-rose-600 dark:text-rose-400'
+ : days <= 7
+ ? 'text-amber-600 dark:text-amber-400'
+ : 'text-emerald-600 dark:text-emerald-400'
+ }`}
                       >
                         <Clock className="h-2.5 w-2.5 shrink-0" />
                         <span>{days <= 3 ? `Шуурхай: ${days} ${t.daysRemaining}` : `${days} ${t.daysRemaining}`}</span>

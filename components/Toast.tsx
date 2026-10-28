@@ -26,7 +26,7 @@ export function ToastContainer({ toasts, onDismiss }: ToastProps) {
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="pointer-events-auto flex items-start gap-3 p-3.5 bg-slate-900 text-white rounded-xl shadow-xl border border-slate-800 animate-in slide-in-from-bottom-5 duration-150"
+          className="pointer-events-auto flex items-start gap-3 p-3.5 bg-slate-900 text-white rounded-md shadow-xl border border-slate-800 animate-in slide-in-from-bottom-5 duration-150"
         >
           {toast.type === 'error' ? (
             <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />

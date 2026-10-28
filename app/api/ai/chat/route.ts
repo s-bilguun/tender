@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { supabase, supabaseAdmin } from '@/lib/supabase';
+const db = supabaseAdmin || supabase;
 import { LIVE_BUNDLE_SCHEMA_VERSION, TenderItem } from '@/lib/types';
 import { getTenderDetailData } from '@/lib/tender-detail';
 import { cleanThoughtBlocks } from '@/lib/ai-cleaner';
 import { analyzeChinaBidderEligibility } from '@/lib/china-bidder-analyzer';
+import { isolateChapterSection, cleanTechnicalSectionText } from '@/lib/live-fetcher';
+import { expandMultilingualSearchTerms } from '@/lib/bilingual-title';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +15,8 @@ const globalPdfTextCache = new Map<string, string>();
 
 const ALLOWED_CHAT_MODELS = new Set([
   'google/gemma-4-26b-a4b-it:free',
+  'google/gemma-4-31b-it:free',
+  'nvidia/nemotron-3-ultra-550b-a55b:free',
   'nvidia/nemotron-3.5-lightning:free',
   'openrouter/free',
 ]);
@@ -58,12 +63,29 @@ interface QueryPlan {
 
 function retrievePdfEvidence(pdfText: string | undefined, question: string): string[] {
   if (!pdfText?.trim()) return [];
-  const queryTerms = Array.from(new Set(
-    question.toLocaleLowerCase().match(/[a-zа-яёөү0-9]{3,}/gi) || [],
-  )).filter((term) => ![
+  const rawTerms = question.toLocaleLowerCase().match(/[a-zа-яёөү0-9]{3,}/gi) || [];
+  const translatedMnTerms = expandMultilingualSearchTerms(question).map((t) => t.toLocaleLowerCase());
+  const queryTerms = Array.from(new Set([...rawTerms, ...translatedMnTerms])).filter((term) => ![
     'энэ', 'тэр', 'ямар', 'хэдэн', 'гэж', 'буюу', 'тухай', 'тендер', 'pdf', 'файл', 'юу', 'байна',
     'надад', 'товч', 'хэл', 'өг', 'please', 'what', 'the', 'and', 'can', 'you', 'tell', 'about',
   ].includes(term));
+
+  const coreChapterExcerpts: string[] = [];
+  const chapter2 = isolateChapterSection(pdfText, 'bds');
+  if (chapter2 && chapter2.length > 80) {
+    const tshz17Idx = chapter2.search(/ТШЗ\s*1[45678]\./i);
+    const sliceStart = tshz17Idx > 0 ? Math.max(0, tshz17Idx - 250) : 0;
+    coreChapterExcerpts.push(
+      `[Эх сурвалж: Албан ёсны ТШББ — II БҮЛЭГ: Тендерийн өгөгдлийн хүснэгт (BDS)]\n${chapter2.slice(sliceStart, sliceStart + 3200).trim()}`
+    );
+  }
+  const chapter3Raw = isolateChapterSection(pdfText, 'tech');
+  const chapter3 = cleanTechnicalSectionText(chapter3Raw);
+  if (chapter3 && chapter3.length > 50) {
+    coreChapterExcerpts.push(
+      `[Эх сурвалж: Албан ёсны ТШББ — III БҮЛЭГ: Техникийн тодорхойлолт ба Бараа/Ажлын жагсаалт]\n${chapter3.slice(0, 3800).trim()}`
+    );
+  }
 
   const documentSections = pdfText.split(/(?=---\s*(?:DOCUMENT\s+[^:]+:|БАРИМТ БИЧИГ:))/i).filter(Boolean);
   const candidates: Array<{ score: number; source: string; text: string }> = [];
@@ -100,17 +122,14 @@ function retrievePdfEvidence(pdfText: string | undefined, question: string): str
     }
   }
 
-  // Do not substitute unrelated cover-page excerpts when a specific question has
-  // no matching evidence; that made missing text look like an answer.
   const selected = candidates.length > 0
     ? candidates
-    : queryTerms.length === 0
-      ? overviewCandidates
-      : [];
-  return selected
+    : overviewCandidates;
+  const keywordExcerpts = selected
     .sort((a, b) => b.score - a.score)
-    .slice(0, candidates.length > 0 ? 8 : 5)
+    .slice(0, candidates.length > 0 ? 5 : 2)
     .map((item, index) => `[Эх сурвалж ${index + 1}: ${item.source}]\n${item.text}`);
+  return [...coreChapterExcerpts, ...keywordExcerpts];
 }
 
 function sanitizeFilterTerm(value: unknown): string {
@@ -211,17 +230,17 @@ export async function POST(request: NextRequest) {
       let row: any = null;
       try {
         const result = /^\d{1,24}$/.test(id)
-          ? await supabase.from('tenders').select('*').eq('invitation_id', id).maybeSingle()
-          : await supabase.from('tenders').select('*').eq('tender_code', code).maybeSingle();
+          ? await db.from('tenders').select('*').eq('invitation_id', id).maybeSingle()
+          : await db.from('tenders').select('*').eq('tender_code', code).maybeSingle();
         if (result.error) throw result.error;
         row = result.data;
         if (!row && code && /^\d{1,24}$/.test(id)) {
-          const byCode = await supabase.from('tenders').select('*').eq('tender_code', code).maybeSingle();
+          const byCode = await db.from('tenders').select('*').eq('tender_code', code).maybeSingle();
           if (byCode.error) throw byCode.error;
           row = byCode.data;
         }
         if (!row && code) {
-          const byInvitationNumber = await supabase.from('tenders').select('*').eq('invitation_number', code).maybeSingle();
+          const byInvitationNumber = await db.from('tenders').select('*').eq('invitation_number', code).maybeSingle();
           if (byInvitationNumber.error) throw byInvitationNumber.error;
           row = byInvitationNumber.data;
         }
@@ -255,11 +274,11 @@ export async function POST(request: NextRequest) {
         if (codeMatch) {
           const rawCode = codeMatch[1].trim();
           const codeQuery = /^\d{10,24}$/.test(rawCode)
-            ? await supabase.from('tenders').select('*').eq('invitation_id', rawCode).maybeSingle()
-            : await supabase.from('tenders').select('*').eq('tender_code', rawCode).maybeSingle();
+            ? await db.from('tenders').select('*').eq('invitation_id', rawCode).maybeSingle()
+            : await db.from('tenders').select('*').eq('tender_code', rawCode).maybeSingle();
           let row = codeQuery.data;
           if (!row) {
-            const byInvitationNumber = await supabase.from('tenders').select('*').eq('invitation_number', rawCode).maybeSingle();
+            const byInvitationNumber = await db.from('tenders').select('*').eq('invitation_number', rawCode).maybeSingle();
             row = byInvitationNumber.data;
           }
 
@@ -380,16 +399,16 @@ export async function POST(request: NextRequest) {
       // ATTEMPT 2: Fallback Domain & Keyword Rules (if AI planner was skipped or yielded 0)
       if (relevantTenders.length === 0) {
         // INTENT A: TOP / HIGHEST BUDGET TENDERS
-        const isTopBudget = /(хамгийн\s*(их|өндөр|үнэтэй|том)|топ\s*\d*|их\s*төсөвтэй|өндөр\s*төсөвтэй|хамгийн\s*их\s*мөнгө|highest\s*budget|top\s*budget|largest)/i.test(message);
+        const isTopBudget = /(хамгийн\s*(их|өндөр|үнэтэй|том)|топ\s*\d*|их\s*төсөвтэй|өндөр\s*төсөвтэй|хамгийн\s*их\s*мөнгө|highest\s*budget|top\s*budget|largest|预算最高|最大|排名前五|重点标段)/i.test(message);
 
         // INTENT B: LOWEST BUDGET TENDERS
-        const isLowBudget = /(хамгийн\s*(бага|хямд|жижиг)|бага\s*төсөвтэй|хямд\s*төсөвтэй|lowest\s*budget)/i.test(message);
+        const isLowBudget = /(хамгийн\s*(бага|хямд|жижиг)|бага\s*төсөвтэй|хямд\s*төсөвтэй|lowest\s*budget|预算最低|小额)/i.test(message);
 
         // INTENT C: ACTIVE / RECEIVING TENDERS
-        const isActiveTenders = /(хүлээн\s*авч\s*байгаа|одоо\s*нээлттэй|дуусах\s*гэж\s*байгаа|дуусах\s*хугацаа|энэ\s*7\s*хоногт|идэвхтэй|active|closing\s*soon)/i.test(message);
+        const isActiveTenders = /(хүлээн\s*авч\s*байгаа|одоо\s*нээлттэй|дуусах\s*гэж\s*байгаа|дуусах\s*хугацаа|энэ\s*7\s*хоногт|идэвхтэй|active|closing\s*soon|正在招|热招|即将截止)/i.test(message);
 
         // INTENT D: RECENT / NEWEST TENDERS
-        const isRecentTenders = /(шинээр|сүүлд\s*зарлагдсан|хамгийн\s*шинэ|шинэ\s*тендер|хамгийн\s*сүүлийн|newest|recent)/i.test(message);
+        const isRecentTenders = /(шинээр|сүүлд\s*зарлагдсан|хамгийн\s*шинэ|шинэ\s*тендер|хамгийн\s*сүүлийн|newest|recent|最新)/i.test(message);
 
         try {
           if (isTopBudget) {
@@ -538,16 +557,18 @@ export async function POST(request: NextRequest) {
               'нийлүүлэх', 'хийх', 'гүйцэтгэх', 'үйлчилгээ', 'ажил', 'бараа'
             ]);
 
+            const expandedDictTerms = expandMultilingualSearchTerms(message);
             const cleaned = message.replace(/["'“”«»()[\]{}?!,.:;]/g, ' ');
-            const keywords = cleaned
+            const rawKeywords = cleaned
               .split(/\s+/)
               .map((w: string) => w.trim())
-              .filter((w: string) => w.length > 2 && !stopwords.has(w.toLowerCase()));
+              .filter((w: string) => w.length > 2 && !/[\u4e00-\u9fa5]/.test(w) && !stopwords.has(w.toLowerCase()));
+            const keywords = Array.from(new Set([...expandedDictTerms, ...rawKeywords]));
 
             if (keywords.length > 0) {
               queryContextDescription = `"${keywords.join(', ')}" түлхүүр үгээр илэрсэн тендерүүд:`;
               const conditions = keywords
-                .slice(0, 3)
+                .slice(0, 5)
                 .map((k: string) => `tender_name.ilike.%${k}%,budget_entity_name.ilike.%${k}%`)
                 .join(',');
 
@@ -703,13 +724,17 @@ ${JSON.stringify(relevantTenders)}`;
       chatHistory.push({ role: 'user', content: message });
     }
 
+    const effectivePrimaryModel =
+      model === 'openrouter/free' || model === 'nvidia/nemotron-3.5-lightning:free'
+        ? 'google/gemma-4-26b-a4b-it:free'
+        : model;
+
     const candidateModels = Array.from(
       new Set([
-        model,
+        effectivePrimaryModel,
         'google/gemma-4-26b-a4b-it:free',
-        'meta-llama/llama-3.3-70b-instruct:free',
-        'mistralai/mistral-small-24b-instruct-2501:free',
-        'google/gemini-2.0-flash-001',
+        'google/gemma-4-31b-it:free',
+        'nvidia/nemotron-3-ultra-550b-a55b:free',
       ].filter(Boolean))
     );
 

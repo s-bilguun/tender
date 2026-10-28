@@ -7,7 +7,7 @@ import { getTranslation } from '@/lib/translations';
 import { useTheme } from '@/components/ThemeProvider';
 import { 
   Sparkles, Globe, Clock, Search, Menu, 
-  Command, CornerDownLeft, X, Layers, Sun, Moon
+  Command, CornerDownLeft, X, Layers, Sun, Moon, Crown
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -15,6 +15,7 @@ interface HeaderProps {
   setLocale: (locale: Locale) => void;
   stats?: TenderStats;
   onOpenAI: () => void;
+  onOpenPricing?: () => void;
   onOpenCommandPalette?: () => void;
   onToggleMobileSidebar?: () => void;
   searchValue?: string;
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   setLocale,
   stats,
   onOpenAI,
+  onOpenPricing,
   onOpenCommandPalette,
   onToggleMobileSidebar,
   searchValue = '',
@@ -48,14 +50,14 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 h-16 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 transition-colors">
+    <header className="sticky top-0 z-30 h-16 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 transition-colors">
       
       {/* Left Section: Mobile Menu Trigger & Breadcrumbs */}
       <div className="flex items-center gap-3 shrink-0">
         {/* Mobile Hamburger Toggle */}
         <button
           onClick={onToggleMobileSidebar}
-          className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors"
+          className="lg:hidden p-2 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 transition-colors"
           aria-label="Open sidebar navigation"
         >
           <Menu className="h-5 w-5" />
@@ -65,21 +67,20 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <span className="text-slate-600 dark:text-slate-300">TenderHub</span>
           <span className="text-slate-400 dark:text-slate-600">/</span>
-          <span className="text-slate-900 dark:text-white font-bold tracking-tight">
-            {activeSectionTitle || (locale === 'mn' ? 'Хяналтын самбар' : locale === 'zh' ? '智选控制台' : 'Dashboard')}
+          <span className="text-slate-900 dark:text-white font-semibold">
+            {activeSectionTitle || (locale === 'mn' ? 'Хяналтын самбар' : locale === 'zh' ? '控制台概览' : 'Dashboard')}
           </span>
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse ml-1" />
         </div>
       </div>
 
       {/* Center Section: Global Search Bar with Cmd+K Trigger */}
       <div className="flex-1 max-w-xl mx-2 sm:mx-4">
         <div
-          className={`relative flex items-center h-10 w-full rounded-xl bg-slate-100/90 dark:bg-slate-900 border transition-all ${
-            isSearchFocused
-              ? 'border-blue-500 ring-2 ring-blue-500/20 bg-white dark:bg-slate-900/95'
-              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-          }`}
+          className={`relative flex items-center h-10 w-full rounded-md bg-slate-100/90 dark:bg-slate-900 border transition-all ${
+ isSearchFocused
+ ? 'border-blue-500 ring-2 ring-blue-500/20 bg-white dark:bg-slate-900/95'
+ : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+ }`}
         >
           {/* Search Icon */}
           <div className="pl-3 pr-2 flex items-center pointer-events-none text-slate-400">
@@ -140,63 +141,75 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Global Dark / Light Mode Toggle */}
         <button
           onClick={toggleTheme}
-          className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shrink-0"
+          className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-900 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all cursor-pointer shrink-0"
           aria-label={theme === 'dark' ? 'Гэгээлэг горим руу шилжих' : 'Харанхуй горим руу шилжих'}
           title={theme === 'dark' ? 'Гэгээлэг горим (Light mode)' : 'Харанхуй горим (Dark mode)'}
         >
           {theme === 'dark' ? (
-            <Sun className="h-4 w-4 text-amber-400 transition-transform hover:rotate-45" />
+            <Sun className="h-4 w-4" />
           ) : (
-            <Moon className="h-4 w-4 text-slate-700 transition-transform hover:-rotate-12" />
+            <Moon className="h-4 w-4" />
           )}
         </button>
 
         {/* 3-Way Language Toggle (MN / EN / ZH) */}
-        <div className="flex items-center bg-slate-100 dark:bg-slate-900 rounded-xl p-0.5 border border-slate-200 dark:border-slate-800 shrink-0">
+        <div className="flex items-center bg-slate-100 dark:bg-slate-900 rounded-md p-0.5 border border-slate-200 dark:border-slate-800 shrink-0">
           <button
             onClick={() => setLocale('mn')}
-            className={`h-7 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
-              locale === 'mn'
-                ? 'bg-blue-600 text-white font-bold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+ locale === 'mn'
+ ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             title="Монгол хэл"
           >
             MN
           </button>
           <button
             onClick={() => setLocale('en')}
-            className={`h-7 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer ${
-              locale === 'en'
-                ? 'bg-blue-600 text-white font-bold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+ locale === 'en'
+ ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             title="English"
           >
             EN
           </button>
           <button
             onClick={() => setLocale('zh')}
-            className={`h-7 px-2 sm:px-2.5 rounded-lg text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-              locale === 'zh'
-                ? 'bg-red-600 text-white font-bold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+ locale === 'zh'
+ ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             title="中文 (Chinese)"
           >
-            <span className="hidden sm:inline">🇨🇳</span>
             <span>中文</span>
           </button>
         </div>
 
+        {/* VIP Subscription / Pricing Button */}
+        {onOpenPricing && (
+          <button
+            onClick={onOpenPricing}
+            className="h-8 px-2.5 sm:px-3 rounded-md text-xs font-medium bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-800 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+          >
+            <Crown className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+            <span className="hidden md:inline whitespace-nowrap">
+              {locale === 'zh' ? '会员方案' : locale === 'mn' ? 'Багцууд' : 'Plans'}
+            </span>
+          </button>
+        )}
+
         {/* AI Assistant Button */}
         <button
           onClick={onOpenAI}
-          className="h-8 px-2.5 sm:px-3.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white flex items-center gap-1.5 transition-all shadow-md shadow-blue-600/20 active:scale-95 cursor-pointer shrink-0"
+          className="h-8 px-2.5 sm:px-3.5 rounded-md text-xs font-medium bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
         >
-          <Sparkles className="h-3.5 w-3.5 text-amber-300 shrink-0" />
+          <Sparkles className="h-3.5 w-3.5 shrink-0" />
           <span className="hidden sm:inline whitespace-nowrap">
-            {locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 专家' : 'AI Assistant'}
+            {locale === 'mn' ? 'AI-аас асуух' : locale === 'zh' ? '询问 AI' : 'Ask AI'}
           </span>
         </button>
 

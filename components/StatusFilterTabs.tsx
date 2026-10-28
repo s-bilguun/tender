@@ -37,25 +37,25 @@ export const StatusFilterTabs: React.FC<StatusFilterTabsProps> = ({
     },
     {
       id: 'new',
-      label: locale === 'mn' ? '🔥 Шинэ зарлагдсан' : '🔥 New Postings',
+      label: locale === 'mn' ? 'Шинэ зарлагдсан' : 'New Postings',
       icon: Flame,
       onClick: () => onFilterChange({ tabMode: 'active', urgency: 'all', status: 'receiving', sortBy: 'date_desc', page: 1 }),
     },
     {
       id: 'urgent',
-      label: locale === 'mn' ? '⏳ Хугацаа дөхсөн' : '⏳ Ending Soon (≤3d)',
+      label: locale === 'mn' ? 'Хугацаа дөхсөн' : 'Ending Soon (≤3d)',
       icon: Clock,
       onClick: () => onFilterChange({ tabMode: 'active', urgency: 'urgent', status: 'receiving', sortBy: 'deadline_asc', page: 1 }),
     },
     {
       id: 'results',
-      label: locale === 'mn' ? '🏆 Үр дүн гарсан' : '🏆 Awarded Results',
+      label: locale === 'mn' ? 'Үр дүн гарсан' : 'Awarded Results',
       icon: Trophy,
       onClick: () => onFilterChange({ tabMode: 'active', status: 'awarded', urgency: 'all', page: 1 }),
     },
     {
       id: 'watchlist',
-      label: locale === 'mn' ? `⭐ Хянаж буй (${watchlistCount})` : `⭐ Watchlist (${watchlistCount})`,
+      label: locale === 'mn' ? `Хянаж буй (${watchlistCount})` : `Watchlist (${watchlistCount})`,
       icon: Star,
       onClick: () => onFilterChange({ tabMode: 'watchlist', page: 1 }),
     },
@@ -70,11 +70,11 @@ export const StatusFilterTabs: React.FC<StatusFilterTabsProps> = ({
           <button
             key={tab.id}
             onClick={tab.onClick}
-            className={`h-9 sm:h-10 px-3.5 sm:px-4 rounded-xl text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all shrink-0 snap-start cursor-pointer active:scale-95 ${
-              isActive
-                ? 'bg-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
-                : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 hover:border-slate-300'
-            }`}
+            className={`h-9 sm:h-10 px-3.5 sm:px-4 rounded-md text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all shrink-0 snap-start cursor-pointer active:scale-95 ${
+ isActive
+ ? 'bg-slate-900 text-white shadow-sm ring-2 ring-slate-900/10'
+ : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200/90 hover:border-slate-300'
+ }`}
           >
             <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-blue-400' : 'text-slate-500'}`} />
             <span>{tab.label}</span>

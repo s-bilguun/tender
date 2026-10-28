@@ -36,8 +36,9 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'Menlo', 'Consolas', 'monospace'],
+        sans: ['"IBM Plex Sans"', '"PingFang SC"', '"Microsoft YaHei"', '"Noto Sans SC"', 'system-ui', 'sans-serif'],
+        // Numbers use the text face with tabular figures (see globals.css), not a code font.
+        mono: ['"IBM Plex Sans"', '"PingFang SC"', '"Microsoft YaHei"', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',

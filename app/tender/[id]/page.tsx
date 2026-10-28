@@ -34,7 +34,7 @@ export default async function TenderPage({ params }: PageProps) {
   if (!data || !data.tender) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-slate-200 dark:border-slate-800 max-w-md w-full text-center space-y-4 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-md border border-slate-200 dark:border-slate-800 max-w-md w-full text-center space-y-4 shadow-sm">
           <AlertCircle className="h-10 w-10 text-amber-500 mx-auto" />
           <h2 className="text-lg font-bold text-slate-900 dark:text-white">Тендер олдсонгүй</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">

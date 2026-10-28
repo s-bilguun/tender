@@ -30,7 +30,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'Эрдэнэт үйлдвэр',
     query: 'Эрдэнэт үйлдвэр',
     category: 'mining',
-    icon: '⛏️',
+    icon: '',
     approxTenders: '1,420+',
     budgetEst: '1.89 их наяд ₮',
   },
@@ -40,7 +40,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'Эрдэнэс Тавантолгой',
     query: 'Эрдэнэс тавантолгой',
     category: 'mining',
-    icon: '⛏️',
+    icon: '',
     approxTenders: '890+',
     budgetEst: '1.45 их наяд ₮',
   },
@@ -50,7 +50,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'Улаанбаатар хот / НЗДТГ',
     query: 'Нийслэл',
     category: 'construction',
-    icon: '🏛️',
+    icon: '',
     approxTenders: '680+',
     budgetEst: '310 тэрбум ₮',
   },
@@ -60,7 +60,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'Эрүүл мэндийн яам',
     query: 'Эрүүл мэнд',
     category: 'medical',
-    icon: '🏥',
+    icon: '',
     approxTenders: '980+',
     budgetEst: '640 тэрбум ₮',
   },
@@ -70,7 +70,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'Боловсролын яам',
     query: 'Боловсрол',
     category: 'stationery',
-    icon: '🏫',
+    icon: '',
     approxTenders: '1,250+',
     budgetEst: '520 тэрбум ₮',
   },
@@ -80,7 +80,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'ДЦС-4 Эрчим хүч',
     query: 'ДЦС',
     category: 'mining',
-    icon: '⚡',
+    icon: '',
     approxTenders: '340+',
     budgetEst: '290 тэрбум ₮',
   },
@@ -90,7 +90,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'Дарханы төмөрлөг',
     query: 'Дархан төмөрлөг',
     category: 'mining',
-    icon: '🏭',
+    icon: '',
     approxTenders: '410+',
     budgetEst: '380 тэрбум ₮',
   },
@@ -100,7 +100,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'Монголросцветмет',
     query: 'Монголросцветмет',
     category: 'mining',
-    icon: '💎',
+    icon: '',
     approxTenders: '260+',
     budgetEst: '210 тэрбум ₮',
   },
@@ -110,7 +110,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'УБТЗ Төмөр зам',
     query: 'төмөр зам',
     category: 'transport',
-    icon: '🚆',
+    icon: '',
     approxTenders: '320+',
     budgetEst: '280 тэрбум ₮',
   },
@@ -120,7 +120,7 @@ export const TOP_COMPANIES: CompanyEntity[] = [
     shortName: 'МИАТ Агаарын тээвэр',
     query: 'МИАТ',
     category: 'transport',
-    icon: '✈️',
+    icon: '',
     approxTenders: '190+',
     budgetEst: '140 тэрбум ₮',
   },
@@ -135,7 +135,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Эрдэнэт үйлдвэр',
       query: 'Эрдэнэт үйлдвэр',
       category: 'mining',
-      icon: '⛏️',
+      icon: '',
       approxTenders: '1,420+',
       budgetEst: '1.89 их наяд ₮',
     },
@@ -145,7 +145,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Эрдэнэс Тавантолгой',
       query: 'Эрдэнэс тавантолгой',
       category: 'mining',
-      icon: '⛏️',
+      icon: '',
       approxTenders: '890+',
       budgetEst: '1.45 их наяд ₮',
     },
@@ -155,7 +155,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Дарханы төмөрлөг',
       query: 'Дархан төмөрлөг',
       category: 'mining',
-      icon: '🏭',
+      icon: '',
       approxTenders: '410+',
       budgetEst: '380 тэрбум ₮',
     },
@@ -165,7 +165,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Монголросцветмет',
       query: 'Монголросцветмет',
       category: 'mining',
-      icon: '💎',
+      icon: '',
       approxTenders: '260+',
       budgetEst: '210 тэрбум ₮',
     },
@@ -175,7 +175,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Багануур ХК',
       query: 'Багануур',
       category: 'mining',
-      icon: '⛏️',
+      icon: '',
       approxTenders: '195+',
       budgetEst: '180 тэрбум ₮',
     },
@@ -185,7 +185,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Шивээ-Овоо ХК',
       query: 'Шивээ-Овоо',
       category: 'mining',
-      icon: '⛏️',
+      icon: '',
       approxTenders: '140+',
       budgetEst: '120 тэрбум ₮',
     },
@@ -195,7 +195,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Эрдэнэс Монгол',
       query: 'Эрдэнэс монгол',
       category: 'mining',
-      icon: '🏢',
+      icon: '',
       approxTenders: '160+',
       budgetEst: '210 тэрбум ₮',
     },
@@ -205,7 +205,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'АМГТГ Ашигт малтмал',
       query: 'Ашигт малтмал',
       category: 'mining',
-      icon: '🗺️',
+      icon: '',
       approxTenders: '85+',
       budgetEst: '65 тэрбум ₮',
     },
@@ -217,7 +217,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Улаанбаатар хот / НЗДТГ',
       query: 'Нийслэл',
       category: 'construction',
-      icon: '🏛️',
+      icon: '',
       approxTenders: '680+',
       budgetEst: '310 тэрбум ₮',
     },
@@ -227,7 +227,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Барилга хот байгуулалт',
       query: 'Барилга хот',
       category: 'construction',
-      icon: '🏗️',
+      icon: '',
       approxTenders: '840+',
       budgetEst: '780 тэрбум ₮',
     },
@@ -237,7 +237,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Зам тээврийн төв',
       query: 'Зам тээвэр',
       category: 'construction',
-      icon: '🛣️',
+      icon: '',
       approxTenders: '520+',
       budgetEst: '490 тэрбум ₮',
     },
@@ -247,7 +247,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ТОСК Орон сууц',
       query: 'ТОСК',
       category: 'construction',
-      icon: '🏢',
+      icon: '',
       approxTenders: '180+',
       budgetEst: '210 тэрбум ₮',
     },
@@ -257,7 +257,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Хот байгуулалтын газар',
       query: 'Хот байгуулалт',
       category: 'construction',
-      icon: '🏙️',
+      icon: '',
       approxTenders: '230+',
       budgetEst: '160 тэрбум ₮',
     },
@@ -267,7 +267,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ГЗБГЗЗГ Газар зохион байгуулалт',
       query: 'Газар зохион байгуулалт',
       category: 'construction',
-      icon: '📐',
+      icon: '',
       approxTenders: '190+',
       budgetEst: '130 тэрбум ₮',
     },
@@ -279,7 +279,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Эрүүл мэндийн яам',
       query: 'Эрүүл мэнд',
       category: 'medical',
-      icon: '🏥',
+      icon: '',
       approxTenders: '980+',
       budgetEst: '640 тэрбум ₮',
     },
@@ -289,7 +289,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'УНТЭ 1-р эмнэлэг',
       query: 'Улсын нэгдүгээр төв эмнэлэг',
       category: 'medical',
-      icon: '🏨',
+      icon: '',
       approxTenders: '240+',
       budgetEst: '85 тэрбум ₮',
     },
@@ -299,7 +299,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ХСҮТ Хавдар судлал',
       query: 'Хавдар судлал',
       category: 'medical',
-      icon: '🎗️',
+      icon: '',
       approxTenders: '190+',
       budgetEst: '68 тэрбум ₮',
     },
@@ -309,7 +309,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ЭХЭМҮТ Эх нялхас',
       query: 'ЭХЭМҮТ',
       category: 'medical',
-      icon: '👶',
+      icon: '',
       approxTenders: '180+',
       budgetEst: '62 тэрбум ₮',
     },
@@ -319,7 +319,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ГССҮТ Гэмтлийн эмнэлэг',
       query: 'Гэмтэл согог',
       category: 'medical',
-      icon: '🦴',
+      icon: '',
       approxTenders: '165+',
       budgetEst: '54 тэрбум ₮',
     },
@@ -329,7 +329,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ХӨСҮТ Халдварт',
       query: 'ХӨСҮТ',
       category: 'medical',
-      icon: '🦠',
+      icon: '',
       approxTenders: '150+',
       budgetEst: '48 тэрбум ₮',
     },
@@ -339,7 +339,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Эм, эмнэлгийн хэрэгслийн газар',
       query: 'Эм, эмнэлгийн хэрэгсэл',
       category: 'medical',
-      icon: '💊',
+      icon: '',
       approxTenders: '120+',
       budgetEst: '75 тэрбум ₮',
     },
@@ -351,7 +351,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ХХААХҮЯ Хүнс, ХАА яам',
       query: 'Хүнс, хөдөө аж ахуй',
       category: 'food',
-      icon: '🌾',
+      icon: '',
       approxTenders: '420+',
       budgetEst: '280 тэрбум ₮',
     },
@@ -361,7 +361,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'НБГ Сургуулийн үдийн хоол',
       query: 'Боловсролын газар',
       category: 'food',
-      icon: '🥪',
+      icon: '',
       approxTenders: '380+',
       budgetEst: '190 тэрбум ₮',
     },
@@ -371,7 +371,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Мал эмнэлгийн газар',
       query: 'Мал эмнэлэг',
       category: 'food',
-      icon: '🐄',
+      icon: '',
       approxTenders: '210+',
       budgetEst: '110 тэрбум ₮',
     },
@@ -381,7 +381,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Хөдөө аж ахуйн корпораци',
       query: 'Хөдөө аж ахуйн корпораци',
       category: 'food',
-      icon: '🌾',
+      icon: '',
       approxTenders: '160+',
       budgetEst: '95 тэрбум ₮',
     },
@@ -391,7 +391,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ОБЕГ Хүнс хангамж',
       query: 'Онцгой байдлын ерөнхий газар',
       category: 'food',
-      icon: '🥫',
+      icon: '',
       approxTenders: '190+',
       budgetEst: '85 тэрбум ₮',
     },
@@ -403,7 +403,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Цахим хөгжлийн яам',
       query: 'Цахим хөгжил',
       category: 'it',
-      icon: '🌐',
+      icon: '',
       approxTenders: '280+',
       budgetEst: '180 тэрбум ₮',
     },
@@ -413,7 +413,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Татварын ерөнхий газар',
       query: 'Татварын ерөнхий газар',
       category: 'it',
-      icon: '📊',
+      icon: '',
       approxTenders: '190+',
       budgetEst: '120 тэрбум ₮',
     },
@@ -423,7 +423,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Үндэсний дата төв',
       query: 'Дата төв',
       category: 'it',
-      icon: '🗄️',
+      icon: '',
       approxTenders: '110+',
       budgetEst: '95 тэрбум ₮',
     },
@@ -433,7 +433,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Монголбанк МТ',
       query: 'Монголбанк',
       category: 'it',
-      icon: '🏦',
+      icon: '',
       approxTenders: '140+',
       budgetEst: '110 тэрбум ₮',
     },
@@ -443,7 +443,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Улсын бүртгэлийн газар',
       query: 'Улсын бүртгэл',
       category: 'it',
-      icon: '🪪',
+      icon: '',
       approxTenders: '160+',
       budgetEst: '85 тэрбум ₮',
     },
@@ -453,7 +453,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Харилцаа холбооны зохицуулах',
       query: 'Харилцаа холбоо',
       category: 'it',
-      icon: '📡',
+      icon: '',
       approxTenders: '130+',
       budgetEst: '70 тэрбум ₮',
     },
@@ -465,7 +465,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'УБТЗ Төмөр зам',
       query: 'төмөр зам',
       category: 'transport',
-      icon: '🚆',
+      icon: '',
       approxTenders: '320+',
       budgetEst: '280 тэрбум ₮',
     },
@@ -475,7 +475,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'МИАТ Агаарын тээвэр',
       query: 'МИАТ',
       category: 'transport',
-      icon: '✈️',
+      icon: '',
       approxTenders: '190+',
       budgetEst: '140 тэрбум ₮',
     },
@@ -485,7 +485,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Нийтийн тээврийн газар',
       query: 'Нийтийн тээвэр',
       category: 'transport',
-      icon: '🚌',
+      icon: '',
       approxTenders: '260+',
       budgetEst: '210 тэрбум ₮',
     },
@@ -495,7 +495,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Автотээврийн үндэсний төв',
       query: 'Автотээвэр',
       category: 'transport',
-      icon: '⛽',
+      icon: '',
       approxTenders: '180+',
       budgetEst: '95 тэрбум ₮',
     },
@@ -505,7 +505,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Зам тээврийн яам',
       query: 'Зам тээвэр',
       category: 'transport',
-      icon: '🛣️',
+      icon: '',
       approxTenders: '340+',
       budgetEst: '420 тэрбум ₮',
     },
@@ -515,7 +515,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'ИНЕГ Иргэний нисэх',
       query: 'Иргэний нисэх',
       category: 'transport',
-      icon: '🚁',
+      icon: '',
       approxTenders: '170+',
       budgetEst: '160 тэрбум ₮',
     },
@@ -527,7 +527,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Төрийн өмчийн газар',
       query: 'Төрийн өмч',
       category: 'facility',
-      icon: '🏢',
+      icon: '',
       approxTenders: '210+',
       budgetEst: '130 тэрбум ₮',
     },
@@ -537,7 +537,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Тусгай хамгаалалтын газар',
       query: 'Тусгай хамгаалалт',
       category: 'facility',
-      icon: '🛡️',
+      icon: '',
       approxTenders: '120+',
       budgetEst: '65 тэрбум ₮',
     },
@@ -547,7 +547,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Нийтлэг үйлчилгээний газар',
       query: 'Нийтлэг үйлчилгээ',
       category: 'facility',
-      icon: '🧹',
+      icon: '',
       approxTenders: '180+',
       budgetEst: '80 тэрбум ₮',
     },
@@ -557,7 +557,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Шүүхийн ерөнхий зөвлөл',
       query: 'Шүүхийн ерөнхий',
       category: 'facility',
-      icon: '⚖️',
+      icon: '',
       approxTenders: '150+',
       budgetEst: '75 тэрбум ₮',
     },
@@ -567,7 +567,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Төрийн ордон ашиглалт',
       query: 'Төрийн ордон',
       category: 'facility',
-      icon: '🏬',
+      icon: '',
       approxTenders: '95+',
       budgetEst: '45 тэрбум ₮',
     },
@@ -579,7 +579,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Боловсролын ерөнхий газар',
       query: 'Боловсролын ерөнхий',
       category: 'stationery',
-      icon: '🏫',
+      icon: '',
       approxTenders: '620+',
       budgetEst: '240 тэрбум ₮',
     },
@@ -589,7 +589,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Төрийн худалдан авах газар',
       query: 'Худалдан авах ажиллагаа',
       category: 'stationery',
-      icon: '🏛️',
+      icon: '',
       approxTenders: '240+',
       budgetEst: '160 тэрбум ₮',
     },
@@ -599,7 +599,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'МУИС & ШУТИС',
       query: 'Их сургууль',
       category: 'stationery',
-      icon: '🎓',
+      icon: '',
       approxTenders: '280+',
       budgetEst: '110 тэрбум ₮',
     },
@@ -609,7 +609,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Үндэсний номын сан',
       query: 'Номын сан',
       category: 'stationery',
-      icon: '📚',
+      icon: '',
       approxTenders: '110+',
       budgetEst: '45 тэрбум ₮',
     },
@@ -619,7 +619,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Сонгуулийн ерөнхий хороо',
       query: 'Сонгуулийн ерөнхий',
       category: 'stationery',
-      icon: '🗳️',
+      icon: '',
       approxTenders: '85+',
       budgetEst: '55 тэрбум ₮',
     },
@@ -631,7 +631,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Сангийн яам & Төслүүд',
       query: 'Сангийн яам',
       category: 'consulting',
-      icon: '📈',
+      icon: '',
       approxTenders: '340+',
       budgetEst: '410 тэрбум ₮',
     },
@@ -641,7 +641,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Хууль зүйн яам',
       query: 'Хууль зүй',
       category: 'consulting',
-      icon: '⚖️',
+      icon: '',
       approxTenders: '230+',
       budgetEst: '180 тэрбум ₮',
     },
@@ -651,7 +651,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Үндэсний аудитын газар',
       query: 'Үндэсний аудит',
       category: 'consulting',
-      icon: '🔍',
+      icon: '',
       approxTenders: '140+',
       budgetEst: '95 тэрбум ₮',
     },
@@ -661,7 +661,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Эдийн засаг хөгжлийн яам',
       query: 'Эдийн засаг',
       category: 'consulting',
-      icon: '🏙️',
+      icon: '',
       approxTenders: '150+',
       budgetEst: '220 тэрбум ₮',
     },
@@ -671,7 +671,7 @@ export const COMPANIES_BY_INDUSTRY: Record<IndustryVertical, CompanyEntity[]> = 
       shortName: 'Дэлхийн банк / АХБ төсөл',
       query: 'Төсөл',
       category: 'consulting',
-      icon: '🌐',
+      icon: '',
       approxTenders: '190+',
       budgetEst: '320 тэрбум ₮',
     },
@@ -706,11 +706,11 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 shadow-2xs space-y-3.5 h-full flex flex-col justify-between">
+    <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-5 shadow-2xs space-y-3.5 h-full flex flex-col justify-between">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">
+          <div className="h-9 w-9 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shadow-2xs shrink-0">
             <Building2 className="h-5 w-5 text-indigo-600" />
           </div>
           <div className="min-w-0">
@@ -749,7 +749,7 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
 
       {/* Active Company Banner */}
       {activeCompany && (
-        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-xl px-3.5 py-2 text-xs text-indigo-950 shadow-2xs">
+        <div className="flex items-center justify-between bg-indigo-50 border border-indigo-200 rounded-md px-3.5 py-2 text-xs text-indigo-950 shadow-2xs">
           <div className="flex items-center gap-2 flex-wrap min-w-0">
             <span className="font-bold text-slate-700 shrink-0">
               {locale === 'mn' ? 'Сонгосон:' : 'Selected:'}
@@ -778,17 +778,17 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
             <button
               key={comp.id}
               onClick={() => handleSelectCompany(comp)}
-              className={`p-2.5 sm:p-3 rounded-xl border text-left flex flex-col justify-between gap-2 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
-                isSelected
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10'
-                  : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
-              }`}
+              className={`p-2.5 sm:p-3 rounded-md border text-left flex flex-col justify-between gap-2 transition-all duration-150 relative overflow-hidden group cursor-pointer select-none ${
+ isSelected
+ ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-900/10'
+ : 'bg-white hover:bg-slate-50 text-slate-800 border-slate-200/90 hover:border-slate-300 hover:shadow-xs'
+ }`}
             >
               <div className="flex items-center justify-between w-full">
                 <div
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 ${
-                    isSelected ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600 shadow-2xs'
-                  }`}
+                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-transform ${
+ isSelected ? 'bg-white/10 text-white' : 'bg-slate-100 text-slate-600 shadow-2xs'
+ }`}
                 >
                   <IndustryIcon id={comp.category} className="h-4 w-4" />
                 </div>
@@ -804,16 +804,16 @@ export const CompanyDiscoveryBar: React.FC<CompanyDiscoveryBarProps> = ({
               <div className="space-y-0.5 min-w-0">
                 <span
                   className={`text-xs font-bold leading-snug line-clamp-1 block transition-colors ${
-                    isSelected ? 'text-white' : 'text-slate-900 group-hover:text-indigo-600'
-                  }`}
+ isSelected ? 'text-white' : 'text-slate-900 group-hover:text-indigo-600'
+ }`}
                   title={comp.name}
                 >
                   {comp.shortName}
                 </span>
                 <span
                   className={`text-[10px] font-mono tabular-nums line-clamp-1 block ${
-                    isSelected ? 'text-indigo-100' : 'text-slate-400'
-                  }`}
+ isSelected ? 'text-indigo-100' : 'text-slate-400'
+ }`}
                 >
                   {comp.budgetEst}
                 </span>

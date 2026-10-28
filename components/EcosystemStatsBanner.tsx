@@ -49,7 +49,7 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden mb-8">
+    <div className=" bg-slate-900 text-white rounded-lg p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden mb-8">
       {/* Glow effect */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -58,8 +58,8 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
         {/* Top Header Tag */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-400/30 ">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 " />
               {locale === 'mn' ? 'Монголын Худалдан Авалтын AI Экосистем' : 'Mongolia Procurement AI Ecosystem'}
             </span>
             <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800/80 text-slate-300 border border-slate-700">
@@ -73,7 +73,7 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
             {onOpenDocAudit && (
               <button
                 onClick={onOpenDocAudit}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-purple-600/90 hover:bg-purple-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer border border-purple-400/30 hover:scale-105"
+                className="px-3 py-1.5 rounded-md text-xs font-bold bg-purple-600/90 hover:bg-purple-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer border border-purple-400/30 "
               >
                 <FileCheck className="h-3.5 w-3.5 text-purple-200" />
                 <span>ТББ Шалгагч AI</span>
@@ -83,7 +83,7 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
             {onOpenFinance && (
               <button
                 onClick={onOpenFinance}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600/90 hover:bg-emerald-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer border border-emerald-400/30 hover:scale-105"
+                className="px-3 py-1.5 rounded-md text-xs font-bold bg-emerald-600/90 hover:bg-emerald-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer border border-emerald-400/30 "
               >
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-200" />
                 <span>Баталгаа & Санхүүжилт</span>
@@ -93,10 +93,10 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
             {onOpenChinaSupplier && (
               <button
                 onClick={onOpenChinaSupplier}
-                className="px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer border border-rose-400/30 hover:scale-105"
+                className="px-3 py-1.5 rounded-md text-xs font-bold bg-rose-600/90 hover:bg-rose-600 text-white flex items-center gap-1.5 transition-all shadow-sm cursor-pointer border border-rose-400/30 "
               >
                 <Globe2 className="h-3.5 w-3.5 text-rose-200" />
-                <span>🇨🇳 Хятадаас нийлүүлэх</span>
+                <span>Хятадаас нийлүүлэх</span>
               </button>
             )}
           </div>
@@ -104,7 +104,7 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
 
         {/* Hero Title & Subtext */}
         <div className="max-w-3xl mb-8">
-          <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight mb-2">
+          <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-white leading-tight mb-2">
             Тендерээс бизнесийн экосистем рүү.
           </h1>
           <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
@@ -116,16 +116,16 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
         {/* 4 Live KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Open Tenders */}
-          <div className="bg-slate-800/60 hover:bg-slate-800/80 backdrop-blur-md rounded-2xl p-4 border border-slate-700/60 transition-all">
+          <div className="bg-slate-800/60 hover:bg-slate-800/80 rounded-lg p-4 border border-slate-700/60 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-400 ">
                 Нээлттэй тендерүүд
               </span>
               <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400">
                 <TrendingUp className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+            <div className="text-2xl sm:text-3xl font-semibold text-white font-mono">
               {stats.openTenderCount.toLocaleString()}+
             </div>
             <div className="text-xs text-slate-400 mt-1 flex items-center gap-1">
@@ -135,16 +135,16 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
           </div>
 
           {/* Card 2: Registered Companies */}
-          <div className="bg-slate-800/60 hover:bg-slate-800/80 backdrop-blur-md rounded-2xl p-4 border border-slate-700/60 transition-all">
+          <div className="bg-slate-800/60 hover:bg-slate-800/80 rounded-lg p-4 border border-slate-700/60 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-400 ">
                 Бүртгэлтэй байгууллага
               </span>
               <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400">
                 <Building2 className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+            <div className="text-2xl sm:text-3xl font-semibold text-white font-mono">
               {stats.companyCount.toLocaleString()}+
             </div>
             <div className="text-xs text-slate-400 mt-1">
@@ -153,16 +153,16 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
           </div>
 
           {/* Card 3: Sourcing & Suppliers */}
-          <div className="bg-slate-800/60 hover:bg-slate-800/80 backdrop-blur-md rounded-2xl p-4 border border-slate-700/60 transition-all">
+          <div className="bg-slate-800/60 hover:bg-slate-800/80 rounded-lg p-4 border border-slate-700/60 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-400 ">
                 Хятад нийлүүлэгчид
               </span>
               <div className="p-1.5 rounded-lg bg-rose-500/10 text-rose-400">
                 <Globe2 className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+            <div className="text-2xl sm:text-3xl font-semibold text-white font-mono">
               19,000+
             </div>
             <div className="text-xs text-slate-400 mt-1">
@@ -171,16 +171,16 @@ export const EcosystemStatsBanner: React.FC<EcosystemStatsBannerProps> = ({
           </div>
 
           {/* Card 4: Guarantees & Trade Finance */}
-          <div className="bg-slate-800/60 hover:bg-slate-800/80 backdrop-blur-md rounded-2xl p-4 border border-slate-700/60 transition-all">
+          <div className="bg-slate-800/60 hover:bg-slate-800/80 rounded-lg p-4 border border-slate-700/60 transition-all">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-slate-400 ">
                 Баталгаа & Санхүүжилт
               </span>
               <div className="p-1.5 rounded-lg bg-purple-500/10 text-purple-400">
                 <Sparkles className="h-4 w-4" />
               </div>
             </div>
-            <div className="text-2xl sm:text-3xl font-black text-white font-mono">
+            <div className="text-2xl sm:text-3xl font-semibold text-white font-mono">
               {formatBillion(stats.financeAmount)}
             </div>
             <div className="text-xs text-slate-400 mt-1">

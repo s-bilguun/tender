@@ -210,8 +210,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     },
     { 
       id: 'direct', 
-      label: locale === 'mn' ? 'Шууд оролцох (Direct)' : locale === 'zh' ? '🇨🇳 独立投标 (Direct)' : 'Direct Allowed', 
-      activeClass: 'bg-emerald-600 text-white font-semibold shadow-2xs',
+      label: locale === 'mn' ? 'Шууд оролцох (Direct)' : locale === 'zh' ? '独立投标 (Direct)' : 'Direct Allowed', 
+      activeClass: 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-medium',
       title: locale === 'mn' 
         ? 'Монголд охин компани байгуулалгүй шууд санал өгөх боломжтой (Бараа нийлүүлэлт, олон улсын нээлттэй тендер)' 
         : locale === 'zh'
@@ -220,8 +220,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     },
     { 
       id: 'joint_venture', 
-      label: locale === 'mn' ? 'Түншлэл шаардлагатай (JV)' : locale === 'zh' ? '🤝 需联合体 (JV)' : 'JV Required', 
-      activeClass: 'bg-amber-600 text-white font-semibold shadow-2xs',
+      label: locale === 'mn' ? 'Түншлэл шаардлагатай (JV)' : locale === 'zh' ? '需联合体 (JV)' : 'JV Required', 
+      activeClass: 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-medium',
       title: locale === 'mn' 
         ? 'Монголын тусгай зөвшөөрөлтэй компанитай Түншлэл (联合体) байгуулах шаардлагатай (Барилга, зам, их засвар)' 
         : locale === 'zh'
@@ -230,7 +230,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     },
     { 
       id: 'domestic_only', 
-      label: locale === 'mn' ? 'Зөвхөн дотоодын' : locale === 'zh' ? '🇲🇳 仅限本土 (Domestic)' : 'Domestic Only', 
+      label: locale === 'mn' ? 'Зөвхөн дотоодын' : locale === 'zh' ? '仅限本土 (Domestic)' : 'Domestic Only', 
       activeClass: 'bg-slate-700 text-white font-semibold shadow-2xs',
       title: locale === 'mn' 
         ? 'Зөвхөн Монгол Улсад бүртгэлтэй дотоодын ААН оролцох боломжтой (Бага төсөвтэй харьцуулалт)' 
@@ -395,25 +395,23 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     activeAdvancedCount > 0;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden transition-all">
+    <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200/90 dark:border-slate-800 shadow-2xs overflow-hidden transition-all">
       {/* 1. Primary Workflow Status Tabs & Utility Controls */}
-      <div className="px-3 sm:px-4 pt-3 pb-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-slate-100 dark:border-slate-800">
+      <div className="px-3 sm:px-4 pt-3 pb-2.5 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5 border-b border-slate-100 dark:border-slate-800">
         {/* Status Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5 -mx-1 px-1 min-w-0">
           {/* Active Live Tab */}
           <button
             onClick={() => handleTabSelect('active')}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'active'
-                ? 'bg-emerald-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-            }`}
+            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+ currentTab === 'active'
+ ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+ : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+ }`}
           >
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
             <span>{locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '正在招投标' : 'Live Bids'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'active' ? 'bg-emerald-700 text-white' : 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300'
-            }`}>
+            <span className="text-[11px] tabular-nums opacity-60">
               {tabMetrics.active.toLocaleString()}
             </span>
           </button>
@@ -421,17 +419,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Closing Soon Tab */}
           <button
             onClick={() => handleTabSelect('closing_soon')}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'closing_soon'
-                ? 'bg-rose-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-            }`}
+            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+ currentTab === 'closing_soon'
+ ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+ : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+ }`}
           >
-            <Flame className="h-3.5 w-3.5 text-rose-400" />
+            <Flame className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : locale === 'zh' ? '即将截标' : 'Closing Soon'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'closing_soon' ? 'bg-rose-700 text-white' : 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300'
-            }`}>
+            <span className="text-[11px] tabular-nums opacity-60">
               {tabMetrics.closing.toLocaleString()}
             </span>
           </button>
@@ -439,30 +435,28 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* No Bid Security Tab */}
           <button
             onClick={() => handleTabSelect('no_guarantee')}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'no_guarantee'
-                ? 'bg-teal-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-            }`}
+            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+ currentTab === 'no_guarantee'
+ ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+ : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+ }`}
           >
-            <ShieldCheck className="h-3.5 w-3.5 text-teal-300" />
+            <ShieldCheck className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : locale === 'zh' ? '免投标保函' : 'No Bid Bond'}</span>
           </button>
 
           {/* Awarded / Concluded Winners Tab */}
           <button
             onClick={() => handleTabSelect('result')}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'result'
-                ? 'bg-blue-600 text-white shadow-2xs'
-                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-            }`}
+            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+ currentTab === 'result'
+ ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+ : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+ }`}
           >
-            <Trophy className="h-3.5 w-3.5 text-amber-300" />
+            <Trophy className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : locale === 'zh' ? '已定标 / 中标结果' : 'Awarded'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'result' ? 'bg-blue-700 text-white' : 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300'
-            }`}>
+            <span className="text-[11px] tabular-nums opacity-60">
               {tabMetrics.result.toLocaleString()}
             </span>
           </button>
@@ -470,17 +464,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* All Historical Archive Tab */}
           <button
             onClick={() => handleTabSelect('all')}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'all'
-                ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-2xs'
-                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-            }`}
+            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+ currentTab === 'all'
+ ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+ : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+ }`}
           >
-            <Database className="h-3.5 w-3.5 text-blue-400" />
+            <Database className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Бүх сан' : locale === 'zh' ? '全部标段' : 'All Tenders'}</span>
-            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold tabular-nums ml-0.5 ${
-              currentTab === 'all' ? 'bg-slate-800 dark:bg-slate-600 text-slate-200' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
-            }`}>
+            <span className="text-[11px] tabular-nums opacity-60">
               {tabMetrics.all.toLocaleString()}
             </span>
           </button>
@@ -488,16 +480,16 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Watchlist Tab */}
           <button
             onClick={() => handleTabSelect('watchlist')}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'watchlist'
-                ? 'bg-amber-500 text-white shadow-2xs'
-                : 'bg-slate-100/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200/80 dark:hover:bg-slate-700'
-            }`}
+            className={`h-8 px-2.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+ currentTab === 'watchlist'
+ ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+ : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+ }`}
           >
-            <Star className={`h-3.5 w-3.5 ${currentTab === 'watchlist' ? 'fill-white' : 'text-amber-500'}`} />
+            <Star className="h-3.5 w-3.5" />
             <span>{locale === 'mn' ? 'Миний хянаж буй' : locale === 'zh' ? '关注收藏' : 'Watchlist'}</span>
             {watchlistCount > 0 && (
-              <span className="ml-0.5 px-1.5 py-0.2 rounded text-[10px] bg-white/20 font-bold tabular-nums">
+              <span className="text-[11px] tabular-nums opacity-60">
                 {watchlistCount}
               </span>
             )}
@@ -505,14 +497,14 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
         </div>
 
         {/* Right Tools: Export & View Mode */}
-        <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+        <div className="flex items-center gap-2 shrink-0 self-end xl:self-auto">
           {onExportCSV && (
             <button
               onClick={onExportCSV}
               className="h-8 px-2.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
               title={locale === 'mn' ? 'Excel / CSV файлаар татах' : locale === 'zh' ? '导出 Excel / CSV 表格' : 'Export to CSV / Excel'}
             >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500" />
               <span className="hidden md:inline">{locale === 'mn' ? 'Excel / CSV' : locale === 'zh' ? '导出表格' : 'Export CSV'}</span>
             </button>
           )}
@@ -521,22 +513,22 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <button
               onClick={() => setViewMode('table')}
               className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
-                viewMode === 'table' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+ viewMode === 'table' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+ }`}
               title={locale === 'mn' ? 'Хүснэгт' : 'Table view'}
             >
               <TableIcon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === 'mn' ? 'Хүснэгт' : 'Table'}</span>
+              <span className="hidden sm:inline">{locale === 'mn' ? 'Хүснэгт' : locale === 'zh' ? '表格' : 'Table'}</span>
             </button>
             <button
               onClick={() => setViewMode('grid')}
               className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
-                viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+ viewMode === 'grid' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+ }`}
               title={locale === 'mn' ? 'Карт' : 'Grid view'}
             >
               <LayoutGrid className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === 'mn' ? 'Карт' : 'Cards'}</span>
+              <span className="hidden sm:inline">{locale === 'mn' ? 'Карт' : locale === 'zh' ? '卡片' : 'Cards'}</span>
             </button>
           </div>
         </div>
@@ -546,16 +538,16 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       <div className="p-3 sm:p-4 space-y-2.5">
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
           {/* Category Segmented Controls */}
-          <div className="flex items-center bg-slate-100/90 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 h-9 shrink-0">
+          <div className="flex items-center bg-slate-100/90 dark:bg-slate-800 p-0.5 rounded-md border border-slate-200 dark:border-slate-700 h-9 shrink-0">
             {categories.map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => onFilterChange({ category: cat.id, page: 1 })}
                 className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                  currentCategory === cat.id
-                    ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-bold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
+ currentCategory === cat.id
+ ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
               >
                 {cat.label}
               </button>
@@ -565,8 +557,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           {/* Secondary Controls: Budget, Year, Sort & Advanced Filters */}
           <div className="flex items-center gap-2 flex-wrap shrink-0 justify-between lg:justify-end">
             {/* Budget Tier Selector Dropdown */}
-            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
-              <span className="text-[11px] text-slate-400 font-medium mr-1">{locale === 'mn' ? 'Төсөв:' : 'Budget:'}</span>
+            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
+              <span className="text-[11px] text-slate-400 font-medium mr-1">{locale === 'mn' ? 'Төсөв:' : locale === 'zh' ? '预算:' : 'Budget:'}</span>
               <select
                 value={activeBudgetTier}
                 onChange={(e) => {
@@ -584,7 +576,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </div>
 
             {/* Year Selector */}
-            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
+            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
               <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 mr-1 shrink-0" />
               <select
                 value={filters.year || 'all'}
@@ -600,7 +592,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 }}
                 className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
               >
-                <option value="all" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Бүх он' : 'All Years'}</option>
+                <option value="all" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Бүх он' : locale === 'zh' ? '全部年份' : 'All years'}</option>
                 <option value="2026" className="dark:bg-slate-850 dark:text-white">2026 он</option>
                 <option value="2025" className="dark:bg-slate-850 dark:text-white">2025 он</option>
                 <option value="2024" className="dark:bg-slate-850 dark:text-white">2024 он</option>
@@ -614,14 +606,14 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             </div>
 
             {/* Sort Dropdown */}
-            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
+            <div className="relative flex items-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md px-2.5 h-9 text-xs text-slate-700 dark:text-slate-200 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600">
               <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 mr-1 shrink-0" />
               <select
                 value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
                 onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
                 className="bg-transparent text-xs text-slate-800 dark:text-slate-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
               >
-                <option value="date_desc" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : 'Newest'}</option>
+                <option value="date_desc" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : locale === 'zh' ? '最新发布' : 'Newest'}</option>
                 <option value="deadline_asc" className="dark:bg-slate-850 dark:text-white">{locale === 'mn' ? 'Хугацаа ойртсоноор' : 'Ending Soon'}</option>
                 <option value="budget_desc" className="dark:bg-slate-850 dark:text-white">{t.sortOptions.budget_desc}</option>
                 <option value="budget_asc" className="dark:bg-slate-850 dark:text-white">{t.sortOptions.budget_asc}</option>
@@ -632,11 +624,11 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             {/* Advanced Filters Button */}
             <button
               onClick={() => setIsAdvancedModalOpen(true)}
-              className={`h-9 px-3 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
-                activeAdvancedCount > 0
-                  ? 'bg-blue-600 text-white font-bold'
-                  : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
-              }`}
+              className={`h-9 px-3 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
+ activeAdvancedCount > 0
+ ? 'bg-blue-600 text-white font-bold'
+ : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
+ }`}
               title="Нарийвчилсан шүүлтүүр"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -659,12 +651,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
             {filters.chinaEligibility && filters.chinaEligibility !== 'all' && (
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border ${
-                locale === 'zh'
-                  ? 'bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
-              }`}>
+ locale === 'zh'
+ ? 'bg-red-50 dark:bg-red-950/60 text-red-800 dark:text-red-300 border-red-200 dark:border-red-800'
+ : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700'
+ }`}>
                 <span>
-                  {locale === 'mn' ? 'Гадаад ААН:' : locale === 'zh' ? '🇨🇳 资格筛选:' : 'Eligibility:'}{' '}
+                  {locale === 'mn' ? 'Гадаад ААН:' : locale === 'zh' ? '资格筛选:' : 'Eligibility:'}{' '}
                   <strong>{chinaEligibilityOptions.find(o => o.id === filters.chinaEligibility)?.label}</strong>
                 </span>
                 <button onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
@@ -758,8 +750,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
       {/* 5. Advanced Filter Slide-Over Modal */}
       {isAdvancedModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100">
             <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-800/60">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -785,10 +777,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                       key={f.id}
                       onClick={() => onFilterChange({ fundName: f.id === 'all' ? undefined : f.id, page: 1 })}
                       className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
-                        (filters.fundName || 'all') === f.id || (!filters.fundName && f.id === 'all')
-                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
-                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
-                      }`}
+ (filters.fundName || 'all') === f.id || (!filters.fundName && f.id === 'all')
+ ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
+ : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
+ }`}
                     >
                       {f.label}
                     </button>
@@ -807,10 +799,10 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                       key={r.id}
                       onClick={() => onFilterChange({ ruleName: r.id === 'all' ? undefined : r.id, page: 1 })}
                       className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
-                        (filters.ruleName || 'all') === r.id || (!filters.ruleName && r.id === 'all')
-                          ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
-                          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
-                      }`}
+ (filters.ruleName || 'all') === r.id || (!filters.ruleName && r.id === 'all')
+ ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
+ : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-750'
+ }`}
                     >
                       {r.label}
                     </button>

@@ -6,7 +6,7 @@ export default function TenderDetailLoading() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 animate-pulse">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-white/95 border-b border-slate-200 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/"
@@ -30,13 +30,13 @@ export default function TenderDetailLoading() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         
         {/* Floating status alert */}
-        <div className="bg-blue-50/80 border border-blue-200 rounded-xl p-3 flex items-center justify-center gap-2 text-xs font-semibold text-blue-800">
+        <div className="bg-blue-50/80 border border-blue-200 rounded-md p-3 flex items-center justify-center gap-2 text-xs font-semibold text-blue-800">
           <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
           <span>Тендерийн дэлгэрэнгүй өгөгдөл, ТШББ болон хавсралт PDF баримтуудыг уншиж байна...</span>
         </div>
 
         {/* Header Hero Banner Skeleton */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
+        <div className="bg-white rounded-md border border-slate-200 p-6 shadow-xs space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <div className="h-6 w-32 bg-slate-200 rounded"></div>
             <div className="h-6 w-20 bg-blue-100 rounded"></div>
@@ -65,7 +65,7 @@ export default function TenderDetailLoading() {
         {/* Financial Metrics Cards Skeleton */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-2">
+            <div key={i} className="bg-white p-4 rounded-md border border-slate-200 shadow-2xs space-y-2">
               <div className="h-3 w-20 bg-slate-200 rounded"></div>
               <div className="h-6 w-32 bg-slate-300 rounded font-mono"></div>
               <div className="h-2.5 w-24 bg-slate-100 rounded"></div>
@@ -74,7 +74,7 @@ export default function TenderDetailLoading() {
         </div>
 
         {/* Tabs Skeleton */}
-        <div className="bg-slate-200/70 p-1 rounded-xl grid grid-cols-4 gap-1">
+        <div className="bg-slate-200/70 p-1 rounded-md grid grid-cols-4 gap-1">
           <div className="h-9 bg-white rounded-lg"></div>
           <div className="h-9 bg-transparent rounded-lg"></div>
           <div className="h-9 bg-transparent rounded-lg"></div>
@@ -82,7 +82,7 @@ export default function TenderDetailLoading() {
         </div>
 
         {/* Content Box Skeleton */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div className="bg-white rounded-md border border-slate-200 p-6 space-y-4">
           <div className="h-5 w-48 bg-slate-200 rounded"></div>
           <div className="space-y-3 pt-2">
             <div className="h-12 bg-slate-100 rounded-lg"></div>

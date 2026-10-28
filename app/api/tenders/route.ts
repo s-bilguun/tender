@@ -5,6 +5,7 @@ import { KEYWORDS_MAP, classifyIndustry } from '@/lib/taxonomy';
 import { LIVE_BUNDLE_SCHEMA_VERSION, TenderFilterParams, TenderItem, TenderStats } from '@/lib/types';
 import { analyzeChinaBidderEligibility } from '@/lib/china-bidder-analyzer';
 import { isBoilerplateSpecItem, cleanTechnicalSectionText, isGarbledPdfText } from '@/lib/live-fetcher';
+import { expandMultilingualSearchTerms } from '@/lib/bilingual-title';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,11 +61,20 @@ export async function GET(request: NextRequest) {
         query = query.ilike('position_name', `%${positionName}%`);
       }
 
-      // If search query is present, filter across relevant text columns
+      // If search query is present, filter across relevant text columns (with Chinese/English -> Mongolian expansion)
       if (search && search.length > 0) {
-        const terms = search.split(/\s+/).filter(Boolean);
-        for (const term of terms) {
-          query = query.or(`tender_name.ilike.%${term}%,budget_entity_name.ilike.%${term}%,position_name.ilike.%${term}%,tender_code.ilike.%${term}%,client_code.ilike.%${term}%,invitation_number.ilike.%${term}%`);
+        const expandedTerms = expandMultilingualSearchTerms(search);
+        const termsToUse = expandedTerms.length > 0 ? expandedTerms : search.split(/\s+/).filter(Boolean);
+        const orClauses = termsToUse.flatMap((term) => [
+          `tender_name.ilike.%${term}%`,
+          `budget_entity_name.ilike.%${term}%`,
+          `position_name.ilike.%${term}%`,
+          `tender_code.ilike.%${term}%`,
+          `client_code.ilike.%${term}%`,
+          `invitation_number.ilike.%${term}%`,
+        ]);
+        if (orClauses.length > 0) {
+          query = query.or(orClauses.join(','));
         }
       } else if (industry && industry !== 'all') {
         // Only apply root keyword OR filter if no specific search query is present to avoid PostgREST logical OR collision

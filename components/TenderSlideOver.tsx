@@ -296,13 +296,13 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
     if (allLicensesOk && turnoverOk && (userTurnoverNum > 0 || licenses.length > 0)) {
       return {
         status: 'pass',
-        title: locale === 'mn' ? '🟢 100% Тэнцэх бүрэн боломжтой' : locale === 'zh' ? '🟢 100% 完全符合资格' : '🟢 100% Fully Eligible to Bid',
+        title: locale === 'mn' ? '100% Тэнцэх бүрэн боломжтой' : locale === 'zh' ? '100% 完全符合资格' : '100% Fully Eligible to Bid',
         desc: locale === 'mn' ? 'Бүх тусгай зөвшөөрөл болон санхүүгийн босго шаардлага бүрэн хангагдсан байна.' : locale === 'zh' ? '已具备全部所需资质及年度营业额门槛要求。' : 'All required licenses and annual turnover criteria are satisfied.'
       };
     } else if (hasInputs) {
       return {
         status: 'warning',
-        title: locale === 'mn' ? '🟡 Түншлэл (JV) эсвэл Туслан гүйцэтгэгч шаардлагатай' : locale === 'zh' ? '🟡 建议组成联合体 (JV) 联合投标' : '🟡 Joint Venture (JV) Recommended',
+        title: locale === 'mn' ? 'Түншлэл (JV) эсвэл Туслан гүйцэтгэгч шаардлагатай' : locale === 'zh' ? '建议组成联合体 (JV) 联合投标' : 'Joint Venture (JV) Recommended',
         desc: locale === 'mn' ? `Дутуу шалгуур: ${[!allLicensesOk ? `Зөвшөөрөл (${licenses.length - licenseMatchCount} дутуу)` : '', !turnoverOk && parsedTurnoverReqMnt ? 'Борлуулалтын босго хүрэхгүй' : ''].filter(Boolean).join(', ')}. Консорциум үүсгэж оролцохыг зөвлөж байна.` : locale === 'zh' ? '部分资质或财务门槛未达标，建议寻找本地合作伙伴联合投标。' : 'Some criteria are not met. Bidding via a consortium is recommended.'
       };
     }
@@ -384,7 +384,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
       {/* Backdrop */}
       <div 
         onClick={onClose}
-        className="absolute inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200" 
+        className="absolute inset-0 bg-slate-950/60 transition-opacity animate-in fade-in duration-200" 
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-4 sm:pl-10">
@@ -406,7 +406,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 </span>
 
                 <span className="text-xs text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 px-2.5 py-1 rounded-lg font-bold border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 " />
                   {tender.docStatusName || (locale === 'mn' ? 'Санал авч буй' : 'Open for Bidding')}
                 </span>
 
@@ -417,7 +417,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                     title="PDF баримтыг вебсайт дээрээс шууд унших"
                   >
                     <BookOpen className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                    <span>{locale === 'zh' ? '📄 标书已归档 (点击阅读)' : locale === 'mn' ? '📄 ТШЗ PDF (Унших)' : '📄 Read PDF'}</span>
+                    <span>{locale === 'zh' ? '标书已归档 (点击阅读)' : locale === 'mn' ? 'ТШЗ PDF (Унших)' : 'Read PDF'}</span>
                   </button>
                 )}
 
@@ -427,11 +427,11 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                   title="Бүрэн хуудас руу шилжих"
                 >
                   <ExternalLink className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>{locale === 'zh' ? '完整页面 ↗' : locale === 'mn' ? 'Бүрэн хуудас ↗' : 'Full Page ↗'}</span>
+                  <span>{locale === 'zh' ? '完整页面 ' : locale === 'mn' ? 'Бүрэн хуудас ' : 'Full Page '}</span>
                 </Link>
               </div>
 
-              <h1 className="text-base sm:text-xl font-black text-slate-900 dark:text-white leading-snug tracking-tight">
+              <h1 className="text-base sm:text-xl font-semibold text-slate-900 dark:text-white leading-snug tracking-tight">
                 {locale === 'zh' && bilingual ? (
                   <span className="flex flex-col gap-0.5">
                     <span className="text-blue-600 dark:text-blue-400 font-bold block text-base sm:text-lg">
@@ -457,14 +457,14 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             {/* Top Right: Countdown & Close Button */}
             <div className="flex items-start gap-3 shrink-0">
               {timeLeft && (
-                <div className={`px-3.5 py-2 rounded-xl border flex flex-col items-center justify-center min-w-[150px] shadow-2xs ${
-                  timeLeft.isExpired
-                    ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
-                    : timeLeft.days <= 2
-                    ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-500/50 text-amber-800 dark:text-amber-200 shadow-amber-500/10'
-                    : 'bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-500/40 text-blue-700 dark:text-blue-200'
-                }`}>
-                  <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
+                <div className={`px-3.5 py-2 rounded-md border flex flex-col items-center justify-center min-w-[150px] shadow-2xs ${
+ timeLeft.isExpired
+ ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+ : timeLeft.days <= 2
+ ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-500/50 text-amber-800 dark:text-amber-200 '
+ : 'bg-white dark:bg-slate-900 border-blue-200 dark:border-blue-500/40 text-blue-700 dark:text-blue-200'
+ }`}>
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 mb-0.5">
                     <Clock className={`h-3 w-3 ${timeLeft.isExpired ? 'text-rose-500' : 'text-amber-500 animate-spin'}`} />
                     <span>{locale === 'mn' ? 'Хугацаа дуусахад:' : locale === 'zh' ? '截标倒计时:' : 'Deadline Remaining:'}</span>
                   </div>
@@ -474,7 +474,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       {locale === 'mn' ? 'Хугацаа дууссан' : 'Bidding Closed'}
                     </span>
                   ) : (
-                    <div className="flex items-baseline gap-1 font-mono font-black text-sm sm:text-base text-slate-900 dark:text-white">
+                    <div className="flex items-baseline gap-1 font-mono font-semibold text-sm sm:text-base text-slate-900 dark:text-white">
                       <span>{String(timeLeft.days).padStart(2, '0')}d</span>
                       <span className="text-slate-400 dark:text-slate-500">:</span>
                       <span>{String(timeLeft.hours).padStart(2, '0')}h</span>
@@ -493,7 +493,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 
               <button
                 onClick={onClose}
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer border border-slate-200 dark:border-slate-800"
+                className="p-2 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer border border-slate-200 dark:border-slate-800"
                 aria-label="Close slide-over"
               >
                 <X className="h-5 w-5" />
@@ -507,10 +507,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             <button
               onClick={() => setActiveTab('bds')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeTab === 'bds'
-                  ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200 dark:border-slate-700'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ activeTab === 'bds'
+ ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs border border-slate-200 dark:border-slate-700'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             >
               <ListChecks className="h-3.5 w-3.5 text-blue-500" />
               <span>{locale === 'mn' ? 'Шалгуур & ТШЗ' : locale === 'zh' ? '资格与标书' : 'BDS Criteria'}</span>
@@ -519,10 +519,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             <button
               onClick={() => setActiveTab('items')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeTab === 'items'
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200 dark:border-slate-700'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ activeTab === 'items'
+ ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200 dark:border-slate-700'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             >
               <Layers className="h-3.5 w-3.5 text-indigo-500" />
               <span>{locale === 'mn' ? 'Бараа, ажлын хүснэгт' : locale === 'zh' ? '采购物料清单' : 'BoQ Items Table'}</span>
@@ -536,10 +536,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             <button
               onClick={() => setActiveTab('ai')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                activeTab === 'ai'
-                  ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-xs border border-slate-200 dark:border-slate-700'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ activeTab === 'ai'
+ ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-xs border border-slate-200 dark:border-slate-700'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
             >
               <Sparkles className="h-3.5 w-3.5 text-amber-500" />
               <span>{locale === 'mn' ? 'AI Шинжилгээ' : locale === 'zh' ? 'AI 智库分析' : 'AI Intelligence'}</span>
@@ -553,11 +553,11 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             {activeTab === 'bds' && (
               <div className="space-y-6">
                 {/* Budget Box */}
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-2xs">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+                <div className="p-4 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 shadow-2xs">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block">
                     {locale === 'mn' ? 'Зарлагдсан төсөвт өртөг (Total Budget)' : 'Declared Total Budget'}
                   </span>
-                  <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
+                  <div className="text-2xl sm:text-3xl font-semibold text-slate-900 dark:text-white font-mono tracking-tight">
                     ₮ {budgetMnt.toLocaleString()}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-mono border-t border-slate-100 dark:border-slate-800/80 pt-2">
@@ -571,9 +571,9 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 {(turnoverReq || liquidAssetsReq || similarExpReq || bidSecurityReq) && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {turnoverReq && (
-                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
-                        <span className="text-[11px] font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400 block">
-                          💰 Борлуулалтын орлого
+                      <div className="p-3.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
+                        <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 block">
+                          Борлуулалтын орлого
                         </span>
                         <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
                           {turnoverReq}
@@ -581,9 +581,9 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       </div>
                     )}
                     {liquidAssetsReq && (
-                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
-                        <span className="text-[11px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-400 block">
-                          💳 Түргэн хөрвөх чадвар
+                      <div className="p-3.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
+                        <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 block">
+                          Түргэн хөрвөх чадвар
                         </span>
                         <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
                           {liquidAssetsReq}
@@ -591,9 +591,9 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       </div>
                     )}
                     {similarExpReq && (
-                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
-                        <span className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-400 block">
-                          🏆 Ижил төстэй ажил / гэрээ
+                      <div className="p-3.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
+                        <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 block">
+                          Ижил төстэй ажил / гэрээ
                         </span>
                         <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
                           {similarExpReq}
@@ -601,9 +601,9 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       </div>
                     )}
                     {bidSecurityReq && (
-                      <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
-                        <span className="text-[11px] font-bold uppercase tracking-wide text-purple-600 dark:text-purple-400 block">
-                          🛡️ Тендерийн баталгаа
+                      <div className="p-3.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1 shadow-2xs">
+                        <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 block">
+                          Тендерийн баталгаа
                         </span>
                         <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
                           {bidSecurityReq}
@@ -615,7 +615,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 
                 {/* Licenses List */}
                 {licenses.length > 0 && (
-                  <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-2xs">
+                  <div className="p-4 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-2xs">
                     <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <ShieldCheck className="h-4 w-4 text-emerald-500" />
                       <span>{locale === 'mn' ? 'Шаардагдах тусгай зөвшөөрөл (Licenses)' : 'Required Licenses'}</span>
@@ -631,12 +631,11 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 )}
 
                 {/* 🎯 Interactive BDS Eligibility Self-Assessment Widget */}
-                <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/40 dark:via-slate-900 dark:to-blue-950/30 border border-indigo-200 dark:border-indigo-800/80 space-y-4 shadow-xs">
+                <div className="p-4 rounded-md bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/80 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-2xs">
-                        ⚖️
-                      </div>
+                                              </div>
                       <div>
                         <h4 className="text-xs font-bold text-slate-900 dark:text-white">
                           {locale === 'mn' ? 'Шалгуурын үнэлгээ & Нийцлийн тооцоолуур' : locale === 'zh' ? '投标资质自查与匹配评估' : 'BDS Eligibility Self-Assessment'}
@@ -648,10 +647,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                     </div>
                     {eligibilityVerdict && (
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-bold shadow-2xs border ${
-                        eligibilityVerdict.status === 'pass'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                          : 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
-                      }`}>
+ eligibilityVerdict.status === 'pass'
+ ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+ : 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+ }`}>
                         {eligibilityVerdict.title}
                       </span>
                     )}
@@ -673,10 +672,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                             <label
                               key={idx}
                               className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all select-none ${
-                                isChecked
-                                  ? 'bg-emerald-50/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
-                                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                              }`}
+ isChecked
+ ? 'bg-emerald-50/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-700 text-emerald-900 dark:text-emerald-200'
+ : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
+ }`}
                             >
                               <input
                                 type="checkbox"
@@ -711,7 +710,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                         Шаардагдах босго: <strong className="text-slate-800 dark:text-slate-200 font-mono">₮{parsedTurnoverReqMnt.toLocaleString()}</strong>
                         {userTurnoverNum > 0 && (
                           <span className={`ml-2 font-bold ${userTurnoverNum >= parsedTurnoverReqMnt ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                            {userTurnoverNum >= parsedTurnoverReqMnt ? '✓ Хангаж байна' : '✗ Хүрэхгүй байна'}
+                            {userTurnoverNum >= parsedTurnoverReqMnt ? 'Хангаж байна' : 'Хүрэхгүй байна'}
                           </span>
                         )}
                       </div>
@@ -721,17 +720,17 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                   {/* Verdict description if available */}
                   {eligibilityVerdict && (
                     <div className={`p-3 rounded-lg border text-xs leading-relaxed ${
-                      eligibilityVerdict.status === 'pass'
-                        ? 'bg-emerald-50/50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
-                        : 'bg-amber-50/50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'
-                    }`}>
+ eligibilityVerdict.status === 'pass'
+ ? 'bg-emerald-50/50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+ : 'bg-amber-50/50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200'
+ }`}>
                       {eligibilityVerdict.desc}
                     </div>
                   )}
                 </div>
 
                 {/* Eligibility & Compliance Checklist */}
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-2xs">
+                <div className="p-4 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <ListChecks className="h-4 w-4 text-blue-500" />
@@ -753,7 +752,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 </div>
 
                 {/* Technical Scope Preview & PDF Document Card */}
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-2xs">
+                <div className="p-4 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       <Tag className="h-4 w-4 text-purple-500" />
@@ -804,7 +803,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                         className="w-full sm:w-auto px-3.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all shrink-0"
                       >
                         <BookOpen className="h-3.5 w-3.5" />
-                        <span>{locale === 'mn' ? '📖 ТШЗ Унших' : '📖 Read PDF'}</span>
+                        <span>{locale === 'mn' ? 'ТШЗ Унших' : 'Read PDF'}</span>
                       </button>
                     </div>
                   ) : (
@@ -820,7 +819,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             {activeTab === 'items' && (
               <div className="space-y-6">
                 {items.length > 0 ? (
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                     {/* Table Header Controls */}
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
@@ -848,10 +847,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                         <button
                           onClick={() => setIsEstimatorMode(!isEstimatorMode)}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer shadow-2xs ${
-                            isEstimatorMode
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-500/20'
-                              : 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-slate-800'
-                          }`}
+ isEstimatorMode
+ ? 'bg-indigo-600 text-white border-indigo-600 '
+ : 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-slate-800'
+ }`}
                           title="Үнийн санал бодох горим"
                         >
                           <Calculator className="h-3.5 w-3.5" />
@@ -874,7 +873,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       <div className="p-3 bg-indigo-50/80 dark:bg-indigo-950/40 border-b border-indigo-100 dark:border-indigo-900/60 flex flex-wrap items-center justify-between gap-2.5 text-xs">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1 text-[11px]">
-                            <span>⚡ Төсвөөр жигд хуваарилах:</span>
+                            <span>Төсвөөр жигд хуваарилах:</span>
                           </span>
                           <div className="flex items-center gap-1.5">
                             <button
@@ -910,7 +909,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                     {/* Table View */}
                     <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                       <table className="w-full text-left border-collapse text-xs">
-                        <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
+                        <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
                           <tr>
                             <th className="py-2.5 px-3 w-12 text-center">№</th>
                             <th className="py-2.5 px-3 min-w-[180px]">Бараа / Ажлын нэр</th>
@@ -982,17 +981,17 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 
                     {/* Estimator Mode Bottom Summary Bar */}
                     {isEstimatorMode && (
-                      <div className="p-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-3 border-t border-slate-800">
+                      <div className="p-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 border-t border-slate-800">
                         <div className="flex items-center gap-4 flex-wrap">
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Нийт санал болгох дүн:</span>
-                            <span className="text-base sm:text-lg font-black font-mono text-emerald-400">
+                            <span className="text-[10px] font-bold text-slate-400 block ">Нийт санал болгох дүн:</span>
+                            <span className="text-base sm:text-lg font-semibold font-mono text-emerald-400">
                               ₮ {totalEstimatedBid.toLocaleString()}
                             </span>
                           </div>
                           {budgetMnt > 0 && totalEstimatedBid > 0 && (
                             <div className="border-l border-slate-700 pl-4">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Төсөвтэй харьцуулахад:</span>
+                              <span className="text-[10px] font-bold text-slate-400 block ">Төсөвтэй харьцуулахад:</span>
                               <span className={`text-xs sm:text-sm font-bold font-mono ${budgetDiff <= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                 {budgetDiffPercent > 0 ? '+' : ''}{budgetDiffPercent.toFixed(1)}% ({budgetDiff <= 0 ? 'Хэмнэлттэй' : 'Төсөв давсан'})
                               </span>
@@ -1010,7 +1009,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                     )}
                   </div>
                 ) : deliverySchedule.length > 0 ? (
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-900/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                         <Layers className="h-4 w-4 text-blue-500" />
@@ -1027,7 +1026,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 
                     <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                       <table className="w-full text-left border-collapse text-xs">
-                        <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
+                        <thead className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-bold text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-700">
                           <tr>
                             <th className="py-2.5 px-3 w-12 text-center">№</th>
                             <th className="py-2.5 px-3 min-w-[180px]">Барааны нэр</th>
@@ -1055,7 +1054,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-4 shadow-2xs">
+                  <div className="p-6 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-4 shadow-2xs">
                     <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
                       <FileSpreadsheet className="h-6 w-6" />
                     </div>
@@ -1072,10 +1071,10 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                     {hasStoredPdf && (
                       <button
                         onClick={() => setIsPdfReaderOpen(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md shadow-purple-600/20 active:scale-95 transition-all cursor-pointer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-md active:scale-95 transition-all cursor-pointer"
                       >
                         <BookOpen className="h-4 w-4" />
-                        <span>{locale === 'mn' ? '📖 ТШЗ PDF Уншигчаар үзэх' : 'Open PDF Reader'}</span>
+                        <span>{locale === 'mn' ? 'ТШЗ PDF Уншигчаар үзэх' : 'Open PDF Reader'}</span>
                       </button>
                     )}
                   </div>
@@ -1087,14 +1086,14 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
             {activeTab === 'ai' && (
               <div className="space-y-6">
                 {/* Why this tender is good for foreign suppliers */}
-                <div className="p-4 rounded-xl bg-gradient-to-br from-white via-blue-50/30 to-white dark:from-slate-900 dark:via-blue-950/40 dark:to-slate-900 border border-blue-200 dark:border-blue-500/30 space-y-3 shadow-2xs">
+                <div className="p-4 rounded-md bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-500/30 space-y-3 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="p-1.5 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 rounded-lg">
                         <Zap className="h-4 w-4 text-amber-500" />
                       </span>
                       <span className="text-xs font-bold text-slate-900 dark:text-white">
-                        {locale === 'zh' ? '💡 为什么该标段适合跨境参与？' : locale === 'mn' ? '💡 Оролцох боломж & Давуу тал' : '💡 Procurement Opportunity'}
+                        {locale === 'zh' ? '为什么该标段适合跨境参与？' : locale === 'mn' ? 'Оролцох боломж & Давуу тал' : 'Procurement Opportunity'}
                       </span>
                     </div>
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
@@ -1112,18 +1111,18 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
 
                   <div className="grid grid-cols-2 gap-2 pt-1 text-xs">
                     <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase">Өрсөлдөөний түвшин</span>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block ">Өрсөлдөөний түвшин</span>
                       <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5 block">Дундаж (3-4 оролцогч)</span>
                     </div>
                     <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block uppercase">Төлбөрийн нөхцөл</span>
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block ">Төлбөрийн нөхцөл</span>
                       <span className="text-xs font-bold text-blue-600 dark:text-blue-400 mt-0.5 block">100% Төрийн сан</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Recommended Winning Strategy */}
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-2xs">
+                <div className="p-4 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5 shadow-2xs">
                   <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                     <Trophy className="h-4 w-4 text-amber-500" />
                     <span>{locale === 'mn' ? 'Ялах стратеги & Зөвлөмж' : 'Recommended Bidding Strategy'}</span>
@@ -1148,7 +1147,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                       onClose();
                       onAskAI(tender);
                     }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-white dark:bg-slate-900 hover:bg-purple-50 dark:hover:bg-slate-850 border border-purple-200 dark:border-purple-500/40 text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-white text-xs font-bold flex items-center justify-between transition-colors cursor-pointer shadow-2xs"
+                    className="w-full py-2.5 px-4 rounded-md bg-white dark:bg-slate-900 hover:bg-purple-50 dark:hover:bg-slate-850 border border-purple-200 dark:border-purple-500/40 text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-white text-xs font-bold flex items-center justify-between transition-colors cursor-pointer shadow-2xs"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="h-4 w-4 text-purple-500" />
@@ -1163,7 +1162,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
           </div>
 
           {/* 3. Sticky Bottom Footer: Action Conversion Funnel */}
-          <div className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl shrink-0">
+          <div className="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-950/95 border-t border-slate-200 dark:border-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xl shrink-0">
             
             {/* Left Info: Trust Guarantee & Link to Full Page */}
             <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
@@ -1172,7 +1171,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline"
               >
                 <ExternalLink className="h-4 w-4" />
-                <span>{locale === 'mn' ? '📄 Дэлгэрэнгүй бүрэн хуудас' : locale === 'zh' ? '查看完整页面' : 'View Full Page'}</span>
+                <span>{locale === 'mn' ? 'Дэлгэрэнгүй бүрэн хуудас' : locale === 'zh' ? '查看完整页面' : 'View Full Page'}</span>
               </Link>
 
               <a
@@ -1191,7 +1190,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
               {hasStoredPdf && (
                 <button
                   onClick={() => setIsPdfReaderOpen(true)}
-                  className="flex-1 sm:flex-initial h-11 px-4 rounded-xl bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                  className="flex-1 sm:flex-initial h-11 px-4 rounded-md bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs"
                   title="PDF баримтыг вебсайт дээрээс шууд унших"
                 >
                   <BookOpen className="h-4 w-4 text-purple-600 dark:text-purple-400" />
@@ -1204,7 +1203,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                 target="_blank"
                 rel="noopener noreferrer"
                 download={hasStoredPdf ? storedPdfFileName : undefined}
-                className="flex-1 sm:flex-initial h-11 px-4 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs"
+                className="flex-1 sm:flex-initial h-11 px-4 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95 shadow-2xs"
               >
                 <Download className="h-4 w-4 text-emerald-500" />
                 <span>{locale === 'mn' ? 'Татах' : locale === 'zh' ? '下载' : 'Download'}</span>
@@ -1216,7 +1215,7 @@ export const TenderSlideOver: React.FC<TenderSlideOverProps> = ({
                   if (onOpenChinaSupplier) onOpenChinaSupplier(tender);
                   else if (onOpenFinance) onOpenFinance(tender);
                 }}
-                className="flex-1 sm:flex-initial h-11 px-5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-600/30 active:scale-95 transition-all cursor-pointer border border-blue-400/40"
+                className="flex-1 sm:flex-initial h-11 px-5 rounded-md bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all cursor-pointer border border-blue-400/40"
               >
                 <ShieldCheck className="h-4 w-4" />
                 <span>{locale === 'zh' ? '跨境联合投标' : locale === 'mn' ? 'Төсөлд хамтран оролцох' : 'Bid Consortium'}</span>

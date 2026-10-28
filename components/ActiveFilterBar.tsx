@@ -100,7 +100,7 @@ export const ActiveFilterBar: React.FC<ActiveFilterBarProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2.5">
+    <div className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200/90 shadow-2xs space-y-2.5">
       {/* Top Count & Context Summary */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs sm:text-sm">
         <div className="flex items-center gap-2 font-medium text-slate-700">
@@ -133,7 +133,7 @@ export const ActiveFilterBar: React.FC<ActiveFilterBarProps> = ({
       {/* Active Filter Pills List (Wrapped for Mobile Responsiveness) */}
       {activeBadges.length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-slate-100">
-          <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">
+          <span className="text-[11px] font-bold text-slate-400 mr-1">
             {locale === 'mn' ? 'Идэвхтэй:' : 'Active:'}
           </span>
           {activeBadges.map((badge) => (

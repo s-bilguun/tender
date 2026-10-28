@@ -16,6 +16,7 @@ import { TenderSlideOver } from '@/components/TenderSlideOver';
 import { TenderDocAuditModal } from '@/components/TenderDocAuditModal';
 import { TenderFinanceModal } from '@/components/TenderFinanceModal';
 import { ChinaSupplierModal } from '@/components/ChinaSupplierModal';
+import { PricingSubscriptionModal } from '@/components/PricingSubscriptionModal';
 import { EmptyState } from '@/components/EmptyState';
 import { AIChatDrawer } from '@/components/AIChatDrawer';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -89,6 +90,7 @@ export default function Home() {
   const [isDocAuditOpen, setIsDocAuditOpen] = useState<boolean>(false);
   const [isFinanceOpen, setIsFinanceOpen] = useState<boolean>(false);
   const [isChinaSupplierOpen, setIsChinaSupplierOpen] = useState<boolean>(false);
+  const [isPricingOpen, setIsPricingOpen] = useState<boolean>(false);
   const [modalTenderContext, setModalTenderContext] = useState<TenderItem | null>(null);
 
   // Command Palette & Toasts
@@ -376,6 +378,7 @@ export default function Home() {
       
       {/* 1. Fixed Left Sidebar Navigation Panel (w-[260px]) */}
       <DashboardSidebar
+        activeCount={stats?.activeTendersCount}
         activeSection={activeSection}
         onSelectSection={handleSidebarSelectSection}
         savedCount={savedIds.size}
@@ -389,6 +392,7 @@ export default function Home() {
         onOpenDocAudit={() => handleOpenDocAudit()}
         onOpenFinance={() => handleOpenFinance()}
         onOpenChinaSupplier={() => handleOpenChinaSupplier()}
+        onOpenPricing={() => setIsPricingOpen(true)}
       />
 
       {/* 2. Main Independent Scrollable Content Area */}
@@ -400,6 +404,7 @@ export default function Home() {
           setLocale={setLocale}
           stats={stats}
           onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+          onOpenPricing={() => setIsPricingOpen(true)}
           onOpenAI={() => {
             setAiTenderContext(null);
             setIsAIDrawerOpen(true);
@@ -425,11 +430,12 @@ export default function Home() {
             
             {/* Horizontal Row of Clean KPI Cards */}
             <DashboardKPICards
+              stats={stats}
               locale={locale}
-              onFilterActive={() => handleFilterChange({ status: 'receiving', tabMode: 'active', page: 1 })}
-              onOpenDocAudit={() => handleOpenDocAudit()}
-              onOpenFinance={() => handleOpenFinance()}
-              onOpenChinaSupplier={() => handleOpenChinaSupplier()}
+              onApplyFilter={(f) => {
+                handleFilterChange(f);
+                document.getElementById('database')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
             />
 
             {/* Buyer Intelligence, Industry Verticals & Foreign Routes Hub */}
@@ -526,7 +532,7 @@ export default function Home() {
                   <button
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
-                    className="flex-1 sm:flex-initial min-h-[40px] px-6 rounded-xl text-xs sm:text-sm font-bold bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
+                    className="flex-1 sm:flex-initial min-h-[40px] px-6 rounded-md text-xs sm:text-sm font-bold bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-95"
                   >
                     {isLoadingMore ? (
                       <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
@@ -537,7 +543,7 @@ export default function Home() {
                   </button>
 
                   {totalPages > 1 && (
-                    <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+                    <div className="flex items-center gap-1.5 bg-white dark:bg-slate-900 p-1 rounded-md border border-slate-200 dark:border-slate-800 shadow-xs">
                       <button
                         onClick={() => handleFilterChange({ page: Math.max(1, (filters.page || 1) - 1) })}
                         disabled={(filters.page || 1) <= 1}
@@ -609,6 +615,13 @@ export default function Home() {
         isOpen={isChinaSupplierOpen}
         onClose={() => setIsChinaSupplierOpen(false)}
         tender={modalTenderContext}
+        locale={locale}
+      />
+
+      {/* VIP Pricing & Subscription Modal */}
+      <PricingSubscriptionModal
+        isOpen={isPricingOpen}
+        onClose={() => setIsPricingOpen(false)}
         locale={locale}
       />
 

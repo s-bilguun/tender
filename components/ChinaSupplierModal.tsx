@@ -52,12 +52,12 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-slate-950/60 flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-slate-900 w-full max-w-xl rounded-lg shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-rose-950 via-red-900 to-slate-900 text-white">
+        <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-rose-950 text-white">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-rose-500/20 border border-rose-400/30 text-rose-300">
+            <div className="p-2 rounded-md bg-rose-500/20 border border-rose-400/30 text-rose-300">
               {isZh ? <Handshake className="h-5 w-5" /> : <Globe2 className="h-5 w-5" />}
             </div>
             <div>
@@ -87,7 +87,7 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-5">
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-2xl p-3.5 text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
+              <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/60 rounded-lg p-3.5 text-xs text-rose-900 dark:text-rose-200 flex items-start gap-2.5">
                 <ShieldCheck className="h-5 w-5 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-bold block mb-0.5">
@@ -104,44 +104,44 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
               {/* Service Type Selection for Chinese mode */}
               {isZh && (
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                     所需协助类型 (可多选核心意向)
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => setServiceType('consortium')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all cursor-pointer ${
-                        serviceType === 'consortium'
-                          ? 'bg-rose-50 border-rose-500 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200'
-                          : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
-                      }`}
+                      className={`p-2.5 rounded-md border text-xs font-semibold text-left transition-all cursor-pointer ${
+ serviceType === 'consortium'
+ ? 'bg-rose-50 border-rose-500 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200'
+ : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+ }`}
                     >
-                      <span className="block font-bold">🤝 联合体组建</span>
+                      <span className="block font-bold">联合体组建</span>
                       <span className="text-[10px] text-slate-500 block mt-0.5">对接蒙古国特许资质成员</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setServiceType('submission')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all cursor-pointer ${
-                        serviceType === 'submission'
-                          ? 'bg-rose-50 border-rose-500 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200'
-                          : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
-                      }`}
+                      className={`p-2.5 rounded-md border text-xs font-semibold text-left transition-all cursor-pointer ${
+ serviceType === 'submission'
+ ? 'bg-rose-50 border-rose-500 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200'
+ : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+ }`}
                     >
-                      <span className="block font-bold">📋 标书申报代办</span>
+                      <span className="block font-bold">标书申报代办</span>
                       <span className="text-[10px] text-slate-500 block mt-0.5">蒙文翻译/公证/电子签章</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setServiceType('logistics')}
-                      className={`p-2.5 rounded-xl border text-xs font-semibold text-left transition-all cursor-pointer ${
-                        serviceType === 'logistics'
-                          ? 'bg-rose-50 border-rose-500 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200'
-                          : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
-                      }`}
+                      className={`p-2.5 rounded-md border text-xs font-semibold text-left transition-all cursor-pointer ${
+ serviceType === 'logistics'
+ ? 'bg-rose-50 border-rose-500 text-rose-900 dark:bg-rose-950/50 dark:text-rose-200'
+ : 'bg-white border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+ }`}
                     >
-                      <span className="block font-bold">🚛 口岸清关物流</span>
+                      <span className="block font-bold">口岸清关物流</span>
                       <span className="text-[10px] text-slate-500 block mt-0.5">二连/扎门乌德DAP运输</span>
                     </button>
                   </div>
@@ -149,46 +149,46 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
               )}
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   {isZh ? '拟投标 / 拟供货物与技术规格' : 'Нийлүүлэх бараа, техникийн үзүүлэлт'}
                 </label>
                 <textarea
                   rows={3}
                   value={requestedItems}
                   onChange={(e) => setRequestedItems(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
+                  className="w-full p-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-xs focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                   placeholder={isZh ? '请输入拟供产品名称、品牌型号、技术参数及出厂能力...' : 'Бүтээгдэхүүний марк, тоо хэмжээ, загвар...'}
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {isZh ? '供应数量 (台 / 套 / 米 / 吨)' : 'Тоо хэмжээ (Ширхэг / Тн / Метр)'}
                   </label>
                   <input
                     type="text"
                     value={targetQuantity}
                     onChange={(e) => setTargetQuantity(e.target.value)}
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
+                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {isZh ? '意向交货口岸 / 地点' : 'Хүргэх байршил'}
                   </label>
                   <input
                     type="text"
                     value={deliveryLocation}
                     onChange={(e) => setDeliveryLocation(e.target.value)}
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
+                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {isZh ? '联系人手机 / 微信 (WeChat)' : 'Утасны дугаар'}
                   </label>
                   <input
@@ -197,11 +197,11 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     placeholder={isZh ? '138-XXXX-XXXX 或 微信号' : '9911-XXXX'}
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
+                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     {isZh ? '企业电子邮箱' : 'И-мэйл хаяг'}
                   </label>
                   <input
@@ -210,7 +210,7 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     placeholder={isZh ? 'manager@factory.com' : 'info@company.mn'}
-                    className="w-full h-10 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
+                    className="w-full h-10 px-3.5 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm focus:outline-hidden focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                   />
                 </div>
               </div>
@@ -218,7 +218,7 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full h-11 rounded-xl font-bold text-sm bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
+                className="w-full h-11 rounded-md font-bold text-sm bg-rose-600 hover:bg-rose-700 text-white flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
@@ -227,7 +227,7 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
                   </>
                 ) : (
                   <>
-                    <span>{isZh ? '🤝 提交对接需求 (专人2小时内联络)' : '🇨🇳 Хятад үйлдвэрүүд рүү үнийн санал илгээх'}</span>
+                    <span>{isZh ? '提交对接需求 (专人2小时内联络)' : 'Хятад үйлдвэрүүд рүү үнийн санал илгээх'}</span>
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -250,7 +250,7 @@ export const ChinaSupplierModal: React.FC<ChinaSupplierModalProps> = ({
               </p>
               <button
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-xl text-xs font-bold bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors cursor-pointer"
+                className="px-6 py-2.5 rounded-md text-xs font-bold bg-slate-900 dark:bg-slate-700 text-white hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors cursor-pointer"
               >
                 {isZh ? '我知道了' : 'Ойлголоо'}
               </button>

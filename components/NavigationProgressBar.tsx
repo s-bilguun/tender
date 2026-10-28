@@ -56,7 +56,7 @@ export function NavigationProgressBar() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-transparent pointer-events-none">
       <div
-        className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-amber-500 transition-all duration-200 ease-out shadow-xs shadow-blue-500/50"
+        className="h-full bg-blue-500 transition-all duration-200 ease-out shadow-xs "
         style={{ width: `${progress}%` }}
       />
     </div>

@@ -9,7 +9,7 @@ import {
   FileUp, Sparkles, ShieldCheck, Globe2, 
   FileCheck2, ChevronRight, ChevronLeft, X, ExternalLink,
   Layers, ArrowUpRight, Cpu, CheckCircle2, PanelLeftClose, PanelLeft
-} from 'lucide-react';
+, Crown } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 
 interface DashboardSidebarProps {
@@ -23,6 +23,8 @@ interface DashboardSidebarProps {
   onOpenDocAudit?: () => void;
   onOpenFinance?: () => void;
   onOpenChinaSupplier?: () => void;
+  onOpenPricing?: () => void;
+  activeCount?: number;
 }
 
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
@@ -36,6 +38,8 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   onOpenDocAudit,
   onOpenFinance,
   onOpenChinaSupplier,
+  onOpenPricing,
+  activeCount,
 }) => {
   const pathname = usePathname();
   const isAdminIngest = pathname === '/admin/ingest';
@@ -65,7 +69,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       labelEn: 'Dashboard Overview',
       labelZh: '控制台概览',
       icon: LayoutDashboard,
-      badge: 'Live',
+      badge: undefined as string | undefined,
       badgeColor: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30',
       href: '#dashboard',
     },
@@ -75,7 +79,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       labelEn: 'Tender Database',
       labelZh: '招标项目全库',
       icon: Database,
-      badge: '504+',
+      badge: activeCount ? activeCount.toLocaleString() : '504+',
       badgeColor: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30',
       href: '#database',
     },
@@ -119,7 +123,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       {/* Mobile Backdrop */}
       {isOpenMobile && (
         <div 
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-950/80 z-40 lg:hidden transition-opacity"
           onClick={onCloseMobile}
         />
       )}
@@ -127,10 +131,10 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       {/* Left Sidebar Panel (Responsive width with collapse toggle) */}
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800/80 flex flex-col justify-between transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${
-          isCollapsed ? 'lg:w-[72px]' : 'lg:w-[260px]'
-        } ${
-          isOpenMobile ? 'w-[260px] translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
-        }`}
+ isCollapsed ? 'lg:w-[72px]' : 'lg:w-[260px]'
+ } ${
+ isOpenMobile ? 'w-[260px] translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'
+ }`}
       >
         {/* Top Header / Branding */}
         <div>
@@ -141,19 +145,16 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               onClick={onCloseMobile}
               title="TenderHub MN"
             >
-              <Logo className="h-8 w-8 shrink-0 drop-shadow-md group-hover:scale-105 transition-transform" />
+              <Logo className="h-8 w-8 shrink-0" />
               {!isCollapsed && (
                 <div className="flex flex-col">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white">
-                      TENDER<span className="text-blue-500">HUB</span>
-                    </span>
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-600/15 dark:bg-blue-600/30 text-blue-600 dark:text-blue-400 border border-blue-500/30 font-mono">
-                      MN
+                    <span className="font-semibold text-[15px] tracking-tight text-slate-900 dark:text-white">
+                      TenderHub
                     </span>
                   </div>
-                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 tracking-wider uppercase">
-                    B2B SaaS Engine
+                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 ">
+                    {locale === 'zh' ? '蒙古国政府采购' : locale === 'en' ? 'Mongolia public procurement' : 'Төрийн худалдан авалт'}
                   </span>
                 </div>
               )}
@@ -185,7 +186,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             {/* Core Views */}
             <div className="space-y-1">
               {!isCollapsed && (
-                <div className="px-3 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                <div className="px-3 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 ">
                   {locale === 'mn' ? 'Үндсэн хэсэг' : locale === 'zh' ? '核心导航' : 'Main Navigation'}
                 </div>
               )}
@@ -200,25 +201,25 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     key={item.id}
                     onClick={() => handleNavClick(item.id, item.href)}
                     title={isCollapsed ? label : undefined}
-                    className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-xs font-semibold transition-all group cursor-pointer ${
-                      isActive
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80'
-                    }`}
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'} rounded-md text-xs font-semibold transition-all group cursor-pointer ${
+ isActive
+ ? 'bg-slate-200/70 dark:bg-slate-800 text-slate-900 dark:text-white'
+ : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80'
+ }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <Icon className={`h-4 w-4 shrink-0 transition-colors ${
-                        isActive ? 'text-white' : 'text-slate-500 dark:text-slate-400 group-hover:text-blue-500'
-                      }`} />
+ isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
+ }`} />
                       {!isCollapsed && <span className="truncate">{label}</span>}
                     </div>
 
                     {!isCollapsed && item.badge && (
                       <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-md border ${
-                        isActive 
-                          ? 'bg-white/20 text-white border-white/30' 
-                          : item.badgeColor
-                      }`}>
+ isActive 
+ ? 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700' 
+ : item.badgeColor
+ }`}>
                         {item.badge}
                       </span>
                     )}
@@ -230,44 +231,39 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             {/* AI & Automation Suite */}
             <div className="space-y-1 pt-2 border-t border-slate-200 dark:border-slate-800">
               {!isCollapsed && (
-                <div className="px-3 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                  <span>{locale === 'mn' ? 'Хиймэл Оюун & Админ' : locale === 'zh' ? '智能分析与管理' : 'AI & Management'}</span>
-                  <Sparkles className="h-3 w-3 text-amber-500" />
+                <div className="px-3 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-between">
+                  <span>{locale === 'mn' ? 'Хэрэгслүүд' : locale === 'zh' ? '工具' : 'Tools'}</span>
                 </div>
               )}
 
-              {/* Requirement 1: Prominent Link to PDF Ingestion (Admin) */}
-              <Link
-                href="/admin/ingest"
-                onClick={onCloseMobile}
-                title={isCollapsed ? (locale === 'mn' ? 'PDF задлан оруулах' : 'AI PDF Ingestion') : undefined}
-                className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'} rounded-xl text-xs font-semibold transition-all group border ${
-                  isAdminIngest
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400/40 shadow-lg shadow-blue-600/30'
-                    : 'bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-200 hover:text-blue-900 dark:hover:text-white border-blue-200 dark:border-blue-800/40'
-                }`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="p-1 rounded-lg bg-blue-500/15 dark:bg-blue-500/20 text-blue-600 dark:text-blue-300">
-                    <FileUp className="h-4 w-4 shrink-0" />
+              {/* VIP Subscription Upgrade CTA */}
+              {onOpenPricing && (
+                <button
+                  onClick={() => {
+                    onOpenPricing();
+                    onCloseMobile();
+                  }}
+                  title={isCollapsed ? (locale === 'zh' ? '升级 VIP 会员' : 'VIP Membership') : undefined}
+                  className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2.5'} rounded-md text-xs font-medium transition-colors group border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700 text-slate-900 dark:text-white cursor-pointer`}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Crown className="h-4 w-4 shrink-0 text-slate-500 dark:text-slate-400" />
+                    {!isCollapsed && (
+                      <div className="flex flex-col text-left min-w-0">
+                        <span className="truncate font-semibold">
+                          {locale === 'zh' ? '升级 Pro' : locale === 'mn' ? 'Pro багц' : 'Upgrade to Pro'}
+                        </span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                          {locale === 'zh' ? '不限次 AI 标书翻译与导出' : locale === 'mn' ? 'Хязгааргүй AI шинжилгээ, экспорт' : 'Unlimited AI analysis and exports'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   {!isCollapsed && (
-                    <div className="flex flex-col text-left min-w-0">
-                      <span className="truncate font-bold">
-                        {locale === 'mn' ? 'PDF задлан оруулах' : locale === 'zh' ? 'PDF智能解析入库' : 'AI PDF Ingestion'}
-                      </span>
-                      <span className="text-[10px] text-blue-600/80 dark:text-blue-400/80 truncate">
-                        {locale === 'mn' ? 'Баримт бичиг & Ялагчид' : 'Auto-extract Specs & Bids'}
-                      </span>
-                    </div>
+                    <ChevronRight className="h-3.5 w-3.5 text-slate-400" />
                   )}
-                </div>
-                {!isCollapsed && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-600 dark:text-blue-300 border border-blue-400/30">
-                    Admin
-                  </span>
-                )}
-              </Link>
+                </button>
+              )}
 
               {/* AI Doc Audit Trigger */}
               {onOpenDocAudit && (
@@ -277,11 +273,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     onCloseMobile();
                   }}
                   title={isCollapsed ? (locale === 'mn' ? 'ТББ Шалгагч AI' : 'AI Tender Doc Audit') : undefined}
-                  className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80 transition-colors group cursor-pointer`}
+                  className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80 transition-colors group cursor-pointer`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <FileCheck2 className="h-4 w-4 text-purple-500 group-hover:scale-110 transition-transform shrink-0" />
-                    {!isCollapsed && <span>{locale === 'mn' ? 'ТББ Шалгагч AI' : 'AI Tender Doc Audit'}</span>}
+                    <FileCheck2 className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                    {!isCollapsed && <span>{locale === 'zh' ? '标书合规检查' : locale === 'mn' ? 'Баримт бичиг шалгах' : 'Check bid documents'}</span>}
                   </div>
                   {!isCollapsed && <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />}
                 </button>
@@ -295,11 +291,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     onCloseMobile();
                   }}
                   title={isCollapsed ? (locale === 'mn' ? 'Баталгаа & Санхүүжилт' : 'Bank Guarantees') : undefined}
-                  className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80 transition-colors group cursor-pointer`}
+                  className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80 transition-colors group cursor-pointer`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <ShieldCheck className="h-4 w-4 text-emerald-500 group-hover:scale-110 transition-transform shrink-0" />
-                    {!isCollapsed && <span>{locale === 'mn' ? 'Баталгаа & Санхүүжилт' : 'Bank Guarantees'}</span>}
+                    <ShieldCheck className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                    {!isCollapsed && <span>{locale === 'zh' ? '投标保函与融资' : locale === 'mn' ? 'Баталгаа, санхүүжилт' : 'Bid guarantees'}</span>}
                   </div>
                   {!isCollapsed && <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />}
                 </button>
@@ -313,11 +309,11 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     onCloseMobile();
                   }}
                   title={isCollapsed ? (locale === 'mn' ? 'Хятадаас нийлүүлэх' : 'Tender2China Sourcing') : undefined}
-                  className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80 transition-colors group cursor-pointer`}
+                  className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2'} rounded-md text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-900/80 transition-colors group cursor-pointer`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Globe2 className="h-4 w-4 text-rose-500 group-hover:scale-110 transition-transform shrink-0" />
-                    {!isCollapsed && <span>{locale === 'mn' ? 'Хятадаас нийлүүлэх' : 'Tender2China Sourcing'}</span>}
+                    <Globe2 className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                    {!isCollapsed && <span>{locale === 'zh' ? '跨境供货与联合体' : locale === 'mn' ? 'Хятадаас нийлүүлэх' : 'Sourcing from China'}</span>}
                   </div>
                   {!isCollapsed && <ChevronRight className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300" />}
                 </button>
@@ -337,20 +333,20 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               onCloseMobile();
             }}
             title={isCollapsed ? (locale === 'mn' ? 'AI Шинжээч' : 'Ask AI') : undefined}
-            className={`w-full ${isCollapsed ? 'h-10 px-2' : 'h-10 px-3.5'} rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-95 transition-all cursor-pointer`}
+            className={`w-full ${isCollapsed ? 'h-10 px-2' : 'h-10 px-3.5'} rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-200 text-white dark:text-slate-900 font-medium text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer`}
           >
-            <Sparkles className="h-4 w-4 text-amber-300 animate-pulse shrink-0" />
-            {!isCollapsed && <span>{locale === 'mn' ? 'AI Шинжээчээс асуух' : locale === 'zh' ? '向AI专家提问' : 'Ask AI Specialist'}</span>}
+            <Sparkles className="h-4 w-4 shrink-0" />
+            {!isCollapsed && <span>{locale === 'mn' ? 'AI-аас асуух' : locale === 'zh' ? '询问 AI' : 'Ask AI'}</span>}
           </button>
 
           {/* System Status Pill */}
           {!isCollapsed && (
-            <div className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+            <div className="px-3 py-2 rounded-md bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-slate-500 dark:text-slate-400 font-medium">Tender.gov.mn Sync</span>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <span className="text-slate-500 dark:text-slate-400">{locale === 'zh' ? '数据来源' : locale === 'en' ? 'Source' : 'Эх сурвалж'}</span>
               </div>
-              <span className="text-emerald-600 dark:text-emerald-400 font-mono font-semibold">100% OK</span>
+              <span className="text-slate-700 dark:text-slate-300 font-medium">tender.gov.mn</span>
             </div>
           )}
 

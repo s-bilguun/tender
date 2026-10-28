@@ -14,7 +14,7 @@ export const BidReadinessChecklist: React.FC<BidReadinessChecklistProps> = ({ re
   const hasEvidence = requirements.requiredClearances.length > 0;
 
   return (
-    <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-4 space-y-3">
+    <div className="bg-slate-50/70 border border-slate-200 rounded-md p-4 space-y-3">
       <div className="flex items-center gap-2">
         <ShieldCheck className="h-4 w-4 text-blue-600" />
         <h4 className="text-xs sm:text-sm font-bold text-slate-900">

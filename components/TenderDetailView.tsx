@@ -409,13 +409,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
     if (allLicensesOk && turnoverOk && (userTurnoverNum > 0 || requiredLicensesList.length > 0)) {
       return {
         status: 'pass',
-        title: locale === 'mn' ? '🟢 100% Тэнцэх бүрэн боломжтой' : locale === 'zh' ? '🟢 100% 完全符合资格' : '🟢 100% Fully Eligible to Bid',
+        title: locale === 'mn' ? '100% Тэнцэх бүрэн боломжтой' : locale === 'zh' ? '100% 完全符合资格' : '100% Fully Eligible to Bid',
         desc: locale === 'mn' ? 'Бүх тусгай зөвшөөрөл болон санхүүгийн босго шаардлага бүрэн хангагдсан байна.' : locale === 'zh' ? '已具备全部所需资质及年度营业额门槛要求。' : 'All required licenses and annual turnover criteria are satisfied.'
       };
     } else if (hasInputs) {
       return {
         status: 'warning',
-        title: locale === 'mn' ? '🟡 Түншлэл (JV) эсвэл Туслан гүйцэтгэгч шаардлагатай' : locale === 'zh' ? '🟡 建议组成联合体 (JV) 联合投标' : '🟡 Joint Venture (JV) Recommended',
+        title: locale === 'mn' ? 'Түншлэл (JV) эсвэл Туслан гүйцэтгэгч шаардлагатай' : locale === 'zh' ? '建议组成联合体 (JV) 联合投标' : 'Joint Venture (JV) Recommended',
         desc: locale === 'mn' ? `Дутуу шалгуур: ${[!allLicensesOk ? `Зөвшөөрөл (${requiredLicensesList.length - licenseMatchCount} дутуу)` : '', !turnoverOk && parsedTurnoverReqMnt ? 'Борлуулалтын босго хүрэхгүй' : ''].filter(Boolean).join(', ')}. Консорциум үүсгэж оролцохыг зөвлөж байна.` : locale === 'zh' ? '部分资质或财务门槛未达标，建议寻找本地合作伙伴联合投标。' : 'Some criteria are not met. Bidding via a consortium is recommended.'
       };
     }
@@ -581,7 +581,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   return (
     <div className="tender-detail-root min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-20 transition-colors duration-150">
       {/* Top Navbar */}
-      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 border-b border-slate-200 dark:border-slate-800 px-4 sm:px-8 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link
             href="/"
@@ -602,7 +602,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           {/* Global Dark / Light Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="h-8 w-8 rounded-xl flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shrink-0"
+            className="h-8 w-8 rounded-md flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-all cursor-pointer shrink-0"
             aria-label={theme === 'dark' ? 'Гэгээлэг горим руу шилжих' : 'Харанхуй горим руу шилжих'}
             title={theme === 'dark' ? 'Гэгээлэг горим (Light mode)' : 'Харанхуй горим (Dark mode)'}
           >
@@ -618,10 +618,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             <button
               onClick={() => setLocale('mn')}
               className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
-                locale === 'mn'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ locale === 'mn'
+ ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
               title="Монгол хэл"
             >
               MN
@@ -629,10 +629,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             <button
               onClick={() => setLocale('en')}
               className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
-                locale === 'en'
-                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ locale === 'en'
+ ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-2xs font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
               title="English"
             >
               EN
@@ -640,13 +640,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             <button
               onClick={() => setLocale('zh')}
               className={`h-7 px-2 sm:px-2.5 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 ${
-                locale === 'zh'
-                  ? 'bg-red-600 text-white shadow-2xs font-bold'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+ locale === 'zh'
+ ? 'bg-red-600 text-white shadow-2xs font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+ }`}
               title="中文 (Chinese)"
             >
-              <span>🇨🇳</span>
+              <span></span>
               <span>中文</span>
             </button>
           </div>
@@ -655,10 +655,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             onClick={() => handleRunAiAnalysis(undefined, 'nav', locale === 'zh' ? '综合ТШЗ招标文件分析' : 'Ерөнхий ТШББ дүгнэлт')}
             disabled={aiAnalyzing}
             className={`h-8 px-3 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-all cursor-pointer ${
-              aiAnalyzingTarget === 'nav'
-                ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
-                : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border-amber-200'
-            }`}
+ aiAnalyzingTarget === 'nav'
+ ? 'bg-amber-100 text-amber-900 border-amber-300 ring-2 ring-amber-400/50'
+ : 'text-amber-800 bg-amber-50 hover:bg-amber-100 border-amber-200'
+ }`}
           >
             {aiAnalyzingTarget === 'nav' ? (
               <>
@@ -686,7 +686,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 title="ТШЗ PDF баримтыг вебсайт дээрээс шууд унших"
               >
                 <BookOpen className="h-3.5 w-3.5 text-purple-600" />
-                <span>📖 ТШЗ Унших</span>
+                <span>ТШЗ Унших</span>
               </button>
               <a
                 href={storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url}
@@ -697,7 +697,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 title="Supabase CDN-ээс ТШЗ PDF-ийг шууд татах"
               >
                 <Download className="h-3.5 w-3.5 text-emerald-600" />
-                <span>⚡ ТШЗ Татах</span>
+                <span>ТШЗ Татах</span>
               </a>
             </>
           )}
@@ -726,7 +726,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         
         {/* Header Hero Banner */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+        <div className="bg-white dark:bg-slate-900 rounded-md border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <div className="flex items-center gap-1 font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
               <span>{tender.tenderCode || tender.invitationNumber}</span>
@@ -742,12 +742,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               {tender.tenderTypeName || 'Тендер'}
             </span>
             <span className={`font-semibold px-2 py-0.5 rounded border ${
-              isFailed
-                ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                : isConcluded
-                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
-                : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-            }`}>
+ isFailed
+ ? 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+ : isConcluded
+ ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+ : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+ }`}>
               {isFailed ? (locale === 'zh' ? '流标 / 终止' : 'Амжилтгүй болсон') : (locale === 'zh' ? (isConcluded ? '已公示' : '投标进行中') : (tender.docStatusName || 'Идэвхтэй'))}
             </span>
             {tender.receiveDate && (
@@ -758,10 +758,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             )}
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+          <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white tracking-tight leading-tight">
             {locale === 'zh' ? (
               <span className="flex flex-col gap-1">
-                <span className="text-blue-700 dark:text-blue-400 block font-extrabold">
+                <span className="text-blue-700 dark:text-blue-400 block font-semibold">
                   {bilingual.titleZh}
                 </span>
                 <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">
@@ -796,22 +796,22 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           </div>
 
           <div className={`flex flex-col sm:flex-row sm:items-center gap-2.5 rounded-lg border px-3.5 py-3 ${
-            pdfCoverageNotice.tone === 'blue'
-              ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200'
-              : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-200'
-          }`} role="status">
+ pdfCoverageNotice.tone === 'blue'
+ ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200'
+ : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-200'
+ }`} role="status">
             <FileText className="h-4 w-4 shrink-0 opacity-80" />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-bold">{pdfCoverageNotice.title}</p>
               <p className="mt-0.5 text-[11px] leading-relaxed opacity-80">{pdfCoverageNotice.message}</p>
             </div>
             <a href={publicLink} target="_blank" rel="noopener noreferrer" className="shrink-0 text-[11px] font-semibold underline underline-offset-2">
-              {locale === 'zh' ? '打开官方源网页 ↗' : 'Эх тендерийг нээх ↗'}
+              {locale === 'zh' ? '打开官方源网页 ' : 'Эх тендерийг нээх '}
             </a>
           </div>
 
           {/* 10-Second Executive Summary Fact Sheet */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white rounded-2xl p-5 shadow-lg border border-indigo-900/60 space-y-4">
+          <div className=" bg-slate-900 text-white rounded-lg p-5 shadow-sm border border-indigo-900/60 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-indigo-800/60 pb-3">
               <div className="flex items-center gap-2">
                 <span className="p-1.5 rounded-lg bg-indigo-500/20 border border-indigo-400/30 text-indigo-300">
@@ -828,14 +828,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {chinaAnalysis && (
-                <span className={`px-3 py-1 rounded-xl text-xs font-bold border flex items-center gap-1.5 shrink-0 ${
-                  chinaAnalysis.eligibilityStatus === 'direct_allowed'
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
-                    : chinaAnalysis.eligibilityStatus === 'joint_venture_required'
-                    ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
-                    : 'bg-slate-700/50 text-slate-300 border-slate-600'
-                }`}>
-                  <span>{locale === 'zh' ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '🟢 允许外企独立直投' : '🟡 建议组建联合体投标') : (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '🟢 Шууд оролцох боломжтой' : '🟡 Түншлэл (JV) шаардлагатай')}</span>
+                <span className={`px-3 py-1 rounded-md text-xs font-bold border flex items-center gap-1.5 shrink-0 ${
+ chinaAnalysis.eligibilityStatus === 'direct_allowed'
+ ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+ : chinaAnalysis.eligibilityStatus === 'joint_venture_required'
+ ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+ : 'bg-slate-700/50 text-slate-300 border-slate-600'
+ }`}>
+                  <span>{locale === 'zh' ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '允许外企独立直投' : '建议组建联合体投标') : (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? 'Шууд оролцох боломжтой' : 'Түншлэл (JV) шаардлагатай')}</span>
                 </span>
               )}
             </div>
@@ -843,7 +843,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             {/* 4 Core Fact Pillars */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
               {/* Pillar 1: Scope & Quantities */}
-              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-md bg-white/5 border border-white/10 space-y-1">
                 <span className="text-[11px] font-bold text-blue-300 flex items-center gap-1">
                   <Package className="h-3.5 w-3.5 text-blue-400" />
                   <span>{locale === 'zh' ? '主要采购标的物' : 'Гол нийлүүлэх бараа'}</span>
@@ -866,12 +866,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* Pillar 2: Total Budget & RMB */}
-              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-md bg-white/5 border border-white/10 space-y-1">
                 <span className="text-[11px] font-bold text-emerald-300 flex items-center gap-1">
                   <DollarSign className="h-3.5 w-3.5 text-emerald-400" />
                   <span>{locale === 'zh' ? '项目预算 & 保函' : 'Төсөвт өртөг & Баталгаа'}</span>
                 </span>
-                <span className="text-sm font-black text-emerald-300 block font-mono">
+                <span className="text-sm font-semibold text-emerald-300 block font-mono">
                   {locale === 'zh' ? bilingual.budgetRmbFormatted : `₮ ${Number(tender.totalBudget).toLocaleString()}`}
                 </span>
                 <span className="text-[11px] text-emerald-200/80 block font-mono">
@@ -880,7 +880,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* Pillar 3: Delivery Period & Location */}
-              <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
+              <div className="p-3.5 rounded-md bg-white/5 border border-white/10 space-y-1">
                 <span className="text-[11px] font-bold text-amber-300 flex items-center gap-1">
                   <Clock className="h-3.5 w-3.5 text-amber-400" />
                   <span>{locale === 'zh' ? '交付周期与地点' : 'Нийлүүлэлтийн хугацаа'}</span>
@@ -894,7 +894,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* Pillar 4: Action & Matchmaking */}
-              <div className="p-3.5 rounded-xl bg-white/10 border border-blue-400/30 flex flex-col justify-between gap-2">
+              <div className="p-3.5 rounded-md bg-white/10 border border-blue-400/30 flex flex-col justify-between gap-2">
                 <span className="text-[11px] font-bold text-white flex items-center gap-1">
                   <Handshake className="h-3.5 w-3.5 text-rose-400" />
                   <span>{locale === 'zh' ? '本地协助 / 申报代办' : 'Түншлэл & Дэмжлэг'}</span>
@@ -903,7 +903,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   onClick={() => setIsChinaSupplierOpen(true)}
                   className="w-full h-8 px-3 rounded-lg text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-98"
                 >
-                  <span>{locale === 'zh' ? '🤝 对接蒙古本地伙伴' : '🤝 Түншлэл холбогдох'}</span>
+                  <span>{locale === 'zh' ? '对接蒙古本地伙伴' : 'Түншлэл холбогдох'}</span>
                 </button>
               </div>
             </div>
@@ -923,10 +923,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
               disabled={aiAnalyzing}
               className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
-                aiAnalyzingTarget === 'quick-license'
-                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-              }`}
+ aiAnalyzingTarget === 'quick-license'
+ ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
+ : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+ }`}
             >
               {aiAnalyzingTarget === 'quick-license' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />}
               <span>Тусгай зөвшөөрөл & Шалгуур</span>
@@ -939,10 +939,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
               disabled={aiAnalyzing}
               className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
-                aiAnalyzingTarget === 'quick-finance'
-                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-              }`}
+ aiAnalyzingTarget === 'quick-finance'
+ ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
+ : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+ }`}
             >
               {aiAnalyzingTarget === 'quick-finance' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <Tag className="h-3.5 w-3.5 text-blue-600" />}
               <span>Санхүүгийн босго & Баталгаа</span>
@@ -955,10 +955,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
               disabled={aiAnalyzing}
               className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
-                aiAnalyzingTarget === 'quick-tech'
-                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-              }`}
+ aiAnalyzingTarget === 'quick-tech'
+ ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
+ : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+ }`}
             >
               {aiAnalyzingTarget === 'quick-tech' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <FileText className="h-3.5 w-3.5 text-blue-600" />}
               <span>Техникийн үзүүлэлтийн эрсдэл</span>
@@ -971,10 +971,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
               disabled={aiAnalyzing}
               className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition-all border flex items-center gap-1.5 cursor-pointer ${
-                aiAnalyzingTarget === 'quick-docs'
-                  ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
-                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
-              }`}
+ aiAnalyzingTarget === 'quick-docs'
+ ? 'bg-blue-100 text-blue-900 border-blue-300 ring-2 ring-blue-400/50'
+ : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'
+ }`}
             >
               {aiAnalyzingTarget === 'quick-docs' ? <Loader2 className="h-3 w-3 animate-spin text-blue-600" /> : <CheckSquare className="h-3.5 w-3.5 text-blue-600" />}
               <span>Баримт бичгийн хяналт</span>
@@ -985,16 +985,16 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         {/* AI Analysis & Multi-turn Conversation Section */}
         <div ref={aiAnalysisRef} className="scroll-mt-24">
           {(aiMessages.length > 0 || aiAnalyzing) ? (
-            <div className="bg-gradient-to-r from-amber-50/90 via-blue-50/70 to-slate-50 border-2 border-amber-300 rounded-2xl shadow-md overflow-hidden transition-all animate-in fade-in duration-200">
+            <div className=" bg-amber-50/90 border-2 border-amber-300 rounded-lg shadow-md overflow-hidden transition-all animate-in fade-in duration-200">
               {/* Header */}
               <div className="p-4 sm:p-5 bg-white/70 border-b border-amber-200/80 flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <div className="h-10 w-10 rounded-md bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
                     <Sparkles className="h-5 w-5" />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                      <h3 className="font-semibold text-slate-900 text-sm sm:text-base">
                         AI Шинжээчийн Харилцан Яриа
                       </h3>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
@@ -1064,11 +1064,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             </div>
                           )}
                           <div
-                            className={`max-w-[88%] sm:max-w-[82%] rounded-2xl p-4 shadow-2xs ${
-                              isUser
-                                ? 'bg-blue-600 text-white rounded-tr-none'
-                                : 'bg-white text-slate-900 border border-amber-200 rounded-tl-none'
-                            }`}
+                            className={`max-w-[88%] sm:max-w-[82%] rounded-lg p-4 shadow-2xs ${
+ isUser
+ ? 'bg-blue-600 text-white rounded-tr-none'
+ : 'bg-white text-slate-900 border border-amber-200 rounded-tl-none'
+ }`}
                           >
                             <div className="flex items-center justify-between gap-2 mb-1.5 border-b pb-1 border-current/15 text-[10px] opacity-80">
                               <span className="font-bold flex items-center gap-1">
@@ -1102,7 +1102,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-2xs">
                           <Loader2 className="h-4 w-4 animate-spin" />
                         </div>
-                        <div className="bg-white border border-amber-300 rounded-2xl rounded-tl-none p-4 shadow-2xs space-y-2 max-w-md">
+                        <div className="bg-white border border-amber-300 rounded-lg rounded-tl-none p-4 shadow-2xs space-y-2 max-w-md">
                           <div className="flex items-center gap-2 text-xs font-bold text-amber-900">
                             <span className="h-2 w-2 rounded-full bg-amber-600 animate-ping" />
                             <span>AI Шинжээч хариултыг боловсруулж байна...</span>
@@ -1139,7 +1139,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           value={followupInput}
                           onChange={(e) => setFollowupInput(e.target.value)}
                           placeholder="Энэ тендерийн ТШББ, PDF заалт, төсвийн талаар тодруулж асуух... (Enter дарж илгээнэ)"
-                          className="w-full bg-white border border-amber-300/90 rounded-xl pl-4 pr-10 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs transition-all"
+                          className="w-full bg-white border border-amber-300/90 rounded-md pl-4 pr-10 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs transition-all"
                           disabled={aiAnalyzing}
                         />
                         {followupInput && (
@@ -1155,7 +1155,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       <button
                         type="submit"
                         disabled={!followupInput.trim() || aiAnalyzing}
-                        className="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer shrink-0"
+                        className="px-4 py-2.5 rounded-md bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer shrink-0"
                       >
                         {aiAnalyzing ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -1226,7 +1226,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
             </div>
           ) : (
-            <div className="bg-gradient-to-r from-amber-50/60 via-blue-50/40 to-slate-50 border border-amber-200 rounded-xl p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
+            <div className=" bg-amber-50/60 border border-amber-200 rounded-md p-4 sm:p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0 shadow-2xs">
                   <Sparkles className="h-5 w-5" />
@@ -1273,8 +1273,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
         {/* Financial Metrics Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
               {locale === 'zh' ? '项目总预算' : locale === 'mn' ? 'Нийт төсөвт өртөг' : 'Total Budget'}
             </span>
             <span className="text-lg sm:text-xl font-bold font-mono text-slate-950 dark:text-white block">
@@ -1285,8 +1285,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </span>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-md border border-slate-200 dark:border-slate-800 shadow-2xs">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block mb-1">
               {locale === 'zh' ? '当年度预算 / 预付款' : (tender.yearBudget && tender.yearBudget !== tender.totalBudget ? 'Тухайн онд санхүүжих' : 'Урьдчилгаа төлбөр')}
             </span>
             <span className="text-lg sm:text-xl font-bold font-mono text-slate-800 dark:text-slate-200 block">
@@ -1301,8 +1301,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </span>
           </div>
 
-          <div className="bg-blue-50/60 dark:bg-blue-950/40 p-4 rounded-xl border border-blue-200 dark:border-blue-800/60 shadow-2xs">
-            <span className="text-[11px] font-bold text-blue-800 dark:text-blue-300 uppercase tracking-wider block mb-1">
+          <div className="bg-blue-50/60 dark:bg-blue-950/40 p-4 rounded-md border border-blue-200 dark:border-blue-800/60 shadow-2xs">
+            <span className="text-[11px] font-bold text-blue-800 dark:text-blue-300 block mb-1">
               {locale === 'zh' ? '投标保函要求' : locale === 'mn' ? 'Тендерийн баталгаа' : 'Bid Bond'}
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-blue-950 dark:text-blue-200 block">
@@ -1319,8 +1319,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </span>
           </div>
 
-          <div className="bg-emerald-50/60 dark:bg-emerald-950/40 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
-            <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block mb-1">
+          <div className="bg-emerald-50/60 dark:bg-emerald-950/40 p-4 rounded-md border border-emerald-200 dark:border-emerald-800/60 shadow-2xs">
+            <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 block mb-1">
               {locale === 'zh' ? '履约保证金' : locale === 'mn' ? 'Гүйцэтгэлийн баталгаа' : 'Performance Bond'}
             </span>
             <span className="text-base sm:text-lg font-bold font-mono text-emerald-950 dark:text-emerald-200 block">
@@ -1333,14 +1333,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         </div>
 
         {/* Responsive Segmented Tab Controls (Zero horizontal scroll) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 p-1.5 bg-slate-100/90 dark:bg-slate-900/90 rounded-2xl border border-slate-200/80 dark:border-slate-800">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 p-1.5 bg-slate-100/90 dark:bg-slate-900/90 rounded-lg border border-slate-200/80 dark:border-slate-800">
           <button
             onClick={() => setActiveTab('bds')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === 'bds'
-                ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
-            }`}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+ activeTab === 'bds'
+ ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
+ }`}
           >
             <FileSpreadsheet className="h-4 w-4 shrink-0" />
             <span className="truncate">{locale === 'zh' ? '准入与资质 (BDS)' : locale === 'mn' ? 'Шалгуур (ТШӨХ)' : 'BDS Criteria'}</span>
@@ -1348,11 +1348,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('tech')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === 'tech'
-                ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
-            }`}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+ activeTab === 'tech'
+ ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
+ }`}
           >
             <Layers className="h-4 w-4 shrink-0" />
             <span className="truncate">{locale === 'zh' ? '采购清单与规格' : locale === 'mn' ? 'Техникийн тодорхойлолт & Бараа' : 'Tech Specs & BoQ'}</span>
@@ -1365,11 +1365,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('results')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === 'results'
-                ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
-            }`}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+ activeTab === 'results'
+ ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
+ }`}
           >
             <Trophy className="h-4 w-4 shrink-0" />
             <span className="truncate">{locale === 'zh' ? '中标结果与投标商' : locale === 'mn' ? 'Үр дүн & Оролцогчид' : 'Results & Bidders'}</span>
@@ -1386,11 +1386,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === 'history'
-                ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
-            }`}
+            className={`flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+ activeTab === 'history'
+ ? 'bg-white dark:bg-slate-800 text-blue-700 dark:text-blue-400 shadow-xs border border-slate-200/70 dark:border-slate-700 font-bold'
+ : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50'
+ }`}
           >
             <Briefcase className="h-4 w-4 shrink-0" />
             <span className="truncate">{locale === 'zh' ? '历史同类项目' : locale === 'mn' ? 'Холбоотой' : 'Similar & Related'}</span>
@@ -1401,26 +1401,26 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('china')}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === 'china'
-                ? locale === 'zh'
-                  ? 'bg-red-700 text-white shadow-xs font-bold'
-                  : 'bg-indigo-700 text-white shadow-xs font-bold'
-                : locale === 'zh'
-                  ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50 bg-red-50/70 dark:bg-red-950/40 border border-red-200/60 dark:border-red-900/60'
-                  : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/60'
-            }`}
+            className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-md text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+ activeTab === 'china'
+ ? locale === 'zh'
+ ? 'bg-red-700 text-white shadow-xs font-bold'
+ : 'bg-indigo-700 text-white shadow-xs font-bold'
+ : locale === 'zh'
+ ? 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50 bg-red-50/70 dark:bg-red-950/40 border border-red-200/60 dark:border-red-900/60'
+ : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-800/50 bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-900/60'
+ }`}
           >
-            <span>{locale === 'zh' ? '🇨🇳' : '🌐'}</span>
+            <span>{locale === 'zh' ? '' : ''}</span>
             <span className="truncate">
               {locale === 'zh' ? '中企投标指南' : locale === 'mn' ? 'Гадаад ААН-ийн заавар' : 'Foreign Bidder Guide'}
             </span>
             {chinaAnalysis && (
               <span className={`hidden xl:inline-block px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${
-                activeTab === 'china'
-                  ? locale === 'zh' ? 'bg-red-800 text-white' : 'bg-indigo-800 text-white'
-                  : locale === 'zh' ? 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300' : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300'
-              }`}>
+ activeTab === 'china'
+ ? locale === 'zh' ? 'bg-red-800 text-white' : 'bg-indigo-800 text-white'
+ : locale === 'zh' ? 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300' : 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-800 dark:text-indigo-300'
+ }`}>
                 {locale === 'zh'
                   ? (chinaAnalysis.eligibilityStatus === 'direct_allowed' ? '独立投标' : chinaAnalysis.eligibilityStatus === 'joint_venture_required' ? '需联合体' : '仅限本土')
                   : locale === 'mn'
@@ -1433,7 +1433,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         </div>
 
         {/* Tab Content Container */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-xs">
+        <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 p-5 sm:p-6 shadow-xs">
           
           {/* TAB 1: I БҮЛЭГ: ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ) */}
           {activeTab === 'bds' && (
@@ -1460,13 +1460,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* Highlight Banner: Extracted Items Table */}
               {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-white dark:from-blue-950/40 dark:via-slate-900 dark:to-slate-900 border border-blue-200 dark:border-blue-900/60 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                <div className=" bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-md p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-10 w-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                    <div className="h-10 w-10 rounded-md bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
                       <Layers className="h-5 w-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                      <h4 className="text-sm font-semibold text-slate-900 dark:text-white">
                         ТШЗ PDF-ээс ялгасан бараа, ажлын хүснэгт ({technicalSpecs.sampleItems.length} нэр төрөл)
                       </h4>
                       <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
@@ -1485,11 +1485,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
 
               {/* 🎯 Interactive BDS Eligibility Self-Assessment Widget */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 dark:from-indigo-950/30 dark:via-slate-900 dark:to-slate-900 border border-indigo-200 dark:border-indigo-900/60 space-y-4 shadow-xs">
+              <div className="p-4 sm:p-5 rounded-lg bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/60 space-y-4 shadow-xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
-                      ⚖️
+                    <div className="h-8 w-8 rounded-md bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                      
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">
@@ -1502,10 +1502,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   </div>
                   {eligibilityVerdict && (
                     <span className={`px-3 py-1 rounded-lg text-xs font-bold shadow-2xs border self-start sm:self-auto ${
-                      eligibilityVerdict.status === 'pass'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
-                        : 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
-                    }`}>
+ eligibilityVerdict.status === 'pass'
+ ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
+ : 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+ }`}>
                       {eligibilityVerdict.title}
                     </span>
                   )}
@@ -1527,10 +1527,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           <label
                             key={idx}
                             className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all select-none ${
-                              isChecked
-                                ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300'
-                                : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
-                            }`}
+ isChecked
+ ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300'
+ : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
+ }`}
                           >
                             <input
                               type="checkbox"
@@ -1565,7 +1565,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       Шаардагдах доод босго: <strong className="text-slate-800 dark:text-slate-200 font-mono">₮{parsedTurnoverReqMnt.toLocaleString()}</strong>
                       {userTurnoverNum > 0 && (
                         <span className={`ml-2 font-bold ${userTurnoverNum >= parsedTurnoverReqMnt ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                          {userTurnoverNum >= parsedTurnoverReqMnt ? '✓ Хангаж байна' : '✗ Хүрэхгүй байна'}
+                          {userTurnoverNum >= parsedTurnoverReqMnt ? 'Хангаж байна' : 'Хүрэхгүй байна'}
                         </span>
                       )}
                     </div>
@@ -1575,19 +1575,19 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 {/* Verdict description if available */}
                 {eligibilityVerdict && (
                   <div className={`p-3 rounded-lg border text-xs leading-relaxed ${
-                    eligibilityVerdict.status === 'pass'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
-                      : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
-                  }`}>
+ eligibilityVerdict.status === 'pass'
+ ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300'
+ : 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-300'
+ }`}>
                     {eligibilityVerdict.desc}
                   </div>
                 )}
               </div>
 
               {/* 1. Тусгай зөвшөөрөл */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <span>1. Шаардагдах тусгай зөвшөөрөл & Эрхийн бичиг</span>
                   </h4>
@@ -1610,8 +1610,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* 2. Санхүүгийн шалгуур үзүүлэлт */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>2. Санхүүгийн чадавхын босго шаардлага</span>
                 </h4>
@@ -1656,9 +1656,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* 3. Түлхүүр боловсон хүчин */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <span>3. Түлхүүр боловсон хүчний шаардлага</span>
                   </h4>
@@ -1691,8 +1691,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* 4. Машин механизм, техник тоног төхөөрөмж */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>4. Шаардагдах машин механизм, тоног төхөөрөмж</span>
                 </h4>
@@ -1713,8 +1713,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* 5. Хуулийн ерөнхий нөхцөлүүд */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>5. Хугацаа ба Үнэлгээний жин</span>
                 </h4>
@@ -1766,10 +1766,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   : technicalSpecs.sampleItems;
 
                 return (
-                  <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-2xs bg-white dark:bg-slate-900">
+                  <div className="border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden shadow-2xs bg-white dark:bg-slate-900">
                     <div className="p-3.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                           <Layers className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
                           <span>Нийлүүлэх бараа, гүйцэтгэх ажлын нарийвчилсан үзүүлэлт ({technicalSpecs.sampleItems.length})</span>
                         </span>
@@ -1796,10 +1796,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         <button
                           onClick={() => setIsEstimatorMode(!isEstimatorMode)}
                           className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer shadow-2xs ${
-                            isEstimatorMode
-                              ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-500/20 font-bold'
-                              : 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/60 hover:bg-indigo-50 dark:hover:bg-slate-700'
-                          }`}
+ isEstimatorMode
+ ? 'bg-indigo-600 text-white border-indigo-600 font-bold'
+ : 'bg-white dark:bg-slate-800 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/60 hover:bg-indigo-50 dark:hover:bg-slate-700'
+ }`}
                           title="Үнийн санал бодох горим"
                         >
                           <Calculator className="h-3.5 w-3.5" />
@@ -1821,7 +1821,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       <div className="p-3 bg-indigo-50/80 dark:bg-indigo-950/40 border-b border-indigo-100 dark:border-indigo-900/60 flex flex-wrap items-center justify-between gap-2.5 text-xs">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-bold text-indigo-900 dark:text-indigo-200 flex items-center gap-1 text-[11px]">
-                            <span>⚡ Төсвөөр жигд хуваарилах:</span>
+                            <span>Төсвөөр жигд хуваарилах:</span>
                           </span>
                           <div className="flex items-center gap-1.5">
                             <button
@@ -1856,7 +1856,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
                     <div className="overflow-x-auto max-h-[600px] overflow-y-auto bg-white dark:bg-slate-900">
                       <table className="w-full text-left border-collapse text-xs">
-                        <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+                        <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 font-bold text-[11px] sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
                           <tr>
                             <th className="py-2.5 px-3 w-12 text-center">№</th>
                             <th className="py-2.5 px-3 min-w-[200px]">Бараа / Ажлын нэр</th>
@@ -1928,17 +1928,17 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
                     {/* Estimator Mode Bottom Summary Bar */}
                     {isEstimatorMode && (
-                      <div className="p-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-3 border-t border-slate-800">
+                      <div className="p-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 border-t border-slate-800">
                         <div className="flex items-center gap-4 flex-wrap">
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Нийт санал болгох дүн:</span>
-                            <span className="text-base sm:text-lg font-black font-mono text-emerald-400">
+                            <span className="text-[10px] font-bold text-slate-400 block ">Нийт санал болгох дүн:</span>
+                            <span className="text-base sm:text-lg font-semibold font-mono text-emerald-400">
                               ₮ {totalEstimatedBid.toLocaleString()}
                             </span>
                           </div>
                           {budgetMnt > 0 && totalEstimatedBid > 0 && (
                             <div className="border-l border-slate-700 pl-4">
-                              <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Төсөвтэй харьцуулахад:</span>
+                              <span className="text-[10px] font-bold text-slate-400 block ">Төсөвтэй харьцуулахад:</span>
                               <span className={`text-xs sm:text-sm font-bold font-mono ${budgetDiff <= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                                 {budgetDiffPercent > 0 ? '+' : ''}{budgetDiffPercent.toFixed(1)}% ({budgetDiff <= 0 ? 'Хэмнэлттэй' : 'Төсөв давсан'})
                               </span>
@@ -1960,7 +1960,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 1. Хэрэв хүснэгт задлагдаагүй бол PDF үзэх уриалга карт */}
               {(!technicalSpecs.sampleItems || technicalSpecs.sampleItems.length === 0) && (
-                <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-5 bg-white dark:bg-slate-900 text-center space-y-3 shadow-2xs">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-md p-5 bg-white dark:bg-slate-900 text-center space-y-3 shadow-2xs">
                   <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto">
                     <FileSpreadsheet className="h-5 w-5" />
                   </div>
@@ -1984,7 +1984,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-2xs transition-colors cursor-pointer"
                     >
                       <BookOpen className="h-4 w-4" />
-                      <span>📖 ТШЗ PDF Уншигчаар үзэх</span>
+                      <span>ТШЗ PDF Уншигчаар үзэх</span>
                     </button>
                   )}
                 </div>
@@ -1992,11 +1992,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 1b. БАРАА НИЙЛҮҮЛЭЛТИЙН АЛБАН ЁСНЫ ХУВААРЬ (DELIVERY SCHEDULE) */}
               {technicalSpecs.deliverySchedule && technicalSpecs.deliverySchedule.length > 0 && (
-                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                   <div className="bg-slate-50 dark:bg-slate-800/70 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 ">
                         Бараа нийлүүлэлтийн албан ёсны хуваарь & Тоо хэмжээ
                       </h4>
                     </div>
@@ -2048,11 +2048,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 1c. ГЭРЭЭНИЙ ТУСГАЙ НӨХЦӨЛ (ГТН / SPECIAL CONDITIONS OF CONTRACT) */}
               {technicalSpecs.specialConditions && technicalSpecs.specialConditions.length > 0 ? (
-                <div className="border border-blue-200 dark:border-blue-900/60 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs space-y-0">
-                  <div className="bg-gradient-to-r from-blue-50/90 to-slate-50 dark:from-slate-800 dark:to-slate-900 px-4 py-3 border-b border-blue-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
+                <div className="border border-blue-200 dark:border-blue-900/60 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow-2xs space-y-0">
+                  <div className=" bg-blue-50/90 dark:bg-slate-800 px-4 py-3 border-b border-blue-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-blue-700 dark:text-blue-400" />
-                      <h4 className="text-xs font-bold text-blue-950 dark:text-white uppercase tracking-wide">
+                      <h4 className="text-xs font-bold text-blue-950 dark:text-white ">
                         Гэрээний тусгай нөхцөл (ТШББ V Бүлэг — Албан ёсны заалтууд)
                       </h4>
                     </div>
@@ -2077,7 +2077,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   </div>
                 </div>
               ) : (
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300">
+                <div className="p-4 rounded-md bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 flex items-start gap-3 text-xs text-slate-600 dark:text-slate-300">
                   <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold text-slate-900 dark:text-white block mb-0.5">Гэрээний нөхцөл ба зохицуулалт:</span>
@@ -2090,17 +2090,17 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 2. Delivery Conditions & Payment Terms */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                <div className="p-4 rounded-md bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">Нийлүүлэх / Гүйцэтгэх газар:</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white block">{technicalSpecs.deliveryLocation || '—'}</span>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                <div className="p-4 rounded-md bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">Нийлүүлэлтийн хугацаа:</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white block">
                     {technicalSpecs.deliveryPeriodText || (technicalSpecs.deliveryPeriodDays != null ? `Гэрээ байгуулснаас хойш ${technicalSpecs.deliveryPeriodDays} хоног` : '—')}
                   </span>
                 </div>
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+                <div className="p-4 rounded-md bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400 text-xs block mb-1">Баталгаат хугацаа:</span>
                   <span className="text-xs font-bold text-slate-900 dark:text-white block">
                     {technicalSpecs.warrantyText || (technicalSpecs.warrantyMonths != null ? `${technicalSpecs.warrantyMonths} сар` : '—')}
@@ -2109,8 +2109,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* 3. Төлбөрийн нөхцөл & Алдангийн заалт */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>Төлбөрийн нөхцөл ба Алдангийн заалт</span>
                 </h4>
@@ -2142,8 +2142,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>
 
               {/* 4. Standards */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Чанарын шаардлага ба стандартууд</h4>
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-2.5">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">Чанарын шаардлага ба стандартууд</h4>
                 <div className="space-y-2 pt-1">
                   {technicalSpecs.standards.map((std: string, idx: number) => (
                     <div key={idx} className="flex items-start gap-2 text-xs text-slate-700 dark:text-slate-300">
@@ -2156,10 +2156,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 5. ШААРДАГДАХ БАРИМТ БИЧГИЙН ХЯНАЛТЫН ХУУДАС (CHECKLIST) */}
               {technicalSpecs.submissionChecklist && technicalSpecs.submissionChecklist.length > 0 && (
-                <div className="border border-blue-200 dark:border-blue-900/60 rounded-xl p-4 bg-blue-50/40 dark:bg-blue-950/20 space-y-3">
+                <div className="border border-blue-200 dark:border-blue-900/60 rounded-md p-4 bg-blue-50/40 dark:bg-blue-950/20 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-blue-950 dark:text-white flex items-center gap-1.5">
+                      <h4 className="text-xs font-bold text-blue-950 dark:text-white flex items-center gap-1.5">
                         <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         <span>Тендерт оролцоход бүрдүүлэх баримт бичгийн хяналтын хуудас (Checklist)</span>
                       </h4>
@@ -2177,15 +2177,15 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           key={item.id}
                           onClick={() => toggleChecklistItem(item.id)}
                           className={`p-3 rounded-lg border transition-all cursor-pointer flex items-start justify-between gap-3 ${
-                            isChecked
-                              ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200'
-                              : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 text-slate-800 dark:text-slate-200'
-                          }`}
+ isChecked
+ ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200'
+ : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 text-slate-800 dark:text-slate-200'
+ }`}
                         >
                           <div className="flex items-start gap-2.5">
                             <div className={`mt-0.5 h-4 w-4 rounded flex items-center justify-center border transition-colors ${
-                              isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
-                            }`}>
+ isChecked ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+ }`}>
                               {isChecked && <Check className="h-3 w-3" />}
                             </div>
                             <div>
@@ -2209,11 +2209,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* Live Extracted Technical Specifications from PDF */}
               {(technicalSpecs.realSpecsText || technicalSpecs.extractedSpecs?.rawSpecText) && (
-                <div className="border border-blue-200 dark:border-blue-900/60 rounded-xl p-5 bg-gradient-to-br from-blue-50/50 via-white to-white dark:from-blue-950/30 dark:via-slate-900 dark:to-slate-900 shadow-2xs space-y-4">
+                <div className="border border-blue-200 dark:border-blue-900/60 rounded-md p-5 bg-blue-50/50 dark:bg-blue-950/30 shadow-2xs space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-100 dark:border-blue-900/60 pb-3">
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 animate-pulse" />
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-blue-950 dark:text-white flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-blue-600 dark:bg-blue-400 " />
+                      <h4 className="text-xs font-bold text-blue-950 dark:text-white flex items-center gap-1.5">
                         <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         <span>Албан ёсны ТШББ PDF-ээс автоматаар задлан шинжилсэн бодит үзүүлэлтүүд</span>
                       </h4>
@@ -2228,7 +2228,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   {/* Extracted Qualifications if present */}
                   {technicalSpecs.extractedQualifications && technicalSpecs.extractedQualifications.length > 0 && (
                     <div className="space-y-2">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide block">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
                         Оролцогчийн чадавхын тухайлсан бодит шаардлагууд (ТШӨХ-ээс):
                       </span>
                       <div className="grid grid-cols-1 gap-2">
@@ -2245,7 +2245,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   {/* Raw Extracted Specifications block */}
                   <div className="space-y-2 pt-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide block">
+                      <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">
                         III Бүлэг: Бараа материалын техникийн нарийвчилсан үзүүлэлт & Ажлын даалгавар:
                       </span>
                       <button
@@ -2265,7 +2265,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         <span>{aiAnalyzingTarget === 'spec-table' ? 'AI хүснэгтлэж байна...' : 'AI-аар хүснэгтлэх'}</span>
                       </button>
                     </div>
-                    <div className="p-4 bg-slate-900 text-slate-100 rounded-xl font-mono text-xs leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap selection:bg-blue-500 selection:text-white border border-slate-800">
+                    <div className="p-4 bg-slate-900 text-slate-100 rounded-md font-mono text-xs leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap selection:bg-blue-500 selection:text-white border border-slate-800">
                       {technicalSpecs.realSpecsText || technicalSpecs.extractedSpecs?.rawSpecText}
                     </div>
                   </div>
@@ -2273,10 +2273,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
 
               {/* 6. Official Documents & Tender Specs */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+              <div className="border border-slate-200 dark:border-slate-800 rounded-md p-4 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       Албан ёсны баримт бичгүүд & ТШББ (PDF / Excel)
                     </h4>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
@@ -2324,7 +2324,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     } as Record<string, string>)[String(doc.extractionStatus || 'not_extracted')] || 'Текст хараахан боловсруулаагүй';
 
                     return (
-                      <div key={idx} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/90 transition-colors overflow-hidden">
+                      <div key={idx} className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/60 hover:bg-slate-100/80 dark:hover:bg-slate-800/90 transition-colors overflow-hidden">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 gap-3">
                           <div className="flex items-start sm:items-center gap-3">
                             <FileText className="h-5 w-5 text-red-500 shrink-0 mt-0.5 sm:mt-0" />
@@ -2333,7 +2333,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                 <span className="text-xs font-bold text-slate-900 dark:text-white block">{doc.name}</span>
                                 {isStoredCdn && (
                                   <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                    ⚡ CDN Шууд татах
+                                    CDN Шууд татах
                                   </span>
                                 )}
                                 {doc.source === 'manual_upload' && (
@@ -2397,10 +2397,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               )}
                               disabled={aiAnalyzing}
                               className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-md border transition-all cursor-pointer ${
-                                aiAnalyzingTarget === `doc-${doc.id || idx}`
-                                   ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50 cursor-wait'
-                                   : 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 shadow-2xs'
-                              }`}
+ aiAnalyzingTarget === `doc-${doc.id || idx}`
+ ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50 cursor-wait'
+ : 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/60 shadow-2xs'
+ }`}
                             >
                               {aiAnalyzingTarget === `doc-${doc.id || idx}` ? (
                                 <>
@@ -2422,14 +2422,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                 rel="noopener noreferrer"
                                 download={doc.name || 'tender.pdf'}
                                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors shadow-2xs ${
-                                  isStoredCdn
-                                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                                }`}
+ isStoredCdn
+ ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+ : 'bg-blue-600 text-white hover:bg-blue-700'
+ }`}
                                 title={isStoredCdn ? 'Supabase CDN-ээс шууд татах' : doc.source === 'manual_upload' ? 'Оруулсан PDF-г татах' : 'Албан ёсны эх баримтыг шууд татах'}
                               >
                                 <Download className="h-3.5 w-3.5" />
-                                <span>{isStoredCdn ? '⚡ ТШЗ PDF татах' : doc.source === 'manual_upload' ? 'PDF татах' : 'Эх файлыг татах'}</span>
+                                <span>{isStoredCdn ? 'ТШЗ PDF татах' : doc.source === 'manual_upload' ? 'PDF татах' : 'Эх файлыг татах'}</span>
                               </a>
                             ) : (
                               <a
@@ -2448,7 +2448,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
                         {/* Inline loading or completion notice for this document */}
                         {aiAnalyzingTarget === `doc-${doc.id || idx}` && (
-                          <div className="px-3.5 pb-2.5 pt-1 text-[11px] text-amber-800 dark:text-amber-200 font-semibold flex items-center justify-between gap-2 bg-amber-50/70 dark:bg-amber-950/40 border-t border-amber-200 dark:border-amber-800 animate-pulse">
+                          <div className="px-3.5 pb-2.5 pt-1 text-[11px] text-amber-800 dark:text-amber-200 font-semibold flex items-center justify-between gap-2 bg-amber-50/70 dark:bg-amber-950/40 border-t border-amber-200 dark:border-amber-800 ">
                             <span className="flex items-center gap-1.5">
                               <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
                               <span>Дээр байрлах AI Шинжээчийн самбарт тайлан боловсруулж байна...</span>
@@ -2457,7 +2457,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               onClick={() => aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
                               className="text-amber-900 dark:text-amber-300 underline font-bold cursor-pointer hover:text-amber-950"
                             >
-                              Дээр очих ↗
+                              Дээр очих 
                             </button>
                           </div>
                         )}
@@ -2472,7 +2472,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               onClick={() => aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                               className="text-blue-700 dark:text-blue-300 underline font-bold cursor-pointer hover:text-blue-900"
                             >
-                              Дээр үзэх ↗
+                              Дээр үзэх 
                             </button>
                           </div>
                         )}
@@ -2491,7 +2491,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                     onClick={() => handleRunAiAnalysis(`"${doc.name}" баримтын энэхүү агуулгаас техникийн гол шаардлага болон нийлүүлэлтийн нөхцөлийг тайлбарлана уу:\n\n${doc.extractedSummary}`, `doc-${doc.id || idx}`, `Дүн шинжилгээ: ${doc.name}`)}
                                     className="text-amber-400 hover:text-amber-300 font-medium underline flex items-center gap-1 cursor-pointer"
                                   >
-                                    AI-аар лавшруулан асуух ↗
+                                    AI-аар лавшруулан асуух 
                                   </button>
                                 </div>
                                 <div className="text-slate-200 text-xs font-mono whitespace-pre-wrap max-h-96 overflow-y-auto pr-2">
@@ -2545,9 +2545,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* Real Sub-Tenders Table (Тендерийн багцууд) */}
               {subTenders && subTenders.length > 0 && (
-                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                   <div className="p-3.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-wrap gap-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                       <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                       <span>Тендерийн багцууд & Албан ёсны төлөв ({subTenders.length})</span>
                     </h4>
@@ -2557,7 +2557,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-slate-50/50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                      <thead className="bg-slate-50/50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[10px]">
                         <tr>
                           <th className="py-2.5 px-3 w-10 text-center">№</th>
                           <th className="py-2.5 px-3">Багцын нэр</th>
@@ -2581,12 +2581,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               </td>
                               <td className="py-3 px-3 text-center whitespace-nowrap">
                                 <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                                  isStFailed
-                                    ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
-                                    : isStSuccess
-                                    ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                                    : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-                                }`}>
+ isStFailed
+ ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+ : isStSuccess
+ ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+ : 'bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+ }`}>
                                   {st.wfmStatusName || 'Бүртгэлтэй'}
                                 </span>
                               </td>
@@ -2609,21 +2609,21 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     <div className="space-y-4">
                       {/* Winner Highlight Banner */}
                       {results.winner && (
-                        <div className="p-4 sm:p-5 rounded-xl bg-gradient-to-r from-emerald-50 via-teal-50/70 to-emerald-50 dark:from-emerald-950/40 dark:via-slate-900 dark:to-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+                        <div className="p-4 sm:p-5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
                           <div className="flex items-start sm:items-center gap-3.5">
-                            <div className="h-11 w-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xl">
+                            <div className="h-11 w-11 rounded-md bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs font-bold text-xl">
                               <Trophy className="h-6 w-6 text-white" />
                             </div>
                             <div>
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[11px] font-bold text-emerald-950 dark:text-emerald-300 uppercase tracking-wide">
+                                <span className="text-[11px] font-bold text-emerald-950 dark:text-emerald-300 ">
                                   Шалгарсан гүйцэтгэгч / Нийлүүлэгч
                                 </span>
                                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600 text-white">
                                   Шалгарсан
                                 </span>
                               </div>
-                              <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
+                              <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white mt-0.5">
                                 {results.winner.supplierName} {results.winner.registerNumber ? `(РД: ${results.winner.registerNumber})` : ''}
                               </h3>
                               {results.winner.commentText && (
@@ -2634,8 +2634,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             </div>
                           </div>
                           <div className="sm:text-right shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-emerald-200 dark:border-emerald-800">
-                            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Гэрээ байгуулах үнэ</span>
-                            <span className="text-lg sm:text-xl font-black font-mono text-emerald-700 dark:text-emerald-400 block">
+                            <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 block">Гэрээ байгуулах үнэ</span>
+                            <span className="text-lg sm:text-xl font-semibold font-mono text-emerald-700 dark:text-emerald-400 block">
                               {formatCurrency(results.winner.discountedAmount || results.winner.openedBidderPrice)}
                             </span>
                             {results.winner.fileId && (
@@ -2653,9 +2653,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       )}
 
                       {/* Bidders Table */}
-                      <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                      <div className="border border-slate-200 dark:border-slate-800 rounded-md overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
                         <div className="p-3.5 bg-slate-50 dark:bg-slate-800/70 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                             <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                             <span>Тендерт оролцсон бүх оролцогчдын санал ба Үнэлгээний хорооны шийдвэр ({results.bidders.length})</span>
                           </h4>
@@ -2665,7 +2665,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         </div>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-xs">
-                            <thead className="bg-slate-50/50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                            <thead className="bg-slate-50/50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-semibold text-[10px]">
                               <tr>
                                 <th className="py-2.5 px-3 w-10 text-center">№</th>
                                 <th className="py-2.5 px-3">Оролцогч байгууллага</th>
@@ -2696,10 +2696,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                                     </td>
                                     <td className="py-3 px-3 text-center whitespace-nowrap">
                                       <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                                        isWinner
-                                          ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
-                                          : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
-                                      }`}>
+ isWinner
+ ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
+ : 'bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+ }`}>
                                         {bidder.wfmStatusName}
                                       </span>
                                     </td>
@@ -2733,7 +2733,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
                   {/* Concluded Official Notice Card - Conditional for Failed vs Success */}
                   {isFailed ? (
-                    <div className="bg-gradient-to-r from-slate-50 via-rose-50/30 to-slate-100 dark:from-slate-900 dark:via-rose-950/20 dark:to-slate-900 border border-slate-300/80 dark:border-slate-800 rounded-xl p-6 shadow-2xs space-y-4">
+                    <div className=" bg-slate-50 dark:bg-slate-900 border border-slate-300/80 dark:border-slate-800 rounded-md p-6 shadow-2xs space-y-4">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-sm">
                           <AlertTriangle className="h-5 w-5 text-rose-500" />
@@ -2788,10 +2788,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           )}
                           disabled={aiAnalyzing}
                           className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                            aiAnalyzingTarget === 'results-ai'
-                              ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50'
-                              : 'bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-slate-700 shadow-2xs'
-                          }`}
+ aiAnalyzingTarget === 'results-ai'
+ ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50'
+ : 'bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-slate-700 shadow-2xs'
+ }`}
                         >
                           {aiAnalyzingTarget === 'results-ai' ? (
                             <>
@@ -2808,7 +2808,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-gradient-to-r from-amber-50/80 to-blue-50/60 dark:from-amber-950/20 dark:to-blue-950/20 border border-amber-300/80 dark:border-amber-700/60 rounded-xl p-6 shadow-2xs space-y-4">
+                    <div className=" bg-amber-50/80 dark:bg-amber-950/20 border border-amber-300/80 dark:border-amber-700/60 rounded-md p-6 shadow-2xs space-y-4">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2 font-bold text-amber-950 dark:text-amber-200 text-sm">
                           <Trophy className="h-5 w-5 text-amber-600 dark:text-amber-400" />
@@ -2864,10 +2864,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           )}
                           disabled={aiAnalyzing}
                           className={`inline-flex items-center gap-1.5 px-3.5 py-2.5 text-xs font-semibold rounded-lg border transition-all cursor-pointer ${
-                            aiAnalyzingTarget === 'results-ai'
-                              ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50'
-                              : 'bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-slate-700 shadow-2xs'
-                          }`}
+ aiAnalyzingTarget === 'results-ai'
+ ? 'bg-amber-100 text-amber-900 border-amber-400 ring-2 ring-amber-400/50'
+ : 'bg-white dark:bg-slate-800 text-amber-900 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-slate-700 shadow-2xs'
+ }`}
                         >
                           {aiAnalyzingTarget === 'results-ai' ? (
                             <>
@@ -2886,7 +2886,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   )}
                 </div>
               ) : (
-                <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center space-y-3">
+                <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-md p-8 text-center space-y-3">
                   <Clock className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto" />
                   <h4 className="text-sm font-bold text-slate-900 dark:text-white">Шалгаруулалт одоогоор идэвхтэй явагдаж байна</h4>
                   <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
@@ -2923,7 +2923,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* Related by Entity */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                   <Building2 className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                   <span>Тус захиалагчийн бусад тендерүүд ({(relatedByEntity || []).length})</span>
                 </h4>
@@ -2933,7 +2933,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     {(relatedByEntity || []).map((r: any) => (
                       <div
                         key={r.invitationId}
-                        className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-700 transition-colors flex flex-col justify-between space-y-2 shadow-2xs"
+                        className="p-3.5 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-700 transition-colors flex flex-col justify-between space-y-2 shadow-2xs"
                       >
                         <div>
                           <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1 font-mono">
@@ -2969,7 +2969,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               {/* Similar category tenders */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Layers className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <span>Салбарын ижил төстэй & Зөвлөмж болгох тендерүүд ({(similarTenders || []).length})</span>
                   </h4>
@@ -2981,7 +2981,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 {(similarTenders || []).length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {(similarTenders || []).map((s: any) => (
-                      <div key={s.invitationId} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-subtle transition-all flex flex-col justify-between space-y-3 shadow-2xs">
+                      <div key={s.invitationId} className="p-4 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-subtle transition-all flex flex-col justify-between space-y-3 shadow-2xs">
                         <div>
                           <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-1.5 font-mono">
                             <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded text-[10px] font-semibold">{s.tenderCode}</span>
@@ -3037,7 +3037,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
                 <div>
                   <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <span className="text-xl">{locale === 'zh' ? '🇨🇳' : '🌐'}</span>
+                    <span className="text-xl">{locale === 'zh' ? '' : ''}</span>
                     <span>
                       {locale === 'zh'
                         ? '中国企业与中资机构投标决策指南'
@@ -3056,8 +3056,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1.5 shrink-0 ${
-                    locale === 'zh' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200'
-                  }`}>
+ locale === 'zh' ? 'bg-red-50 text-red-800 border-red-200' : 'bg-slate-100 text-slate-700 border-slate-200'
+ }`}>
                     <span>
                       {locale === 'zh'
                         ? '北京时间 / 乌兰巴托 (UTC+8 无时差)'
@@ -3071,42 +3071,42 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 2. Key Verdict Box */}
               {chinaAnalysis && (
-                <div className={`p-5 rounded-2xl border ${
-                  chinaAnalysis.eligibilityStatus === 'direct_allowed'
-                    ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
-                    : chinaAnalysis.eligibilityStatus === 'joint_venture_required'
-                      ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800'
-                      : 'bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700'
-                }`}>
+                <div className={`p-5 rounded-lg border ${
+ chinaAnalysis.eligibilityStatus === 'direct_allowed'
+ ? 'bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800'
+ : chinaAnalysis.eligibilityStatus === 'joint_venture_required'
+ ? 'bg-amber-50/80 dark:bg-amber-950/30 border-amber-300 dark:border-amber-800'
+ : 'bg-slate-50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700'
+ }`}>
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                          chinaAnalysis.eligibilityStatus === 'direct_allowed'
-                            ? 'bg-emerald-600 text-white'
-                            : chinaAnalysis.eligibilityStatus === 'joint_venture_required'
-                              ? 'bg-amber-600 text-white'
-                              : 'bg-slate-700 text-white'
-                        }`}>
+ chinaAnalysis.eligibilityStatus === 'direct_allowed'
+ ? 'bg-emerald-600 text-white'
+ : chinaAnalysis.eligibilityStatus === 'joint_venture_required'
+ ? 'bg-amber-600 text-white'
+ : 'bg-slate-700 text-white'
+ }`}>
                           {locale === 'zh' ? (
                             <>
-                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '✓ 允许独立投标 (Direct Allowed)'}
-                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '⚠ 需组建联合体 (Joint Venture Required)'}
-                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && '✕ 仅限蒙古国本土企业 (Domestic Only)'}
+                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '允许独立投标 (Direct Allowed)'}
+                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '需组建联合体 (Joint Venture Required)'}
+                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && '仅限蒙古国本土企业 (Domestic Only)'}
                               {chinaAnalysis.eligibilityStatus === 'conditional' && 'ℹ 有条件参与 (Conditional)'}
                             </>
                           ) : locale === 'mn' ? (
                             <>
-                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '✓ Шууд оролцох боломжтой (Direct Allowed)'}
-                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '⚠ Түншлэл / JV шаардлагатай (Joint Venture Required)'}
-                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && '✕ Зөвхөн дотоодын ААН (Domestic Only)'}
+                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && 'Шууд оролцох боломжтой (Direct Allowed)'}
+                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && 'Түншлэл / JV шаардлагатай (Joint Venture Required)'}
+                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && 'Зөвхөн дотоодын ААН (Domestic Only)'}
                               {chinaAnalysis.eligibilityStatus === 'conditional' && 'ℹ Нөхцөлтэй оролцох (Conditional)'}
                             </>
                           ) : (
                             <>
-                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && '✓ Direct Bidding Allowed'}
-                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && '⚠ Joint Venture Required'}
-                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && '✕ Domestic Bidders Only'}
+                              {chinaAnalysis.eligibilityStatus === 'direct_allowed' && 'Direct Bidding Allowed'}
+                              {chinaAnalysis.eligibilityStatus === 'joint_venture_required' && 'Joint Venture Required'}
+                              {chinaAnalysis.eligibilityStatus === 'domestic_only' && 'Domestic Bidders Only'}
                               {chinaAnalysis.eligibilityStatus === 'conditional' && 'ℹ Conditional Participation'}
                             </>
                           )}
@@ -3129,8 +3129,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       )}
                     </div>
                     {locale === 'zh' && Boolean((chinaAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
-                      <div className="bg-white/90 dark:bg-slate-900/90 p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-700 shadow-2xs shrink-0 sm:text-right min-w-[170px]">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">折合人民币预算</span>
+                      <div className="bg-white/90 dark:bg-slate-900/90 p-3.5 rounded-md border border-slate-200/80 dark:border-slate-700 shadow-2xs shrink-0 sm:text-right min-w-[170px]">
+                        <span className="text-[10px] font-bold text-slate-400 block">折合人民币预算</span>
                         <span className="text-lg sm:text-xl font-bold font-mono text-slate-900 dark:text-white block text-red-600 dark:text-red-400">
                           ~¥{chinaAnalysis.estimatedBudgetRMB! >= 10000 
                             ? (chinaAnalysis.estimatedBudgetRMB! / 10000).toFixed(1) + ' 万元' 
@@ -3163,7 +3163,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 2b. Itemized BoQ & Delivery Snapshot for Foreign / China Bidders */}
               {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
-                <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-3.5">
+                <div className="p-5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-3.5">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
                     <div className="flex items-center gap-2">
                       <Package className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -3184,7 +3184,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-xs border-collapse">
                       <thead>
-                        <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider bg-slate-50/70 dark:bg-slate-800/50">
+                        <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-50/70 dark:bg-slate-800/50">
                           <th className="py-2 px-3 w-10 text-center">№</th>
                           <th className="py-2 px-3 min-w-[180px]">{locale === 'zh' ? '标的物名称' : 'Барааны нэр'}</th>
                           <th className="py-2 px-3 w-28 text-center">{locale === 'zh' ? '采购数量' : 'Тоо хэмжээ'}</th>
@@ -3239,7 +3239,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               {/* 3. Detailed Guidance Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* A. Bank Guarantee & Financing */}
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
+                <div className="p-4 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
@@ -3284,7 +3284,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </div>
 
                 {/* B. Qualification & Licenses */}
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
+                <div className="p-4 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
                   <div className="flex items-center gap-2">
                     <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
@@ -3328,7 +3328,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </div>
 
                 {/* C. Joint Venture & Partner Strategy */}
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
+                <div className="p-4 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
@@ -3370,7 +3370,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </div>
 
                 {/* D. Procurement Logistics & Clearance */}
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
+                <div className="p-4 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 shadow-2xs space-y-3">
                   <div className="flex items-center gap-2">
                     <Package className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
@@ -3416,7 +3416,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
               {/* 4. Extracted Goods & Specifications Preview */}
               {technicalSpecs.sampleItems && technicalSpecs.sampleItems.length > 0 && (
-                <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
+                <div className="p-4 rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xs space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <FileSpreadsheet className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -3472,15 +3472,15 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
 
               {/* 5. Chinese / Foreign AI Tender Analyst Quick Prompts */}
-              <div className={`p-5 rounded-2xl border shadow-xs space-y-3 ${
-                locale === 'zh'
-                  ? 'bg-gradient-to-r from-red-50 via-amber-50 to-slate-50 dark:from-red-950/20 dark:via-amber-950/20 dark:to-slate-900 border-red-200 dark:border-red-900/60'
-                  : 'bg-gradient-to-r from-indigo-50 via-blue-50 to-slate-50 dark:from-indigo-950/20 dark:via-blue-950/20 dark:to-slate-900 border-indigo-200 dark:border-indigo-900/60'
-              }`}>
+              <div className={`p-5 rounded-lg border shadow-xs space-y-3 ${
+ locale === 'zh'
+ ? ' bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/60'
+ : ' bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/60'
+ }`}>
                 <div className="flex items-center gap-2">
                   <div className={`h-8 w-8 rounded-lg text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-2xs ${
-                    locale === 'zh' ? 'bg-red-600' : 'bg-indigo-600'
-                  }`}>
+ locale === 'zh' ? 'bg-red-600' : 'bg-indigo-600'
+ }`}>
                     <Sparkles className="h-4 w-4" />
                   </div>
                   <div>
@@ -3513,7 +3513,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-800 dark:text-slate-200 hover:text-red-700 dark:hover:text-red-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>📋 中国企业所需公证材料与业绩清单？</span>
+                        <span>中国企业所需公证材料与业绩清单？</span>
                       </button>
 
                       <button
@@ -3525,7 +3525,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-800 dark:text-slate-200 hover:text-red-700 dark:hover:text-red-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>💰 投标保函金额与国内银行开函路径？</span>
+                        <span>投标保函金额与国内银行开函路径？</span>
                       </button>
 
                       <button
@@ -3537,7 +3537,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-800 dark:text-slate-200 hover:text-red-700 dark:hover:text-red-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>🤝 联合体协议书公证与当地伙伴分工策略？</span>
+                        <span>联合体协议书公证与当地伙伴分工策略？</span>
                       </button>
 
                       <button
@@ -3549,7 +3549,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-red-50 dark:hover:bg-red-950/40 text-slate-800 dark:text-slate-200 hover:text-red-700 dark:hover:text-red-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>🔍 技术规格解析与中国产品适配性？</span>
+                        <span>技术规格解析与中国产品适配性？</span>
                       </button>
                     </>
                   ) : locale === 'mn' ? (
@@ -3563,7 +3563,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>📋 Гадаадын / Хятад ААН-ийн бүрдүүлэх бичиг баримтын жагсаалт?</span>
+                        <span>Гадаадын / Хятад ААН-ийн бүрдүүлэх бичиг баримтын жагсаалт?</span>
                       </button>
 
                       <button
@@ -3575,7 +3575,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>💰 Тендерийн баталгааны дүн ба банкны сувгууд?</span>
+                        <span>Тендерийн баталгааны дүн ба банкны сувгууд?</span>
                       </button>
 
                       <button
@@ -3587,7 +3587,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>🤝 Түншлэлийн гэрээ (JV) байгуулах ба үүрэг хуваарилалт?</span>
+                        <span>Түншлэлийн гэрээ (JV) байгуулах ба үүрэг хуваарилалт?</span>
                       </button>
 
                       <button
@@ -3599,7 +3599,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>🔍 Техникийн тодорхойлолт ба чанарын стандарт?</span>
+                        <span>Техникийн тодорхойлолт ба чанарын стандарт?</span>
                       </button>
                     </>
                   ) : (
@@ -3613,7 +3613,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>📋 Foreign bidder dossier & apostille checklist?</span>
+                        <span>Foreign bidder dossier & apostille checklist?</span>
                       </button>
 
                       <button
@@ -3625,7 +3625,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>💰 Bid security amount & guarantee channels?</span>
+                        <span>Bid security amount & guarantee channels?</span>
                       </button>
 
                       <button
@@ -3637,7 +3637,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>🤝 Joint Venture agreement & partner allocation?</span>
+                        <span>Joint Venture agreement & partner allocation?</span>
                       </button>
 
                       <button
@@ -3649,7 +3649,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         disabled={aiAnalyzing}
                         className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all border flex items-center gap-1.5 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 text-slate-800 dark:text-slate-200 hover:text-indigo-700 dark:hover:text-indigo-400 border-slate-200 dark:border-slate-700 shadow-2xs cursor-pointer"
                       >
-                        <span>🔍 Technical specifications & standards compliance?</span>
+                        <span>Technical specifications & standards compliance?</span>
                       </button>
                     </>
                   )}
@@ -3662,8 +3662,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
       {/* DOCUMENT PREVIEW & EXTRACTION MODAL */}
       {docModalOpen && selectedDoc && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800">
+        <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-md shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800">
             {/* Modal Header */}
             <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-850">
               <div className="flex items-center gap-2.5 min-w-0">
@@ -3695,12 +3695,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   <span className="font-semibold">Боловсруулалтын төлөв:</span>
                   <span>{selectedDoc.extractionStatus || 'not_extracted'}</span>
                 </div>
-                <span className="font-mono text-[10px] text-blue-700 dark:text-blue-300 font-semibold uppercase">{selectedDoc.type}</span>
+                <span className="font-mono text-[10px] text-blue-700 dark:text-blue-300 font-semibold ">{selectedDoc.type}</span>
               </div>
 
               {/* Extracted Structured View */}
               <div className="space-y-1.5">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 block">
                   Эх баримтаас уншсан текст
                 </span>
                 <div className="p-4 rounded-lg bg-slate-900 text-slate-100 font-sans text-xs leading-relaxed border border-slate-800 shadow-inner select-text">
@@ -3786,8 +3786,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
       {/* Modal for Instant Document Text Preview */}
       {previewModalDoc && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-lg max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden">
             <div className="px-5 py-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -3843,13 +3843,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setTimeout(() => chatInputRef.current?.focus(), 250);
         }}
-        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-800 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all flex items-center gap-2.5 text-xs sm:text-sm font-bold cursor-pointer ring-2 ring-white/80 hover:scale-105 active:scale-95 group"
+        className="fixed bottom-6 right-6 z-40 bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-full shadow-sm hover:shadow-xl transition-all flex items-center gap-2.5 text-xs sm:text-sm font-bold cursor-pointer ring-2 ring-white/80 active:scale-95 group"
         title="Тендерийн AI Шинжээчээс асуух"
       >
         <Sparkles className="h-4 w-4 text-amber-200 group-hover:rotate-12 transition-transform" />
         <span>AI Шинжээчээс асуух</span>
         {aiMessages.length > 0 && (
-          <span className="h-5 min-w-[20px] px-1.5 rounded-full bg-white text-amber-800 text-[11px] font-black flex items-center justify-center shadow-xs">
+          <span className="h-5 min-w-[20px] px-1.5 rounded-full bg-white text-amber-800 text-[11px] font-semibold flex items-center justify-center shadow-xs">
             {aiMessages.length}
           </span>
         )}

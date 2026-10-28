@@ -14,7 +14,7 @@ export function TenderSkeleton({ viewMode, count = 6 }: TenderSkeletonProps) {
         {Array.from({ length: count }).map((_, i) => (
           <div
             key={i}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-5 space-y-4 shadow-2xs"
+            className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/80 dark:border-slate-800 p-5 space-y-4 shadow-2xs"
           >
             {/* Header badges */}
             <div className="flex items-center justify-between gap-2">
@@ -52,8 +52,8 @@ export function TenderSkeleton({ viewMode, count = 6 }: TenderSkeletonProps) {
 
               {/* Action buttons */}
               <div className="flex items-center gap-2 pt-1">
-                <div className="h-8 w-20 bg-slate-100 dark:bg-slate-800 rounded-xl" />
-                <div className="h-8 flex-1 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+                <div className="h-8 w-20 bg-slate-100 dark:bg-slate-800 rounded-md" />
+                <div className="h-8 flex-1 bg-slate-200 dark:bg-slate-700 rounded-md" />
               </div>
             </div>
           </div>
@@ -63,7 +63,7 @@ export function TenderSkeleton({ viewMode, count = 6 }: TenderSkeletonProps) {
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs animate-pulse">
+    <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200/90 dark:border-slate-800 overflow-hidden shadow-2xs animate-pulse">
       <div className="h-10 bg-slate-50/80 dark:bg-slate-800/80 border-b border-slate-200/80 dark:border-slate-700 px-4 flex items-center gap-4">
         <div className="h-3.5 w-20 bg-slate-200 dark:bg-slate-700 rounded" />
         <div className="h-3.5 w-40 bg-slate-200 dark:bg-slate-700 rounded hidden sm:block" />

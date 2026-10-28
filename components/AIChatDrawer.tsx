@@ -155,52 +155,52 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
       elements.push(
         <div
           key={`table-${elements.length}`}
-          className="my-3 overflow-x-auto rounded-lg border border-slate-200 shadow-2xs"
-        >
-          <table className="min-w-full divide-y divide-slate-200 text-xs">
-            <thead className={isUser ? 'bg-blue-800/80 text-white' : 'bg-slate-100 text-slate-900 font-bold'}>
-              <tr>
-                {headerRow.map((cell, cIdx) => (
-                  <th key={cIdx} className="px-3 py-2 text-left font-bold">
-                    {renderInline(cell, isUser)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 bg-white">
-              {bodyRows.map((row, rIdx) => (
-                <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
-                  {row.map((cell, cIdx) => (
-                    <td key={cIdx} className="px-3 py-2 text-slate-800">
-                      {renderInline(cell, isUser)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
-    }
-    inTable = false;
-    tableRows = [];
-  };
+ className="my-3 overflow-x-auto rounded-lg border border-slate-200 shadow-2xs"
+ >
+ <table className="min-w-full divide-y divide-slate-200 text-xs">
+ <thead className={isUser ? 'bg-blue-800/80 text-white' : 'bg-slate-100 text-slate-900 font-bold'}>
+ <tr>
+ {headerRow.map((cell, cIdx) => (
+ <th key={cIdx} className="px-3 py-2 text-left font-bold">
+ {renderInline(cell, isUser)}
+ </th>
+ ))}
+ </tr>
+ </thead>
+ <tbody className="divide-y divide-slate-100 bg-white">
+ {bodyRows.map((row, rIdx) => (
+ <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+ {row.map((cell, cIdx) => (
+ <td key={cIdx} className="px-3 py-2 text-slate-800">
+ {renderInline(cell, isUser)}
+ </td>
+ ))}
+ </tr>
+ ))}
+ </tbody>
+ </table>
+ </div>
+ );
+ }
+ inTable = false;
+ tableRows = [];
+ };
 
-  for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i];
-    const trimmed = rawLine.trim();
+ for (let i = 0; i < lines.length; i++) {
+ const rawLine = lines[i];
+ const trimmed = rawLine.trim();
 
-    // Code block toggle
-    if (trimmed.startsWith('```')) {
-      flushList();
-      flushTable();
-      if (inCodeBlock) {
-        elements.push(
-          <pre
-            key={`code-${i}`}
-            className="p-3 my-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs overflow-x-auto border border-slate-800"
-          >
-            <code>{codeBlockLines.join('\n')}</code>
+ // Code block toggle
+ if (trimmed.startsWith('```')) {
+ flushList();
+ flushTable();
+ if (inCodeBlock) {
+ elements.push(
+ <pre
+ key={`code-${i}`}
+ className="p-3 my-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs overflow-x-auto border border-slate-800"
+ >
+ <code>{codeBlockLines.join('\n')}</code>
           </pre>
         );
         codeBlockLines = [];
@@ -218,81 +218,81 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
 
     // Markdown Table row
     const isTableRow = trimmed.startsWith('|') && trimmed.endsWith('|') && trimmed.length > 2;
-    if (isTableRow) {
-      flushList();
-      if (!inTable) {
-        inTable = true;
-        tableRows = [];
-      }
-      tableRows.push(trimmed);
-      continue;
-    } else if (inTable) {
-      flushTable();
-    }
+ if (isTableRow) {
+ flushList();
+ if (!inTable) {
+ inTable = true;
+ tableRows = [];
+ }
+ tableRows.push(trimmed);
+ continue;
+ } else if (inTable) {
+ flushTable();
+ }
 
-    // Horizontal divider (e.g. ***, ---, ___)
-    if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed)) {
-      flushList();
-      flushTable();
-      elements.push(
-        <hr
-          key={`hr-${i}`}
-          className={`my-3 border-t ${isUser ? 'border-blue-400' : 'border-slate-200'}`}
-        />
-      );
-      continue;
-    }
+ // Horizontal divider (e.g. ***, ---, ___)
+ if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed)) {
+ flushList();
+ flushTable();
+ elements.push(
+ <hr
+ key={`hr-${i}`}
+ className={`my-3 border-t ${isUser ? 'border-blue-400' : 'border-slate-200'}`}
+ />
+ );
+ continue;
+ }
 
-    // Markdown Headers: #, ##, ###, ####
-    const hMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
-    if (hMatch) {
-      flushList();
-      flushTable();
-      const level = hMatch[1].length;
-      const hText = hMatch[2];
+ // Markdown Headers: #, ##, ###, ####
+ const hMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
+ if (hMatch) {
+ flushList();
+ flushTable();
+ const level = hMatch[1].length;
+ const hText = hMatch[2];
 
-      if (level === 1) {
-        elements.push(
-          <div
-            key={`h-${i}`}
-            className={`text-base font-black tracking-tight mt-4 mb-2 pb-1 border-b flex items-center gap-2 ${
-              isUser ? 'text-white border-blue-400' : 'text-slate-900 border-slate-200'
-            }`}
-          >
-            {renderInline(hText, isUser)}
-          </div>
-        );
-      } else if (level === 2) {
-        elements.push(
-          <div
-            key={`h-${i}`}
-            className={`text-sm sm:text-base font-bold tracking-tight mt-3.5 mb-1.5 flex items-center gap-1.5 ${
-              isUser ? 'text-white' : 'text-slate-900 font-extrabold'
-            }`}
-          >
-            {renderInline(hText, isUser)}
-          </div>
-        );
-      } else if (level === 3) {
-        elements.push(
-          <div
-            key={`h-${i}`}
-            className={`text-xs sm:text-sm font-bold mt-3 mb-1.5 px-3 py-1.5 rounded-lg border flex items-center gap-2 ${
-              isUser
-                ? 'bg-blue-700/60 border-blue-400/80 text-white'
+ if (level === 1) {
+ elements.push(
+ <div
+ key={`h-${i}`}
+ className={`text-base font-semibold tracking-tight mt-4 mb-2 pb-1 border-b flex items-center gap-2 ${
+ isUser ? 'text-white border-blue-400' : 'text-slate-900 border-slate-200'
+ }`}
+ >
+ {renderInline(hText, isUser)}
+ </div>
+ );
+ } else if (level === 2) {
+ elements.push(
+ <div
+ key={`h-${i}`}
+ className={`text-sm sm:text-base font-bold tracking-tight mt-3.5 mb-1.5 flex items-center gap-1.5 ${
+ isUser ? 'text-white' : 'text-slate-900 font-extrabold'
+ }`}
+ >
+ {renderInline(hText, isUser)}
+ </div>
+ );
+ } else if (level === 3) {
+ elements.push(
+ <div
+ key={`h-${i}`}
+ className={`text-xs sm:text-sm font-bold mt-3 mb-1.5 px-3 py-1.5 rounded-lg border flex items-center gap-2 ${
+ isUser
+ ? 'bg-blue-700/60 border-blue-400/80 text-white'
                 : 'bg-amber-50/80 border-amber-200/90 text-amber-950 shadow-2xs'
-            }`}
-          >
-            <Sparkles className="h-3.5 w-3.5 text-amber-600 shrink-0" />
-            <span>{renderInline(hText, isUser)}</span>
-          </div>
-        );
-      } else {
-        elements.push(
-          <div
-            key={`h-${i}`}
-            className={`text-xs font-bold uppercase tracking-wider mt-2.5 mb-1 ${
-              isUser ? 'text-blue-100' : 'text-slate-800'
+ }`}
+ >
+ <Sparkles className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+ <span>{renderInline(hText, isUser)}</span>
+ </div>
+ );
+ } else {
+ elements.push(
+ <div
+ key={`h-${i}`}
+ className={`text-xs font-bold mt-2.5 mb-1 ${
+ isUser ? 'text-blue-100' : 'text-slate-800'
             }`}
           >
             {renderInline(hText, isUser)}
@@ -304,13 +304,13 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
 
     // Blockquote
     if (trimmed.startsWith('> ')) {
-      flushList();
-      flushTable();
-      elements.push(
-        <blockquote
-          key={`quote-${i}`}
-          className={`border-l-3 pl-3 py-1 my-2 rounded-r-md text-xs sm:text-[13px] leading-relaxed italic ${
-            isUser ? 'border-blue-300 bg-blue-700/30 text-blue-100' : 'border-amber-500 bg-amber-50/50 text-slate-800'
+ flushList();
+ flushTable();
+ elements.push(
+ <blockquote
+ key={`quote-${i}`}
+ className={`border-l-3 pl-3 py-1 my-2 rounded-r-md text-xs sm:text-[13px] leading-relaxed italic ${
+ isUser ? 'border-blue-300 bg-blue-700/30 text-blue-100' : 'border-amber-500 bg-amber-50/50 text-slate-800'
           }`}
         >
           {renderInline(trimmed.slice(2), isUser)}
@@ -345,32 +345,32 @@ export const FormattedChatMessage: React.FC<{ text: string; isUser: boolean }> =
 
     // Empty line
     if (trimmed === '') {
-      flushList();
-      flushTable();
-      elements.push(<div key={`empty-${i}`} className="h-2" />);
-      continue;
-    }
+ flushList();
+ flushTable();
+ elements.push(<div key={`empty-${i}`} className="h-2" />);
+ continue;
+ }
 
-    // Normal paragraph line
-    flushList();
-    flushTable();
-    elements.push(
-      <p key={`p-${i}`} className={`leading-relaxed text-xs sm:text-[13px] ${isUser ? 'text-white' : 'text-slate-800'} my-1`}>
-        {renderInline(trimmed, isUser)}
-      </p>
-    );
-  }
+ // Normal paragraph line
+ flushList();
+ flushTable();
+ elements.push(
+ <p key={`p-${i}`} className={`leading-relaxed text-xs sm:text-[13px] ${isUser ? 'text-white' : 'text-slate-800'} my-1`}>
+ {renderInline(trimmed, isUser)}
+ </p>
+ );
+ }
 
-  flushList();
-  flushTable();
+ flushList();
+ flushTable();
 
-  if (inCodeBlock && codeBlockLines.length > 0) {
-    elements.push(
-      <pre
-        key="code-unclosed"
-        className="p-3 my-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs overflow-x-auto border border-slate-800"
-      >
-        <code>{codeBlockLines.join('\n')}</code>
+ if (inCodeBlock && codeBlockLines.length > 0) {
+ elements.push(
+ <pre
+ key="code-unclosed"
+ className="p-3 my-2.5 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs overflow-x-auto border border-slate-800"
+ >
+ <code>{codeBlockLines.join('\n')}</code>
       </pre>
     );
   }
@@ -392,9 +392,11 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
     {
       id: 'welcome',
       sender: 'assistant',
-      text: locale === 'mn'
+      text: locale === 'zh'
+        ? `您好！我是您的 **蒙古国政府采购与中企出海 AI 投标专家**。我已接入官方 ТШББ 招标文件数据库，支持直接用中文向蒙古语标书 PDF 提问并提取关键条款。\n\n您可以随时用中文询问：\n• *"列出目前预算最高的重点招标项目"*\n• *"额尔登特铜矿或电缆、医疗设备的最新标段"*\n• *"点击任意标段的【AI分析】，一键把蒙古语技术规格书与采购清单翻译成中文"*`
+        : locale === 'mn'
         ? `Сайн байна уу! Би тендерийн цахим системийн бүх зарлал, төсөв, шаардлагыг шинжилж туслах таны AI зөвлөх байна.\n\nТа сонирхсон тендерийнхээ нэр, салбар, төсвийн талаар чөлөөтэй асуугаарай. Жишээ нь:\n• *"Хамгийн их төсөвтэй тендерүүд юу байна?"*\n• *"Эрдэнэт үйлдвэрийн тендерүүд"*\n• *"Одоо зарлагдсан эмнэлгийн тоног төхөөрөмжийн тендер"*`
-      : `Hello! I'm your AI tender consultant, ready to help you analyze procurement bids, budgets, and requirements.\n\nFeel free to ask about any tender, agency, or sector!`,
+        : `Hello! I'm your AI tender consultant, ready to help you analyze procurement bids, attached ТШББ PDFs, budgets, and requirements.\n\nFeel free to ask about any tender, agency, or sector!`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -408,9 +410,11 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
 
   useEffect(() => {
     if (selectedTender && isOpen) {
-      const autoPrompt = initialPrompt || (locale === 'mn'
+      const autoPrompt = initialPrompt || (locale === 'zh'
+        ? `请用简体中文深度解析标段 "${selectedTender.tenderName}" (${selectedTender.tenderCode}) 的官方 ТШББ 招标文件：\n1. 翻译并列出具体采购货物/工程量清单（名称、数量、单位、核心技术参数）；\n2. 提取第二章投标人须知(BDS)中的投标保证金(ТШЗ 24.1)、营业额与财务门槛(ТШЗ 18.1)、交货期/工期及地点；\n3. 评估中国企业可否独立直投或需联合体(JV)，并给出报价与合规建议。`
+        : locale === 'mn'
         ? `"${selectedTender.tenderName}" (${selectedTender.tenderCode}) тендерийн төсөв, шаардлага, онцлогийг шинжилж, оролцогчдод зориулсан зөвлөмж өгнө үү.`
-        : `Analyze the tender "${selectedTender.tenderName}" (${selectedTender.tenderCode}), highlighting key requirements and actionable recommendations.`);
+        : `Analyze the tender "${selectedTender.tenderName}" (${selectedTender.tenderCode}), highlighting key requirements, extracted PDF specifications, and actionable recommendations.`);
       
       handleSend(autoPrompt);
     }
@@ -465,131 +469,139 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         ...prev,
         {
           id: `error-${Date.now()}`,
-          sender: 'assistant',
-          text: locale === 'mn' ? 'Сервертэй холбогдоход алдаа гарлаа.' : 'Network error connecting to AI engine.',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+ sender: 'assistant',
+ text: locale === 'mn' ? 'Сервертэй холбогдоход алдаа гарлаа.' : 'Network error connecting to AI engine.',
+ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+ },
+ ]);
+ } finally {
+ setIsLoading(false);
+ }
+ };
 
-  const clearChat = () => {
-    setMessages([
-      {
-        id: 'welcome',
-        sender: 'assistant',
-        text: locale === 'mn' ? 'Харилцан яриа цэвэрлэгдлээ. Та асуултаа бичнэ үү.' : 'Chat cleared. How can I help you?',
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      },
-    ]);
-  };
+ const clearChat = () => {
+ setMessages([
+ {
+ id: 'welcome',
+ sender: 'assistant',
+ text: locale === 'mn' ? 'Харилцан яриа цэвэрлэгдлээ. Та асуултаа бичнэ үү.' : 'Chat cleared. How can I help you?',
+ timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+ },
+ ]);
+ };
 
-  if (!isOpen) return null;
+ if (!isOpen) return null;
 
-  return (
-    <>
-      {/* Dimmed Backdrop */}
-      <div
-        onClick={onClose}
-        className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
-      />
+ return (
+ <>
+ {/* Dimmed Backdrop */}
+ <div
+ onClick={onClose}
+ className="fixed inset-0 z-50 bg-slate-950/60 transition-opacity animate-in fade-in duration-200"
+ />
 
-      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 text-slate-900 dark:text-slate-100">
-        {/* Header */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 bg-white dark:bg-slate-950">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="h-8 w-8 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/40 shrink-0">
-              <Sparkles className="h-4 w-4" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                {locale === 'mn' ? 'Тендерийн AI Шинжээч' : 'AI Tender Analyst'}
-              </h3>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                {locale === 'mn' ? 'Худалдан авалтын зөвлөх туслах' : 'Procurement intelligence assistant'}
-              </p>
-            </div>
-          </div>
+ <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 text-slate-900 dark:text-slate-100">
+ {/* Header */}
+ <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 bg-white dark:bg-slate-950">
+ <div className="flex items-center gap-2 min-w-0">
+ <div className="h-8 w-8 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900/40 shrink-0">
+ <Sparkles className="h-4 w-4" />
+ </div>
+ <div className="min-w-0">
+ <h3 className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+ {locale === 'zh' ? '蒙古国标书 AI 专家 (支持中文问PDF)' : locale === 'mn' ? 'Тендерийн AI Шинжээч' : 'AI Tender & PDF Analyst'}
+ </h3>
+ <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+ {locale === 'zh' ? '实时解析官方蒙文 ТШББ 标书 • 中企合规评估' : locale === 'mn' ? 'Худалдан авалтын зөвлөх туслах' : ' Official ТШББ PDF & procurement intelligence'}
+ </p>
+ </div>
+ </div>
 
-          <div className="flex items-center gap-1 shrink-0">
-            <button
-              onClick={clearChat}
-              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Цэвэрлэх"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title="Хаах"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+ <div className="flex items-center gap-1 shrink-0">
+ <button
+ onClick={clearChat}
+ className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+ title="Цэвэрлэх"
+ >
+ <Trash2 className="h-4 w-4" />
+ </button>
+ <button
+ onClick={onClose}
+ className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+ title="Хаах"
+ >
+ <X className="h-5 w-5" />
+ </button>
+ </div>
+ </div>
 
-        {/* Model Selector Bar */}
-        <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
-          <span className="text-slate-500 dark:text-slate-400 text-[11px] shrink-0">
-            {locale === 'mn' ? 'AI Загвар:' : 'Model:'}
-          </span>
-          <select
-            value={selectedModel}
-            onChange={(e) => setSelectedModel(e.target.value)}
-            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
-          >
-            <option value="google/gemma-4-26b-a4b-it:free">Google Gemma 4 26B (free - Хурдан, Монгол хэл)</option>
-            <option value="nvidia/nemotron-3.5-lightning:free">NVIDIA Nemotron 3.5 Lightning (free)</option>
-            <option value="openrouter/free">Автомат сонголт (openrouter/free)</option>
-          </select>
-        </div>
+ {/* Model Selector Bar */}
+ <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+ <span className="text-slate-500 dark:text-slate-400 text-[11px] shrink-0">
+ {locale === 'mn' ? 'AI Загвар:' : 'Model:'}
+ </span>
+ <select
+ value={selectedModel}
+ onChange={(e) => setSelectedModel(e.target.value)}
+ className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-slate-900 dark:focus:border-slate-500 w-full max-w-[240px] sm:max-w-[340px] truncate cursor-pointer shadow-2xs font-medium"
+ >
+ <option value="google/gemma-4-26b-a4b-it:free">
+ {locale === 'zh' ? 'Google Gemma 4 26B (极速中蒙双语标书解析)' : 'Google Gemma 4 26B (Хурдан, Монгол/Хятад хэл)'}
+ </option>
+ <option value="google/gemma-4-31b-it:free">
+ {locale === 'zh' ? 'Google Gemma 4 31B (深度长文档推理)' : 'Google Gemma 4 31B (Гүнзгий шинжилгээ)'}
+ </option>
+ <option value="nvidia/nemotron-3-ultra-550b-a55b:free">
+ {locale === 'zh' ? 'NVIDIA Nemotron 3 Ultra 550B' : 'NVIDIA Nemotron 3 Ultra 550B'}
+ </option>
+ </select>
+ </div>
 
-      {/* Selected tender banner */}
-      {selectedTender && (
-        <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2 truncate text-slate-700 dark:text-slate-300 min-w-0">
-            <Tag className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-            <div className="truncate flex items-center gap-1.5">
-              <span className="text-slate-400 dark:text-slate-500 mr-1 font-medium shrink-0">Сонгосон:</span>
-              <span className="font-semibold text-slate-900 dark:text-white truncate">
-                {selectedTender.tenderName}
-              </span>
-              {Boolean((selectedTender as any).raw_data?.pdfUrl || (selectedTender as any).rawData?.pdfUrl || (selectedTender as any).hasStoredPdf) && (
-                <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 flex items-center gap-1 shrink-0">
-                  <FileText className="h-3 w-3 text-purple-500" />
-                  <span>📄 ТШЗ PDF холбогдсон</span>
-                </span>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={`/tender/${selectedTender.invitationId}`}
-              className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 transition-colors"
-            >
-              <span>Дэлгэрэнгүй</span>
-              <ExternalLink className="h-3 w-3" />
-            </Link>
-            <button
-              onClick={onClearSelectedTender}
-              className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-0.5 transition-colors cursor-pointer"
-              title="Сонголтыг арилгах"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
+ {/* Selected tender banner */}
+ {selectedTender && (
+ <div className="px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs">
+ <div className="flex items-center gap-2 truncate text-slate-700 dark:text-slate-300 min-w-0">
+ <Tag className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+ <div className="truncate flex items-center gap-1.5">
+ <span className="text-slate-400 dark:text-slate-500 mr-1 font-medium shrink-0">
+ {locale === 'zh' ? '当前标段:' : locale === 'mn' ? 'Сонгосон:' : 'Selected:'}
+ </span>
+ <span className="font-semibold text-slate-900 dark:text-white truncate">
+ {selectedTender.tenderName}
+ </span>
+ {Boolean((selectedTender as any).raw_data?.pdfUrl || (selectedTender as any).rawData?.pdfUrl || (selectedTender as any).hasStoredPdf) && (
+ <span className="text-[10px] font-bold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-1.5 py-0.5 rounded border border-purple-200 dark:border-purple-800 flex items-center gap-1 shrink-0">
+ <FileText className="h-3 w-3 text-purple-500" />
+ <span>{locale === 'zh' ? '已挂载官方PDF' : locale === 'mn' ? 'ТШЗ PDF холбогдсон' : 'PDF Attached'}</span>
+ </span>
+ )}
+ </div>
+ </div>
+ <div className="flex items-center gap-2 shrink-0">
+ <Link
+ href={`/tender/${selectedTender.invitationId}`}
+ className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 px-2 py-0.5 rounded shadow-2xs flex items-center gap-1 transition-colors"
+ >
+ <span>Дэлгэрэнгүй</span>
+ <ExternalLink className="h-3 w-3" />
+ </Link>
+ <button
+ onClick={onClearSelectedTender}
+ className="text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-0.5 transition-colors cursor-pointer"
+ title="Сонголтыг арилгах"
+ >
+ <X className="h-3.5 w-3.5" />
+ </button>
+ </div>
+ </div>
+ )}
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex items-start gap-2.5 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
+ {/* Messages */}
+ <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+ {messages.map((msg) => (
+ <div
+ key={msg.id}
+ className={`flex items-start gap-2.5 ${msg.sender === 'user' ? 'flex-row-reverse' : ''}`}
           >
             <div
               className={`h-7 w-7 rounded-md flex items-center justify-center shrink-0 text-xs ${
@@ -634,28 +646,44 @@ export const AIChatDrawer: React.FC<AIChatDrawerProps> = ({
         {selectedTender ? (
           <>
             <button
-              onClick={() => handleSend('Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.')}
-              className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
+              onClick={() => handleSend(
+                locale === 'zh'
+                  ? '请把这份标书第三章（III БҮЛЭГ）的采购货物/工程量清单、数量单位、技术参数要求以及交货期完整翻译成中文表格。'
+                  : 'Энэ тендерийн III бүлгийн бараа/ажлын тоо хэмжээний жагсаалт болон техникийн гол үзүүлэлтүүдийг Хятад/Монгол хэлээр дэлгэрэнгүй гаргаж өгнө үү.'
+              )}
+              className="h-7 px-2.5 rounded-full bg-rose-600 text-white border border-rose-500 hover:bg-rose-500 transition-colors shrink-0 shadow-2xs font-bold cursor-pointer"
             >
-              Нийлүүлэлтийн хуваарь?
+              {locale === 'zh' ? '一键中文精译采购清单与技术规格' : 'Хятад/Монгол техникийн задаргаа'}
             </button>
             <button
-              onClick={() => handleSend('Гэрээний тусгай нөхцөл (ГТН)-д заасан алданги, төлбөрийн нөхцөл, хүлээлцэх нөхцөлүүд ямар байна вэ?')}
+              onClick={() => handleSend(
+                locale === 'zh'
+                  ? '请提取该标书的交货时间表、最终交货期、交货地点（ТШЗ 17.3 / III БҮЛЭГ）以及质保要求。'
+                  : 'Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.'
+              )}
               className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
-              Тусгай нөхцөл & Алданги?
+              {locale === 'zh' ? '交货期与交货地点?' : 'Нийлүүлэлтийн хуваарь?'}
             </button>
             <button
-              onClick={() => handleSend('Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?')}
+              onClick={() => handleSend(
+                locale === 'zh'
+                  ? '请告诉我这份标书的投标保证金金额、有效期（ТШЗ 24.1），以及中国企业如何开立银行投标保函？'
+                  : 'Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?'
+              )}
               className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
-              Тендерийн баталгаа?
+              {locale === 'zh' ? '投标保证金与银行保函?' : 'Тендерийн баталгаа?'}
             </button>
             <button
-              onClick={() => handleSend('Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?')}
+              onClick={() => handleSend(
+                locale === 'zh'
+                  ? '请分析第二章（ТШЗ 18.1）对营业额、流动资金、同类业绩及特种资质的要求，中国企业能否独立直投？有哪些废标风险点？'
+                  : 'Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?'
+              )}
               className="h-7 px-2.5 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors shrink-0 shadow-2xs font-medium cursor-pointer"
             >
-              Өрсөлдөхөд анхаарах эрсдэл?
+              {locale === 'zh' ? '资质门槛与废标风险?' : 'Өрсөлдөхөд анхаарах эрсдэл?'}
             </button>
             {(selectedTender.docStatusName?.includes('Амжилтгүй') || selectedTender.docStatusCode === 'TENDER_FAILED') && (
               <button

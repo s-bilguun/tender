@@ -56,7 +56,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     : 1;
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 mb-4 shadow-2xs space-y-5">
+    <div className="bg-white border border-slate-200 rounded-md p-5 mb-4 shadow-2xs space-y-5">
       <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <BarChart2 className="h-4 w-4 text-blue-600" />
@@ -69,7 +69,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
       {/* Top 3 KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
+        <div className="p-3.5 rounded-md bg-slate-50/80 border border-slate-200/80">
           <span className="text-xs text-slate-500 font-medium block mb-1">
             {locale === 'mn' ? 'Нийт бүртгэгдсэн төсөв' : 'Total Tracked Budget'}
           </span>
@@ -83,7 +83,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
+        <div className="p-3.5 rounded-md bg-slate-50/80 border border-slate-200/80">
           <span className="text-xs text-slate-500 font-medium block mb-1">
             {locale === 'mn' ? 'Идэвхтэй нээлттэй тендер' : 'Active Live Bids'}
           </span>
@@ -96,7 +96,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </span>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/80">
+        <div className="p-3.5 rounded-md bg-slate-50/80 border border-slate-200/80">
           <span className="text-xs text-slate-500 font-medium block mb-1">
             {locale === 'mn' ? 'Дундаж төсөвт өртөг' : 'Average Tender Budget'}
           </span>
@@ -113,7 +113,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
         {/* Category Breakdown */}
-        <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+        <div className="p-4 rounded-md bg-slate-50/80 border border-slate-200/80 space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-slate-900 flex items-center gap-1.5">
               <PieChart className="h-3.5 w-3.5 text-blue-600" />
@@ -180,7 +180,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* Top Spending Entities with relative progress bars */}
-        <div className="p-4 rounded-xl bg-slate-50/80 border border-slate-200/80 space-y-3">
+        <div className="p-4 rounded-md bg-slate-50/80 border border-slate-200/80 space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-slate-900 flex items-center gap-1.5">
               <Landmark className="h-3.5 w-3.5 text-blue-600" />

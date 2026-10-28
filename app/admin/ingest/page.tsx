@@ -245,7 +245,7 @@ export default function AdminIngestPage() {
     <div className="min-h-screen bg-slate-50/90 text-slate-900 pb-16 font-sans">
       
       {/* 1. Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs backdrop-blur-sm bg-white/95">
+      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
@@ -257,10 +257,10 @@ export default function AdminIngestPage() {
             </Link>
             <span className="text-slate-300">|</span>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-slate-900 text-sm sm:text-base">
+              <span className="font-semibold text-slate-900 text-sm sm:text-base">
                 TENDER<span className="text-blue-600">HUB</span>
               </span>
-              <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-bold tracking-wider uppercase">
+              <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[10px] font-bold ">
                 PDF Analytics & Winner Discovery
               </span>
             </div>
@@ -268,7 +268,7 @@ export default function AdminIngestPage() {
 
           <div className="flex items-center gap-3">
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-emerald-500 " />
               <span>AI Ingest & Winner Matcher Active</span>
             </div>
             <Link
@@ -285,15 +285,15 @@ export default function AdminIngestPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
         
         {/* 2. Visual Value Proposition Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-indigo-950 rounded-2xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div className=" bg-slate-900 rounded-lg p-6 text-white shadow-xl relative overflow-hidden">
           <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
           
           <div className="relative z-10 max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/15 text-amber-300 text-xs font-semibold backdrop-blur-md mb-3 border border-amber-400/20">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-400/15 text-amber-300 text-xs font-semibold mb-3 border border-amber-400/20">
               <Trophy className="h-3.5 w-3.5" />
               <span>Төстэй тендерүүд & Ялагч нийлүүлэгчдийг илрүүлэгч</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white mb-2">
               Өөрийн PDF тендерээ уншуулаад, өмнөх ялагчид & үнийн дүнг шууд хар
             </h1>
             <p className="text-sm text-slate-300 leading-relaxed">
@@ -303,17 +303,17 @@ export default function AdminIngestPage() {
         </div>
 
         {/* 3. Ingestion Methods Hub */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-lg border border-slate-200/90 shadow-sm overflow-hidden">
           {/* Tabs */}
           <div className="px-6 pt-4 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveTab('upload')}
                 className={`pb-3 px-3 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'upload'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-900'
-                }`}
+ activeTab === 'upload'
+ ? 'border-blue-600 text-blue-600'
+ : 'border-transparent text-slate-500 hover:text-slate-900'
+ }`}
               >
                 <Upload className="h-4 w-4" />
                 <span>PDF Файл(ууд) хуулах</span>
@@ -321,10 +321,10 @@ export default function AdminIngestPage() {
               <button
                 onClick={() => setActiveTab('urls')}
                 className={`pb-3 px-3 text-xs sm:text-sm font-semibold border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
-                  activeTab === 'urls'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-900'
-                }`}
+ activeTab === 'urls'
+ ? 'border-blue-600 text-blue-600'
+ : 'border-transparent text-slate-500 hover:text-slate-900'
+ }`}
               >
                 <Globe className="h-4 w-4" />
                 <span>Олон PDF URL оруулах</span>
@@ -347,13 +347,13 @@ export default function AdminIngestPage() {
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all ${
-                  dragActive
-                    ? 'border-blue-500 bg-blue-50/70 scale-[0.99]'
-                    : 'border-slate-300 hover:border-blue-400 bg-slate-50/60'
-                }`}
+                className={`border-2 border-dashed rounded-lg p-10 text-center transition-all ${
+ dragActive
+ ? 'border-blue-500 bg-blue-50/70 scale-[0.99]'
+ : 'border-slate-300 hover:border-blue-400 bg-slate-50/60'
+ }`}
               >
-                <div className="h-14 w-14 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4 shadow-2xs">
+                <div className="h-14 w-14 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center mx-auto mb-4 shadow-2xs">
                   <Upload className="h-7 w-7" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900 mb-1">
@@ -363,7 +363,7 @@ export default function AdminIngestPage() {
                   Тендерийн өгөгдөл, шалгуурууд, төстэй түүхэн тендерүүд болон ялагчдыг шууд харах боломжтой.
                 </p>
 
-                <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl inline-flex items-center gap-2 text-xs shadow-md transition-all active:scale-95">
+                <label className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-md inline-flex items-center gap-2 text-xs shadow-md transition-all active:scale-95">
                   <FileText className="h-4 w-4" />
                   <span>Компьютерээс PDF сонгох</span>
                   <input
@@ -390,7 +390,7 @@ export default function AdminIngestPage() {
                     value={urlsInput}
                     onChange={(e) => setUrlsInput(e.target.value)}
                     placeholder="https://tender.gov.mn/documents/2024-tender-01.pdf&#10;https://tender.gov.mn/documents/2024-tender-02.pdf"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-900 font-mono focus:bg-white focus:border-blue-600 focus:outline-none transition-all shadow-2xs"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-md p-3.5 text-xs text-slate-900 font-mono focus:bg-white focus:border-blue-600 focus:outline-none transition-all shadow-2xs"
                   />
                 </div>
 
@@ -402,7 +402,7 @@ export default function AdminIngestPage() {
                   <button
                     onClick={handleProcessUrls}
                     disabled={isProcessing}
-                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
+                    className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-md text-xs flex items-center gap-2 shadow-md cursor-pointer transition-all active:scale-95"
                   >
                     {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
                     <span>Боловсруулж эхлэх</span>
@@ -413,7 +413,7 @@ export default function AdminIngestPage() {
 
             {/* Ingestion Batch Progress Bar */}
             {isProcessing && (
-              <div className="mt-5 p-4 rounded-xl bg-blue-50 border border-blue-200 space-y-2">
+              <div className="mt-5 p-4 rounded-md bg-blue-50 border border-blue-200 space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold text-blue-900">
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
@@ -436,11 +436,11 @@ export default function AdminIngestPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Processed Items History List (5 cols) */}
-          <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
+          <div className="lg:col-span-5 bg-white rounded-lg border border-slate-200/90 shadow-2xs overflow-hidden flex flex-col">
             <div className="p-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <FileCheck2 className="h-4 w-4 text-slate-600" />
-                <span className="font-bold text-xs text-slate-800 uppercase tracking-wider">
+                <span className="font-bold text-xs text-slate-800 ">
                   Шинжилсэн баримтууд ({logs.length})
                 </span>
               </div>
@@ -471,10 +471,10 @@ export default function AdminIngestPage() {
                       key={log.id}
                       onClick={() => setSelectedLog(log)}
                       className={`p-4 transition-all cursor-pointer flex items-start gap-3.5 ${
-                        isSelected
-                          ? 'bg-blue-50/80 border-l-4 border-blue-600'
-                          : 'hover:bg-slate-50/90'
-                      }`}
+ isSelected
+ ? 'bg-blue-50/80 border-l-4 border-blue-600'
+ : 'hover:bg-slate-50/90'
+ }`}
                     >
                       {/* Status Icon */}
                       {log.status === 'loading' && (
@@ -534,7 +534,7 @@ export default function AdminIngestPage() {
           </div>
 
           {/* Detailed Inspector Panel with Winners & Competitors (7 cols) */}
-          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200/90 shadow-2xs p-5 flex flex-col">
+          <div className="lg:col-span-7 bg-white rounded-lg border border-slate-200/90 shadow-2xs p-5 flex flex-col">
             
             {/* Top Inspector Navigation Tabs */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 mb-4">
@@ -542,15 +542,15 @@ export default function AdminIngestPage() {
                 <button
                   onClick={() => setInspectorTab('winners')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    inspectorTab === 'winners'
-                      ? 'bg-amber-500 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+ inspectorTab === 'winners'
+ ? 'bg-amber-500 text-white shadow-2xs'
+ : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+ }`}
                 >
                   <Trophy className="h-3.5 w-3.5" />
                   <span>Төстэй тендер & Ялагчид</span>
                   {selectedLog?.similarTenders && selectedLog.similarTenders.length > 0 && (
-                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-extrabold ${inspectorTab === 'winners' ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-semibold ${inspectorTab === 'winners' ? 'bg-amber-700 text-white' : 'bg-slate-200 text-slate-700'}`}>
                       {selectedLog.similarTenders.length}
                     </span>
                   )}
@@ -559,10 +559,10 @@ export default function AdminIngestPage() {
                 <button
                   onClick={() => setInspectorTab('specs')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    inspectorTab === 'specs'
-                      ? 'bg-blue-600 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+ inspectorTab === 'specs'
+ ? 'bg-blue-600 text-white shadow-2xs'
+ : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+ }`}
                 >
                   <ListChecks className="h-3.5 w-3.5" />
                   <span>PDF Шаардлагууд</span>
@@ -571,10 +571,10 @@ export default function AdminIngestPage() {
                 <button
                   onClick={() => setInspectorTab('market')}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                    inspectorTab === 'market'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
+ inspectorTab === 'market'
+ ? 'bg-indigo-600 text-white shadow-2xs'
+ : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+ }`}
                 >
                   <BarChart3 className="h-3.5 w-3.5" />
                   <span>Өрсөлдөөний зах зээл</span>
@@ -597,7 +597,7 @@ export default function AdminIngestPage() {
               <div className="space-y-4 flex-1 overflow-y-auto max-h-[540px] pr-1 text-xs">
                 
                 {/* Active Tender Brief Banner */}
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start justify-between gap-3">
+                <div className="p-3.5 rounded-md bg-slate-50 border border-slate-200/80 flex items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[10px] font-mono">
@@ -635,14 +635,14 @@ export default function AdminIngestPage() {
                     </div>
 
                     {(!selectedLog.similarTenders || selectedLog.similarTenders.length === 0) ? (
-                      <div className="p-8 text-center bg-slate-50 rounded-xl border border-slate-200 text-slate-500 text-xs">
+                      <div className="p-8 text-center bg-slate-50 rounded-md border border-slate-200 text-slate-500 text-xs">
                         Энэхүү захиалагч эсвэл салбарт яг төстэй өмнөх тендер одоогоор бүртгэгдээгүй байна.
                       </div>
                     ) : (
                       selectedLog.similarTenders.map((sim, idx) => (
                         <div
                           key={idx}
-                          className="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:border-blue-300 transition-all space-y-2.5"
+                          className="p-3.5 rounded-md bg-white border border-slate-200 shadow-2xs hover:border-blue-300 transition-all space-y-2.5"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div>
@@ -679,7 +679,7 @@ export default function AdminIngestPage() {
                           {sim.winner ? (
                             <div className="p-3 rounded-lg bg-emerald-50/70 border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                               <div className="space-y-0.5">
-                                <div className="flex items-center gap-1.5 text-xs font-black text-emerald-950">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-950">
                                   <Trophy className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
                                   <span>Шалгарсан нийлүүлэгч: {sim.winner.supplierName}</span>
                                   {sim.winner.registerNumber && (
@@ -696,7 +696,7 @@ export default function AdminIngestPage() {
                               </div>
 
                               <div className="text-right shrink-0">
-                                <div className="text-xs font-extrabold text-emerald-800">
+                                <div className="text-xs font-semibold text-emerald-800">
                                   {sim.winner.winningAmount > 0 ? `${sim.winner.winningAmount.toLocaleString()} ₮` : 'Гэрээ байгуулсан'}
                                 </div>
                                 {sim.winner.discountPercent > 0 && (
@@ -722,7 +722,7 @@ export default function AdminIngestPage() {
                 {inspectorTab === 'specs' && (
                   <div className="space-y-3">
                     {/* Requirements List */}
-                    <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                    <div className="p-4 rounded-md bg-slate-50 border border-slate-200/80 space-y-2">
                       <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
                         <ListChecks className="h-4 w-4 text-blue-600" />
                         <span>Шалгуур үзүүлэлтүүд (Eligibility & Qualification Requirements):</span>
@@ -739,7 +739,7 @@ export default function AdminIngestPage() {
 
                     {/* Full Scope of Work */}
                     {selectedLog.data.full_scope_of_work && (
-                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                      <div className="p-4 rounded-md bg-slate-50 border border-slate-200/80 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
                             <FileText className="h-4 w-4 text-indigo-600" />
@@ -754,8 +754,8 @@ export default function AdminIngestPage() {
 
                     {/* Historical Comparison Notes */}
                     {(selectedLog.data.historical_comparison_flags || selectedLog.data.historical_comparison_notes) && (
-                      <div className="p-3.5 rounded-xl bg-indigo-50/60 border border-indigo-100 space-y-1">
-                        <span className="text-[10px] font-bold text-indigo-900 uppercase tracking-wider">
+                      <div className="p-3.5 rounded-md bg-indigo-50/60 border border-indigo-100 space-y-1">
+                        <span className="text-[10px] font-bold text-indigo-900 ">
                           Түүхэн харьцуулалтын тэмдэглэл (LLM Insight)
                         </span>
                         <p className="text-[11px] text-indigo-900 leading-relaxed">
@@ -767,15 +767,15 @@ export default function AdminIngestPage() {
                     {/* Metadata Badges */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Төсвийн ангилал</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">Төсвийн ангилал</span>
                         <span className="font-semibold text-slate-800 text-[11px] font-mono">{selectedLog.data.budget_category}</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Нийтэлсэн огноо</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">Нийтэлсэн огноо</span>
                         <span className="font-semibold text-slate-800 text-[11px]">{selectedLog.data.publish_date}</span>
                       </div>
                       <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Хүлээн авах эцсийн хугацаа</span>
+                        <span className="text-[10px] text-slate-400 font-bold block">Хүлээн авах эцсийн хугацаа</span>
                         <span className="font-semibold text-slate-800 text-[11px]">{selectedLog.data.deadline || `${selectedLog.data.deadline_year || ''}`}</span>
                       </div>
                     </div>
@@ -789,32 +789,32 @@ export default function AdminIngestPage() {
                       <>
                         {/* Summary Metrics */}
                         <div className="grid grid-cols-3 gap-2.5">
-                          <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-center">
-                            <span className="text-[10px] font-bold text-blue-700 uppercase block">Дундаж хөнгөлөлт</span>
-                            <span className="text-lg font-black text-blue-950">
+                          <div className="p-3 rounded-md bg-blue-50 border border-blue-200 text-center">
+                            <span className="text-[10px] font-bold text-blue-700 block">Дундаж хөнгөлөлт</span>
+                            <span className="text-lg font-semibold text-blue-950">
                               {selectedLog.marketIntelligence.avgDiscountPercent}%
                             </span>
                             <span className="text-[9px] text-blue-600 block">төсвөөс доогуур</span>
                           </div>
 
-                          <div className="p-3 rounded-xl bg-purple-50 border border-purple-200 text-center">
-                            <span className="text-[10px] font-bold text-purple-700 uppercase block">Өрсөлдөгчид</span>
-                            <span className="text-lg font-black text-purple-950">
+                          <div className="p-3 rounded-md bg-purple-50 border border-purple-200 text-center">
+                            <span className="text-[10px] font-bold text-purple-700 block">Өрсөлдөгчид</span>
+                            <span className="text-lg font-semibold text-purple-950">
                               ~{selectedLog.marketIntelligence.avgBiddersCount}
                             </span>
                             <span className="text-[9px] text-purple-600 block">оролцогч/тендер</span>
                           </div>
 
-                          <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-center">
-                            <span className="text-[10px] font-bold text-emerald-700 uppercase block">Өрсөлдөөний түвшин</span>
-                            <span className="text-xs font-black text-emerald-950 uppercase block mt-1">
+                          <div className="p-3 rounded-md bg-emerald-50 border border-emerald-200 text-center">
+                            <span className="text-[10px] font-bold text-emerald-700 block">Өрсөлдөөний түвшин</span>
+                            <span className="text-xs font-semibold text-emerald-950 block mt-1">
                               {selectedLog.marketIntelligence.estimatedCompetitionLevel === 'high' ? 'Өндөр' : selectedLog.marketIntelligence.estimatedCompetitionLevel === 'medium' ? 'Дунд' : 'Бага'}
                             </span>
                           </div>
                         </div>
 
                         {/* Top Winning Competitors */}
-                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-2">
+                        <div className="p-4 rounded-md bg-slate-50 border border-slate-200/80 space-y-2">
                           <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
                             <Users className="h-4 w-4 text-indigo-600" />
                             <span>Тус захиалагчийн шалгарч байсан топ нийлүүлэгчид:</span>
@@ -842,7 +842,7 @@ export default function AdminIngestPage() {
                         </div>
 
                         {/* Recommendation Note */}
-                        <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2">
+                        <div className="p-3 rounded-md bg-amber-50/70 border border-amber-200/80 text-[11px] text-amber-900 flex items-start gap-2">
                           <Sparkles className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                           <span><strong>Үнийн санал өгөх зөвлөмж:</strong> {selectedLog.marketIntelligence.pricingRecommendation}</span>
                         </div>
