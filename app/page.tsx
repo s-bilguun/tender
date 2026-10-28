@@ -577,8 +577,8 @@ export default function Home() {
           {/* Footer */}
           <footer className="border-t border-slate-200 dark:border-zinc-800 py-6 text-xs text-slate-500 dark:text-zinc-400 text-center">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-2">
-              <span>TenderHub MN — B2B Procurement Intelligence & Database</span>
-              <span>Албан ёсны tender.gov.mn эх сурвалжийн шууд боловсруулалт</span>
+              <span>TenderHub — {locale === 'mn' ? 'Монголын төрийн худалдан авалтын мэдээлэл' : locale === 'zh' ? '蒙古国政府采购信息' : 'Mongolian public procurement data'}</span>
+              <span>{locale === 'mn' ? 'Эх сурвалж: tender.gov.mn болон албан ёсны зарын суваг. Албан ёсны баримтыг эх сурвалжаас шалгана уу.' : locale === 'zh' ? '来源：tender.gov.mn 及官方公告频道。请以官方文件为准。' : 'Source: tender.gov.mn and its official announcement channel. Always check the official documents.'}</span>
             </div>
           </footer>
 

@@ -166,7 +166,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <button
               onClick={toggleCollapse}
               className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
-              title={isCollapsed ? 'Дэлгэх (Expand)' : 'Хураах (Collapse)'}
+              title={isCollapsed ? (locale === 'mn' ? 'Дэлгэх' : locale === 'zh' ? '展开' : 'Expand') : (locale === 'mn' ? 'Хураах' : locale === 'zh' ? '收起' : 'Collapse')}
               aria-label="Toggle sidebar collapse"
             >
               {isCollapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}

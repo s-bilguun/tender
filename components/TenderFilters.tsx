@@ -582,14 +582,14 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
               >
                 <option value="all" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? 'Бүх он' : locale === 'zh' ? '全部年份' : 'All years'}</option>
-                <option value="2026" className="dark:bg-zinc-850 dark:text-white">2026 он</option>
-                <option value="2025" className="dark:bg-zinc-850 dark:text-white">2025 он</option>
-                <option value="2024" className="dark:bg-zinc-850 dark:text-white">2024 он</option>
-                <option value="2023" className="dark:bg-zinc-850 dark:text-white">2023 он</option>
-                <option value="2022" className="dark:bg-zinc-850 dark:text-white">2022 он</option>
-                <option value="2021" className="dark:bg-zinc-850 dark:text-white">2021 он</option>
-                <option value="2020" className="dark:bg-zinc-850 dark:text-white">2020 он</option>
-                <option value="2019" className="dark:bg-zinc-850 dark:text-white">2019 он</option>
+                <option value="2026" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2026 он' : locale === 'zh' ? '2026 年' : '2026'}</option>
+                <option value="2025" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2025 он' : locale === 'zh' ? '2025 年' : '2025'}</option>
+                <option value="2024" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2024 он' : locale === 'zh' ? '2024 年' : '2024'}</option>
+                <option value="2023" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2023 он' : locale === 'zh' ? '2023 年' : '2023'}</option>
+                <option value="2022" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2022 он' : locale === 'zh' ? '2022 年' : '2022'}</option>
+                <option value="2021" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2021 он' : locale === 'zh' ? '2021 年' : '2021'}</option>
+                <option value="2020" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2020 он' : locale === 'zh' ? '2020 年' : '2020'}</option>
+                <option value="2019" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2019 он' : locale === 'zh' ? '2019 年' : '2019'}</option>
               </select>
               <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
             </div>
@@ -618,7 +618,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
  ? 'bg-blue-600 text-white font-bold'
  : 'bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700'
  }`}
-              title="Нарийвчилсан шүүлтүүр"
+              title={locale === 'mn' ? 'Нарийвчилсан шүүлтүүр' : locale === 'zh' ? '高级筛选' : 'Advanced filters'}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">{locale === 'mn' ? 'Шүүлтүүр' : locale === 'zh' ? '高级筛选' : 'Filters'}</span>

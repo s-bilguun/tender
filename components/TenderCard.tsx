@@ -51,51 +51,51 @@ export const TenderCard: React.FC<TenderCardProps> = ({
     switch (industryId) {
       case 'it':
         return { 
-          label: locale === 'zh' ? '电脑与软件IT' : 'Мэдээллийн технологи', 
+          label: locale === 'zh' ? '电脑与软件IT' : locale === 'en' ? 'IT & software' : 'Мэдээллийн технологи', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'construction':
         return { 
-          label: locale === 'zh' ? '工程建筑与机械' : 'Барилга, дэд бүтэц', 
+          label: locale === 'zh' ? '工程建筑与机械' : locale === 'en' ? 'Construction' : 'Барилга, дэд бүтэц', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'medical':
         return { 
-          label: locale === 'zh' ? '医疗器械与药品' : 'Эрүүл мэнд, эм', 
+          label: locale === 'zh' ? '医疗器械与药品' : locale === 'en' ? 'Health & medicine' : 'Эрүүл мэнд, эм', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'mining':
         return { 
-          label: locale === 'zh' ? '矿山重型设备' : 'Уул уурхай', 
+          label: locale === 'zh' ? '矿山重型设备' : locale === 'en' ? 'Mining' : 'Уул уурхай', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'food':
         return { 
-          label: locale === 'zh' ? '粮油肉类食品' : 'Хүнс, хоол', 
+          label: locale === 'zh' ? '粮油肉类食品' : locale === 'en' ? 'Food' : 'Хүнс, хоол', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'transport':
         return { 
-          label: locale === 'zh' ? '交通车辆与燃油' : 'Тээвэр, шатахуун', 
+          label: locale === 'zh' ? '交通车辆与燃油' : locale === 'en' ? 'Transport & fuel' : 'Тээвэр, шатахуун', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'facility':
         return { 
-          label: locale === 'zh' ? '安防安保设施' : 'Харуул, цэвэрлэгээ', 
+          label: locale === 'zh' ? '安防安保设施' : locale === 'en' ? 'Security & cleaning' : 'Харуул, цэвэрлэгээ', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       case 'stationery':
         return { 
-          label: locale === 'zh' ? '办公桌椅与文教' : 'Боловсрол, бичиг хэрэг', 
+          label: locale === 'zh' ? '办公桌椅与文教' : locale === 'en' ? 'Education & supplies' : 'Боловсрол, бичиг хэрэг', 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
       default:
         return { 
           label: typeCode === 'PRODUCT' 
-            ? (locale === 'zh' ? '货物采购' : 'Бараа нийлүүлэлт') 
+            ? (locale === 'zh' ? '货物采购' : locale === 'en' ? 'Goods' : 'Бараа нийлүүлэлт') 
             : typeCode === 'JOB' 
-            ? (locale === 'zh' ? '工程承包' : 'Ажил гүйцэтгэл') 
-            : (locale === 'zh' ? '服务采购' : 'Үйлчилгээ'), 
+            ? (locale === 'zh' ? '工程承包' : locale === 'en' ? 'Works' : 'Ажил гүйцэтгэл') 
+            : (locale === 'zh' ? '服务采购' : locale === 'en' ? 'Services' : 'Үйлчилгээ'), 
           color: 'text-slate-600 dark:text-zinc-400 border-transparent !px-0' 
         };
     }
@@ -475,7 +475,7 @@ export const TenderCard: React.FC<TenderCardProps> = ({
         {onAskAI && (
           <button
             onClick={() => onAskAI(tender)}
-            title={locale === 'zh' ? '用中文向此标书PDF提问并翻译技术规格' : 'Энэ тендерийн ТШББ PDF-ийг AI-аар шинжлэх'}
+            title={locale === 'zh' ? '用 AI 解读此招标' : locale === 'en' ? 'Ask AI about this tender' : 'Энэ тендерийг AI-аар шинжлэх'}
             className="h-9 px-3 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-300 dark:border-zinc-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0"
           >
             <Sparkles className="h-3.5 w-3.5 text-slate-400" />

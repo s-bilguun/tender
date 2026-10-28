@@ -619,8 +619,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           <button
             onClick={toggleTheme}
             className="h-8 w-8 rounded-md flex items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 transition-all cursor-pointer shrink-0"
-            aria-label={theme === 'dark' ? 'Гэгээлэг горим руу шилжих' : 'Харанхуй горим руу шилжих'}
-            title={theme === 'dark' ? 'Гэгээлэг горим (Light mode)' : 'Харанхуй горим (Dark mode)'}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? (locale === 'mn' ? 'Гэгээлэг горим' : locale === 'zh' ? '浅色模式' : 'Light mode') : (locale === 'mn' ? 'Харанхуй горим' : locale === 'zh' ? '深色模式' : 'Dark mode')}
           >
             {theme === 'dark' ? (
               <Sun className="h-4 w-4 text-amber-400 transition-transform hover:rotate-45" />
@@ -638,7 +638,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
  ? 'bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-2xs font-bold'
  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
  }`}
-              title="Монгол хэл"
+              title="Монгол хэл (Mongolian)"
             >
               MN
             </button>
