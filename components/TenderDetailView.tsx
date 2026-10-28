@@ -586,11 +586,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
   const isConcluded = isFailed || tender.docStatusName?.includes('Үр дүн') || tender.docStatusName?.includes('Дууссан');
   const deadlinePassed = Boolean(tender.receiveDate && Date.parse(tender.receiveDate) < Date.now());
+  const hasFinancialData = Boolean(bds.turnoverReq || bds.liquidAssetsReq || bds.similarExpReq);
   const hasEvaluationData = bds.validityDays != null || bds.clarificationDays != null || bds.evaluationCriteria?.priceWeight != null || bds.evaluationCriteria?.qualityWeight != null;
   const missingBdsSections: string[] = [
     !(bds.requiredLicenses && bds.requiredLicenses.length > 0) && (locale === 'zh' ? '许可要求' : locale === 'en' ? 'licences' : 'тусгай зөвшөөрөл'),
     !(bds.keyPersonnel && bds.keyPersonnel.length > 0) && (locale === 'zh' ? '关键人员' : locale === 'en' ? 'key personnel' : 'түлхүүр боловсон хүчин'),
     !(bds.machinery && bds.machinery.length > 0) && (locale === 'zh' ? '设备' : locale === 'en' ? 'equipment' : 'тоног төхөөрөмж'),
+    !hasFinancialData && (locale === 'zh' ? '财务门槛' : locale === 'en' ? 'financial thresholds' : 'санхүүгийн босго'),
     !hasEvaluationData && (locale === 'zh' ? '有效期与评审权重' : locale === 'en' ? 'validity & evaluation weights' : 'хүчинтэй хугацаа, үнэлгээний жин'),
   ].filter(Boolean) as string[];
 
@@ -960,7 +962,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-200 dark:divide-zinc-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 lg:divide-x divide-slate-200 dark:divide-zinc-800">
               <div className="px-4 py-3.5">
                 <p className="text-[11px] text-slate-500 dark:text-zinc-400">{locale === 'zh' ? '主要采购标的物' : locale === 'en' ? 'Main item' : 'Гол нийлүүлэх бараа'}</p>
                 <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-zinc-100 line-clamp-1">
@@ -993,6 +995,18 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </p>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400 truncate">
                   {locale === 'zh' ? (bilingual.entityZh || technicalSpecs.deliveryLocation) : (technicalSpecs.deliveryLocation || '—')}
+                </p>
+              </div>
+              <div className="px-4 py-3.5">
+                <p className="text-[11px] text-slate-500 dark:text-zinc-400">{locale === 'zh' ? '投标保证金' : locale === 'en' ? 'Bid security' : 'Тендерийн баталгаа'}</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900 dark:text-zinc-100 line-clamp-2">
+                  {bds.bidSecurityReq?.includes('Шаардахгүй')
+                    ? (locale === 'zh' ? '无需' : locale === 'en' ? 'Not required' : 'Шаардахгүй')
+                    : bds.bidSecurityReq || (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">
+                  {locale === 'zh' ? '履约保证金：' : locale === 'en' ? 'Performance bond: ' : 'Гүйцэтгэлийн баталгаа: '}
+                  {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : '—'}
                 </p>
               </div>
             </div>
@@ -1361,68 +1375,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           )}
         </div>
 
-        {/* Financial Metrics Cards */}
-        {!isTelegramOnly && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
-              {locale === 'zh' ? '项目总预算' : locale === 'mn' ? 'Нийт төсөвт өртөг' : 'Total Budget'}
-            </span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-slate-950 dark:text-white block">
-              {formatCurrency(tender.totalBudget)}
-            </span>
-            <span className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 block">
-              {locale === 'zh' ? `折合 ~${bilingual.budgetRmbFormatted}` : locale === 'en' ? 'Approved total budget' : 'Батлагдсан нийт төсөв'}
-            </span>
-          </div>
 
-          <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
-              {locale === 'zh' ? '当年度预算 / 预付款' : (tender.yearBudget && tender.yearBudget !== tender.totalBudget ? (locale === 'en' ? 'Funded this year' : 'Тухайн онд санхүүжих') : (locale === 'en' ? 'Advance payment' : 'Урьдчилгаа төлбөр'))}
-            </span>
-            <span className="text-lg sm:text-xl font-bold font-mono text-slate-800 dark:text-zinc-200 block">
-              {tender.yearBudget && tender.yearBudget !== tender.totalBudget
-                ? formatCurrency(tender.yearBudget)
-                : (technicalSpecs.paymentTerms?.advancePaymentPct != null
-                  ? `${technicalSpecs.paymentTerms.advancePaymentPct}%`
-                  : '—')}
-            </span>
-            <span className="text-[10px] text-slate-400 dark:text-zinc-500 mt-1 block">
-              {tender.yearBudget && tender.yearBudget !== tender.totalBudget ? (locale === 'zh' ? '本年度拨款' : locale === 'en' ? 'Scheduled for this year' : 'Энэ оны хуваарьт санхүүжилт') : (locale === 'zh' ? '请以官方文件为准' : locale === 'en' ? 'Check the official document' : 'Албан ёсны эх баримтаас шалгана уу')}
-            </span>
-          </div>
-
-          <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
-              {locale === 'zh' ? '投标保函要求' : locale === 'mn' ? 'Тендерийн баталгаа' : 'Bid Bond'}
-            </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-slate-950 dark:text-white block">
-              {bds.bidSecurityReq?.includes('Шаардахгүй') ? (
-                <span className="text-emerald-700 dark:text-emerald-400">{locale === 'zh' ? '免保函 (0₮)' : 'Шаардахгүй'}</span>
-              ) : bds.bidSecurityReq ? (
-                <span className="text-sm">{bds.bidSecurityReq}</span>
-              ) : (
-                '—'
-              )}
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1 block truncate">
-              {bds.bidSecurityReq ? (locale === 'zh' ? '从 ТШЗ 招标文件解析' : locale === 'en' ? 'Detected in the PDF text' : 'PDF текстээс автоматаар илрүүлсэн') : (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
-            </span>
-          </div>
-
-          <div className="bg-white dark:bg-zinc-900 p-4 rounded-md border border-slate-200 dark:border-zinc-800 shadow-2xs">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 block mb-1">
-              {locale === 'zh' ? '履约保证金' : locale === 'mn' ? 'Гүйцэтгэлийн баталгаа' : 'Performance Bond'}
-            </span>
-            <span className="text-base sm:text-lg font-bold font-mono text-slate-950 dark:text-white block">
-              {bds.performanceBondPct != null ? `${bds.performanceBondPct}%` : '—'}
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-400 mt-1 block">
-              {bds.performanceBondPct != null ? (locale === 'zh' ? '中标签约时缴纳' : 'Гэрээ байгуулахад гаргах баталгаа') : (locale === 'zh' ? '未从PDF读取' : locale === 'en' ? 'Not read from PDF' : 'PDF-ээс уншаагүй')}
-            </span>
-          </div>
-        </div>
-        )}
 
         {/* Responsive Segmented Tab Controls (Zero horizontal scroll) */}
         <div className="flex items-center gap-6 border-b border-slate-200 dark:border-zinc-800 overflow-x-auto no-scrollbar">
@@ -1511,14 +1464,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     Автоматаар илрүүлсэн заалтуудыг доор харуулна. Албан ёсны PDF-ийн эх заалтаар нягтална уу.
                   </p>
                 </div>
-                <button
+                {showAdminTools && (<button
                   onClick={handleCopyStructuredJson}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 text-xs font-semibold shrink-0 shadow-2xs transition-colors cursor-pointer"
                   title={locale === 'zh' ? '复制结构化数据' : locale === 'en' ? 'Copy all structured data as JSON' : 'Бүх бүтцийн өгөгдлийг JSON хэлбэрээр санах ойд хуулах'}
                 >
                   {copiedStructuredJson ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 text-slate-400" />}
                   <span>{copiedStructuredJson ? (locale === 'zh' ? '已复制 JSON' : locale === 'en' ? 'JSON copied' : 'JSON хуулагдлаа') : (locale === 'zh' ? '复制结构化数据 (JSON)' : locale === 'en' ? 'Copy structured data (JSON)' : 'Бүтцийн өгөгдлийг хуулах (JSON)')}</span>
-                </button>
+                </button>)}
               </div>
 
               {/* Highlight Banner: Extracted Items Table */}
@@ -1548,7 +1501,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               )}
 
               {/* 🎯 Interactive BDS Eligibility Self-Assessment Widget */}
-              <div className="p-4 sm:p-5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-4 shadow-xs">
+              {(parsedTurnoverReqMnt || requiredLicensesList.length > 0) && (<div className="p-4 sm:p-5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 space-y-4 shadow-xs">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
                     <div>
@@ -1642,7 +1595,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     {eligibilityVerdict.desc}
                   </div>
                 )}
-              </div>
+              </div>)}
 
               {/* 1. Тусгай зөвшөөрөл */}
               {bds.requiredLicenses && bds.requiredLicenses.length > 0 && (<div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-2.5">
@@ -1670,7 +1623,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </div>)}
 
               {/* 2. Санхүүгийн шалгуур үзүүлэлт */}
-              <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
+              {hasFinancialData && (<div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                   <CheckSquare className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                   <span>{locale === 'zh' ? '财务能力门槛' : locale === 'en' ? 'Financial capacity thresholds' : 'Санхүүгийн чадавхын босго шаардлага'}</span>
@@ -1709,7 +1662,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
                   
                 </div>
-              </div>
+              </div>)}
 
               {/* 3. Түлхүүр боловсон хүчин */}
               {bds.keyPersonnel && bds.keyPersonnel.length > 0 && (<div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
