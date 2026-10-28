@@ -844,7 +844,15 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           </div>
 
           {!hasPdfTextEvidence && showAdminTools && (
-            <div className="rounded-lg border border-dashed border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 space-y-3">
+            <div
+              className="rounded-lg border border-dashed border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 p-4 space-y-3"
+              onDragOver={(e) => { e.preventDefault(); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const f = Array.from(e.dataTransfer.files || []).find((x) => /\.pdf$/i.test(x.name) || x.type === 'application/pdf');
+                if (f) setManualPdfFile(f);
+              }}
+            >
               <div>
                 <p className="text-sm font-semibold text-slate-900 dark:text-white">
                   {locale === 'zh' ? '添加招标文件 PDF（管理员）' : locale === 'en' ? 'Add the tender PDF (admin)' : 'Тендерийн PDF нэмэх (админ)'}
@@ -854,7 +862,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     ? '在 tender.gov.mn 打开此招标并下载 ТШЗ/PDF，然后在此上传。系统会读取文本并生成摘要，所有访客都能看到。'
                     : locale === 'en'
                     ? 'Open this tender on tender.gov.mn, download the bidding document (PDF), then upload it here. The text is read and summarised for every visitor.'
-                    : 'Энэ тендерийг tender.gov.mn дээр нээж ТШБ/PDF-ийг татаад энд оруулна уу. Текстийг уншиж, хураангуйг бүх хэрэглэгчид харуулна.'}
+                    : 'Энэ тендерийг tender.gov.mn дээр нээж ТШБ/PDF-ийг татаад энд чирж оруулна уу. Текстийг уншиж, хураангуйг бүх хэрэглэгчид харуулна.'}
+                  {manualPdfFile && <span className="block mt-1 font-medium text-slate-700 dark:text-zinc-200">{manualPdfFile.name}</span>}
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2">
@@ -862,6 +871,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   type="file"
                   accept="application/pdf,.pdf"
                   onChange={(e) => setManualPdfFile(e.target.files?.[0] || null)}
+                  title={manualPdfFile?.name || ''}
                   className="flex-1 text-xs text-slate-600 dark:text-zinc-300 file:mr-3 file:h-8 file:px-3 file:rounded-md file:border-0 file:bg-slate-100 dark:file:bg-zinc-800 file:text-slate-700 dark:file:text-zinc-200 file:text-xs file:font-medium"
                 />
                 <input
