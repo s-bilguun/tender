@@ -22,9 +22,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: 'Тендер олдсонгүй | TenderHub'
     };
   }
+  const budget = Number(data.tender.totalBudget) || 0;
+  const description = [
+    data.tender.budgetEntityName,
+    budget > 0 ? `Төсөвт өртөг: ${budget.toLocaleString()} ₮` : null,
+    data.tender.receiveDate ? `Эцсийн хугацаа: ${String(data.tender.receiveDate).slice(0, 10)}` : null,
+  ].filter(Boolean).join(' · ');
+  const title = `${data.tender.tenderName} | TenderHub`;
   return {
-    title: `${data.tender.tenderName} | TenderHub`,
-    description: `${data.tender.budgetEntityName} - Төсөвт өртөг: ${Number(data.tender.totalBudget).toLocaleString()} ₮`
+    title,
+    description,
+    openGraph: { title, description, type: 'article', siteName: 'TenderHub' },
   };
 }
 
@@ -42,7 +50,7 @@ export default async function TenderPage({ params }: PageProps) {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-lg transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 rounded-lg transition-colors cursor-pointer"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>Нүүр хуудас руу буцах</span>

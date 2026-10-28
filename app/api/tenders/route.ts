@@ -183,7 +183,6 @@ export async function GET(request: NextRequest) {
       query = query.range(from, to);
 
       const { data, count, error } = await query;
-      const dynamicStats = tenderStore.getStats();
 
       // An exact successful empty query is still a real result. Do not replace it
       // with unrelated in-memory rows simply because the requested filters found nothing.
@@ -196,7 +195,6 @@ export async function GET(request: NextRequest) {
           perPage,
           totalPages: 1,
           source: 'supabase',
-          stats: dynamicStats,
         });
       }
 
@@ -350,7 +348,6 @@ export async function GET(request: NextRequest) {
             perPage,
             totalPages: Math.max(1, Math.ceil(totalCount / perPage)),
             source: 'supabase',
-            stats: dynamicStats,
           });
         }
       }
@@ -368,7 +365,6 @@ export async function GET(request: NextRequest) {
               perPage,
               totalPages: 1,
               source: 'live_fetch_partial',
-              stats: dynamicStats,
             });
           }
           if (liveResult.source !== 'live') {

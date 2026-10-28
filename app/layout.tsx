@@ -4,6 +4,12 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'TenderHub — Монголын тендерийн мэдээлэл',
   description: 'Монголын төрийн болон хувийн хэвшлийн тендер, худалдан авалтын нэгдсэн дата, AI шинжилгээ, зах зээлийн аналитик систем',
+  openGraph: {
+    title: 'TenderHub — Монголын тендерийн мэдээлэл',
+    description: 'Монголын төрийн худалдан авалтын нээлттэй тендерүүдийг монгол, англи, хятад хэлээр хайж, AI-аар шинжлэх.',
+    siteName: 'TenderHub',
+    type: 'website',
+  },
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' }
