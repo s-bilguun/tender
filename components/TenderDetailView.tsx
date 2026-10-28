@@ -331,7 +331,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   );
   const bds = {
     ...data?.bds,
-    requiredLicenses: data?.bds?.requiredLicenses || [],
+    // Drop clipped PDF fragments (e.g. a line starting mid-word) so they are not shown as licences.
+    requiredLicenses: ((data?.bds?.requiredLicenses || []) as string[]).filter(
+      (lic) => typeof lic === 'string' && lic.trim().length > 8 && !/^[а-яөүa-z]{1,2}\s/.test(lic.trim()),
+    ),
     keyPersonnel: data?.bds?.keyPersonnel || [],
     machinery: data?.bds?.machinery || [],
     generalRequirements: data?.bds?.generalRequirements || [],
@@ -574,6 +577,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
     (subTenders.length > 0 && subTenders.every((st: any) => st.wfmStatusCode === 'TENDER_FAILED' || (st.wfmStatusName || '').includes('Амжилтгүй')));
 
   const isConcluded = isFailed || tender.docStatusName?.includes('Үр дүн') || tender.docStatusName?.includes('Дууссан');
+  const deadlinePassed = Boolean(tender.receiveDate && Date.parse(tender.receiveDate) < Date.now());
 
   const [selectedDoc, setSelectedDoc] = useState<any | null>(null);
   const [docModalOpen, setDocModalOpen] = useState(false);
@@ -756,22 +760,23 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               </button>
             </div>
             )}
-            <span className="font-semibold px-2 py-0.5 rounded bg-blue-50 dark:bg-zinc-900 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-zinc-800">
+            <span className="font-medium text-slate-600 dark:text-zinc-400">
               {locale === 'mn' ? (tender.tenderTypeName || 'Тендер') : tender.tenderTypeCode === 'JOB' ? (locale === 'zh' ? '工程' : 'Works') : tender.tenderTypeCode === 'SERVICE' ? (locale === 'zh' ? '服务' : 'Services') : (locale === 'zh' ? '货物' : 'Goods')}
             </span>
-            <span className={`font-semibold px-2 py-0.5 rounded border ${
- isFailed
- ? 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-300 border-slate-300 dark:border-zinc-700'
- : isConcluded
- ? 'bg-amber-50 dark:bg-zinc-900 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-zinc-800'
- : 'bg-emerald-50 dark:bg-zinc-900 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-zinc-800'
- }`}>
-              {isFailed ? (locale === 'zh' ? '流标 / 终止' : locale === 'en' ? 'Failed' : 'Амжилтгүй болсон') : locale === 'zh' ? (isConcluded ? '已公示' : '投标进行中') : locale === 'en' ? (isConcluded ? 'Concluded' : 'Accepting bids') : (tender.docStatusName || 'Идэвхтэй')}
+            <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-zinc-300">
+              <span className={`h-1.5 w-1.5 rounded-full ${isFailed || (deadlinePassed && !isConcluded) ? 'bg-slate-400' : isConcluded ? 'bg-blue-500' : 'bg-emerald-500'}`} />
+              {isFailed
+                ? (locale === 'zh' ? '流标 / 终止' : locale === 'en' ? 'Failed' : 'Амжилтгүй болсон')
+                : isConcluded
+                ? (locale === 'zh' ? '已公示结果' : locale === 'en' ? 'Result published' : 'Үр дүн гарсан')
+                : deadlinePassed
+                ? (locale === 'zh' ? '已截止' : locale === 'en' ? 'Closed' : 'Хугацаа дууссан')
+                : (locale === 'zh' ? '接受投标' : locale === 'en' ? 'Accepting bids' : 'Санал авч буй')}
             </span>
             {tender.receiveDate && (
               <span className="text-slate-500 dark:text-zinc-400 font-medium ml-auto flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5 text-slate-400" />
-                <span>{locale === 'zh' ? '截止时间: ' : locale === 'en' ? 'Deadline: ' : 'Эцсийн хугацаа: '}{tender.receiveDate}</span>
+                <span>{locale === 'zh' ? '截止时间: ' : locale === 'en' ? 'Deadline: ' : 'Эцсийн хугацаа: '}{(() => { const d = new Date(tender.receiveDate); return Number.isNaN(d.getTime()) ? String(tender.receiveDate) : d.toLocaleString(locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-GB' : 'mn-MN', { timeZone: 'Asia/Ulaanbaatar', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }); })()}</span>
               </span>
             )}
           </div>
@@ -1527,7 +1532,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 {requiredLicensesList.length > 0 && (
                   <div className="space-y-2 pt-1">
                     <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-zinc-300">
-                      <span>{locale === 'zh' ? '许可准备情况：' : locale === 'en' ? 'Licence readiness:' : '1. Шаардагдах тусгай зөвшөөрлийн бэлэн байдал:'}</span>
+                      <span>{locale === 'zh' ? '许可准备情况：' : locale === 'en' ? 'Licence readiness:' : 'Шаардагдах тусгай зөвшөөрлийн бэлэн байдал:'}</span>
                       <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">
                         {licenseMatchCount} / {requiredLicensesList.length} {locale === 'zh' ? '已满足' : locale === 'en' ? 'met' : 'хангасан'}
                       </span>
@@ -1601,7 +1606,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span>{locale === 'zh' ? '所需许可与资质' : locale === 'en' ? 'Required licences & permits' : '1. Шаардагдах тусгай зөвшөөрөл & Эрхийн бичиг'}</span>
+                    <span>{locale === 'zh' ? '所需许可与资质' : locale === 'en' ? 'Required licences & permits' : 'Шаардагдах тусгай зөвшөөрөл & Эрхийн бичиг'}</span>
                   </h4>
                   <span className="text-[11px] font-semibold text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-amber-200 dark:border-zinc-800">{locale === 'zh' ? '请核对 PDF' : locale === 'en' ? 'Verify in PDF' : 'PDF-ээс нягтална'}</span>
                 </div>
@@ -1672,7 +1677,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                     <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    <span>{locale === 'zh' ? '关键人员要求' : locale === 'en' ? 'Key personnel' : '3. Түлхүүр боловсон хүчний шаардлага'}</span>
+                    <span>{locale === 'zh' ? '关键人员要求' : locale === 'en' ? 'Key personnel' : 'Түлхүүр боловсон хүчний шаардлага'}</span>
                   </h4>
                   {bds.keyPersonnel && bds.keyPersonnel.length > 0 && (
                     <span className="text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-zinc-900 px-2 py-0.5 rounded border border-blue-200 dark:border-zinc-800">
@@ -1706,7 +1711,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                   <Tag className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>{locale === 'zh' ? '所需设备' : locale === 'en' ? 'Required equipment' : '4. Шаардагдах машин механизм, тоног төхөөрөмж'}</span>
+                  <span>{locale === 'zh' ? '所需设备' : locale === 'en' ? 'Required equipment' : 'Шаардагдах машин механизм, тоног төхөөрөмж'}</span>
                 </h4>
                 {bds.machinery && bds.machinery.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
@@ -1728,7 +1733,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               <div className="border border-slate-200 dark:border-zinc-800 rounded-md p-4 bg-white dark:bg-zinc-900 shadow-2xs space-y-3">
                 <h4 className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
                   <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  <span>{locale === 'zh' ? '有效期与评审权重' : locale === 'en' ? 'Validity & evaluation weights' : '5. Хугацаа ба Үнэлгээний жин'}</span>
+                  <span>{locale === 'zh' ? '有效期与评审权重' : locale === 'en' ? 'Validity & evaluation weights' : 'Хугацаа ба Үнэлгээний жин'}</span>
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
