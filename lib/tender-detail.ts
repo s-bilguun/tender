@@ -275,9 +275,10 @@ function quantile(sorted: number[], q: number): number {
  */
 async function estimateBudgetFromHistory(title: string, buyer: string | null, excludeId: string): Promise<BudgetEstimate | null> {
   const GENERIC = /^(үйлчилгээ|үзүүлэх|үзүүл|худалдан|авах|нийлүүлэх|нийлүүл|ажил|хийх|материал|бараа|төхөөрөмж|тоног|хэрэгсэл|хэрэгцээт|шаардлагатай|зориулалт|зориулалтт|зориулалттай|байгууллага|төв|газар|сум|аймаг|дүүрэг|хот|оны|онд|2025|2026)$/;
-  const keywords = Array.from(new Set(extractSubstantiveKeywords(title).filter((k) => !GENERIC.test(k)))).slice(0, 5);
+  // Distinct roots only: drop a keyword when a shorter one is its prefix (stem + full form).
+  const raw = Array.from(new Set(extractSubstantiveKeywords(title).filter((k) => !GENERIC.test(k))));
+  const keywords = raw.filter((k) => !raw.some((o) => o !== k && o.length < k.length && k.startsWith(o))).slice(0, 5);
   if (keywords.length === 0) return null;
-  const needed = Math.min(2, keywords.length);
   const matchCount = (name: string) => {
     const n = (name || '').toLowerCase();
     return keywords.filter((k) => n.includes(k)).length;
@@ -286,6 +287,7 @@ async function estimateBudgetFromHistory(title: string, buyer: string | null, ex
   const columns = 'invitation_id, tender_name, total_budget, publish_date';
 
   const summarize = (rows: any[], basis: BudgetEstimate['basis']): BudgetEstimate | null => {
+    const needed = Math.min(basis === 'same_buyer' ? 2 : 3, keywords.length);
     const usable = rows.filter((r) => Number(r.total_budget) > 0 && String(r.invitation_id) !== excludeId && matchCount(r.tender_name) >= needed);
     if (usable.length < (basis === 'same_buyer' ? 2 : 3)) return null;
     const budgets = usable.map((r) => Number(r.total_budget)).sort((a, b) => a - b);
