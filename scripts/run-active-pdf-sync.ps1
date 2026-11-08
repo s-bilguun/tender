@@ -15,6 +15,10 @@ function IsRecent([string]$Path, [TimeSpan]$Window) {
 }
 if (IsRecent $successFile (New-TimeSpan -Hours 24)) { exit 0 }
 if (IsRecent $attemptFile (New-TimeSpan -Hours 3)) { exit 0 }
+# A manually started backlog can outlive this scheduler. Do not start another
+# browser against the same profile or duplicate its provider requests.
+$otherWorker = Get-CimInstance Win32_Process -Filter "Name='node.exe'" | Where-Object { $_.CommandLine -like '*browser-tender-worker.cjs*' }
+if ($otherWorker) { exit 0 }
 $now.ToString('o') | Set-Content -LiteralPath $attemptFile -Encoding ASCII
 Set-Location $repoRoot
 $localEnv = Join-Path $env:LOCALAPPDATA 'TenderMN\worker.env'

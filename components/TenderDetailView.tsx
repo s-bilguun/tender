@@ -392,17 +392,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   };
 
   const parsedTurnoverReqMnt = React.useMemo(() => {
-    const reqStr = bds.turnoverReq || (bds.minAnnualTurnover ? String(bds.minAnnualTurnover) : '');
-    if (!reqStr) return null;
-    const str = String(reqStr).toLowerCase();
-    const bilMatch = str.match(/([\d.,]+)\s*(тэрбум|billion)/);
-    if (bilMatch) return parseFloat(bilMatch[1].replace(/,/g, '')) * 1_000_000_000;
-    const milMatch = str.match(/([\d.,]+)\s*(сая|million)/);
-    if (milMatch) return parseFloat(milMatch[1].replace(/,/g, '')) * 1_000_000;
-    const numMatch = str.replace(/[^\d]/g, '');
-    if (numMatch && numMatch.length >= 6) return parseFloat(numMatch);
-    return null;
-  }, [bds.turnoverReq, bds.minAnnualTurnover]);
+    // Free-form PDF passages contain years, percentages and clause numbers.
+    // Combining their digits invents a monetary threshold, so only use an
+    // already structured numeric amount in the calculator.
+    const amount = bds.minAnnualTurnover;
+    return typeof amount === 'number' && Number.isFinite(amount) && amount > 0 ? amount : null;
+  }, [bds.minAnnualTurnover]);
 
   const userTurnoverNum = React.useMemo(() => {
     return parseFloat(userAnnualTurnover.replace(/[^\d.]/g, '')) || 0;

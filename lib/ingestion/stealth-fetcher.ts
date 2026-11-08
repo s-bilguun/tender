@@ -22,7 +22,7 @@ export async function fetchStealthBinary(
   targetUrl: string,
   options: StealthFetchOptions = {}
 ): Promise<Buffer> {
-  const { timeoutMs = 45000 } = options;
+  const { timeoutMs = 90000 } = options;
   const proxyUrl = buildProxyUrl(targetUrl, options);
 
   const controller = new AbortController();

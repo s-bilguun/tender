@@ -34,7 +34,12 @@ export async function fetchVerifiedAttachment(
 
   const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
   if (browserTransport?.getBuffer) {
-    return browserTransport.getBuffer(new URL(`/mn/download/${fileId}`, SOURCE_ORIGIN).toString(), allowImage);
+    try {
+      return await browserTransport.getBuffer(new URL(`/mn/download/${fileId}`, SOURCE_ORIGIN).toString(), allowImage);
+    } catch (error) {
+      if (!hasScrapingProvider()) throw error;
+      console.warn('Browser attachment download failed; trying the configured download provider.');
+    }
   }
 
   if (hasScrapingProvider()) {
