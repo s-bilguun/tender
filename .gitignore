@@ -41,6 +41,7 @@ next-env.d.ts
 /scratch/source-diagnostic/
 /scratch/cloud-pdf-diagnostic/
 /scratch/browser-worker/
+/scratch/pdf-sync/
 /.env.tender-worker
 /scratch/*.js
 
