@@ -11,6 +11,10 @@ export interface StealthFetchOptions {
   renderJs?: boolean;
 }
 
+export function hasScrapingProvider(): boolean {
+  return Boolean(process.env.ZENROWS_API_KEY || process.env.SCRAPINGBEE_API_KEY || process.env.SCRAPER_API_KEY || process.env.SCRAPER_PROXY_URL);
+}
+
 /**
  * Cloudflare ботыг алгасаж URL-аас PDF файлыг Binary Buffer хэлбэрээр татах
  */
@@ -36,17 +40,28 @@ export async function fetchStealthBinary(
       },
     });
 
-    clearTimeout(timeoutId);
-
     if (!res.ok) {
-      const errText = await res.text().catch(() => '');
       throw new Error(
-        `PDF татаж чадсангүй (HTTP ${res.status}): ${errText.slice(0, 300) || res.statusText}`
+        `PDF provider returned HTTP ${res.status}`
       );
     }
 
-    const arrayBuffer = await res.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+    const limit = 40 * 1024 * 1024;
+    if (Number(res.headers.get('content-length')) > limit || !res.body) throw new Error('Provider response exceeds the size limit');
+    const reader = res.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > limit) { await reader.cancel(); throw new Error('Provider response exceeds the size limit'); }
+        chunks.push(value);
+      }
+    } finally { reader.releaseLock(); }
+    clearTimeout(timeoutId);
+    return Buffer.concat(chunks);
   } catch (error: any) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
@@ -81,14 +96,13 @@ export async function fetchStealthHtml(
       },
     });
 
-    clearTimeout(timeoutId);
-
     if (!res.ok) {
-      const errText = await res.text().catch(() => '');
-      throw new Error(`Хуудас татаж чадсангүй (HTTP ${res.status}): ${errText.slice(0, 300)}`);
+      throw new Error(`Source provider returned HTTP ${res.status}`);
     }
 
-    return await res.text();
+    const text = await res.text();
+    clearTimeout(timeoutId);
+    return text;
   } catch (error: any) {
     clearTimeout(timeoutId);
     if (error.name === 'AbortError') {
@@ -110,8 +124,8 @@ function buildProxyUrl(targetUrl: string, options: StealthFetchOptions): string 
       url: targetUrl,
       antibot: 'true',
       premium_proxy: 'true',
-      proxy_country: 'mn',
     });
+    if (process.env.ZENROWS_PROXY_COUNTRY) params.set('proxy_country', process.env.ZENROWS_PROXY_COUNTRY);
     if (options.renderJs) {
       params.append('js_render', 'true');
     }
@@ -141,7 +155,7 @@ function buildProxyUrl(targetUrl: string, options: StealthFetchOptions): string 
     if (options.renderJs) {
       params.append('render', 'true');
     }
-    return `http://api.scraperapi.com?${params.toString()}`;
+    return `https://api.scraperapi.com?${params.toString()}`;
   }
 
   // 4. Custom Proxy URL (хэрэв өөрийн proxy сервер тохируулсан бол)

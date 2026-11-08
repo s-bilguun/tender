@@ -1,3 +1,5 @@
+import { fetchStealthBinary, hasScrapingProvider } from './ingestion/stealth-fetcher';
+
 const MAX_ATTACHMENT_BYTES = 40 * 1024 * 1024;
 const SOURCE_ORIGIN = 'https://user.tender.gov.mn';
 
@@ -33,6 +35,13 @@ export async function fetchVerifiedAttachment(
   const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
   if (browserTransport?.getBuffer) {
     return browserTransport.getBuffer(new URL(`/mn/download/${fileId}`, SOURCE_ORIGIN).toString(), allowImage);
+  }
+
+  if (hasScrapingProvider()) {
+    const buffer = await fetchStealthBinary(new URL(`/mn/download/${fileId}`, SOURCE_ORIGIN).toString());
+    if (buffer.length > MAX_ATTACHMENT_BYTES) throw new AttachmentFetchError('Attachment exceeds the size limit');
+    if (!looksLikePdf(buffer) && !(allowImage && looksLikeImage(buffer))) throw new AttachmentFetchError('Provider response is not a supported PDF or image');
+    return { buffer, contentType: looksLikePdf(buffer) ? 'application/pdf' : buffer[0] === 0x89 ? 'image/png' : 'image/jpeg' };
   }
 
   let url = new URL(`/mn/download/${fileId}`, SOURCE_ORIGIN);

@@ -7,11 +7,10 @@ import { cleanThoughtBlocks } from '@/lib/ai-cleaner';
 import { analyzeChinaBidderEligibility } from '@/lib/china-bidder-analyzer';
 import { isolateChapterSection, cleanTechnicalSectionText } from '@/lib/live-fetcher';
 import { expandMultilingualSearchTerms } from '@/lib/bilingual-title';
+import { readStoredPdfText } from '@/lib/stored-pdf-text';
 
 export const dynamic = 'force-dynamic';
 
-const pdfParse = require('pdf-parse/lib/pdf-parse.js');
-const globalPdfTextCache = new Map<string, string>();
 
 export const maxDuration = 60;
 
@@ -680,30 +679,13 @@ export async function POST(request: NextRequest) {
     // On-demand extraction from Supabase Storage CDN PDF if text is not pre-cached
     let activePdfText = liveBundle?.pdfText || '';
     const storedPdfUrl = targetRawData?.pdfUrl || targetRawData?.liveBundle?.documents?.[0]?.downloadUrl;
-    if (!activePdfText && storedPdfUrl && typeof storedPdfUrl === 'string' && storedPdfUrl.includes('supabase.co')) {
-      if (globalPdfTextCache.has(storedPdfUrl)) {
-        activePdfText = globalPdfTextCache.get(storedPdfUrl)!;
-      } else {
-        try {
-          const pdfRes = await fetch(storedPdfUrl, { signal: AbortSignal.timeout(12000) });
-          if (pdfRes.ok) {
-            const buf = Buffer.from(await pdfRes.arrayBuffer());
-            const parsed = await pdfParse(buf);
-            if (parsed?.text && parsed.text.length > 50) {
-              const docName = targetRawData?.pdfFileName || targetRawData?.liveBundle?.documents?.[0]?.fileName || 'ТШББ.pdf';
-              const rawPages = parsed.text.split(/[\f\x0c]/);
-              if (rawPages.length > 1) {
-                activePdfText = `--- DOCUMENT 1: ${docName} ---\n` +
-                  rawPages.map((p: string, idx: number) => `[Page ${idx + 1}]\n${p.trim()}`).filter((p: string) => p.length > 20).join('\n\n');
-              } else {
-                activePdfText = `--- DOCUMENT 1: ${docName} ---\n[Page 1]\n${parsed.text}`;
-              }
-              globalPdfTextCache.set(storedPdfUrl, activePdfText);
-            }
-          }
-        } catch (pdfFetchErr: any) {
-          console.warn('On-demand Supabase PDF parse skipped:', pdfFetchErr?.message);
-        }
+    if (!activePdfText && typeof storedPdfUrl === 'string') {
+      try {
+        const doc = targetRawData?.liveBundle?.documents?.[0];
+        const parsed = await readStoredPdfText(storedPdfUrl, targetRawData?.pdfFileName || doc?.fileName || 'ТШББ.pdf', String(doc?.fileId || 'stored'));
+        activePdfText = parsed?.text || '';
+      } catch (pdfFetchErr: any) {
+        console.warn('On-demand Supabase PDF parse skipped:', pdfFetchErr?.message);
       }
     }
 
@@ -713,7 +695,7 @@ export async function POST(request: NextRequest) {
     const structuredSpecs = targetRawData?.structuredSpecs || targetRawData?.llmExtracted?.structuredSpecs || targetRawData?.liveBundle?.structuredSpecs || liveBundle?.structuredSpecs || null;
 
     const structuredInfo = targetTender ? {
-      extractionStatus: activePdfText ? 'complete' : (liveBundle?.extractionStatus || 'unavailable'),
+      extractionStatus: liveBundle?.extractionStatus || (activePdfText ? 'partial' : 'unavailable'),
       stale: !!liveBundle?.stale,
       fetchedAt: liveBundle?.fetchedAt || null,
       documents: (liveBundle?.documents || []).map((doc: any) => ({

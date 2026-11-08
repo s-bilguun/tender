@@ -667,7 +667,7 @@ export async function run() {
 }
 
 // Direct CLI invocation
-if (typeof process !== 'undefined' && process.argv && (require.main === module || (process.argv[1] && process.argv[1].endsWith('sync-tenders.ts')))) {
+if (typeof process !== 'undefined' && process.argv?.[1]?.endsWith('sync-tenders.ts')) {
   run().catch((e) => {
     console.error('Fatal sync error:', e);
     process.exit(1);

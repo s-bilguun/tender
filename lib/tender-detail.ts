@@ -1,7 +1,8 @@
 import { supabase } from './supabase';
 import { tenderStore } from './tender-client';
 import { LIVE_BUNDLE_SCHEMA_VERSION, TenderItem } from './types';
-import { fetchTenderLiveBundle, isGarbledPdfText, cleanTechnicalSectionText } from './live-fetcher';
+import { fetchTenderLiveBundle, isGarbledPdfText, cleanTechnicalSectionText, parsePdfContent } from './live-fetcher';
+import { readStoredPdfText } from './stored-pdf-text';
 import { analyzeChinaBidderEligibility } from './china-bidder-analyzer';
 
 function generateBDS(_tender: any) {
@@ -505,6 +506,48 @@ export async function getTenderDetailData(id: string | number, options: { useSto
     }
   }
 
+  // Older ingestion stored a PDF URL and an excerpt, but no searchable PDF
+  // text or structured requirements. Read the stored file independently of
+  // tender.gov.mn so the existing document can still be useful.
+  const storedUrl = rawData?.pdfUrl || rawData?.liveBundle?.documents?.find((d: any) => d.isStored && d.downloadUrl)?.downloadUrl;
+  if (typeof storedUrl === 'string' && !liveBundle?.pdfText?.trim()) {
+    try {
+      const storedDoc = rawData?.liveBundle?.documents?.find((d: any) => d.downloadUrl === storedUrl) || rawData?.liveBundle?.documents?.[0];
+      const name = rawData?.pdfFileName || storedDoc?.fileName || 'ТШББ.pdf';
+      const id = String(storedDoc?.fileId || storedDoc?.id || 'stored');
+      const parsed = await readStoredPdfText(storedUrl, name, id);
+      if (parsed?.text && !isGarbledPdfText(parsed.text)) {
+        const prior = liveBundle || rawData?.liveBundle || {};
+        const extracted = parsePdfContent(parsed.text);
+        const merged: any = { ...extracted };
+        for (const [key, value] of Object.entries(prior.structuredSpecs || {})) {
+          if (value != null && value !== '' && (!Array.isArray(value) || value.length)) merged[key] = value;
+        }
+        const documents = [...(prior.documents || [])];
+        const index = documents.findIndex((d: any) => d.downloadUrl === storedUrl || String(d.fileId || d.id) === id);
+        const doc = { ...(index >= 0 ? documents[index] : {}), fileId: storedDoc?.fileId, id, fileName: name, downloadUrl: storedUrl, isStored: true,
+          extractionStatus: parsed.extractedPages >= parsed.pageCount ? 'text_extracted' : 'partial',
+          extractedPageCount: parsed.extractedPages, totalPageCount: parsed.pageCount };
+        if (index >= 0) documents[index] = doc; else documents.unshift(doc);
+        liveBundle = { ...prior, documents, pdfText: parsed.text, pdfPageCount: parsed.pageCount, structuredSpecs: merged,
+          extractionStatus: documents.length === 1 && parsed.extractedPages >= parsed.pageCount ? 'complete' : 'partial' };
+      }
+    } catch (error) {
+      console.warn('Stored PDF could not be read:', error);
+    }
+  }
+
+  // Some imports already saved text but never ran the requirements parser.
+  // Fill missing fields without replacing previously extracted values.
+  if (liveBundle?.pdfText?.trim() && !isGarbledPdfText(liveBundle.pdfText)) {
+    const parsed = parsePdfContent(liveBundle.pdfText);
+    const merged: any = { ...parsed };
+    for (const [key, value] of Object.entries(liveBundle.structuredSpecs || {})) {
+      if (value != null && value !== '' && (!Array.isArray(value) || value.length)) merged[key] = value;
+    }
+    liveBundle = { ...liveBundle, structuredSpecs: merged };
+  }
+
   // 5. Generate structured BDS & Specs & Results
   const bds = generateBDS(tenderData);
   const technicalSpecs = generateTechnicalSpecs(tenderData);
@@ -563,7 +606,7 @@ export async function getTenderDetailData(id: string | number, options: { useSto
           extractedPageCount: d.extractedPageCount || storedDoc?.pageCount,
           totalPageCount: d.totalPageCount || storedDoc?.pageCount,
           ocrSampleCount: d.ocrSampleCount,
-          extractedSummary: extractedSummary || storedDoc?.extractedSummary || rawData?.liveBundle?.fullScopeOfWork
+          extractedSummary: extractedSummary || storedDoc?.extractedSummary || d.extractedSummary
         };
       });
       (technicalSpecs as any).isScannedOcr = !!liveBundle.isScannedOcr;

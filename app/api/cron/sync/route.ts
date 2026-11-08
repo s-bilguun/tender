@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchLatestTenders, downloadPdfBuffer, parseTenderWithGemini, upsertTenderToDatabase } from '@/scripts/sync-tenders';
+import { fetchLatestTenders, downloadPdfBuffer, parseTenderWithGemini, upsertTenderToDatabase } from '@/scripts/sync-tenders.ts';
 import { supabase, syncSingleTenderPdf } from '@/scripts/sync-active-pdfs';
 
 export const dynamic = 'force-dynamic';
@@ -10,7 +10,10 @@ export async function GET(request: NextRequest) {
   const authHeader = request.headers.get('authorization');
   const cronSecret = process.env.CRON_SECRET || process.env.TENDER_SYNC_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret) {
+    return NextResponse.json({ success: false, error: 'Cron secret is not configured' }, { status: 503 });
+  }
+  if (authHeader !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ success: false, error: 'Unauthorized cron request' }, { status: 401 });
   }
 

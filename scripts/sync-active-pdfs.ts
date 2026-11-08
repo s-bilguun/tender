@@ -19,25 +19,30 @@
 import { execFile } from 'child_process';
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
+import { fetchVerifiedAttachment } from '../lib/source-attachment';
+import { parsePdfContent, isGarbledPdfText } from '../lib/live-fetcher';
+import { LIVE_BUNDLE_SCHEMA_VERSION } from '../lib/types';
+import { fetchStealthHtml, hasScrapingProvider } from '../lib/ingestion/stealth-fetcher';
 const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
+dotenv.config({ path: process.env.TENDER_WORKER_ENV_FILE || '.env.tender-worker' });
 dotenv.config({ path: '.env.local' });
 dotenv.config();
 
 const SUPABASE_URL = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
-const SUPABASE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+const SUPABASE_KEY = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '').trim();
 const BUCKET_NAME = 'tender-documents';
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ Missing Supabase credentials in .env.local');
-  process.exit(1);
-}
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+export const supabase = SUPABASE_URL && SUPABASE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_KEY)
+  : new Proxy({} as ReturnType<typeof createClient>, { get() { throw new Error('Missing Supabase URL or service-role key'); } });
 
 const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
 
 export function curlGet(url: string, asBuffer = false): Promise<string | Buffer | null> {
+  if (hasScrapingProvider() && !asBuffer) {
+    return fetchStealthHtml(url);
+  }
   return new Promise((resolve) => {
     const args = [
       '-s', '-L',
@@ -85,6 +90,10 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function sourceChallenged(body: unknown): boolean {
+  return typeof body === 'string' && /just a moment|performing security verification|cf-chl-|challenge-platform/i.test(body);
+}
+
 export async function ensureBucketExists() {
   const { data: buckets } = await supabase.storage.listBuckets();
   if (!buckets?.some((b) => b.name === BUCKET_NAME)) {
@@ -102,6 +111,7 @@ export interface SyncPdfResult {
   fileSize?: number;
   pageCount?: number;
   error?: string;
+  warnings?: string[];
 }
 
 /**
@@ -122,6 +132,7 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
     let tenderDocId = tender.raw_data?.tenderDocumentId || tender.raw_data?.liveBundle?.tenderDocumentId;
     if (!tenderDocId) {
       const detailHtml = (await curlGet(`https://www.tender.gov.mn/mn/invitation/detail/${invId}`, false)) as string;
+      if (sourceChallenged(detailHtml)) return { success: false, invitationId: invId, tenderCode, error: 'Source access challenged by Cloudflare' };
       if (detailHtml) {
         const docMatch = detailHtml.match(/tenderDocumentId(?:&quot;|"|\\\"|'|:|\s|=)*(\d+)/i);
         if (docMatch) {
@@ -135,23 +146,47 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
     }
 
     // 2. Discover document list from official gateway gw/153
-    const listJsonStr = (await curlGet(`https://www.tender.gov.mn/api/gw/153/list?tenderDocumentId=${tenderDocId}&offset=1&limit=20`, false)) as string;
+    const listJsonStr = (await curlGet(`https://www.tender.gov.mn/api/gw/153/list?tenderDocumentId=${tenderDocId}&offset=1&limit=9999`, false)) as string;
+    if (sourceChallenged(listJsonStr)) return { success: false, invitationId: invId, tenderCode, error: 'Source access challenged by Cloudflare' };
     if (!listJsonStr || !listJsonStr.trim().startsWith('[')) {
       return { success: false, invitationId: invId, tenderCode, error: 'No documents returned from gw/153' };
     }
 
     const docs = JSON.parse(listJsonStr);
-    if (!Array.isArray(docs) || docs.length === 0) {
+    if (!Array.isArray(docs)) {
       return { success: false, invitationId: invId, tenderCode, error: 'Empty document list' };
     }
+
+    // Other official lists contain technical documents and clarifications.
+    // Keep a failed list visible in the result; it must not mean zero files.
+    const discoveryErrors: string[] = [];
+    for (const [kind, url] of [
+      ['technical', `https://www.tender.gov.mn/api/gw/88/list?tenderDocumentId=${tenderDocId}`],
+      ['clarifications', `https://www.tender.gov.mn/api/gw/106/list?invitationId=${invId}`],
+    ]) {
+      try {
+        const body = await curlGet(url, false);
+        const list = typeof body === 'string' ? JSON.parse(body) : null;
+        if (!Array.isArray(list)) throw new Error('Invalid response');
+        const files = kind === 'clarifications' ? list.flatMap((item: any) => Array.isArray(item.files) ? item.files : []) : list;
+        for (const file of files) {
+          if (file?.fileId && !docs.some((doc: any) => String(doc.fileId) === String(file.fileId))) docs.push(file);
+        }
+      } catch { discoveryErrors.push(`${kind} attachment list unavailable`); }
+    }
+
+    if (!docs.length) return { success: false, invitationId: invId, tenderCode, error: discoveryErrors.length ? discoveryErrors.join('; ') : 'No attachments found' };
+    // Prefer a PDF when the source lists spreadsheets or other formats first.
+    const firstPdf = docs.findIndex((doc: any) => String(doc.fileExtention || '').toLowerCase() === 'pdf' || !doc.fileName || !/\.[a-z0-9]{2,5}$/i.test(doc.fileName) || /\.pdf$/i.test(doc.fileName));
+    if (firstPdf < 0) return { success: false, invitationId: invId, tenderCode, error: 'No PDF attachment found' };
+    if (firstPdf > 0) docs.unshift(docs.splice(firstPdf, 1)[0]);
 
     const primaryDoc = docs[0];
     const fileId = primaryDoc.fileId;
     const fileName = primaryDoc.fileName || `${tenderCode}_ТШББ.pdf`;
 
     // 3. Download official PDF via user.tender.gov.mn
-    const downloadSrcUrl = `https://user.tender.gov.mn/mn/download/${fileId}`;
-    const pdfBuffer = (await curlGet(downloadSrcUrl, true)) as Buffer;
+    const { buffer: pdfBuffer } = await fetchVerifiedAttachment(fileId);
 
     if (!pdfBuffer || pdfBuffer.length < 500) {
       return { success: false, invitationId: invId, tenderCode, error: `Invalid buffer (${pdfBuffer?.length || 0} bytes)` };
@@ -178,11 +213,24 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
 
     // 6. Extract text with pdf-parse
     let extractedText = '';
-    let pageCount = 1;
+    let pageCount = 0;
+    const pageTexts: string[] = [];
     try {
-      const parsed = await pdfParse(pdfBuffer);
+      const parsed = await pdfParse(pdfBuffer, { pagerender: async (page: any) => {
+        const content = await page.getTextContent();
+        let y: number | null = null;
+        let text = '';
+        for (const item of content.items || []) {
+          const nextY = item.transform?.[5];
+          text += y !== null && nextY != null && Math.abs(nextY - y) > 2 ? '\n' : ' ';
+          text += typeof item.str === 'string' ? item.str : '';
+          if (nextY != null) y = nextY;
+        }
+        pageTexts.push(text.trim());
+        return text;
+      }});
       extractedText = parsed.text || '';
-      pageCount = parsed.numpages || 1;
+      pageCount = parsed.numpages || 0;
     } catch {
       // ignore parse text warning
     }
@@ -206,6 +254,53 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
     // 7. Update database record with linked PDF and structured data
     const existingRaw = tender.raw_data || {};
     const existingLiveBundle = existingRaw.liveBundle || {};
+    const extraDocuments: any[] = [];
+    const extraText: string[] = [];
+    for (const doc of docs.slice(1)) {
+      const old = existingLiveBundle.documents?.find((item: any) => String(item.fileId) === String(doc.fileId));
+      if (old?.isStored && old?.downloadUrl) { extraDocuments.push(old); continue; }
+      const name = doc.fileName || `${doc.fileId}.pdf`;
+      const ext = String(doc.fileExtention || name.split('.').pop() || '').toLowerCase();
+      if (ext && ext !== 'pdf' && /\.[a-z0-9]{2,5}$/i.test(name)) {
+        extraDocuments.push({ ...doc, downloadUrl: `https://user.tender.gov.mn/mn/download/${doc.fileId}`, extractionStatus: 'not_extracted' });
+        continue;
+      }
+      try {
+        const { buffer } = await fetchVerifiedAttachment(doc.fileId);
+        const path = `tenders/${invId}/doc_${doc.fileId}.pdf`;
+        const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, buffer, { contentType: 'application/pdf', upsert: true });
+        if (error) throw error;
+        const url = supabase.storage.from(BUCKET_NAME).getPublicUrl(path).data.publicUrl;
+        const pages: string[] = [];
+        let count = 0;
+        try {
+          const result = await pdfParse(buffer, { pagerender: async (page: any) => {
+            const content = await page.getTextContent();
+            const text = (content.items || []).map((item: any) => item.str || '').join(' ');
+            pages.push(text.trim());
+            return text;
+          }});
+          count = result.numpages || 0;
+        } catch { /* The file is stored; text extraction can be retried. */ }
+        const readable = pages.filter((page) => page.length > 20).length;
+        if (readable) extraText.push(`--- DOCUMENT ${doc.fileId}: ${name} ---\n` + pages.map((page, i) => page.length > 20 ? `[Page ${i + 1}]\n${page}` : '').filter(Boolean).join('\n\n'));
+        extraDocuments.push({ ...doc, fileName: name, downloadUrl: url, storagePath: path, isStored: true, fileSize: buffer.length,
+          extractionStatus: readable ? (readable >= count ? 'text_extracted' : 'partial') : (count ? 'scanned_not_processed' : 'not_extracted'),
+          extractedPageCount: readable, totalPageCount: count });
+      } catch (error: any) {
+        discoveryErrors.push(`Attachment ${doc.fileId}: ${error.message}`);
+        extraDocuments.push({ ...old, ...doc, downloadUrl: `https://user.tender.gov.mn/mn/download/${doc.fileId}`, extractionStatus: 'source_error' });
+      }
+    }
+    const readable = extractedText.length > 30 && !isGarbledPdfText(extractedText);
+    const readablePages = readable ? pageTexts.filter((page) => page.length > 20).length : 0;
+    const documentText = readable ? `--- DOCUMENT ${fileId}: ${fileName} ---\n` + pageTexts.map((page, i) => page.length > 20 ? `[Page ${i + 1}]\n${page}` : '').filter(Boolean).join('\n\n') : '';
+    const allReadableText = [readable ? extractedText : '', ...extraText].filter(Boolean).join('\n\n');
+    const parsedSpecs = allReadableText ? parsePdfContent(allReadableText) : {};
+    const mergedSpecs: any = { ...(existingLiveBundle.structuredSpecs || {}) };
+    for (const [key, value] of Object.entries(parsedSpecs)) {
+      if (value != null && value !== '' && (!Array.isArray(value) || value.length)) mergedSpecs[key] = value;
+    }
 
     const updatedRawData = {
       ...existingRaw,
@@ -217,9 +312,11 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
       full_scope_of_work: scopeSummary || existingRaw.full_scope_of_work || existingLiveBundle.fullScopeOfWork,
       liveBundle: {
         ...existingLiveBundle,
-        schemaVersion: 2,
+        schemaVersion: LIVE_BUNDLE_SCHEMA_VERSION,
         tenderDocumentId: tenderDocId,
         pdfPageCount: pageCount,
+        pdfText: [documentText, ...extraText, existingLiveBundle.pdfText].filter(Boolean).join('\n\n').slice(0, 300000),
+        extractionStatus: readablePages && readablePages >= pageCount && extraDocuments.every((doc) => doc.extractionStatus === 'text_extracted') && !discoveryErrors.length ? 'complete' : 'partial',
         fullScopeOfWork: scopeSummary || existingLiveBundle.fullScopeOfWork,
         documents: [
           {
@@ -232,19 +329,20 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
             isStored: true,
             storedAt: new Date().toISOString(),
             pageCount,
+            totalPageCount: pageCount,
+            extractedPageCount: readablePages,
+            extractionStatus: readablePages ? (readablePages >= pageCount ? 'text_extracted' : 'partial') : (pageCount ? 'scanned_not_processed' : 'not_extracted'),
             extractedSummary: scopeSummary,
           },
-          ...docs.slice(1).map((d: any) => ({
-            fileId: d.fileId,
-            fileName: d.fileName,
-            isPrimary: false,
-            downloadUrl: `https://user.tender.gov.mn/mn/download/${d.fileId}`,
-          })),
+          ...extraDocuments,
+          ...(existingLiveBundle.documents || []).filter((old: any) => !docs.some((doc: any) => String(doc.fileId) === String(old.fileId))),
         ],
+        acquisitionErrors: discoveryErrors,
+        attachmentDiscoveryVersion: 1,
         structuredSpecs: {
-          ...(existingLiveBundle.structuredSpecs || {}),
-          rawSpecText: scopeSummary || existingLiveBundle.structuredSpecs?.rawSpecText,
-          fullScopeOfWork: scopeSummary || existingLiveBundle.structuredSpecs?.fullScopeOfWork,
+          ...mergedSpecs,
+          rawSpecText: mergedSpecs.rawSpecText || scopeSummary,
+          fullScopeOfWork: mergedSpecs.fullScopeOfWork || scopeSummary,
         },
       },
     };
@@ -269,6 +367,7 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
       fileName,
       fileSize: pdfBuffer.length,
       pageCount,
+      warnings: discoveryErrors,
     };
   } catch (err: any) {
     return { success: false, invitationId: invId, tenderCode, error: err.message };
@@ -295,8 +394,7 @@ export async function getMissingPdfCandidates(maxCandidates = 1000): Promise<any
       .range(from, to);
 
     if (error) {
-      console.error('❌ Could not query active tenders batch:', error.message);
-      break;
+      throw new Error(`Could not query active tenders: ${error.message}`);
     }
 
     if (!batch || batch.length === 0) {
@@ -305,12 +403,11 @@ export async function getMissingPdfCandidates(maxCandidates = 1000): Promise<any
 
     for (const t of batch) {
       const rawData = t.raw_data;
-      if (rawData?.pdfUrl && typeof rawData.pdfUrl === 'string' && rawData.pdfUrl.includes('supabase.co')) {
-        continue;
-      }
       const docs = rawData?.liveBundle?.documents;
-      const hasStoredPdf = docs?.some((d: any) => d.isStored || (d.downloadUrl && typeof d.downloadUrl === 'string' && d.downloadUrl.includes('supabase.co')));
-      if (!hasStoredPdf) {
+      const hasStoredPdf = Boolean(rawData?.pdfUrl?.includes('supabase.co') || docs?.some((d: any) => d.isStored));
+      const missingKnownPdf = docs?.some((d: any) => d.fileId && !d.isStored && !String(d.downloadUrl || '').includes('supabase.co') && (!d.fileName || /\.pdf$/i.test(d.fileName)));
+      const incompleteDiscovery = rawData?.liveBundle?.attachmentDiscoveryVersion !== 1 || rawData?.liveBundle?.acquisitionErrors?.length > 0;
+      if (!hasStoredPdf || missingKnownPdf || incompleteDiscovery) {
         candidates.push(t);
         if (candidates.length >= maxCandidates) break;
       }
@@ -333,7 +430,7 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
   const candidates = await getMissingPdfCandidates(limit);
 
   if (candidates.length === 0) {
-    console.log(`🎉 All active tenders already have official PDFs stored in Supabase Storage!`);
+    console.log('No active tenders currently matched the PDF acquisition queue.');
     return;
   }
 
@@ -343,10 +440,11 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
   let successCount = 0;
   let failCount = 0;
   let processedIndex = 0;
+  let consecutiveBlocks = 0;
 
   // Worker loop
   async function worker(workerId: number) {
-    while (processedIndex < candidates.length) {
+    while (processedIndex < candidates.length && consecutiveBlocks < 3) {
       const currentIndex = processedIndex++;
       const tender = candidates[currentIndex];
       const invId = String(tender.invitation_id);
@@ -358,12 +456,16 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
       const result = await syncSingleTenderPdf(tender);
 
       if (result.success) {
-        successCount++;
+        consecutiveBlocks = 0;
+        if (result.warnings?.length) failCount++; else successCount++;
         const sizeKb = ((result.fileSize || 0) / 1024).toFixed(0);
         console.log(`  ✅ [W${workerId}] Stored: ${result.fileName} (${sizeKb} KB, ${result.pageCount}p)`);
         console.log(`     🔗 ${result.publicUrl}`);
+        if (result.warnings?.length) console.warn(`     ⚠ Incomplete: ${result.warnings.join('; ')}`);
       } else {
         failCount++;
+        if (/challenge|HTTP 403|HTTP 429/i.test(result.error || '')) consecutiveBlocks++;
+        else consecutiveBlocks = 0;
         console.warn(`  ⚠️ [W${workerId}] Skipped: ${result.error}`);
       }
 
@@ -376,19 +478,22 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
   const workers = Array.from({ length: Math.min(concurrency, candidates.length) }, (_, i) => worker(i + 1));
   await Promise.all(workers);
 
+  if (consecutiveBlocks >= 3) console.warn('Stopped after repeated source blocks; retry after access is restored.');
+
   console.log(`\n══════════════════════════════════════════════════════════`);
   console.log(`🏁 Ingestion finished: ${successCount} stored successfully, ${failCount} skipped/failed.`);
   console.log(`══════════════════════════════════════════════════════════\n`);
+  if (failCount) process.exitCode = 1;
 }
 
 // CLI Execution
-if (typeof process !== 'undefined' && process.argv && (require.main === module || (process.argv[1] && process.argv[1].endsWith('sync-active-pdfs.ts')))) {
+if (typeof process !== 'undefined' && process.argv?.[1]?.endsWith('sync-active-pdfs.ts')) {
   const args = process.argv.slice(2);
   let limit = 10;
   let concurrency = 2;
 
   if (args.includes('--all')) {
-    limit = 1000;
+    limit = Number.MAX_SAFE_INTEGER;
   } else {
     const limitIdx = args.indexOf('--limit');
     if (limitIdx !== -1 && args[limitIdx + 1]) {

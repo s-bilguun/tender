@@ -513,9 +513,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
       downloadUrl: tenderRawData.pdfUrl,
       isStored: true,
       source: 'stored_cdn',
-      extractionStatus: 'text_extracted',
-      extractedPageCount: tenderRawData.pdfPageCount || 1,
-      totalPageCount: tenderRawData.pdfPageCount || 1,
+      extractionStatus: 'not_extracted',
+      extractedPageCount: 0,
+      totalPageCount: tenderRawData.pdfPageCount || undefined,
       extractedSummary: tenderRawData.liveBundle?.fullScopeOfWork || '',
       officialNotice: 'Supabase хадгалагдсан албан ёсны ТШЗ баримт'
     }];
