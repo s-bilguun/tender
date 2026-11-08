@@ -23,6 +23,7 @@ import { fetchVerifiedAttachment } from '../lib/source-attachment';
 import { parsePdfContent, isGarbledPdfText } from '../lib/live-fetcher';
 import { LIVE_BUNDLE_SCHEMA_VERSION } from '../lib/types';
 import { fetchStealthHtml, hasScrapingProvider } from '../lib/ingestion/stealth-fetcher';
+import { mergeLegacyAttachments, replacePdfDocumentSections } from '../lib/legacy-attachment-merge';
 const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
 dotenv.config({ path: process.env.TENDER_WORKER_ENV_FILE || '.env.tender-worker' });
@@ -40,6 +41,8 @@ export const supabase = SUPABASE_URL && SUPABASE_KEY
 const curlCmd = process.platform === 'win32' ? 'curl.exe' : 'curl';
 
 export function curlGet(url: string, asBuffer = false): Promise<string | Buffer | null> {
+  const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
+  if (!asBuffer && browserTransport?.getText) return browserTransport.getText(url);
   if (hasScrapingProvider() && !asBuffer) {
     return fetchStealthHtml(url);
   }
@@ -112,14 +115,22 @@ export interface SyncPdfResult {
   pageCount?: number;
   error?: string;
   warnings?: string[];
+  discoveryOnly?: boolean;
+  skipped?: boolean;
+  unchanged?: boolean;
 }
 
 /**
  * Syncs and stores official PDF for a single tender into Supabase Storage & updates row
  */
-export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
+export async function syncSingleTenderPdf(tender: any, options: { discoveryOnly?: boolean } = {}): Promise<SyncPdfResult> {
   const invId = String(tender.invitation_id || tender.invitationId);
   const tenderCode = tender.tender_code || tender.tenderCode || invId;
+
+  const lastDiscovery = Date.parse(tender.raw_data?.liveBundle?.attachmentDiscoveredAt || '');
+  if (options.discoveryOnly && Number.isFinite(lastDiscovery) && lastDiscovery <= Date.now() && Date.now() - lastDiscovery < 24 * 60 * 60 * 1000) {
+    return { success: true, invitationId: invId, tenderCode, discoveryOnly: true, skipped: true };
+  }
 
   // Store PDFs only for live tenders (deadline not passed).
   const receiveDate = tender.receive_date || tender.receiveDate;
@@ -128,8 +139,17 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
   }
 
   try {
-    // 1. Discover tenderDocumentId
+    // The legacy public detail page lists attachment IDs in server-rendered
+    // HTML, even when the newer site's JSON gateways are unavailable.
     let tenderDocId = tender.raw_data?.tenderDocumentId || tender.raw_data?.liveBundle?.tenderDocumentId;
+    let docs: any[] = [];
+    const discoveryErrors: string[] = [];
+    const browserTransport = (globalThis as any).__TENDER_SOURCE_BROWSER__;
+    if (browserTransport?.getLegacyDocuments) {
+      const legacy = await browserTransport.getLegacyDocuments(invId);
+      tenderDocId = legacy.tenderDocumentId || tenderDocId;
+      docs = legacy.documents;
+    } else {
     if (!tenderDocId) {
       const detailHtml = (await curlGet(`https://www.tender.gov.mn/mn/invitation/detail/${invId}`, false)) as string;
       if (sourceChallenged(detailHtml)) return { success: false, invitationId: invId, tenderCode, error: 'Source access challenged by Cloudflare' };
@@ -152,14 +172,13 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
       return { success: false, invitationId: invId, tenderCode, error: 'No documents returned from gw/153' };
     }
 
-    const docs = JSON.parse(listJsonStr);
+    docs = JSON.parse(listJsonStr);
     if (!Array.isArray(docs)) {
       return { success: false, invitationId: invId, tenderCode, error: 'Empty document list' };
     }
 
     // Other official lists contain technical documents and clarifications.
     // Keep a failed list visible in the result; it must not mean zero files.
-    const discoveryErrors: string[] = [];
     for (const [kind, url] of [
       ['technical', `https://www.tender.gov.mn/api/gw/88/list?tenderDocumentId=${tenderDocId}`],
       ['clarifications', `https://www.tender.gov.mn/api/gw/106/list?invitationId=${invId}`],
@@ -174,8 +193,36 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
         }
       } catch { discoveryErrors.push(`${kind} attachment list unavailable`); }
     }
+    }
 
     if (!docs.length) return { success: false, invitationId: invId, tenderCode, error: discoveryErrors.length ? discoveryErrors.join('; ') : 'No attachments found' };
+
+    // Keep the official attachment list even if a subsequent PDF download is
+    // blocked. Merge with the latest row so existing uploaded or stored files
+    // remain available, and never label a discovered file as already read.
+    if (browserTransport?.getLegacyDocuments) {
+      const { data: latest, error: readError } = await supabase.from('tenders').select('raw_data').eq('invitation_id', tender.invitation_id || invId).maybeSingle();
+      if (readError || !latest) throw new Error(`Could not read tender before saving attachment list: ${readError?.message || 'not found'}`);
+      const raw: any = latest.raw_data || {};
+      const bundle: any = raw.liveBundle || {};
+      const previous: any[] = Array.isArray(bundle.documents) ? bundle.documents : [];
+      const merged = mergeLegacyAttachments(previous, docs);
+      const pdfDocs = docs.filter((doc: any) => String(doc.fileExtention || '').toLowerCase() === 'pdf' || !doc.fileName || !/\.[a-z0-9]{2,5}$/i.test(doc.fileName) || /\.pdf$/i.test(doc.fileName));
+      const allVerified = pdfDocs.length > 0 && pdfDocs.every((doc: any) => previous.some((old: any) => String(old.fileId) === String(doc.fileId) && old.isStored && old.verifiedPdf && old.downloadUrl));
+      const nextRaw = { ...raw, tenderDocumentId: tenderDocId || raw.tenderDocumentId, liveBundle: {
+        ...bundle, schemaVersion: LIVE_BUNDLE_SCHEMA_VERSION, documents: merged.documents,
+        extractionStatus: bundle.extractionStatus === 'complete' && merged.newlyDiscovered ? 'partial' : (bundle.extractionStatus || 'unavailable'),
+        attachmentDiscoverySource: 'legacy_public_page',
+        attachmentDiscoveryVersion: 1,
+        attachmentDiscoveredAt: new Date().toISOString(),
+        acquisitionErrors: allVerified ? [] : (bundle.acquisitionErrors || []),
+      } };
+      const { error: saveError } = await supabase.from('tenders').update({ raw_data: nextRaw, updated_at: new Date().toISOString() }).eq('invitation_id', tender.invitation_id || invId);
+      if (saveError) throw new Error(`Could not save discovered attachments: ${saveError.message}`);
+      tender.raw_data = nextRaw;
+      if (allVerified && !options.discoveryOnly) return { success: true, invitationId: invId, tenderCode, unchanged: true };
+    }
+    if (options.discoveryOnly) return { success: true, invitationId: invId, tenderCode, discoveryOnly: true };
     // Prefer a PDF when the source lists spreadsheets or other formats first.
     const firstPdf = docs.findIndex((doc: any) => String(doc.fileExtention || '').toLowerCase() === 'pdf' || !doc.fileName || !/\.[a-z0-9]{2,5}$/i.test(doc.fileName) || /\.pdf$/i.test(doc.fileName));
     if (firstPdf < 0) return { success: false, invitationId: invId, tenderCode, error: 'No PDF attachment found' };
@@ -258,7 +305,7 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
     const extraText: string[] = [];
     for (const doc of docs.slice(1)) {
       const old = existingLiveBundle.documents?.find((item: any) => String(item.fileId) === String(doc.fileId));
-      if (old?.isStored && old?.downloadUrl) { extraDocuments.push(old); continue; }
+      if (old?.isStored && old?.verifiedPdf && old?.downloadUrl) { extraDocuments.push(old); continue; }
       const name = doc.fileName || `${doc.fileId}.pdf`;
       const ext = String(doc.fileExtention || name.split('.').pop() || '').toLowerCase();
       if (ext && ext !== 'pdf' && /\.[a-z0-9]{2,5}$/i.test(name)) {
@@ -284,7 +331,7 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
         } catch { /* The file is stored; text extraction can be retried. */ }
         const readable = pages.filter((page) => page.length > 20).length;
         if (readable) extraText.push(`--- DOCUMENT ${doc.fileId}: ${name} ---\n` + pages.map((page, i) => page.length > 20 ? `[Page ${i + 1}]\n${page}` : '').filter(Boolean).join('\n\n'));
-        extraDocuments.push({ ...doc, fileName: name, downloadUrl: url, storagePath: path, isStored: true, fileSize: buffer.length,
+        extraDocuments.push({ ...doc, fileName: name, downloadUrl: url, storagePath: path, isStored: true, verifiedPdf: true, fileSize: buffer.length,
           extractionStatus: readable ? (readable >= count ? 'text_extracted' : 'partial') : (count ? 'scanned_not_processed' : 'not_extracted'),
           extractedPageCount: readable, totalPageCount: count });
       } catch (error: any) {
@@ -301,6 +348,7 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
     for (const [key, value] of Object.entries(parsedSpecs)) {
       if (value != null && value !== '' && (!Array.isArray(value) || value.length)) mergedSpecs[key] = value;
     }
+    const preservedDocs = (existingLiveBundle.documents || []).filter((old: any) => !docs.some((doc: any) => String(doc.fileId) === String(old.fileId)));
 
     const updatedRawData = {
       ...existingRaw,
@@ -315,8 +363,8 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
         schemaVersion: LIVE_BUNDLE_SCHEMA_VERSION,
         tenderDocumentId: tenderDocId,
         pdfPageCount: pageCount,
-        pdfText: [documentText, ...extraText, existingLiveBundle.pdfText].filter(Boolean).join('\n\n').slice(0, 300000),
-        extractionStatus: readablePages && readablePages >= pageCount && extraDocuments.every((doc) => doc.extractionStatus === 'text_extracted') && !discoveryErrors.length ? 'complete' : 'partial',
+        pdfText: replacePdfDocumentSections(existingLiveBundle.pdfText, [documentText, ...extraText]),
+        extractionStatus: readablePages && readablePages >= pageCount && extraDocuments.every((doc) => doc.extractionStatus === 'text_extracted') && preservedDocs.every((doc: any) => doc.extractionStatus === 'text_extracted') && !discoveryErrors.length ? 'complete' : 'partial',
         fullScopeOfWork: scopeSummary || existingLiveBundle.fullScopeOfWork,
         documents: [
           {
@@ -327,6 +375,7 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
             storagePath,
             fileSize: pdfBuffer.length,
             isStored: true,
+            verifiedPdf: true,
             storedAt: new Date().toISOString(),
             pageCount,
             totalPageCount: pageCount,
@@ -335,10 +384,11 @@ export async function syncSingleTenderPdf(tender: any): Promise<SyncPdfResult> {
             extractedSummary: scopeSummary,
           },
           ...extraDocuments,
-          ...(existingLiveBundle.documents || []).filter((old: any) => !docs.some((doc: any) => String(doc.fileId) === String(old.fileId))),
+          ...preservedDocs,
         ],
         acquisitionErrors: discoveryErrors,
         attachmentDiscoveryVersion: 1,
+        attachmentDiscoverySource: browserTransport?.getLegacyDocuments ? 'legacy_public_page' : 'gateway',
         structuredSpecs: {
           ...mergedSpecs,
           rawSpecText: mergedSpecs.rawSpecText || scopeSummary,
@@ -388,9 +438,10 @@ export async function getMissingPdfCandidates(maxCandidates = 1000): Promise<any
 
     const { data: batch, error } = await supabase
       .from('tenders')
-      .select('invitation_id, invitation_number, tender_code, tender_name, total_budget, budget_entity_name, raw_data')
+      .select('invitation_id, invitation_number, tender_code, tender_name, total_budget, budget_entity_name, receive_date, raw_data')
       .eq('is_receiving', 1)
       .order('publish_date', { ascending: false })
+      .order('invitation_id', { ascending: true })
       .range(from, to);
 
     if (error) {
@@ -402,12 +453,15 @@ export async function getMissingPdfCandidates(maxCandidates = 1000): Promise<any
     }
 
     for (const t of batch) {
+      if (t.receive_date && Number.isFinite(Date.parse(t.receive_date)) && Date.parse(t.receive_date) < Date.now()) continue;
       const rawData = t.raw_data;
       const docs = rawData?.liveBundle?.documents;
       const hasStoredPdf = Boolean(rawData?.pdfUrl?.includes('supabase.co') || docs?.some((d: any) => d.isStored));
       const missingKnownPdf = docs?.some((d: any) => d.fileId && !d.isStored && !String(d.downloadUrl || '').includes('supabase.co') && (!d.fileName || /\.pdf$/i.test(d.fileName)));
       const incompleteDiscovery = rawData?.liveBundle?.attachmentDiscoveryVersion !== 1 || rawData?.liveBundle?.acquisitionErrors?.length > 0;
-      if (!hasStoredPdf || missingKnownPdf || incompleteDiscovery) {
+      const lastDiscovery = Date.parse(rawData?.liveBundle?.attachmentDiscoveredAt || '');
+      const staleDiscovery = !Number.isFinite(lastDiscovery) || lastDiscovery > Date.now() || Date.now() - lastDiscovery >= 24 * 60 * 60 * 1000;
+      if (!hasStoredPdf || missingKnownPdf || incompleteDiscovery || staleDiscovery) {
         candidates.push(t);
         if (candidates.length >= maxCandidates) break;
       }
@@ -439,12 +493,14 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
 
   let successCount = 0;
   let failCount = 0;
+  let discoveryCount = 0;
   let processedIndex = 0;
-  let consecutiveBlocks = 0;
+  let sourceDownloadBlocked = false;
+  let stopWork = false;
 
   // Worker loop
   async function worker(workerId: number) {
-    while (processedIndex < candidates.length && consecutiveBlocks < 3) {
+    while (processedIndex < candidates.length && !stopWork) {
       const currentIndex = processedIndex++;
       const tender = candidates[currentIndex];
       const invId = String(tender.invitation_id);
@@ -453,10 +509,23 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
 
       console.log(`[W${workerId}][${currentIndex + 1}/${candidates.length} - ${progressPct}%] 📄 Processing: ${tender.tender_code || invId} — "${title.slice(0, 42)}..."`);
 
-      const result = await syncSingleTenderPdf(tender);
+      const discoveryOnly = sourceDownloadBlocked && !!(globalThis as any).__TENDER_SOURCE_BROWSER__?.getLegacyDocuments;
+      const result = await syncSingleTenderPdf(tender, { discoveryOnly });
 
       if (result.success) {
-        consecutiveBlocks = 0;
+        if (result.discoveryOnly) {
+          if (!result.skipped) discoveryCount++;
+          console.log(result.skipped ? '  ↪ Attachment list was checked recently.' : '  📋 Saved the attachment list; PDF download remains blocked.');
+          await sleep(1200);
+          continue;
+        }
+        if (result.unchanged) {
+          successCount++;
+          console.log('  ↪ Verified attachments are unchanged.');
+          await sleep(1200);
+          continue;
+        }
+        if (result.warnings?.some((warning) => /Attachment access failed: HTTP (403|429)|source access challenged/i.test(warning))) sourceDownloadBlocked = true;
         if (result.warnings?.length) failCount++; else successCount++;
         const sizeKb = ((result.fileSize || 0) / 1024).toFixed(0);
         console.log(`  ✅ [W${workerId}] Stored: ${result.fileName} (${sizeKb} KB, ${result.pageCount}p)`);
@@ -464,8 +533,13 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
         if (result.warnings?.length) console.warn(`     ⚠ Incomplete: ${result.warnings.join('; ')}`);
       } else {
         failCount++;
-        if (/challenge|HTTP 403|HTTP 429/i.test(result.error || '')) consecutiveBlocks++;
-        else consecutiveBlocks = 0;
+        const downloadBlocked = /Attachment access failed: HTTP (403|429)|source access challenged/i.test(result.error || '');
+        if (downloadBlocked && !discoveryOnly && (globalThis as any).__TENDER_SOURCE_BROWSER__?.getLegacyDocuments) {
+          sourceDownloadBlocked = true;
+          console.warn('Source blocked PDF downloads; continuing with attachment discovery only.');
+        } else if (/challenge|HTTP 403|HTTP 429|blocked response/i.test(result.error || '')) {
+          stopWork = true;
+        }
         console.warn(`  ⚠️ [W${workerId}] Skipped: ${result.error}`);
       }
 
@@ -478,10 +552,10 @@ export async function processActiveTenders(limit = 10, concurrency = 2) {
   const workers = Array.from({ length: Math.min(concurrency, candidates.length) }, (_, i) => worker(i + 1));
   await Promise.all(workers);
 
-  if (consecutiveBlocks >= 3) console.warn('Stopped after repeated source blocks; retry after access is restored.');
+  if (sourceDownloadBlocked || stopWork) console.warn('PDF access was blocked; retry downloads after access is restored.');
 
   console.log(`\n══════════════════════════════════════════════════════════`);
-  console.log(`🏁 Ingestion finished: ${successCount} stored successfully, ${failCount} skipped/failed.`);
+  console.log(`🏁 Ingestion finished: ${successCount} stored successfully, ${discoveryCount} attachment lists saved, ${failCount} skipped/failed.`);
   console.log(`══════════════════════════════════════════════════════════\n`);
   if (failCount) process.exitCode = 1;
 }

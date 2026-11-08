@@ -10,11 +10,9 @@ const SUPABASE_SERVICE_ROLE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.SUPABASE_SECRET_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  throw new Error('Set SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL) and SUPABASE_SERVICE_ROLE_KEY before syncing.');
-}
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+  : new Proxy({}, { get() { throw new Error('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY before syncing.'); } });
 
 function findBalancedArrayEnd(source, start) {
   let depth = 0;
@@ -135,8 +133,10 @@ function mapToRecord(item, existingRawData = {}) {
 async function syncPages(startPage = 1, maxPages = 50) {
   console.log(`Starting sync from page ${startPage} for up to ${maxPages} pages...`);
   let totalInserted = 0;
+  const seenInvitationIds = new Set();
+  let reachedEnd = false;
   
-  const batchSize = 5;
+  const batchSize = globalThis.__TENDER_SOURCE_BROWSER__ ? 1 : 5;
   for (let p = startPage; p < startPage + maxPages; p += batchSize) {
     const pageBatch = [];
     for (let b = 0; b < batchSize && (p + b) < startPage + maxPages; b++) {
@@ -152,6 +152,7 @@ async function syncPages(startPage = 1, maxPages = 50) {
         throw new Error(`Tender source returned no records on the first requested page (${p}); refusing to report an empty sync as successful.`);
       }
       console.log('No more items found. Stopping.');
+      reachedEnd = true;
       break;
     }
     
@@ -163,6 +164,10 @@ async function syncPages(startPage = 1, maxPages = 50) {
     });
     const items = Array.from(uniqueMap.values());
     const invitationIds = items.map((item) => item.invitationId).filter(Boolean);
+    if (invitationIds.length && invitationIds.every((id) => seenInvitationIds.has(String(id)))) {
+      throw new Error(`Listing pages returned previously seen tenders at page ${p}; refusing to report complete coverage.`);
+    }
+    for (const id of invitationIds) seenInvitationIds.add(String(id));
     const { data: existingRows, error: readError } = await supabase
       .from('tenders')
       .select('invitation_id, raw_data')
@@ -192,10 +197,14 @@ async function syncPages(startPage = 1, maxPages = 50) {
       totalInserted += records.length;
       console.log(`[Batch ${p}-${p + pageBatch.length - 1} / ${startPage + maxPages}] Upserted ${records.length} records. (Total run: ${totalInserted})`);
     }
-    await new Promise(r => setTimeout(r, 250));
+    await new Promise(r => setTimeout(r, globalThis.__TENDER_SOURCE_BROWSER__ ? 1000 : 250));
   }
   
   console.log(`Finished! Total upserted: ${totalInserted}`);
+  if (!reachedEnd) {
+    console.warn(`Reached the configured ${maxPages}-page limit before confirming the end of the listing.`);
+    process.exitCode = 1;
+  }
 }
 
 // Check command line arguments: e.g. node sync-to-supabase.js 1 100
@@ -203,7 +212,7 @@ const args = process.argv.slice(2);
 const startPage = parseInt(args[0]) || 1;
 const maxPages = parseInt(args[1]) || 3000;
 
-module.exports = { syncPages };
+module.exports = { syncPages, parsePageBody };
 
 if (require.main === module) {
   syncPages(startPage, maxPages).catch((error) => {

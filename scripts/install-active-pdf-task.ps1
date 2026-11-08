@@ -2,7 +2,8 @@ param([switch]$Enable)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 if (-not (Get-Command node.exe -ErrorAction SilentlyContinue)) { throw 'Install Node.js 20 or newer.' }
-if ($Enable -and -not (Test-Path (Join-Path $repoRoot '.env.tender-worker'))) { throw 'Create .env.tender-worker with Supabase credentials and your source provider key first.' }
+$localEnv = Join-Path $env:LOCALAPPDATA 'TenderMN\worker.env'
+if ($Enable -and -not (Test-Path -LiteralPath $localEnv) -and -not (Test-Path (Join-Path $repoRoot '.env.tender-worker'))) { throw 'Configure the local Supabase credentials first.' }
 if (-not (Test-Path (Join-Path $repoRoot 'node_modules\tsx\dist\cli.mjs'))) { throw 'Run npm ci in the repository first.' }
 $runner = Join-Path $PSScriptRoot 'run-active-pdf-sync.ps1'
 $action = New-ScheduledTaskAction -Execute (Join-Path $PSHOME 'powershell.exe') -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$runner`"" -WorkingDirectory $repoRoot

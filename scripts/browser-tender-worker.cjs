@@ -32,6 +32,22 @@ function validateSourceUrl(rawUrl) {
   return url;
 }
 
+// Executed in the isolated source page. Only public attachment IDs and names
+// are returned; cookies and browser profile data stay in the browser.
+function extractLegacyDocumentDom() {
+  const value = (selector) => document.querySelector(selector)?.getAttribute('value')?.trim() || '';
+  const docs = Array.from(document.querySelectorAll('a[data-fileid],a[href*="/mn/download/"]')).map((link) => {
+    const fileId = link.getAttribute('data-fileid') || link.getAttribute('href')?.match(/\/mn\/download\/(\d+)/)?.[1] || '';
+    return { fileId, fileName: (link.textContent || '').trim().replace(/\s+/g, ' ') };
+  }).filter((doc) => /^\d+$/.test(doc.fileId));
+  return { invitationId: value('#invitationId'), tenderDocumentId: value('#tenderDocumentId'), tenderId: value('#tenderId'), documents: docs };
+}
+
+function validateLegacyDocuments(result, invitationId) {
+  if (result.invitationId !== String(invitationId)) throw new Error('Legacy page did not identify the requested tender');
+  return { ...result, documents: [...new Map(result.documents.map((doc) => [doc.fileId, doc])).values()] };
+}
+
 async function pageText(page) {
   try {
     return {
@@ -108,7 +124,7 @@ async function launchEdgeForWorker(profileDir) {
 async function run() {
   loadWorkerEnv();
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (process.env.TENDER_WORKER_DIAGNOSTICS_ONLY !== 'true' && (!supabaseUrl || !process.env.SUPABASE_SERVICE_ROLE_KEY)) {
     throw new Error(`Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to ${ENV_FILE}.`);
   }
 
@@ -174,7 +190,18 @@ async function run() {
   async function checkNavigation(page, targetUrl, response, stage) {
     let kind = await inspectNavigation(page, targetUrl, response, stage);
     if (kind === 'challenge') {
-      throw new Error(`Microsoft Edge received a Cloudflare challenge for ${targetUrl}. No manual verification was attempted. See scratch/browser-worker/report.json and source-page.png.`);
+      // The source may finish its normal browser check automatically and then
+      // navigate to the real page. The first 403 is not the final response.
+      const deadline = Date.now() + 30000;
+      while (Date.now() < deadline && kind === 'challenge') {
+        await page.waitForTimeout(500);
+        const latest = navigationResponses.get(page);
+        if (latest && latest !== response) {
+          response = latest;
+          kind = await inspectNavigation(page, targetUrl, latest, `${stage}-after-wait`);
+        }
+      }
+      if (kind === 'challenge') throw new Error(`Microsoft Edge could not complete the source check for ${targetUrl} within 30 seconds. See scratch/browser-worker/report.json and source-page.png.`);
     }
     if (kind !== 'ok') {
       throw new Error(`Edge received a ${kind} response for ${targetUrl}. A 403 block may have no human-verification control. See scratch/browser-worker/report.json and source-page.png.`);
@@ -210,7 +237,22 @@ async function run() {
     const url = validateSourceUrl(rawUrl);
     let page;
     try {
+      // Page navigations can succeed when the source refuses JavaScript fetch
+      // requests. Use a separate tab for HTML pages and keep API requests on
+      // the origin page.
+      if (method === 'GET' && !url.pathname.startsWith('/api/')) {
+        page = await newSourcePage();
+        try {
+          const response = await page.goto(url.toString(), { waitUntil: 'domcontentloaded', timeout: 60000 });
+          await checkNavigation(page, url.toString(), response, 'html-navigation');
+          return await page.content();
+        } finally { await page.close().catch(() => {}); }
+      }
       page = await ensureOriginPage(url);
+      // Reuse the document already loaded by navigation. A second fetch of
+      // the same page can be rejected by the origin even after navigation
+      // succeeded, and isn't needed for the initial detail page.
+      if (method === 'GET' && page.url() === url.toString()) return await page.content();
       const send = () => page.evaluate(async ({ requestUrl, requestMethod, requestBody }) => {
         const response = await fetch(requestUrl, {
           method: requestMethod,
@@ -247,6 +289,23 @@ async function run() {
     }
   }
 
+  async function browserLegacyDocuments(invitationId) {
+    if (!/^\d{1,24}$/.test(String(invitationId))) throw new Error('Invalid tender ID');
+    const url = `https://user.tender.gov.mn/mn/invitation/detail/${invitationId}`;
+    const page = await newSourcePage();
+    try {
+      lastFailurePage = page;
+      const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 });
+      await checkNavigation(page, url, response, 'legacy-detail');
+      return validateLegacyDocuments(await page.evaluate(extractLegacyDocumentDom), invitationId);
+    } catch (error) {
+      failureCount += 1;
+      throw error;
+    } finally {
+      await page.close().catch(() => {});
+    }
+  }
+
   async function browserDownload(rawUrl, allowImage = false) {
     const url = validateSourceUrl(rawUrl);
     if (url.hostname !== 'user.tender.gov.mn' || !/^\/mn\/download\/\d+$/.test(url.pathname)) {
@@ -267,13 +326,17 @@ async function run() {
         page.once('download', onDownload);
         let response = null;
         let navigationError = null;
-        await page.setExtraHTTPHeaders({ Referer: 'https://www.tender.gov.mn/' });
         try {
           response = await page.goto(url.toString(), { waitUntil: 'domcontentloaded', timeout: 60_000 });
         } catch (error) {
           navigationError = error;
         }
-        if (!download) download = await Promise.race([downloadEvent, page.waitForTimeout(750).then(() => null)]);
+        // An initial challenge page can navigate to the download several
+        // seconds later without any human interaction.
+        const isChallenge = response?.headers()['cf-mitigated'] === 'challenge' || /^just a moment/i.test(await page.title().catch(() => ''));
+        if (!download && (!response || response.status() < 400 || isChallenge)) {
+          download = await Promise.race([downloadEvent, page.waitForTimeout(30000).then(() => null)]);
+        }
         page.removeListener('download', onDownload);
         if (download) {
           const filePath = path.join(tempDir, 'attachment.bin');
@@ -327,6 +390,7 @@ async function run() {
     get failureCount() { return failureCount; },
     getText: browserRequestText,
     getBuffer: browserDownload,
+    getLegacyDocuments: browserLegacyDocuments,
   };
 
   try {
@@ -334,49 +398,51 @@ async function run() {
     report.edgeLaunchMode = 'normal-edge-with-loopback-cdp-nonzero-port';
     report.webdriverFlag = await context.pages()[0]?.evaluate(() => navigator.webdriver).catch(() => undefined);
     if (process.env.TENDER_WORKER_DIAGNOSTICS_ONLY === 'true') {
+      if (process.env.TENDER_WORKER_DIAGNOSTIC_LISTING === 'true') {
+        const { parsePageBody } = require('./sync-to-supabase.js');
+        const pages = [];
+        for (let pageNumber = 1; pageNumber <= 2; pageNumber++) {
+          const html = await browserRequestText(`https://www.tender.gov.mn/mn/invitation?page=${pageNumber}`);
+          const rows = parsePageBody(html, pageNumber);
+          if (!rows.length) throw new Error(`Official listing page ${pageNumber} returned no tender records`);
+          pages.push(rows);
+          console.log(`PASS: listing page ${pageNumber} contains ${rows.length} tenders.`);
+        }
+        if (String(pages[0][0].invitationId) === String(pages[1][0].invitationId)) throw new Error('Listing pages 1 and 2 returned the same first tender');
+        report.result = 'pass';
+        report.listing = pages.map((rows) => ({ count: rows.length, firstInvitationId: String(rows[0].invitationId) }));
+        console.log('Read-only listing diagnostic completed; no Supabase rows were modified.');
+        return;
+      }
       const invitationId = process.env.TENDER_WORKER_DIAGNOSTIC_TENDER_ID || '1789954037772';
       if (!/^\d{1,24}$/.test(invitationId)) throw new Error('Invalid diagnostic tender ID.');
       console.log(`Read-only Edge diagnostic for tender ${invitationId}. No Supabase rows are modified.`);
-      const detailUrl = `https://www.tender.gov.mn/mn/invitation/detail/${encodeURIComponent(invitationId)}`;
-      const detailHtml = await browserRequestText(detailUrl);
-      const documentMatch = detailHtml.match(/tenderDocumentId[^\d]{1,20}(\d+)/i);
-      const storedTender = await require('@supabase/supabase-js')
-        .createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY)
-        .from('tenders')
-        .select('raw_data')
-        .eq('invitation_id', invitationId)
-        .maybeSingle();
-      if (storedTender.error) throw new Error(`Could not read the diagnostic tender from Supabase: ${storedTender.error.message}`);
-      const sourcePage = await ensureOriginPage(new URL(detailUrl));
-      await sourcePage.locator('a[href*="user.tender.gov.mn/mn/download/"]').first().waitFor({ timeout: 15_000 }).catch(() => {});
-      const links = await sourcePage.locator('a[href]').evaluateAll((anchors) => anchors.map((anchor) => ({
-        fileName: anchor.textContent.trim(), url: anchor.href,
-      })).filter((link) => /^https:\/\/user\.tender\.gov\.mn\/mn\/download\/\d+$/.test(link.url)));
-      let selectedPdf = links.find((link) => /\.pdf\b/i.test(link.fileName)) || links[0];
-      report.publicAttachmentLinkCount = links.length;
-      if (!selectedPdf) {
-        const tenderDocumentId = Number(documentMatch?.[1] || storedTender.data?.raw_data?.tenderDocumentId);
-        if (!Number.isSafeInteger(tenderDocumentId) || tenderDocumentId <= 0) {
-          throw new Error('No public attachment links or tenderDocumentId were found in the tender page.');
-        }
-        const docsText = await browserRequestText(`https://www.tender.gov.mn/api/gw/153/list?tenderDocumentId=${tenderDocumentId}&offset=1&limit=9999`);
-        const docs = JSON.parse(docsText);
-        if (!Array.isArray(docs)) throw new Error('The official document list did not return an array.');
-        const pdfDoc = docs.find((doc) => String(doc.fileExtention || doc.fileExtension || 'pdf').toLowerCase() === 'pdf');
-        if (!pdfDoc?.fileId) throw new Error(`No PDF was listed in the primary document list (${docs.length} files).`);
-        selectedPdf = { fileName: pdfDoc.fileName, url: `https://user.tender.gov.mn/mn/download/${pdfDoc.fileId}` };
+      const found = await browserLegacyDocuments(invitationId);
+      const pdfs = found.documents.filter((doc) => /\.pdf$/i.test(doc.fileName));
+      report.publicAttachmentLinkCount = found.documents.length;
+      if (process.env.TENDER_WORKER_DIAGNOSTIC_DISCOVERY_ONLY === 'true') {
+        report.result = 'pass';
+        report.discoveredDocuments = found.documents;
+        console.log(`PASS: discovered ${found.documents.length} attachments (${pdfs.length} PDFs) from the official tender page.`);
+        for (const doc of found.documents) console.log(`  ${doc.fileId}: ${doc.fileName}`);
+        console.log('Read-only discovery diagnostic completed; no files were downloaded or database rows modified.');
+        return;
       }
-      const attachment = await browserDownload(selectedPdf.url);
-      const parsedPdf = await require('pdf-parse/lib/pdf-parse.js')(attachment.buffer);
-      report.pdf = { fileName: selectedPdf.fileName, bytes: attachment.buffer.length, pages: parsedPdf.numpages, nativeTextCharacters: parsedPdf.text.length };
+      if (!pdfs.length) throw new Error('No PDF was listed on the public tender page.');
+      report.pdfs = [];
+      for (const doc of pdfs.slice(0, 10)) {
+        const attachment = await browserDownload(`https://user.tender.gov.mn/mn/download/${doc.fileId}`);
+        const parsedPdf = await require('pdf-parse/lib/pdf-parse.js')(attachment.buffer);
+        report.pdfs.push({ fileName: doc.fileName, bytes: attachment.buffer.length, pages: parsedPdf.numpages, nativeTextCharacters: parsedPdf.text.length });
+        console.log(`PASS: Edge downloaded ${doc.fileName} (${attachment.buffer.length} bytes, ${parsedPdf.numpages} pages, ${parsedPdf.text.length} text characters).`);
+      }
       report.result = 'pass';
-      console.log(`PASS: Edge downloaded ${selectedPdf.fileName} (${attachment.buffer.length} bytes, ${parsedPdf.numpages} pages, ${parsedPdf.text.length} text characters).`);
       console.log('The read-only diagnostic completed; no tender, queue, or PDF data was written to Supabase.');
-      console.log('This verifies one PDF download only. Listing sync and the full PDF queue still need a separate run.');
+      console.log(`Verified ${report.pdfs.length} of ${pdfs.length} listed PDFs. Listing sync and the full PDF queue still need a separate run.`);
       return;
     }
 
-    const maxPages = Math.max(1, Number(process.env.TENDER_MAX_SYNC_PAGES) || 30);
+    const maxPages = Math.max(1, Number(process.env.TENDER_MAX_SYNC_PAGES) || 3000);
     if (process.env.TENDER_SKIP_LISTING_SYNC === 'true') {
       console.log('Skipping tender listing sync because TENDER_SKIP_LISTING_SYNC=true.');
     } else {
@@ -385,7 +451,6 @@ async function run() {
       await syncPages(1, maxPages);
     }
 
-    console.log('Processing the Supabase PDF queue through Edge, including scanned-page OCR where Poppler is installed.');
     process.env.TENDER_PDF_QUEUE_LIBRARY = 'true';
     process.env.PDF_JOB_CONCURRENCY = process.env.PDF_JOB_CONCURRENCY || '1';
     require.extensions['.ts'] = (module, filename) => {
@@ -402,8 +467,19 @@ async function run() {
       });
       module._compile(compiled.outputText, filename);
     };
-    const { processPdfQueue } = require('./process-pdf-queue.ts');
-    await processPdfQueue();
+    if (process.env.TENDER_BROWSER_ACTIVE_PDFS === 'true') {
+      console.log('Downloading and processing active tender attachments through Edge.');
+      const { processActiveTenders } = require('./sync-active-pdfs.ts');
+      const limit = Number(process.env.TENDER_PDF_LIMIT) || Number.MAX_SAFE_INTEGER;
+      await processActiveTenders(limit, 1);
+    }
+    if (process.env.TENDER_BROWSER_ACTIVE_PDFS !== 'true' || process.env.TENDER_RUN_PDF_QUEUE === 'true') {
+      console.log('Processing the PDF queue, including scanned-page OCR where Poppler is installed.');
+      const { processPdfQueue } = require('./process-pdf-queue.ts');
+      await processPdfQueue();
+    } else {
+      console.log('Separate scanned-PDF OCR queue not run; enable it only after verifying its backlog and Poppler setup.');
+    }
     report.result = process.exitCode ? 'failed' : 'completed';
     console.log(process.exitCode ? 'Browser worker finished with failed PDF jobs; see logs.' : 'Browser-based tender sync and PDF extraction completed.');
   } catch (error) {
@@ -426,7 +502,10 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-  console.error('Browser tender worker failed:', error instanceof Error ? error.message : error);
-  process.exitCode = 1;
-});
+module.exports = { extractLegacyDocumentDom, validateLegacyDocuments };
+if (require.main === module) {
+  run().catch((error) => {
+    console.error('Browser tender worker failed:', error instanceof Error ? error.message : error);
+    process.exitCode = 1;
+  });
+}

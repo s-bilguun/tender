@@ -17,7 +17,14 @@ if (IsRecent $successFile (New-TimeSpan -Hours 24)) { exit 0 }
 if (IsRecent $attemptFile (New-TimeSpan -Hours 3)) { exit 0 }
 $now.ToString('o') | Set-Content -LiteralPath $attemptFile -Encoding ASCII
 Set-Location $repoRoot
-& node.exe (Join-Path $repoRoot 'node_modules\tsx\dist\cli.mjs') (Join-Path $PSScriptRoot 'sync-active-pdfs.ts') --all --concurrency 1 2>&1 | Tee-Object -FilePath $log -Append
+$localEnv = Join-Path $env:LOCALAPPDATA 'TenderMN\worker.env'
+if (-not $env:TENDER_WORKER_ENV_FILE -and (Test-Path -LiteralPath $localEnv)) { $env:TENDER_WORKER_ENV_FILE = $localEnv }
+$nodePath = Join-Path $repoRoot 'scratch\pdf-worker-runtime\node.exe'
+if (-not (Test-Path -LiteralPath $nodePath)) { $nodePath = (Get-Command node.exe -ErrorAction Stop).Source }
+$version = & $nodePath --version
+if ($version -notmatch '^v(\d+)' -or [int]$Matches[1] -lt 20) { throw 'The worker needs Node.js 20 or newer.' }
+$env:TENDER_BROWSER_ACTIVE_PDFS = 'true'
+& $nodePath (Join-Path $PSScriptRoot 'browser-tender-worker.cjs') 2>&1 | Tee-Object -FilePath $log -Append
 $syncExit = $LASTEXITCODE
 if ($syncExit -eq 0) { [DateTime]::UtcNow.ToString('o') | Set-Content -LiteralPath $successFile -Encoding ASCII }
 exit $syncExit
