@@ -28,6 +28,8 @@ if (-not (Test-Path -LiteralPath $nodePath)) { $nodePath = (Get-Command node.exe
 $version = & $nodePath --version
 if ($version -notmatch '^v(\d+)' -or [int]$Matches[1] -lt 20) { throw 'The worker needs Node.js 20 or newer.' }
 $env:TENDER_BROWSER_ACTIVE_PDFS = 'true'
+# Allow Node warnings on stderr without PowerShell terminating the sync.
+$ErrorActionPreference = 'Continue'
 & $nodePath (Join-Path $PSScriptRoot 'browser-tender-worker.cjs') 2>&1 | Tee-Object -FilePath $log -Append
 $syncExit = $LASTEXITCODE
 if ($syncExit -eq 0) { [DateTime]::UtcNow.ToString('o') | Set-Content -LiteralPath $successFile -Encoding ASCII }

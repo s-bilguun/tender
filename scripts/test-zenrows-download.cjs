@@ -1,6 +1,8 @@
 const { URLSearchParams } = require('url');
 (async () => {
-  const params = new URLSearchParams({ apikey: process.env.ZENROWS_API_KEY || '', url: 'https://user.tender.gov.mn/mn/download/1793628518651', antibot: 'true', premium_proxy: 'true' });
+  const fileId = process.argv[2] || '1793628518651';
+  if (!/^\d+$/.test(fileId)) throw new Error('Invalid attachment ID.');
+  const params = new URLSearchParams({ apikey: process.env.ZENROWS_API_KEY || '', url: `https://user.tender.gov.mn/mn/download/${fileId}`, antibot: 'true', premium_proxy: 'true' });
   console.log('Testing one official PDF through ZenRows. This can take a minute.');
   const response = await fetch(`https://api.zenrows.com/v1/?${params}`, { signal: AbortSignal.timeout(90000) });
   if (!response.ok) throw new Error(`Provider returned HTTP ${response.status}.`);
