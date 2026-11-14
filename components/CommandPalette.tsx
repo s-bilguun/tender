@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Search, Sparkles, Layers, Download, LayoutGrid, 
-  List, Bookmark, ArrowRight, CornerDownLeft, 
-  ShieldCheck, Clock, X, Building2, Cpu, Stethoscope, 
-  Pickaxe, Utensils, Truck, Shield, BookOpen, Scale, FileUp
+  Search, Sparkles, Download, FileText, 
+  Bookmark, ArrowRight, CornerDownLeft, 
+  ShieldCheck, Clock, X, FileUp
 } from 'lucide-react';
 import { TenderItem, TenderFilterParams } from '@/lib/types';
 import { INDUSTRIES } from '@/lib/taxonomy';
@@ -17,8 +16,8 @@ interface CommandPaletteProps {
   onFilterChange: (filters: Partial<TenderFilterParams>) => void;
   onOpenAI: (tender?: TenderItem) => void;
   onExportCSV: () => void;
-  onToggleView: () => void;
-  viewMode: 'table' | 'grid';
+  onToggleView?: () => void;
+  viewMode?: 'table' | 'grid';
   tenders: TenderItem[];
   savedCount: number;
 }
@@ -29,8 +28,6 @@ export function CommandPalette({
   onFilterChange,
   onOpenAI,
   onExportCSV,
-  onToggleView,
-  viewMode,
   tenders,
   savedCount,
 }: CommandPaletteProps) {
@@ -111,14 +108,14 @@ export function CommandPalette({
     });
 
     items.push({
-      id: 'action-view-toggle',
-      title: viewMode === 'table' ? 'Картын харагдац руу шилжих' : 'Хүснэгтийн харагдац руу шилжих',
-      subtitle: `Одоогийн горим: ${viewMode === 'table' ? 'Хүснэгт' : 'Карт'}`,
-      category: 'action',
-      icon: viewMode === 'table' ? <LayoutGrid className="h-4 w-4 text-slate-600" /> : <List className="h-4 w-4 text-slate-600" />,
+      id: 'filter-has-docs',
+      title: 'PDF баримт уншсан тендерүүд (With PDF Specs)',
+      subtitle: 'ТШББ болон техникийн задаргаатай тендерүүдийг шүүх',
+      category: 'filter',
+      icon: <FileText className="h-4 w-4 text-slate-600 dark:text-zinc-400" />,
       onSelect: () => {
         onClose();
-        onToggleView();
+        onFilterChange({ hasDocs: true, page: 1 });
       },
     });
 
@@ -207,7 +204,7 @@ export function CommandPalette({
         item.title.toLowerCase().includes(qLower) ||
         (item.subtitle && item.subtitle.toLowerCase().includes(qLower))
     );
-  }, [query, tenders, viewMode, savedCount, onClose, onFilterChange, onOpenAI, onExportCSV, onToggleView]);
+  }, [query, tenders, savedCount, onClose, onFilterChange, onOpenAI, onExportCSV]);
 
   // Handle arrow navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get('status') || undefined;
     const tabMode = (searchParams.get('tabMode') as any) || undefined;
     const urgency = (searchParams.get('urgency') as any) || undefined;
+    const hasDocs = searchParams.get('hasDocs') === '1' || searchParams.get('hasDocs') === 'true';
     const chinaEligibility = (searchParams.get('chinaEligibility') as any) || undefined;
     const sortBy = (searchParams.get('sortBy') as TenderFilterParams['sortBy']) || 'date_desc';
     const page = Math.max(1, Number(searchParams.get('page')) || 1);
@@ -159,6 +160,10 @@ export async function GET(request: NextRequest) {
         const now = new Date();
         query = query.gte('publish_date', new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString())
           .lte('publish_date', now.toISOString());
+      }
+
+      if (hasDocs) {
+        query = query.or('raw_data->>pdfUrl.not.is.null,raw_data->liveBundle.not.is.null,raw_data->structuredSpecs.not.is.null');
       }
 
       // Sorting
@@ -332,6 +337,12 @@ export async function GET(request: NextRequest) {
 
         if (tabMode === 'no_guarantee') {
           mappedItems = mappedItems.filter((item) => item.liveBundleSummary?.isBidSecurityExempt);
+        }
+
+        if (hasDocs) {
+          mappedItems = mappedItems.filter((item) =>
+            Boolean(item.liveBundleSummary?.hasBundle || item.raw_data?.hasPdf || (item.items && item.items.length > 0))
+          );
         }
 
         if (chinaEligibility && chinaEligibility !== 'all') {

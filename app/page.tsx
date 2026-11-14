@@ -6,9 +6,7 @@ import { getTranslation } from '@/lib/translations';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { Header } from '@/components/Header';
 import { DashboardKPICards } from '@/components/DashboardKPICards';
-import { GlobalSearchBar } from '@/components/GlobalSearchBar';
 import { DiscoveryCardsHub } from '@/components/DiscoveryCardsHub';
-import { TenderTable } from '@/components/TenderTable';
 import { TenderRow } from '@/components/TenderRow';
 import { TenderFilters } from '@/components/TenderFilters';
 import { TenderDocAuditModal } from '@/components/TenderDocAuditModal';
@@ -73,7 +71,6 @@ export default function Home() {
   const [stats, setStats] = useState<TenderStats | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
 
   // Search Input State (Synchronized between Header and Main Filter Center)
   const [searchInputValue, setSearchInputValue] = useState<string>('');
@@ -198,6 +195,8 @@ export default function Home() {
       if (currentFilters.status && currentFilters.status !== 'all') params.append('status', currentFilters.status);
       if (currentFilters.tabMode) params.append('tabMode', currentFilters.tabMode);
       if (currentFilters.urgency && currentFilters.urgency !== 'all') params.append('urgency', currentFilters.urgency);
+      if (currentFilters.hasDocs) params.append('hasDocs', '1');
+      if (currentFilters.chinaEligibility && currentFilters.chinaEligibility !== 'all') params.append('chinaEligibility', currentFilters.chinaEligibility);
       if (currentFilters.sortBy) params.append('sortBy', currentFilters.sortBy);
       if (currentFilters.year && currentFilters.year !== 'all') params.append('year', currentFilters.year);
       if (currentFilters.dateFrom) params.append('dateFrom', currentFilters.dateFrom);
@@ -389,6 +388,8 @@ export default function Home() {
       status: 'receiving',
       tabMode: 'active',
       urgency: 'all',
+      hasDocs: undefined,
+      chinaEligibility: undefined,
       year: undefined,
       dateFrom: undefined,
       dateTo: undefined,
@@ -413,9 +414,14 @@ export default function Home() {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-200">
       
-      {/* 1. Fixed Left Sidebar Navigation Panel (w-[260px]) */}
+      {/* 1. Functional Workspace Left Rail */}
       <DashboardSidebar
+        filters={filters}
+        onFilterChange={handleFilterChange}
         activeCount={stats?.activeTendersCount}
+        closingCount={stats?.closingSoonCount}
+        resultCount={stats?.resultCount}
+        totalCount={stats?.totalCount}
         lastUpdatedAt={stats?.lastUpdatedAt}
         activeSection={activeSection}
         onSelectSection={handleSidebarSelectSection}
@@ -436,7 +442,7 @@ export default function Home() {
       {/* 2. Main Independent Scrollable Content Area */}
       <div className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
         
-        {/* Optimized Top Header Bar */}
+        {/* Streamlined Top Header Bar */}
         <Header
           locale={locale}
           setLocale={setLocale}
@@ -451,22 +457,23 @@ export default function Home() {
           searchValue={searchInputValue}
           onSearchChange={setSearchInputValue}
           onSearchSubmit={handleGlobalSearchSubmit}
+          onSelectSuggestion={handleSelectSearchSuggestion}
           activeSectionTitle={
-            activeSection === 'watchlist'
-              ? (locale === 'mn' ? 'Хадгалсан төслүүд' : locale === 'zh' ? '我的收藏' : 'My Saved Bids')
-              : activeSection === 'buyers'
-              ? (locale === 'mn' ? 'Захиалагч байгууллагууд' : locale === 'zh' ? '采购单位' : 'Buyer Intelligence')
+            filters.tabMode === 'watchlist'
+              ? (locale === 'mn' ? 'Хадгалсан төслүүд' : locale === 'zh' ? '我的收藏' : 'Watchlist')
+              : filters.tabMode === 'closing_soon'
+              ? (locale === 'mn' ? 'Яаралтай тендерүүд' : locale === 'zh' ? '即将截标' : 'Closing Soon')
+              : filters.tabMode === 'result'
+              ? (locale === 'mn' ? 'Шалгарсан үр дүн' : locale === 'zh' ? '中标结果' : 'Awarded')
               : undefined
           }
         />
 
-        {/* Independently Scrollable Main Viewport (Strict 8px Grid Multiples) */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Independently Scrollable Main Viewport */}
+        <main ref={mainRef} className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-8 space-y-5">
           
           {/* Section: Dashboard Overview / Top KPI Row */}
-          <section id="dashboard" className="space-y-6">
-            
-            {/* Horizontal Row of Clean KPI Cards */}
+          <section id="dashboard">
             <DashboardKPICards
               stats={stats}
               locale={locale}
@@ -475,33 +482,18 @@ export default function Home() {
                 document.getElementById('database')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
             />
-
-
           </section>
 
-          {/* Section: Tender Database Feed & Search Center */}
-          <section id="database" className="space-y-4 pt-2">
+          {/* Section: Tender Database Feed & Filter Console */}
+          <section id="database" className="space-y-3">
             
-            {/* Primary Search Bar with Quick Presets */}
-            <GlobalSearchBar
-              value={searchInputValue}
-              onChange={setSearchInputValue}
-              onSubmit={handleGlobalSearchSubmit}
-              onClear={() => handleFilterChange({ search: undefined, page: 1 })}
-              locale={locale}
-              totalFound={totalCount}
-              onSelectSuggestion={handleSelectSearchSuggestion}
-            />
-
-            {/* Comprehensive Tender Filters & Workflow Console */}
+            {/* Clean Single-Bar Tender Filters Console */}
             <TenderFilters
               filters={filters}
               onFilterChange={handleFilterChange}
               locale={locale}
               totalFound={totalCount}
               watchlistCount={savedIds.size}
-              viewMode={viewMode}
-              setViewMode={setViewMode}
               stats={stats}
               onExportCSV={handleExportCSV}
             />
@@ -509,49 +501,64 @@ export default function Home() {
             {/* Watchlist anchor target */}
             <div id="watchlist" />
 
-            {/* Tender Result Cards / Table */}
-            {!isLoading && displayedTenders.length > 0 && (
-              <p className="px-1 text-sm text-slate-600 dark:text-zinc-400">
-                {locale === 'zh'
-                  ? `共找到 ${totalCount.toLocaleString('en-US')} 个招标`
-                  : locale === 'en'
-                  ? `${totalCount.toLocaleString('en-US')} tenders found`
-                  : `${totalCount.toLocaleString('en-US')} тендер олдлоо`}
-                {filters.search ? <span className="text-slate-400 dark:text-zinc-500"> · “{filters.search}”</span> : null}
-              </p>
-            )}
+            {/* Unified High-Density Tender List Table */}
             {isLoading ? (
-              viewMode === 'table' ? (
-                <TenderSkeleton count={8} viewMode="table" />
-              ) : (
-                <TenderSkeleton count={6} viewMode="grid" />
-              )
+              <TenderSkeleton count={6} viewMode="grid" />
             ) : displayedTenders.length === 0 ? (
               <EmptyState
                 onResetFilters={handleResetAllFilters}
                 locale={locale}
                 onSelectSuggestion={handleSelectSearchSuggestion}
               />
-            ) : viewMode === 'table' ? (
-              <TenderTable
-                tenders={displayedTenders}
-                locale={locale}
-                savedIds={savedIds}
-                onToggleSave={handleToggleSave}
-                onAskAI={handleAskAI}
-              />
             ) : (
-              <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden divide-y divide-slate-200 dark:divide-zinc-800 bg-white dark:bg-zinc-900">
-                {displayedTenders.map((tender) => (
-                  <TenderRow
-                    key={String(tender.invitationId)}
-                    tender={tender}
-                    locale={locale}
-                    isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
-                    onToggleSave={handleToggleSave}
-                    onAskAI={handleAskAI}
-                  />
-                ))}
+              <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900">
+                {/* Summary Utility Header */}
+                <div className="px-4 sm:px-5 py-2.5 border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="text-slate-600 dark:text-zinc-300 font-medium">
+                    <span className="tabular-nums font-semibold text-slate-900 dark:text-white">
+                      {filters.tabMode === 'watchlist' ? displayedTenders.length.toLocaleString('en-US') : totalCount.toLocaleString('en-US')}
+                    </span>{' '}
+                    {locale === 'zh' ? '个匹配招标' : locale === 'en' ? 'tenders found' : 'тендер олдлоо'}
+                    {filters.search ? <span className="text-slate-400 dark:text-zinc-500"> · “{filters.search}”</span> : null}
+                  </div>
+                  <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-zinc-400">
+                    {filters.hasDocs && (
+                      <span className="text-slate-900 dark:text-zinc-200 font-medium">
+                        {locale === 'zh' ? '仅显示含 PDF' : locale === 'en' ? 'PDF Specs Only' : 'PDF задаргаатай'}
+                      </span>
+                    )}
+                    {filters.chinaEligibility && filters.chinaEligibility !== 'all' && (
+                      <span className="text-slate-900 dark:text-zinc-200 font-medium">
+                        {filters.chinaEligibility === 'direct'
+                          ? (locale === 'zh' ? '允许直投' : locale === 'en' ? 'Direct Foreign Bid' : 'Шууд оролцох')
+                          : filters.chinaEligibility === 'joint_venture'
+                          ? (locale === 'zh' ? '需联合体' : locale === 'en' ? 'JV Required' : 'Түншлэл (JV)')
+                          : (locale === 'zh' ? '仅限本土' : locale === 'en' ? 'Domestic Only' : 'Зөвхөн дотоодын')}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Desktop Table Column Header */}
+                <div className="hidden md:grid grid-cols-[minmax(0,1fr)_10rem_8.5rem_5rem] gap-x-5 px-5 py-2 bg-slate-50/80 dark:bg-zinc-950/40 border-b border-slate-200 dark:border-zinc-800 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                  <span>{locale === 'zh' ? '招标项目与采购方' : locale === 'en' ? 'Tender & Buyer' : 'Тендер ба Захиалагч'}</span>
+                  <span className="text-right">{locale === 'zh' ? '预算金额' : locale === 'en' ? 'Budget' : 'Төсөвт өртөг'}</span>
+                  <span className="text-right">{locale === 'zh' ? '截止时间' : locale === 'en' ? 'Deadline' : 'Эцсийн хугацаа'}</span>
+                  <span />
+                </div>
+
+                <div className="divide-y divide-slate-200/80 dark:divide-zinc-800">
+                  {displayedTenders.map((tender) => (
+                    <TenderRow
+                      key={String(tender.invitationId)}
+                      tender={tender}
+                      locale={locale}
+                      isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
+                      onToggleSave={handleToggleSave}
+                      onAskAI={handleAskAI}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -679,8 +686,6 @@ export default function Home() {
           }
         }}
         onExportCSV={handleExportCSV}
-        onToggleView={() => setViewMode((prev) => (prev === 'table' ? 'grid' : 'table'))}
-        viewMode={viewMode}
         tenders={displayedTenders}
         savedCount={savedIds.size}
       />

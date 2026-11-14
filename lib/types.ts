@@ -180,6 +180,7 @@ export interface TenderFilterParams {
   status?: string;         // all, receiving, opened, result, cancelled, requested
   tabMode?: ActiveTabMode;
   noBidSecurityOnly?: boolean;
+  hasDocs?: boolean;
   chinaEligibility?: 'all' | 'direct' | 'joint_venture' | 'domestic_only'; // Filter for Chinese/foreign bidders
   urgency?: 'all' | 'urgent_48h' | 'new_48h' | 'high_budget' | 'urgent' | 'critical' | 'closed' | 'active';
   sortBy?: 'date_desc' | 'budget_desc' | 'budget_asc' | 'deadline_asc';

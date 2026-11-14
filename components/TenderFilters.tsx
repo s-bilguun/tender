@@ -1,16 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Locale, TenderFilterParams, ActiveTabMode, TenderStats } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { INDUSTRIES } from '@/lib/taxonomy';
-import { IndustryIcon } from '@/components/IndustryIcon';
-import { TOP_COMPANIES, COMPANIES_BY_INDUSTRY, CompanyEntity } from '@/components/CompanyDiscoveryBar';
-import { 
-  Search, X, Table as TableIcon, LayoutGrid, ArrowUpDown, 
-  Flame, Star, Calendar, Trophy, Database, 
-  SlidersHorizontal, RotateCcw, ShieldCheck, Sparkles,
-  FileSpreadsheet, Layers, Building2, ChevronDown, ChevronLeft, ChevronRight, List } from 'lucide-react';
+import {
+  X, ArrowUpDown, Flame, Star, Calendar, Trophy, Database,
+  SlidersHorizontal, RotateCcw, ShieldCheck, FileSpreadsheet,
+  FileText, ChevronDown, Globe2, Layers,
+} from 'lucide-react';
 
 interface TenderFiltersProps {
   filters: TenderFilterParams;
@@ -18,35 +16,11 @@ interface TenderFiltersProps {
   locale: Locale;
   totalFound: number;
   watchlistCount?: number;
-  viewMode: 'table' | 'grid';
-  setViewMode: (mode: 'table' | 'grid') => void;
+  viewMode?: 'table' | 'grid';
+  setViewMode?: (mode: 'table' | 'grid') => void;
   stats?: TenderStats;
   onExportCSV?: () => void;
 }
-
-const SHORT_INDUSTRY_NAMES: Record<string, string> = {
-  mining: 'Уул уурхай',
-  construction: 'Барилга, дэд бүтэц',
-  medical: 'Эрүүл мэнд, эм',
-  food: 'Хүнс, хоол',
-  it: 'Мэдээллийн технологи',
-  transport: 'Тээвэр, шатахуун',
-  facility: 'Харуул, цэвэрлэгээ',
-  stationery: 'Бичиг хэрэг, тавилга',
-  consulting: 'Зөвлөх, аудит',
-};
-
-const SHORT_INDUSTRY_NAMES_ZH: Record<string, string> = {
-  mining: '矿业重工',
-  construction: '建筑基建',
-  medical: '医疗器械',
-  food: '食品餐饮',
-  it: '信息技术',
-  transport: '交通燃油',
-  facility: '物业安保',
-  stationery: '办公家具',
-  consulting: '咨询审计',
-};
 
 export const TenderFilters: React.FC<TenderFiltersProps> = ({
   filters,
@@ -54,109 +28,14 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   locale,
   totalFound,
   watchlistCount = 0,
-  viewMode,
-  setViewMode,
   stats,
   onExportCSV,
 }) => {
   const t = getTranslation(locale);
+  const tr = (mn: string, en: string, zh: string) =>
+    locale === 'zh' ? zh : locale === 'en' ? en : mn;
 
-  // Search input state with debouncing
-  const [searchTerm, setSearchTerm] = useState(filters.search || '');
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
-
-  // Sector Horizontal Scroll Ref & State
-  const sectorScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-
-  // Company Horizontal Scroll Ref & State
-  const companyScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollCompanyLeft, setCanScrollCompanyLeft] = useState(false);
-  const [canScrollCompanyRight, setCanScrollCompanyRight] = useState(true);
-
-  const checkSectorScroll = () => {
-    if (sectorScrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = sectorScrollRef.current;
-      setCanScrollLeft(scrollLeft > 4);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 4);
-    }
-  };
-
-  const checkCompanyScroll = () => {
-    if (companyScrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = companyScrollRef.current;
-      setCanScrollCompanyLeft(scrollLeft > 4);
-      setCanScrollCompanyRight(scrollLeft < scrollWidth - clientWidth - 4);
-    }
-  };
-
-  useEffect(() => {
-    checkSectorScroll();
-    checkCompanyScroll();
-    window.addEventListener('resize', checkSectorScroll);
-    window.addEventListener('resize', checkCompanyScroll);
-    return () => {
-      window.removeEventListener('resize', checkSectorScroll);
-      window.removeEventListener('resize', checkCompanyScroll);
-    };
-  }, []);
-
-  const handleScrollSector = (direction: 'left' | 'right') => {
-    if (sectorScrollRef.current) {
-      const delta = direction === 'left' ? -240 : 240;
-      sectorScrollRef.current.scrollBy({ left: delta, behavior: 'smooth' });
-      setTimeout(checkSectorScroll, 250);
-    }
-  };
-
-  const handleScrollCompany = (direction: 'left' | 'right') => {
-    if (companyScrollRef.current) {
-      const delta = direction === 'left' ? -220 : 220;
-      companyScrollRef.current.scrollBy({ left: delta, behavior: 'smooth' });
-      setTimeout(checkCompanyScroll, 250);
-    }
-  };
-
-  // Sync internal search input when external filters change
-  useEffect(() => {
-    setSearchTerm(filters.search || '');
-  }, [filters.search]);
-
-  // Click outside to close suggestions dropdown
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (suggestionsRef.current && !suggestionsRef.current.contains(e.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSearchChange = (val: string) => {
-    setSearchTerm(val);
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    searchTimeoutRef.current = setTimeout(() => {
-      onFilterChange({ search: val.trim() ? val : undefined, page: 1 });
-    }, 300);
-  };
-
-  const handleApplySuggestion = (text: string) => {
-    setSearchTerm(text);
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    onFilterChange({ search: text, page: 1 });
-    setShowSuggestions(false);
-  };
-
-  const handleClearSearch = () => {
-    setSearchTerm('');
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-    onFilterChange({ search: undefined, page: 1 });
-  };
 
   const categories = [
     { id: 'all', label: t.categories.all },
@@ -174,94 +53,32 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   ];
 
   const fundSources = [
-    { id: 'all', label: locale === 'mn' ? 'Бүх санхүүжилт' : locale === 'zh' ? '全部资金来源' : 'All Funds' },
-    { id: 'Улсын төсөв', label: locale === 'mn' ? 'Улсын төсөв' : locale === 'zh' ? '国家预算' : 'State Budget' },
-    { id: 'Орон нутгийн төсөв', label: locale === 'mn' ? 'Орон нутгийн төсөв' : locale === 'zh' ? '地方预算' : 'Local Budget' },
-    { id: 'Өөрийн хөрөнгө', label: locale === 'mn' ? 'Өөрийн хөрөнгө' : locale === 'zh' ? '自有资金' : 'Own Capital' },
-    { id: 'Гадаадын зээл', label: locale === 'mn' ? 'Гадаадын зээл, тусламж' : locale === 'zh' ? '外国贷款/援助' : 'Foreign Loan/Grant' },
+    { id: 'all', label: tr('Бүх санхүүжилт', 'All Funds', '全部资金来源') },
+    { id: 'Улсын төсөв', label: tr('Улсын төсөв', 'State Budget', '国家预算') },
+    { id: 'Орон нутгийн төсөв', label: tr('Орон нутгийн төсөв', 'Local Budget', '地方预算') },
+    { id: 'Өөрийн хөрөнгө', label: tr('Өөрийн хөрөнгө', 'Own Capital', '自有资金') },
+    { id: 'Гадаадын зээл', label: tr('Гадаадын зээл, тусламж', 'Foreign Loan/Grant', '外国贷款/援助') },
   ];
 
   const procurementRules = [
-    { id: 'all', label: locale === 'mn' ? 'Бүх арга' : locale === 'zh' ? '全部方式' : 'All Methods' },
-    { id: 'Нээлттэй', label: locale === 'mn' ? 'Нээлттэй тендер' : locale === 'zh' ? '公开招标' : 'Open Bidding' },
-    { id: 'Харьцуулалт', label: locale === 'mn' ? 'Харьцуулалтын арга' : locale === 'zh' ? '对比方式' : 'Comparison' },
-    { id: 'Зөвлөх', label: locale === 'mn' ? 'Зөвлөх үйлчилгээ' : locale === 'zh' ? '咨询服务' : 'Consulting' },
-    { id: 'Шууд', label: locale === 'mn' ? 'Шууд худалдан авалт' : locale === 'zh' ? '直接采购' : 'Direct' },
-  ];
-
-  const popularSuggestions = [
-    { label: 'Эрдэнэт үйлдвэр ТӨҮГ', query: 'Эрдэнэт үйлдвэр' },
-    { label: 'Эрдэнэс тавантолгой ХК', query: 'Эрдэнэс тавантолгой' },
-    { label: 'Эм, эмнэлгийн тоног төхөөрөмж', query: 'эмнэлэг' },
-    { label: 'Компьютер, мэдээллийн технологи', query: 'компьютер' },
-    { label: 'Сургууль, цэцэрлэгийн засвар', query: 'сургууль цэцэрлэг' },
-    { label: 'Зам, дэд бүтцийн ажил', query: 'зам барилга' },
-    { label: 'Шатахуун, түлш нийлүүлэх', query: 'шатахуун' },
-    { label: 'Улаанбаатар хотын захиргаа', query: 'Улаанбаатар' },
+    { id: 'all', label: tr('Бүх арга', 'All Methods', '全部方式') },
+    { id: 'Нээлттэй', label: tr('Нээлттэй тендер', 'Open Bidding', '公开招标') },
+    { id: 'Харьцуулалт', label: tr('Харьцуулалтын арга', 'Comparison', '对比方式') },
+    { id: 'Зөвлөх', label: tr('Зөвлөх үйлчилгээ', 'Consulting', '咨询服务') },
+    { id: 'Шууд', label: tr('Шууд худалдан авалт', 'Direct', '直接采购') },
   ];
 
   const chinaEligibilityOptions = [
-    { 
-      id: 'all', 
-      label: locale === 'mn' ? 'Бүх тендер' : locale === 'zh' ? '全部项目' : 'All Tenders', 
-      activeClass: 'bg-slate-900 text-white font-semibold shadow-2xs',
-      title: locale === 'mn' ? 'Бүх тендерийг харах' : locale === 'zh' ? '查看全部招标项目' : 'View all tenders'
-    },
-    { 
-      id: 'direct', 
-      label: locale === 'mn' ? 'Шууд оролцох (Direct)' : locale === 'zh' ? '独立投标 (Direct)' : 'Direct Allowed', 
-      activeClass: 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900 font-medium',
-      title: locale === 'mn' 
-        ? 'Монголд охин компани байгуулалгүй шууд санал өгөх боломжтой (Бараа нийлүүлэлт, олон улсын нээлттэй тендер)' 
-        : locale === 'zh'
-        ? '中企可直接以中国法人资质投标，无须在蒙设立子公司（物资设备采购与国际标）'
-        : 'Foreign companies can bid directly without a Mongolian entity (Goods & International Bidding)'
-    },
-    { 
-      id: 'joint_venture', 
-      label: locale === 'mn' ? 'Түншлэл шаардлагатай (JV)' : locale === 'zh' ? '需联合体 (JV)' : 'JV Required', 
-      activeClass: 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900 font-medium',
-      title: locale === 'mn' 
-        ? 'Монголын тусгай зөвшөөрөлтэй компанитай Түншлэл (联合体) байгуулах шаардлагатай (Барилга, зам, их засвар)' 
-        : locale === 'zh'
-        ? '须与蒙古国持证企业组成联合体投标（工程施工、特种资质准入）'
-        : 'Must form a Joint Venture with a licensed Mongolian company (Works & Construction)'
-    },
-    { 
-      id: 'domestic_only', 
-      label: locale === 'mn' ? 'Зөвхөн дотоодын' : locale === 'zh' ? '仅限本土 (Domestic)' : 'Domestic Only', 
-      activeClass: 'bg-slate-700 text-white font-semibold shadow-2xs',
-      title: locale === 'mn' 
-        ? 'Зөвхөн Монгол Улсад бүртгэлтэй дотоодын ААН оролцох боломжтой (Бага төсөвтэй харьцуулалт)' 
-        : locale === 'zh'
-        ? '仅限蒙古国本土注册纳税实体（小型比价与本地专属项目）'
-        : 'Restricted to domestic Mongolian registered entities'
-    },
+    { id: 'all', label: tr('Бүх ААН (Дотоод/Гадаад)', 'All Bidders', '全部投标人') },
+    { id: 'direct', label: tr('Шууд оролцох (Direct)', 'Direct Foreign Bid', '可独立投标 (Direct)') },
+    { id: 'joint_venture', label: tr('Түншлэл (JV)', 'Local JV Required', '需联合体 (JV)') },
+    { id: 'domestic_only', label: tr('Зөвхөн дотоодын', 'Domestic Only', '仅限本土') },
   ];
 
   const currentTab: ActiveTabMode = filters.tabMode || 'active';
   const currentCategory = filters.category || 'all';
   const currentIndustry = filters.industry || 'all';
-
-  // Current Sector-Connected Top Companies
-  const currentCompanies: CompanyEntity[] = COMPANIES_BY_INDUSTRY[currentIndustry] || TOP_COMPANIES;
-  const currentSearch = (filters.search || '').trim().toLowerCase();
-
-  const activeCompany = currentCompanies.find(
-    (c) =>
-      currentSearch === c.query.toLowerCase() ||
-      (currentSearch && c.query.toLowerCase().includes(currentSearch)) ||
-      (currentSearch && currentSearch.includes(c.shortName.toLowerCase()))
-  );
-
-  const handleSelectCompany = (comp: CompanyEntity) => {
-    if (activeCompany?.id === comp.id) {
-      // Toggle off
-      onFilterChange({ search: undefined, sortBy: 'date_desc', page: 1 });
-    } else {
-      onFilterChange({ search: comp.query, sortBy: 'date_desc', page: 1 });
-    }
-  };
+  const currentEligibility = filters.chinaEligibility || 'all';
 
   const getActiveBudgetTier = () => {
     if (filters.minBudget === 0 && filters.maxBudget === 50_000_000) return 'under50m';
@@ -273,7 +90,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
 
   const activeBudgetTier = getActiveBudgetTier();
 
-  // Active advanced filters counter
   const activeAdvancedCount = [
     filters.fundName && filters.fundName !== 'all',
     filters.ruleName && filters.ruleName !== 'all',
@@ -299,7 +115,6 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
   };
 
   const handleResetAll = () => {
-    setSearchTerm('');
     onFilterChange({
       search: undefined,
       category: 'all',
@@ -307,6 +122,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       status: 'receiving',
       tabMode: 'active',
       urgency: 'all',
+      hasDocs: undefined,
       minBudget: undefined,
       maxBudget: undefined,
       year: undefined,
@@ -321,26 +137,20 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     });
   };
 
-  // Dynamic Tab Metrics: Sector & Company-aware metrics calculation
-  const activeIndustryInfo = currentIndustry !== 'all' 
-    ? INDUSTRIES.find((i) => i.id === currentIndustry) 
-    : null;
-  const activeIndustryStats = currentIndustry !== 'all' 
-    ? stats?.statsByIndustry?.[currentIndustry] 
-    : null;
+  const activeIndustryStats = currentIndustry !== 'all' ? stats?.statsByIndustry?.[currentIndustry] : null;
 
   const hasSubFilters = Boolean(
-    filters.search || 
-    (filters.category && filters.category !== 'all') || 
-    (filters.year && filters.year !== 'all') || 
-    activeBudgetTier !== 'all' || 
-    Boolean(filters.fundName && filters.fundName !== 'all') || 
-    Boolean(filters.ruleName && filters.ruleName !== 'all') || 
-    Boolean(filters.chinaEligibility && filters.chinaEligibility !== 'all') || 
+    filters.search ||
+    filters.hasDocs ||
+    (filters.category && filters.category !== 'all') ||
+    (filters.year && filters.year !== 'all') ||
+    activeBudgetTier !== 'all' ||
+    Boolean(filters.fundName && filters.fundName !== 'all') ||
+    Boolean(filters.ruleName && filters.ruleName !== 'all') ||
+    Boolean(filters.chinaEligibility && filters.chinaEligibility !== 'all') ||
     Boolean(filters.dateFrom || filters.dateTo)
   );
 
-  // Tab counts are shown only when they are known; never guessed.
   const tabMetrics = useMemo((): { all: number | null; active: number | null; result: number | null; closing: number | null } => {
     const known = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) ? n : null);
     if (hasSubFilters) {
@@ -365,472 +175,608 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       result: known(stats?.resultCount),
       closing: known(stats?.closingSoonCount),
     };
-  }, [hasSubFilters, currentIndustry, filters.status, filters.tabMode, activeIndustryInfo, activeIndustryStats, stats, totalFound]);
+  }, [hasSubFilters, currentIndustry, currentTab, activeIndustryStats, stats, totalFound]);
 
-  // Meaningful active filter tags (excludes default active tab)
-  const isCustomFiltered = 
-    Boolean(filters.search) || 
-    (filters.category && filters.category !== 'all') || 
-    (currentIndustry !== 'all') ||
-    (filters.year && filters.year !== 'all') || 
-    activeBudgetTier !== 'all' || 
-    Boolean(filters.fundName && filters.fundName !== 'all') || 
-    Boolean(filters.ruleName && filters.ruleName !== 'all') || 
-    Boolean(filters.chinaEligibility && filters.chinaEligibility !== 'all') || 
+  const isCustomFiltered =
+    Boolean(filters.search) ||
+    Boolean(filters.hasDocs) ||
+    (filters.category && filters.category !== 'all') ||
+    currentIndustry !== 'all' ||
+    (filters.year && filters.year !== 'all') ||
+    activeBudgetTier !== 'all' ||
+    Boolean(filters.fundName && filters.fundName !== 'all') ||
+    Boolean(filters.ruleName && filters.ruleName !== 'all') ||
+    Boolean(filters.chinaEligibility && filters.chinaEligibility !== 'all') ||
     Boolean(filters.dateFrom || filters.dateTo) ||
     activeAdvancedCount > 0;
 
+  const chipClass =
+    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700';
+
+  const selectBoxClass =
+    'relative flex items-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md px-2.5 h-8 text-xs text-slate-700 dark:text-zinc-200 hover:border-slate-300 dark:hover:border-zinc-700 transition-colors';
+
+  const getSectorLabel = (id: string) => {
+    const info = INDUSTRIES.find((i) => i.id === id);
+    if (!info) return id;
+    return locale === 'zh' ? (info.labelZh || info.labelEn) : locale === 'en' ? info.labelEn : info.labelMn;
+  };
+
   return (
     <div className="bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
-      {/* 1. Primary Workflow Status Tabs & Utility Controls */}
-      <div className="px-3 sm:px-4 flex flex-col xl:flex-row xl:items-center justify-between gap-x-4 border-b border-slate-200 dark:border-zinc-800">
-        {/* Status Tabs */}
+      {/* Row 1: Primary Status Tabs (Left) & Category Switcher + Export CSV (Right) */}
+      <div className="px-3 sm:px-4 flex flex-col xl:flex-row xl:items-center justify-between gap-2 border-b border-slate-200 dark:border-zinc-800">
         <div className="flex items-center gap-5 overflow-x-auto no-scrollbar -mx-1 px-1 min-w-0">
-          {/* Active Live Tab */}
           <button
+            type="button"
             onClick={() => handleTabSelect('active')}
-            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'active' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'active'
+                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
-            <span>{locale === 'mn' ? 'Санал авч буй' : locale === 'zh' ? '正在招投标' : 'Live Bids'}</span>
-            <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.active != null ? tabMetrics.active.toLocaleString('en-US') : ''}
-            </span>
+            <span>{tr('Санал авч буй', 'Live Bids', '正在招投标')}</span>
+            {tabMetrics.active != null && (
+              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.active.toLocaleString('en-US')}</span>
+            )}
           </button>
 
-          {/* Closing Soon Tab */}
           <button
+            type="button"
             onClick={() => handleTabSelect('closing_soon')}
-            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'closing_soon' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'closing_soon'
+                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
             <Flame className="h-3.5 w-3.5" />
-            <span>{locale === 'mn' ? 'Хаагдах дөхсөн' : locale === 'zh' ? '即将截标' : 'Closing Soon'}</span>
-            <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.closing != null ? tabMetrics.closing.toLocaleString('en-US') : ''}
-            </span>
+            <span>{tr('Хаагдах дөхсөн', 'Closing Soon', '即将截标')}</span>
+            {tabMetrics.closing != null && (
+              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.closing.toLocaleString('en-US')}</span>
+            )}
           </button>
 
-          {/* No Bid Security Tab (hidden while no tender is confirmed to need no bid security) */}
           {(stats?.noGuaranteeCount !== 0 || currentTab === 'no_guarantee') && (
-          <button
-            onClick={() => handleTabSelect('no_guarantee')}
-            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'no_guarantee' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
-          >
-            <ShieldCheck className="h-3.5 w-3.5" />
-            <span>{locale === 'mn' ? 'Баталгаа шаардахгүй' : locale === 'zh' ? '免投标保函' : 'No Bid Bond'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => handleTabSelect('no_guarantee')}
+              className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+                currentTab === 'no_guarantee'
+                  ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                  : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>{tr('Баталгаагүй', 'No Bid Bond', '免保函')}</span>
+            </button>
           )}
 
-          {/* Awarded / Concluded Winners Tab */}
           <button
+            type="button"
             onClick={() => handleTabSelect('result')}
-            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'result' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'result'
+                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
             <Trophy className="h-3.5 w-3.5" />
-            <span>{locale === 'mn' ? 'Шалгарсан / Үр дүн' : locale === 'zh' ? '已定标 / 中标结果' : 'Awarded'}</span>
-            <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.result != null ? tabMetrics.result.toLocaleString('en-US') : ''}
-            </span>
+            <span>{tr('Үр дүн', 'Awarded', '中标结果')}</span>
+            {tabMetrics.result != null && (
+              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.result.toLocaleString('en-US')}</span>
+            )}
           </button>
 
-          {/* All Historical Archive Tab */}
           <button
+            type="button"
             onClick={() => handleTabSelect('all')}
-            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'all' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'all'
+                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
             <Database className="h-3.5 w-3.5" />
-            <span>{locale === 'mn' ? 'Бүх сан' : locale === 'zh' ? '全部标段' : 'All Tenders'}</span>
-            <span className="text-[11px] tabular-nums opacity-60">
-              {tabMetrics.all != null ? tabMetrics.all.toLocaleString('en-US') : ''}
-            </span>
+            <span>{tr('Бүх сан', 'All Tenders', '全部标段')}</span>
+            {tabMetrics.all != null && (
+              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.all.toLocaleString('en-US')}</span>
+            )}
           </button>
 
-          {/* Watchlist Tab */}
           <button
+            type="button"
             onClick={() => handleTabSelect('watchlist')}
-            className={`h-12 -mb-px border-b-2 text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${currentTab === 'watchlist' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+              currentTab === 'watchlist'
+                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
+                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
           >
             <Star className="h-3.5 w-3.5" />
-            <span>{locale === 'mn' ? 'Миний хянаж буй' : locale === 'zh' ? '关注收藏' : 'Watchlist'}</span>
+            <span>{tr('Хянаж буй', 'Watchlist', '关注')}</span>
             {watchlistCount > 0 && (
-              <span className="text-[11px] tabular-nums opacity-60">
-                {watchlistCount}
-              </span>
+              <span className="text-[11px] tabular-nums opacity-60">{watchlistCount}</span>
             )}
           </button>
         </div>
 
-        {/* Right Tools: Export & View Mode */}
-        <div className="flex items-center gap-2 shrink-0 self-end xl:self-auto py-2">
-          {onExportCSV && (
-            <button
-              onClick={onExportCSV}
-              className="h-8 px-2.5 rounded-lg bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
-              title={locale === 'mn' ? 'Excel / CSV файлаар татах' : locale === 'zh' ? '导出 Excel / CSV 表格' : 'Export to CSV / Excel'}
-            >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500" />
-              <span className="hidden md:inline">{locale === 'mn' ? 'Excel / CSV' : locale === 'zh' ? '导出表格' : 'Export CSV'}</span>
-            </button>
-          )}
-
-          <div className="flex items-center bg-slate-100/90 dark:bg-zinc-800 p-0.5 rounded-lg border border-slate-200 dark:border-zinc-700 h-8">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
- viewMode === 'table' ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
- }`}
-              title={locale === 'mn' ? 'Хүснэгт' : locale === 'zh' ? '表格视图' : 'Table view'}
-            >
-              <TableIcon className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === 'mn' ? 'Хүснэгт' : locale === 'zh' ? '表格' : 'Table'}</span>
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`px-2.5 h-7 rounded text-xs flex items-center gap-1 transition-colors cursor-pointer ${
- viewMode === 'grid' ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-semibold' : 'text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200'
- }`}
-              title={locale === 'mn' ? 'Жагсаалт' : locale === 'zh' ? '列表' : 'List'}
-            >
-              <List className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === 'mn' ? 'Жагсаалт' : locale === 'zh' ? '列表' : 'List'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Filter Controls Toolbar Row */}
-      <div className="p-3 sm:p-4 space-y-2.5">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5">
-          {/* Category Segmented Controls */}
-          <div className="flex items-center bg-slate-100/90 dark:bg-zinc-800 p-0.5 rounded-md border border-slate-200 dark:border-zinc-700 h-9 shrink-0">
+        {/* Right Utility Controls: Category Segmented Control + Export CSV */}
+        <div className="flex items-center justify-between xl:justify-end gap-2 py-2 shrink-0">
+          <div className="flex items-center bg-slate-100/90 dark:bg-zinc-800 p-0.5 rounded-md border border-slate-200 dark:border-zinc-700 h-8 overflow-x-auto no-scrollbar">
             {categories.map((cat) => (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => onFilterChange({ category: cat.id, page: 1 })}
-                className={`h-8 px-3 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
- currentCategory === cat.id
- ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-bold'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
- }`}
+                className={`h-7 px-2.5 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                  currentCategory === cat.id
+                    ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-semibold'
+                    : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
               >
                 {cat.label}
               </button>
             ))}
           </div>
 
-          {/* Secondary Controls: Budget, Year, Sort & Advanced Filters */}
-          <div className="flex items-center gap-2 flex-wrap shrink-0 justify-between lg:justify-end">
-            {/* Budget Tier Selector Dropdown */}
-            <div className="relative flex items-center bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md px-2.5 h-9 text-xs text-slate-700 dark:text-zinc-200 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-600">
-              <span className="text-[11px] text-slate-400 font-medium mr-1">{locale === 'mn' ? 'Төсөв:' : locale === 'zh' ? '预算:' : 'Budget:'}</span>
-              <select
-                value={activeBudgetTier}
-                onChange={(e) => {
-                  const tierId = e.target.value;
-                  const selected = budgetTiers.find((b) => b.id === tierId);
-                  onFilterChange({ minBudget: selected?.min, maxBudget: selected?.max, page: 1 });
-                }}
-                className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
-              >
-                {budgetTiers.map((b) => (
-                  <option key={b.id} value={b.id} className="dark:bg-zinc-850 dark:text-white">{b.label}</option>
-                ))}
-              </select>
-              <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
-            </div>
-
-            {/* Year Selector */}
-            <div className="relative flex items-center bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md px-2.5 h-9 text-xs text-slate-700 dark:text-zinc-200 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-600">
-              <Calendar className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 mr-1 shrink-0" />
-              <select
-                value={filters.year || 'all'}
-                onChange={(e) => {
-                  const yr = e.target.value;
-                  const isPastYear = yr !== 'all' && yr !== '2026';
-                  const shouldResetStatus = isPastYear && filters.status === 'receiving';
-                  onFilterChange({
-                    year: yr === 'all' ? undefined : yr,
-                    ...(shouldResetStatus ? { status: 'all', tabMode: 'all' } : {}),
-                    page: 1,
-                  });
-                }}
-                className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
-              >
-                <option value="all" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? 'Бүх он' : locale === 'zh' ? '全部年份' : 'All years'}</option>
-                <option value="2026" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2026 он' : locale === 'zh' ? '2026 年' : '2026'}</option>
-                <option value="2025" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2025 он' : locale === 'zh' ? '2025 年' : '2025'}</option>
-                <option value="2024" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2024 он' : locale === 'zh' ? '2024 年' : '2024'}</option>
-                <option value="2023" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2023 он' : locale === 'zh' ? '2023 年' : '2023'}</option>
-                <option value="2022" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2022 он' : locale === 'zh' ? '2022 年' : '2022'}</option>
-                <option value="2021" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2021 он' : locale === 'zh' ? '2021 年' : '2021'}</option>
-                <option value="2020" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2020 он' : locale === 'zh' ? '2020 年' : '2020'}</option>
-                <option value="2019" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? '2019 он' : locale === 'zh' ? '2019 年' : '2019'}</option>
-              </select>
-              <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
-            </div>
-
-            {/* Sort Dropdown */}
-            <div className="relative flex items-center bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md px-2.5 h-9 text-xs text-slate-700 dark:text-zinc-200 shadow-2xs hover:border-slate-300 dark:hover:border-zinc-600">
-              <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 mr-1 shrink-0" />
-              <select
-                value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
-                onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
-                className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-semibold focus:outline-none cursor-pointer pr-4 appearance-none"
-              >
-                <option value="date_desc" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? 'Шинээр зарлагдсанаар' : locale === 'zh' ? '最新发布' : 'Newest'}</option>
-                <option value="deadline_asc" className="dark:bg-zinc-850 dark:text-white">{locale === 'mn' ? 'Хугацаа ойртсоноор' : locale === 'zh' ? '即将截止' : 'Ending Soon'}</option>
-                <option value="budget_desc" className="dark:bg-zinc-850 dark:text-white">{t.sortOptions.budget_desc}</option>
-                <option value="budget_asc" className="dark:bg-zinc-850 dark:text-white">{t.sortOptions.budget_asc}</option>
-              </select>
-              <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
-            </div>
-
-            {/* Advanced Filters Button */}
+          {onExportCSV && (
             <button
-              onClick={() => setIsAdvancedModalOpen(true)}
-              className={`h-9 px-3 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs ${
- activeAdvancedCount > 0
- ? 'bg-blue-600 text-white font-bold'
- : 'bg-white dark:bg-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700'
- }`}
-              title={locale === 'mn' ? 'Нарийвчилсан шүүлтүүр' : locale === 'zh' ? '高级筛选' : 'Advanced filters'}
+              type="button"
+              onClick={onExportCSV}
+              className="h-8 px-2.5 rounded-md bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              title={tr('Excel / CSV файлаар татах', 'Export to CSV / Excel', '导出 Excel / CSV 表格')}
             >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === 'mn' ? 'Шүүлтүүр' : locale === 'zh' ? '高级筛选' : 'Filters'}</span>
-              {activeAdvancedCount > 0 && (
-                <span className="h-4 w-4 rounded-full bg-white text-blue-700 text-[10px] font-bold flex items-center justify-center">
-                  {activeAdvancedCount}
-                </span>
-              )}
+              <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" />
+              <span className="hidden md:inline">{tr('CSV', 'Export CSV', '导出')}</span>
             </button>
-          </div>
+          )}
         </div>
-
-        {/* 5. Active Filters Dismissible Chips (ONLY when non-default custom filters applied) */}
-        {isCustomFiltered && (
-          <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-slate-100 dark:border-zinc-800 text-[11px] animate-in fade-in duration-150">
-            <span className="text-slate-400 font-semibold mr-1">
-              {locale === 'mn' ? 'Идэвхтэй:' : locale === 'zh' ? '已选条件:' : 'Active:'}
-            </span>
-
-            {filters.chinaEligibility && filters.chinaEligibility !== 'all' && (
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold border ${
- locale === 'zh'
- ? 'bg-red-50 dark:bg-zinc-900 text-red-800 dark:text-red-300 border-red-200 dark:border-zinc-800'
- : 'bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border-slate-200 dark:border-zinc-700'
- }`}>
-                <span>
-                  {locale === 'mn' ? 'Гадаад ААН:' : locale === 'zh' ? '资格筛选:' : 'Eligibility:'}{' '}
-                  <strong>{chinaEligibilityOptions.find(o => o.id === filters.chinaEligibility)?.label}</strong>
-                </span>
-                <button onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {filters.search && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-zinc-900 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-zinc-800">
-                <span>Хайлт / Захиалагч: <strong>"{filters.search}"</strong></span>
-                <button onClick={handleClearSearch} className="hover:text-blue-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {currentIndustry !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 dark:bg-zinc-900 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-zinc-800">
-                <span>Салбар: <strong>{INDUSTRIES.find(i => i.id === currentIndustry)?.labelMn}</strong></span>
-                <button onClick={() => onFilterChange({ industry: 'all', page: 1 })} className="hover:text-blue-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {filters.category && filters.category !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700">
-                <span>Төрөл: <strong>{categories.find(c => c.id === filters.category)?.label}</strong></span>
-                <button onClick={() => onFilterChange({ category: 'all', page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {filters.year && filters.year !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700">
-                <span>Он: <strong>{filters.year}</strong></span>
-                <button onClick={() => onFilterChange({ year: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {activeBudgetTier !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700">
-                <span>Төсөв: <strong>{budgetTiers.find(b => b.id === activeBudgetTier)?.label}</strong></span>
-                <button onClick={() => onFilterChange({ minBudget: undefined, maxBudget: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {filters.fundName && filters.fundName !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700">
-                <span>Санхүүжилт: <strong>{filters.fundName}</strong></span>
-                <button onClick={() => onFilterChange({ fundName: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {filters.ruleName && filters.ruleName !== 'all' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700">
-                <span>Арга: <strong>{filters.ruleName}</strong></span>
-                <button onClick={() => onFilterChange({ ruleName: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            {(filters.dateFrom || filters.dateTo) && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700">
-                <span>Огноо: <strong>{filters.dateFrom || '...'} ~ {filters.dateTo || '...'}</strong></span>
-                <button onClick={() => onFilterChange({ dateFrom: undefined, dateTo: undefined, page: 1 })} className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer">
-                  <X className="h-3 w-3" />
-                </button>
-              </span>
-            )}
-
-            <button
-              onClick={handleResetAll}
-              className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 hover:bg-rose-50 dark:hover:bg-zinc-900 font-semibold transition-colors cursor-pointer"
-            >
-              <RotateCcw className="h-3 w-3" />
-              <span>Шүүлтүүр цэвэрлэх</span>
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* 5. Advanced Filter Slide-Over Modal */}
+      {/* Row 2: Compact Inline Filter Strip */}
+      <div className="px-3 sm:px-4 py-2 bg-slate-50/70 dark:bg-zinc-900/50 flex flex-wrap items-center gap-2">
+        {/* Sector Select */}
+        <div className={selectBoxClass}>
+          <Layers className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+          <select
+            value={currentIndustry}
+            onChange={(e) => onFilterChange({ industry: e.target.value as any, page: 1 })}
+            aria-label={tr('Салбар', 'Sector', '行业')}
+            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none max-w-[165px]"
+          >
+            <option value="all" className="dark:bg-zinc-900 dark:text-white">
+              {tr('Бүх салбар', 'All Sectors', '全部行业')}
+            </option>
+            {INDUSTRIES.map((ind) => (
+              <option key={ind.id} value={ind.id} className="dark:bg-zinc-900 dark:text-white">
+                {locale === 'zh' ? (ind.labelZh || ind.labelEn) : locale === 'en' ? ind.labelEn : ind.labelMn}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+        </div>
+
+        {/* Foreign Eligibility Select */}
+        <div className={selectBoxClass}>
+          <Globe2 className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+          <select
+            value={currentEligibility}
+            onChange={(e) => onFilterChange({ chinaEligibility: e.target.value as any, page: 1 })}
+            aria-label={tr('Гадаад оролцогч', 'Foreign Eligibility', '外企准入')}
+            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+          >
+            {chinaEligibilityOptions.map((opt) => (
+              <option key={opt.id} value={opt.id} className="dark:bg-zinc-900 dark:text-white">
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+        </div>
+
+        {/* Budget Tier Select */}
+        <div className={selectBoxClass}>
+          <span className="text-[11px] text-slate-400 dark:text-zinc-500 mr-1 shrink-0">
+            {tr('Төсөв:', 'Budget:', '预算:')}
+          </span>
+          <select
+            value={activeBudgetTier}
+            onChange={(e) => {
+              const selected = budgetTiers.find((b) => b.id === e.target.value);
+              onFilterChange({ minBudget: selected?.min, maxBudget: selected?.max, page: 1 });
+            }}
+            aria-label={tr('Төсөв', 'Budget', '预算')}
+            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+          >
+            {budgetTiers.map((b) => (
+              <option key={b.id} value={b.id} className="dark:bg-zinc-900 dark:text-white">
+                {b.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+        </div>
+
+        {/* Year Select */}
+        <div className={selectBoxClass}>
+          <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+          <select
+            value={filters.year || 'all'}
+            onChange={(e) => {
+              const yr = e.target.value;
+              const isPastYear = yr !== 'all' && yr !== '2026';
+              const shouldResetStatus = isPastYear && filters.status === 'receiving';
+              onFilterChange({
+                year: yr === 'all' ? undefined : yr,
+                ...(shouldResetStatus ? { status: 'all', tabMode: 'all' } : {}),
+                page: 1,
+              });
+            }}
+            aria-label={tr('Он', 'Year', '年份')}
+            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+          >
+            <option value="all" className="dark:bg-zinc-900 dark:text-white">
+              {tr('Бүх он', 'All years', '全部年份')}
+            </option>
+            {['2026', '2025', '2024', '2023', '2022', '2021', '2020', '2019'].map((yr) => (
+              <option key={yr} value={yr} className="dark:bg-zinc-900 dark:text-white">
+                {locale === 'mn' ? `${yr} он` : locale === 'zh' ? `${yr} 年` : yr}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+        </div>
+
+        {/* Sort Select */}
+        <div className={selectBoxClass}>
+          <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+          <select
+            value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
+            onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
+            aria-label={tr('Эрэмбэ', 'Sort', '排序')}
+            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+          >
+            <option value="date_desc" className="dark:bg-zinc-900 dark:text-white">
+              {tr('Шинээр зарлагдсан', 'Newest', '最新发布')}
+            </option>
+            <option value="deadline_asc" className="dark:bg-zinc-900 dark:text-white">
+              {tr('Хугацаа ойртсон', 'Ending Soon', '即将截止')}
+            </option>
+            <option value="budget_desc" className="dark:bg-zinc-900 dark:text-white">
+              {t.sortOptions.budget_desc}
+            </option>
+            <option value="budget_asc" className="dark:bg-zinc-900 dark:text-white">
+              {t.sortOptions.budget_asc}
+            </option>
+          </select>
+          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+        </div>
+
+        {/* With PDF / Specs Toggle Pill */}
+        <button
+          type="button"
+          aria-pressed={Boolean(filters.hasDocs)}
+          onClick={() => onFilterChange({ hasDocs: filters.hasDocs ? undefined : true, page: 1 })}
+          className={`h-8 px-2.5 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer ${
+            filters.hasDocs
+              ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-900 dark:border-white'
+              : 'bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
+          }`}
+        >
+          <FileText className="h-3.5 w-3.5 shrink-0" />
+          <span>{tr('PDF / Задаргаатай', 'With PDF / Specs', '含 PDF 规格书')}</span>
+        </button>
+
+        {/* Advanced Filters Button */}
+        <button
+          type="button"
+          onClick={() => setIsAdvancedModalOpen(true)}
+          className={`h-8 px-2.5 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer ml-auto ${
+            activeAdvancedCount > 0
+              ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-900 dark:border-white'
+              : 'bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border-slate-200 dark:border-zinc-800'
+          }`}
+          title={tr('Нарийвчилсан шүүлтүүр', 'More Filters', '更多筛选')}
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
+          <span>{tr('Нарийвчилсан', 'Filters', '更多筛选')}</span>
+          {activeAdvancedCount > 0 && (
+            <span className="h-4 min-w-4 px-1 rounded-full bg-white/20 dark:bg-zinc-900/20 text-[10px] font-semibold tabular-nums flex items-center justify-center">
+              {activeAdvancedCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Row 3: Dismissible Active Filter Chips (only when non-default filters are active) */}
+      {isCustomFiltered && (
+        <div className="px-3 sm:px-4 py-2 border-t border-slate-200/80 dark:border-zinc-800 flex items-center gap-1.5 flex-wrap text-[11px]">
+          <span className="text-slate-400 dark:text-zinc-500 font-medium mr-0.5">
+            {tr('Шүүлт:', 'Active:', '已选:')}
+          </span>
+
+          {filters.search && (
+            <span className={chipClass}>
+              <span>
+                {tr('Хайлт', 'Search', '搜索')}: <strong>“{filters.search}”</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ search: undefined, page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {filters.hasDocs && (
+            <span className={chipClass}>
+              <span>{tr('PDF / Задаргаатай', 'With PDF / Specs', '含 PDF 规格书')}</span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ hasDocs: undefined, page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {currentIndustry !== 'all' && (
+            <span className={chipClass}>
+              <span>
+                {tr('Салбар', 'Sector', '行业')}: <strong>{getSectorLabel(currentIndustry)}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ industry: 'all', page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {filters.chinaEligibility && filters.chinaEligibility !== 'all' && (
+            <span className={chipClass}>
+              <span>
+                {tr('Оролцогч', 'Eligibility', '准入')}:{' '}
+                <strong>{chinaEligibilityOptions.find((o) => o.id === filters.chinaEligibility)?.label}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ chinaEligibility: 'all', page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {filters.category && filters.category !== 'all' && (
+            <span className={chipClass}>
+              <span>
+                {tr('Төрөл', 'Category', '类别')}: <strong>{categories.find((c) => c.id === filters.category)?.label}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ category: 'all', page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {filters.year && filters.year !== 'all' && (
+            <span className={chipClass}>
+              <span>
+                {tr('Он', 'Year', '年份')}: <strong>{filters.year}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ year: undefined, page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {activeBudgetTier !== 'all' && (
+            <span className={chipClass}>
+              <span>
+                {tr('Төсөв', 'Budget', '预算')}: <strong>{budgetTiers.find((b) => b.id === activeBudgetTier)?.label}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ minBudget: undefined, maxBudget: undefined, page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {filters.fundName && filters.fundName !== 'all' && (
+            <span className={chipClass}>
+              <span>
+                {tr('Санхүүжилт', 'Fund', '资金')}: <strong>{filters.fundName}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ fundName: undefined, page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {filters.ruleName && filters.ruleName !== 'all' && (
+            <span className={chipClass}>
+              <span>
+                {tr('Арга', 'Method', '方式')}: <strong>{filters.ruleName}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ ruleName: undefined, page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          {(filters.dateFrom || filters.dateTo) && (
+            <span className={chipClass}>
+              <span>
+                {tr('Огноо', 'Date', '日期')}: <strong>{filters.dateFrom || '...'} ~ {filters.dateTo || '...'}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={() => onFilterChange({ dateFrom: undefined, dateTo: undefined, page: 1 })}
+                className="hover:text-slate-950 dark:hover:text-white p-0.5 cursor-pointer"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          )}
+
+          <button
+            type="button"
+            onClick={handleResetAll}
+            className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 font-medium transition-colors cursor-pointer"
+          >
+            <RotateCcw className="h-3 w-3" />
+            <span>{tr('Цэвэрлэх', 'Reset all', '清空筛选')}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Advanced Filter Modal */}
       {isAdvancedModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 animate-in fade-in duration-150">
           <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col border border-slate-200 dark:border-zinc-800 overflow-hidden text-slate-900 dark:text-zinc-100">
-            <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between bg-slate-50/80 dark:bg-zinc-800/60">
+            <div className="px-4 py-3 border-b border-slate-200 dark:border-zinc-800 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <SlidersHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Нарийвчилсан шүүлтүүр</h3>
+                <SlidersHorizontal className="h-4 w-4 text-slate-500 dark:text-zinc-400" />
+                <h3 className="text-sm font-semibold">
+                  {tr('Нарийвчилсан шүүлтүүр', 'Advanced Filters', '高级筛选条件')}
+                </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAdvancedModalOpen(false)}
-                className="p-1.5 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-200/60 dark:hover:bg-zinc-800"
+                className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             <div className="p-5 overflow-y-auto space-y-4 text-xs">
-              {/* Fund Source */}
               <div>
-                <label className="font-bold text-slate-700 dark:text-zinc-300 block mb-1.5">
-                  Санхүүжилтийн эх үүсвэр
+                <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1.5">
+                  {tr('Санхүүжилтийн эх үүсвэр', 'Funding Source', '资金来源')}
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
-                  {fundSources.map((f) => (
-                    <button
-                      key={f.id}
-                      onClick={() => onFilterChange({ fundName: f.id === 'all' ? undefined : f.id, page: 1 })}
-                      className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
- (filters.fundName || 'all') === f.id || (!filters.fundName && f.id === 'all')
- ? 'bg-blue-50 dark:bg-zinc-900 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
- : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-750'
- }`}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+                  {fundSources.map((f) => {
+                    const selected = (filters.fundName || 'all') === f.id || (!filters.fundName && f.id === 'all');
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => onFilterChange({ fundName: f.id === 'all' ? undefined : f.id, page: 1 })}
+                        className={`p-2 rounded-md text-left border transition-colors cursor-pointer ${
+                          selected
+                            ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-900 dark:border-white font-semibold'
+                            : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-700/60'
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Procurement Rule */}
               <div>
-                <label className="font-bold text-slate-700 dark:text-zinc-300 block mb-1.5">
-                  Худалдан авах ажиллагааны арга
+                <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1.5">
+                  {tr('Худалдан авах арга', 'Procurement Method', '采购方式')}
                 </label>
                 <div className="grid grid-cols-2 gap-1.5">
-                  {procurementRules.map((r) => (
-                    <button
-                      key={r.id}
-                      onClick={() => onFilterChange({ ruleName: r.id === 'all' ? undefined : r.id, page: 1 })}
-                      className={`p-2 rounded-lg text-left border transition-all cursor-pointer ${
- (filters.ruleName || 'all') === r.id || (!filters.ruleName && r.id === 'all')
- ? 'bg-blue-50 dark:bg-zinc-900 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-200 font-bold'
- : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-750'
- }`}
-                    >
-                      {r.label}
-                    </button>
-                  ))}
+                  {procurementRules.map((r) => {
+                    const selected = (filters.ruleName || 'all') === r.id || (!filters.ruleName && r.id === 'all');
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => onFilterChange({ ruleName: r.id === 'all' ? undefined : r.id, page: 1 })}
+                        className={`p-2 rounded-md text-left border transition-colors cursor-pointer ${
+                          selected
+                            ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-900 dark:border-white font-semibold'
+                            : 'bg-white dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-700/60'
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Custom Date Range */}
               <div>
-                <label className="font-bold text-slate-700 dark:text-zinc-300 block mb-1.5">
-                  Хугацааны интервал
+                <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1.5">
+                  {tr('Зарласан огнооны интервал', 'Published Date Range', '发布日期范围')}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
                     value={filters.dateFrom || ''}
-                    onChange={(e) => onFilterChange({
-                      dateFrom: e.target.value || undefined,
-                      page: 1,
-                    })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs text-slate-900 dark:text-white"
-                    title="Эхлэх огноо"
+                    onChange={(e) => onFilterChange({ dateFrom: e.target.value || undefined, page: 1 })}
+                    className="w-1/2 px-3 py-1.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md text-xs text-slate-900 dark:text-white"
                   />
-                  <span className="text-slate-400">-</span>
+                  <span className="text-slate-400">—</span>
                   <input
                     type="date"
                     value={filters.dateTo || ''}
-                    onChange={(e) => onFilterChange({
-                      dateTo: e.target.value || undefined,
-                      page: 1,
-                    })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs text-slate-900 dark:text-white"
-                    title="Дуусах огноо"
+                    onChange={(e) => onFilterChange({ dateTo: e.target.value || undefined, page: 1 })}
+                    className="w-1/2 px-3 py-1.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md text-xs text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
 
-              {/* Custom Budget Range */}
               <div>
-                <label className="font-bold text-slate-700 dark:text-zinc-300 block mb-1.5">
-                  Төсөвт өртгийн интервал (₮)
+                <label className="font-semibold text-slate-700 dark:text-zinc-300 block mb-1.5">
+                  {tr('Төсөвт өртгийн дүн (₮)', 'Custom Budget Range (MNT)', '自定义预算区间 (₮)')}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    placeholder="Доод дүн"
+                    placeholder={tr('Доод дүн', 'Min', '最低预算')}
                     value={filters.minBudget !== undefined ? filters.minBudget : ''}
                     onChange={(e) => onFilterChange({ minBudget: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs text-slate-900 dark:text-white"
+                    className="w-1/2 px-3 py-1.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md text-xs text-slate-900 dark:text-white"
                   />
-                  <span className="text-slate-400">-</span>
+                  <span className="text-slate-400">—</span>
                   <input
                     type="number"
-                    placeholder="Дээд дүн"
+                    placeholder={tr('Дээд дүн', 'Max', '最高预算')}
                     value={filters.maxBudget !== undefined ? filters.maxBudget : ''}
                     onChange={(e) => onFilterChange({ maxBudget: e.target.value ? Number(e.target.value) : undefined, page: 1 })}
-                    className="w-1/2 px-3 py-2 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-lg text-xs text-slate-900 dark:text-white"
+                    className="w-1/2 px-3 py-1.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-md text-xs text-slate-900 dark:text-white"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-800/60 flex items-center justify-between">
+            <div className="px-4 py-3 border-t border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-900 flex items-center justify-between">
               <button
+                type="button"
                 onClick={() => {
                   onFilterChange({
                     fundName: undefined,
@@ -842,15 +788,16 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                     page: 1,
                   });
                 }}
-                className="text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200 font-medium cursor-pointer"
+                className="text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white font-medium cursor-pointer"
               >
-                Бүгдийг арилгах
+                {tr('Бүгдийг арилгах', 'Clear all', '清空条件')}
               </button>
               <button
+                type="button"
                 onClick={() => setIsAdvancedModalOpen(false)}
-                className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-xs hover:bg-blue-700 transition-colors cursor-pointer"
+                className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-semibold rounded-md text-xs transition-colors cursor-pointer"
               >
-                Хэрэглэх ({activeAdvancedCount})
+                {tr(`Хэрэглэх (${activeAdvancedCount})`, `Apply (${activeAdvancedCount})`, `应用 (${activeAdvancedCount})`)}
               </button>
             </div>
           </div>
