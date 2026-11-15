@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { IndustryIcon } from '@/components/IndustryIcon';
 import { getBilingualTenderInfo } from '@/lib/bilingual-title';
 import {
-  Building2, ChevronRight, ExternalLink, FileText,
+  ArrowUpRight, Building2, ExternalLink, FileText,
   Loader2, Package, ShieldCheck, Sparkles, Star,
 } from 'lucide-react';
 
@@ -14,6 +15,9 @@ interface TenderRowProps {
   tender: TenderItem;
   locale: Locale;
   isSaved?: boolean;
+  isSelected?: boolean;
+  inspectorOpen?: boolean;
+  onSelect?: (tender: TenderItem) => void;
   onToggleSave?: (tenderId: string | number) => void;
   onAskAI?: (tender: TenderItem) => void;
 }
@@ -64,6 +68,9 @@ export const TenderRow: React.FC<TenderRowProps> = ({
   tender,
   locale,
   isSaved = false,
+  isSelected = false,
+  inspectorOpen = false,
+  onSelect,
   onToggleSave,
   onAskAI,
 }) => {
@@ -145,8 +152,8 @@ export const TenderRow: React.FC<TenderRowProps> = ({
 
   const foreignStatus = tender.chinaBidderAnalysis?.eligibilityStatus;
 
-  const open = (e: React.MouseEvent) => {
-    if (e.metaKey || e.ctrlKey || e.button === 1) {
+  const openDetail = (e?: React.MouseEvent) => {
+    if (e && (e.metaKey || e.ctrlKey || e.button === 1)) {
       window.open(href, '_blank', 'noopener');
       return;
     }
@@ -154,23 +161,55 @@ export const TenderRow: React.FC<TenderRowProps> = ({
     router.push(href);
   };
 
+  const handleRowClick = (e: React.MouseEvent) => {
+    if (e.metaKey || e.ctrlKey || e.button === 1) {
+      window.open(href, '_blank', 'noopener');
+      return;
+    }
+    if (onSelect) {
+      onSelect(tender);
+      return;
+    }
+    setOpening(true);
+    router.push(href);
+  };
+
+  const gridColsClass = inspectorOpen
+    ? 'grid-cols-1 xl:grid-cols-[minmax(0,1fr)_8.5rem_7.25rem_5.5rem] items-start xl:items-center'
+    : 'grid-cols-1 md:grid-cols-[minmax(0,1fr)_9.5rem_8rem_5.5rem] items-start md:items-center';
+
   return (
     <article
       role="link"
       tabIndex={0}
       aria-label={tender.tenderName}
-      onClick={open}
+      aria-selected={isSelected}
+      onClick={handleRowClick}
+      onDoubleClick={() => openDetail()}
       onAuxClick={(e) => {
-        if (e.button === 1) open(e);
+        if (e.button === 1) openDetail(e);
       }}
       onKeyDown={(e) => {
         if (e.key === 'Enter') {
-          setOpening(true);
-          router.push(href);
+          if (onSelect && !isSelected) {
+            onSelect(tender);
+          } else {
+            openDetail();
+          }
         }
       }}
-      className="group relative grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_10rem_8.5rem_5rem] items-start md:items-center gap-x-5 gap-y-2.5 px-4 sm:px-5 py-3.5 bg-white dark:bg-zinc-900 hover:bg-slate-50/90 dark:hover:bg-zinc-800/50 cursor-pointer transition-colors focus-visible:outline-2"
+      className={`group relative grid ${gridColsClass} gap-x-4 gap-y-2.5 px-4 sm:px-5 py-3.5 cursor-pointer transition-colors focus-visible:outline-2 ${
+        isSelected
+          ? 'bg-[#5266eb]/[0.05] dark:bg-[#5e6ad2]/[0.12] hover:bg-[#5266eb]/[0.08] dark:hover:bg-[#5e6ad2]/[0.16]'
+          : 'bg-white dark:bg-[#111318] hover:bg-slate-50/90 dark:hover:bg-[#171a24]'
+      }`}
     >
+      {isSelected && (
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 w-[3px] bg-[#5266eb] dark:bg-[#5e6ad2]"
+        />
+      )}
       {/* Column 1: Code, Meta, Title, Buyer & Extracted Spec Signals */}
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
@@ -236,8 +275,8 @@ export const TenderRow: React.FC<TenderRowProps> = ({
           </span>
 
           {hasDocs && (
-            <span className="inline-flex items-center gap-1 px-1.5 py-px rounded bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200/80 dark:border-zinc-700 text-[10px] font-medium shrink-0">
-              <FileText className="h-2.5 w-2.5 text-slate-500 dark:text-zinc-400" />
+            <span className="inline-flex items-center gap-1 px-1.5 py-px rounded bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-medium shrink-0">
+              <FileText className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" />
               <span>PDF</span>
             </span>
           )}
@@ -267,11 +306,11 @@ export const TenderRow: React.FC<TenderRowProps> = ({
         </div>
       </div>
 
-      {/* Column 2 & 3 on mobile side-by-side, separate columns on desktop */}
-      <div className="flex items-baseline justify-between gap-4 md:contents">
+      {/* Column 2 & 3 on mobile/compact side-by-side, separate columns on wide desktop */}
+      <div className={`flex items-baseline justify-between gap-4 ${inspectorOpen ? 'xl:contents' : 'md:contents'}`}>
         {/* Column 2: Budget */}
-        <div className="md:text-right tabular-nums">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500 md:hidden block">
+        <div className={`${inspectorOpen ? 'xl:text-right' : 'md:text-right'} tabular-nums`}>
+          <span className={`text-[11px] font-medium text-slate-400 dark:text-zinc-500 block ${inspectorOpen ? 'xl:hidden' : 'md:hidden'}`}>
             {L(locale, 'Төсөв', 'Budget', '预算')}
           </span>
           {budget > 0 ? (
@@ -299,7 +338,7 @@ export const TenderRow: React.FC<TenderRowProps> = ({
 
         {/* Column 3: Deadline / Published */}
         <div className="text-right tabular-nums">
-          <span className="text-[10px] uppercase tracking-wider text-slate-400 dark:text-zinc-500 md:hidden block">
+          <span className={`text-[11px] font-medium text-slate-400 dark:text-zinc-500 block ${inspectorOpen ? 'xl:hidden' : 'md:hidden'}`}>
             {daysLeft != null
               ? L(locale, 'Хугацаа', 'Deadline', '截止')
               : L(locale, 'Нийтэлсэн', 'Published', '发布')}
@@ -333,14 +372,16 @@ export const TenderRow: React.FC<TenderRowProps> = ({
 
       {/* Column 4: Actions */}
       <div
-        className="flex items-center justify-end gap-0.5 pt-1 md:pt-0 border-t border-slate-100 dark:border-zinc-800/80 md:border-t-0"
+        className={`flex items-center justify-end gap-0.5 pt-1 border-t border-slate-100 dark:border-zinc-800/80 ${
+          inspectorOpen ? 'xl:pt-0 xl:border-t-0' : 'md:pt-0 md:border-t-0'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         {onAskAI && (
           <button
             type="button"
             onClick={() => onAskAI(tender)}
-            className="h-7 w-7 inline-flex items-center justify-center rounded-md text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer transition-colors"
+            className="h-7 w-7 inline-flex items-center justify-center rounded-md text-slate-400 hover:text-[#5266eb] dark:hover:text-[#828fff] hover:bg-[#5266eb]/10 dark:hover:bg-[#5e6ad2]/15 cursor-pointer transition-colors"
             title={L(locale, 'AI-аас асуух', 'Ask AI', '询问 AI')}
             aria-label={L(locale, 'AI-аас асуух', 'Ask AI', '询问 AI')}
           >
@@ -361,18 +402,24 @@ export const TenderRow: React.FC<TenderRowProps> = ({
             <Star className={`h-3.5 w-3.5 ${isSaved ? 'fill-amber-500' : ''}`} />
           </button>
         )}
-        <button
-          type="button"
-          onClick={open}
-          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-slate-400 group-hover:text-slate-700 dark:group-hover:text-zinc-200 cursor-pointer transition-colors"
+        <Link
+          href={href}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!e.metaKey && !e.ctrlKey) {
+              setOpening(true);
+            }
+          }}
+          className="h-7 w-7 inline-flex items-center justify-center rounded-md text-slate-400 hover:text-[#5266eb] dark:hover:text-[#828fff] hover:bg-[#5266eb]/10 dark:hover:bg-[#5e6ad2]/15 transition-colors"
+          title={L(locale, 'Бүрэн мэдээлэл нээх', 'Open full dossier', '打开完整标书详情')}
           aria-label={L(locale, 'Дэлгэрэнгүй', 'Details', '详情')}
         >
           {opening ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#5266eb]" />
           ) : (
-            <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            <ArrowUpRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           )}
-        </button>
+        </Link>
       </div>
     </article>
   );

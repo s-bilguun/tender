@@ -7,10 +7,15 @@
 }
 
 body {
-  background-color: #f8fafc;
+  background-color: #fbfcfd;
   color: #0f172a;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: #5266eb;
+  color: #ffffff;
 }
 
 /* Figures: tabular, same face as text */
@@ -22,7 +27,7 @@ body {
 
 /* Keyboard focus */
 :focus-visible {
-  outline: 2px solid #2563eb;
+  outline: 2px solid #5266eb;
   outline-offset: 2px;
 }
 
@@ -38,20 +43,26 @@ table {
   border-spacing: 0;
 }
 
-/* Minimalist scrollbars */
+/* Thin custom scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
-  border-radius: 3px;
+  background: rgba(148, 163, 184, 0.45);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1aa;
+  background: rgba(100, 116, 139, 0.7);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #2a2d3a;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3e4356;
 }
 
 /* Hide scrollbars for clean horizontal tab bars and chips */
@@ -65,8 +76,8 @@ table {
 }
 
 .dark body {
-  background-color: #09090b;
-  color: #fafafa;
+  background-color: #0c0d10;
+  color: #f7f8f8;
 }
 
 /* =========================================================
@@ -74,14 +85,14 @@ table {
    ========================================================= */
 
 .dark .tender-detail-root {
-  background-color: #0f0f11 !important;
-  color: #fafafa !important;
+  background-color: #0c0d10 !important;
+  color: #f7f8f8 !important;
 }
 
-/* Header & Card Surfaces */
+/* Header preserves committed Ink-Night shell */
 .dark .tender-detail-root header {
-  background-color: rgba(24, 24, 27, 0.95) !important;
-  border-color: #27272a !important;
+  background-color: #08090d !important;
+  border-color: #222530 !important;
 }
 
 .dark .tender-detail-root .bg-white {

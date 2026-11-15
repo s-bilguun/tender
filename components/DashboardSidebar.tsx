@@ -175,14 +175,14 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     },
   ];
 
-  const sectionHeading = 'px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500';
+  const sectionHeading = 'px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-500';
   const navBtnClass = (active: boolean) =>
     `w-full flex items-center ${
       isCollapsed ? 'justify-center px-2 py-2' : 'justify-between px-2.5 py-1.5'
     } rounded-md text-xs transition-colors cursor-pointer ${
       active
-        ? 'bg-slate-100 dark:bg-zinc-800/90 text-slate-900 dark:text-white font-semibold'
-        : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-zinc-900 font-medium'
+        ? 'bg-[#5266eb] text-white font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]'
+        : 'text-zinc-400 hover:text-white hover:bg-white/[0.05] font-medium'
     }`;
 
   return (
@@ -195,13 +195,13 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 bg-white dark:bg-zinc-950 border-r border-slate-200 dark:border-zinc-800 flex flex-col justify-between transition-all duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed top-0 bottom-0 left-0 z-50 bg-[#11131a] dark:bg-[#08090d] border-r border-[#222530] text-zinc-200 flex flex-col justify-between transition-all duration-200 lg:static lg:translate-x-0 ${
           isCollapsed ? 'lg:w-[68px]' : 'lg:w-56'
         } ${isOpenMobile ? 'w-56 translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Top Branding & Navigation */}
         <div className="flex flex-col min-h-0 flex-1">
-          <div className="h-14 px-3 flex items-center justify-between border-b border-slate-200 dark:border-zinc-800 shrink-0">
+          <div className="h-14 px-3 flex items-center justify-between border-b border-[#222530] shrink-0">
             <Link
               href="/"
               className={`flex items-center gap-2 min-w-0 cursor-pointer ${
@@ -213,10 +213,10 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <Logo className="h-7 w-7 shrink-0" />
               {!isCollapsed && (
                 <div className="flex flex-col min-w-0">
-                  <span className="font-semibold text-sm tracking-tight text-slate-900 dark:text-white truncate">
+                  <span className="font-semibold text-sm tracking-tight text-white truncate">
                     TenderHub
                   </span>
-                  <span className="text-[10px] text-slate-500 dark:text-zinc-500 truncate">
+                  <span className="text-[10px] text-zinc-400 truncate">
                     {t('Төрийн худалдан авалт', 'Mongolia Procurement', '蒙古国政府采购')}
                   </span>
                 </div>
@@ -225,7 +225,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
             <button
               onClick={toggleCollapse}
-              className="hidden lg:flex p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+              className="hidden lg:flex p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
               title={isCollapsed ? t('Дэлгэх', 'Expand', '展开') : t('Хураах', 'Collapse', '收起')}
               aria-label="Toggle sidebar collapse"
             >
@@ -234,7 +234,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-800"
+              className="lg:hidden p-1 rounded-md text-zinc-400 hover:text-white hover:bg-white/[0.06]"
               aria-label="Close sidebar"
             >
               <X className="h-4 w-4" />
@@ -260,15 +260,17 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                       <span className="flex items-center gap-2 min-w-0">
                         <Icon
                           className={`h-3.5 w-3.5 shrink-0 ${
-                            item.active
-                              ? 'text-slate-900 dark:text-white'
-                              : 'text-slate-400 dark:text-zinc-500'
+                            item.active ? 'text-white' : 'text-zinc-500'
                           }`}
                         />
                         {!isCollapsed && <span className="truncate">{item.label}</span>}
                       </span>
                       {!isCollapsed && item.count != null && (
-                        <span className="text-[11px] tabular-nums text-slate-400 dark:text-zinc-500 ml-2">
+                        <span
+                          className={`text-[11px] font-mono tabular-nums ml-2 ${
+                            item.active ? 'text-white/85' : 'text-zinc-500'
+                          }`}
+                        >
                           {item.count.toLocaleString('en-US')}
                         </span>
                       )}
@@ -279,7 +281,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </div>
 
             {/* Section 2: Sectors */}
-            <div className="pt-2 border-t border-slate-100 dark:border-zinc-900">
+            <div className="pt-2 border-t border-[#1d202b]">
               {!isCollapsed && <div className={sectionHeading}>{t('Салбар', 'Sectors', '行业')}</div>}
               <div className="space-y-0.5">
                 {SECTOR_LINKS.map((sec) => {
@@ -297,9 +299,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                         <IndustryIcon
                           id={sec.id}
                           className={`h-3.5 w-3.5 shrink-0 ${
-                            active
-                              ? 'text-slate-900 dark:text-white'
-                              : 'text-slate-400 dark:text-zinc-500'
+                            active ? 'text-white' : 'text-zinc-500'
                           }`}
                         />
                         {!isCollapsed && <span className="truncate">{label}</span>}
@@ -311,7 +311,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </div>
 
             {/* Section 3: Foreign Bidders */}
-            <div className="pt-2 border-t border-slate-100 dark:border-zinc-900">
+            <div className="pt-2 border-t border-[#1d202b]">
               {!isCollapsed && (
                 <div className={sectionHeading}>{t('Гадаад ААН', 'Cross-Border', '外企准入')}</div>
               )}
@@ -328,7 +328,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   className={navBtnClass(currentEligibility === 'direct')}
                 >
                   <span className="flex items-center gap-2 min-w-0">
-                    <Globe2 className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                    <Globe2 className={`h-3.5 w-3.5 shrink-0 ${currentEligibility === 'direct' ? 'text-white' : 'text-zinc-500'}`} />
                     {!isCollapsed && (
                       <span className="truncate">{t('Шууд оролцох', 'Direct Foreign Bid', '可独立直投')}</span>
                     )}
@@ -346,7 +346,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   className={navBtnClass(currentEligibility === 'joint_venture')}
                 >
                   <span className="flex items-center gap-2 min-w-0">
-                    <Handshake className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                    <Handshake className={`h-3.5 w-3.5 shrink-0 ${currentEligibility === 'joint_venture' ? 'text-white' : 'text-zinc-500'}`} />
                     {!isCollapsed && (
                       <span className="truncate">{t('Түншлэл (JV)', 'Local JV Required', '需联合体 (JV)')}</span>
                     )}
@@ -356,7 +356,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </div>
 
             {/* Section 4: Tools */}
-            <div className="pt-2 border-t border-slate-100 dark:border-zinc-900">
+            <div className="pt-2 border-t border-[#1d202b]">
               {!isCollapsed && <div className={sectionHeading}>{t('Хэрэгсэл', 'Tools', '工具')}</div>}
               <div className="space-y-0.5">
                 {onOpenDocAudit && (
@@ -370,7 +370,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     className={navBtnClass(false)}
                   >
                     <span className="flex items-center gap-2 min-w-0">
-                      <FileCheck2 className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                      <FileCheck2 className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
                       {!isCollapsed && (
                         <span className="truncate">
                           {t('Баримт шалгах', 'Check bid documents', '标书合规检查')}
@@ -390,7 +390,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     className={navBtnClass(false)}
                   >
                     <span className="flex items-center gap-2 min-w-0">
-                      <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                      <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
                       {!isCollapsed && (
                         <span className="truncate">{t('Баталгаа, санхүү', 'Bid guarantees', '保函与融资')}</span>
                       )}
@@ -408,7 +408,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     className={navBtnClass(false)}
                   >
                     <span className="flex items-center gap-2 min-w-0">
-                      <Globe2 className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                      <Globe2 className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
                       {!isCollapsed && (
                         <span className="truncate">
                           {t('Түнш & Нийлүүлэлт', 'Sourcing / JV Partner', '跨境供货与合作')}
@@ -428,7 +428,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     className={navBtnClass(false)}
                   >
                     <span className="flex items-center gap-2 min-w-0">
-                      <Crown className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-zinc-500" />
+                      <Crown className="h-3.5 w-3.5 shrink-0 text-amber-400" />
                       {!isCollapsed && (
                         <span className="truncate">{t('Pro багцууд', 'Plans', '会员方案')}</span>
                       )}
@@ -441,7 +441,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
 
         {/* Footer: Ask AI & Updated time */}
-        <div className="p-2.5 border-t border-slate-200 dark:border-zinc-800 space-y-2 shrink-0">
+        <div className="p-2.5 border-t border-[#222530] space-y-2 shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -449,7 +449,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               onCloseMobile();
             }}
             title={isCollapsed ? t('AI-аас асуух', 'Ask AI', '询问 AI') : undefined}
-            className={`w-full h-9 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 font-medium text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+            className={`w-full h-9 rounded-md bg-[#5266eb] hover:bg-[#4356d6] text-white font-semibold shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
               isCollapsed ? 'px-0' : 'px-3'
             }`}
           >
@@ -458,7 +458,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </button>
 
           {!isCollapsed && (
-            <div className="px-2 py-1 flex items-center justify-between text-[10px] text-slate-400 dark:text-zinc-500">
+            <div className="px-2 py-1 flex items-center justify-between text-[10px] text-zinc-500">
               <span className="inline-flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 {t('Шинэчлэл', 'Updated', '同步')}

@@ -9,6 +9,7 @@ import { DashboardKPICards } from '@/components/DashboardKPICards';
 import { DiscoveryCardsHub } from '@/components/DiscoveryCardsHub';
 import { TenderRow } from '@/components/TenderRow';
 import { TenderFilters } from '@/components/TenderFilters';
+import { TenderInspectorPane } from '@/components/TenderInspectorPane';
 import { TenderDocAuditModal } from '@/components/TenderDocAuditModal';
 import { TenderFinanceModal } from '@/components/TenderFinanceModal';
 import { ChinaSupplierModal } from '@/components/ChinaSupplierModal';
@@ -21,7 +22,7 @@ import { ToastContainer, ToastMessage } from '@/components/Toast';
 import { exportTendersToCSV } from '@/lib/export';
 import {
   ChevronLeft, ChevronRight, Sparkles, 
-  Loader2, ArrowDown
+  Loader2, ArrowDown, PanelRight
 } from 'lucide-react';
 
 export default function Home() {
@@ -71,6 +72,11 @@ export default function Home() {
   const [stats, setStats] = useState<TenderStats | undefined>(undefined);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isLoadingMore, setIsLoadingMore] = useState<boolean>(false);
+
+  // Live 3-Pane Split Inspector state
+  const [selectedTender, setSelectedTender] = useState<TenderItem | null>(null);
+  const [isInspectorOpen, setIsInspectorOpen] = useState<boolean>(true);
+  const [isMobileInspectorOpen, setIsMobileInspectorOpen] = useState<boolean>(false);
 
   // Search Input State (Synchronized between Header and Main Filter Center)
   const [searchInputValue, setSearchInputValue] = useState<string>('');
@@ -344,6 +350,29 @@ export default function Home() {
     return tenders;
   }, [tenders, filters.tabMode, savedIds]);
 
+  // Auto-select first tender for desktop live inspector when list loads or selection disappears
+  useEffect(() => {
+    if (displayedTenders.length === 0) {
+      setSelectedTender(null);
+      return;
+    }
+    setSelectedTender((prev) => {
+      if (prev && displayedTenders.some((item) => String(item.invitationId) === String(prev.invitationId))) {
+        return prev;
+      }
+      return displayedTenders[0];
+    });
+  }, [displayedTenders]);
+
+  const handleSelectTender = useCallback((tender: TenderItem) => {
+    setSelectedTender(tender);
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setIsInspectorOpen(true);
+    } else {
+      setIsMobileInspectorOpen(true);
+    }
+  }, []);
+
   const [aiInitialPrompt, setAiInitialPrompt] = useState<string | undefined>(undefined);
 
   const handleAskAI = (tender: TenderItem, prompt?: string) => {
@@ -412,7 +441,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-200">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#fbfcfd] dark:bg-[#0c0d10] text-slate-900 dark:text-zinc-100 font-sans transition-colors duration-200">
       
       {/* 1. Functional Workspace Left Rail */}
       <DashboardSidebar
@@ -469,8 +498,10 @@ export default function Home() {
           }
         />
 
-        {/* Independently Scrollable Main Viewport */}
-        <main ref={mainRef} className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-8 space-y-5">
+        {/* Horizontal Split Feed + Live Dossier Inspector */}
+        <div className="flex-1 flex min-h-0 overflow-hidden bg-[#fbfcfd] dark:bg-[#0c0d10]">
+          {/* Independently Scrollable Main Viewport */}
+          <main ref={mainRef} className="flex-1 min-w-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5 lg:px-7 space-y-5">
           
           {/* Section: Dashboard Overview / Top KPI Row */}
           <section id="dashboard">
@@ -511,9 +542,9 @@ export default function Home() {
                 onSelectSuggestion={handleSelectSearchSuggestion}
               />
             ) : (
-              <div className="rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900">
+              <div className="rounded-xl border border-slate-200/90 dark:border-[#23252f] overflow-hidden bg-white dark:bg-[#111318] shadow-xs">
                 {/* Summary Utility Header */}
-                <div className="px-4 sm:px-5 py-2.5 border-b border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="px-4 sm:px-5 py-2.5 border-b border-slate-200 dark:border-[#23252f] bg-white dark:bg-[#111318] flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div className="text-slate-600 dark:text-zinc-300 font-medium">
                     <span className="tabular-nums font-semibold text-slate-900 dark:text-white">
                       {filters.tabMode === 'watchlist' ? displayedTenders.length.toLocaleString('en-US') : totalCount.toLocaleString('en-US')}
@@ -536,24 +567,43 @@ export default function Home() {
                           : (locale === 'zh' ? '仅限本土' : locale === 'en' ? 'Domestic Only' : 'Зөвхөн дотоодын')}
                       </span>
                     )}
+                    {!isInspectorOpen && (
+                      <button
+                        type="button"
+                        onClick={() => setIsInspectorOpen(true)}
+                        className="hidden lg:inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium bg-[#5266eb]/10 text-[#5266eb] dark:text-[#828fff] hover:bg-[#5266eb]/15 transition-colors cursor-pointer"
+                      >
+                        <PanelRight className="h-3.5 w-3.5" />
+                        <span>{locale === 'zh' ? '打开实时简报' : locale === 'en' ? 'Inspector' : 'Хураангуй самбар'}</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
                 {/* Desktop Table Column Header */}
-                <div className="hidden md:grid grid-cols-[minmax(0,1fr)_10rem_8.5rem_5rem] gap-x-5 px-5 py-2 bg-slate-50/80 dark:bg-zinc-950/40 border-b border-slate-200 dark:border-zinc-800 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+                <div
+                  className={`${
+                    isInspectorOpen
+                      ? 'hidden xl:grid grid-cols-[minmax(0,1fr)_8.5rem_7.25rem_5.5rem]'
+                      : 'hidden md:grid grid-cols-[minmax(0,1fr)_9.5rem_8rem_5.5rem]'
+                  } gap-x-4 px-5 py-2 bg-slate-50/80 dark:bg-[#0d0f14] border-b border-slate-200 dark:border-[#23252f] text-[11px] font-medium text-slate-400 dark:text-zinc-500`}
+                >
                   <span>{locale === 'zh' ? '招标项目与采购方' : locale === 'en' ? 'Tender & Buyer' : 'Тендер ба Захиалагч'}</span>
                   <span className="text-right">{locale === 'zh' ? '预算金额' : locale === 'en' ? 'Budget' : 'Төсөвт өртөг'}</span>
                   <span className="text-right">{locale === 'zh' ? '截止时间' : locale === 'en' ? 'Deadline' : 'Эцсийн хугацаа'}</span>
                   <span />
                 </div>
 
-                <div className="divide-y divide-slate-200/80 dark:divide-zinc-800">
+                <div className="divide-y divide-slate-200/80 dark:divide-[#1f222d]">
                   {displayedTenders.map((tender) => (
                     <TenderRow
                       key={String(tender.invitationId)}
                       tender={tender}
                       locale={locale}
                       isSaved={savedIds.has(tender.invitationId) || savedIds.has(String(tender.invitationId))}
+                      isSelected={Boolean(selectedTender && String(selectedTender.invitationId) === String(tender.invitationId))}
+                      inspectorOpen={isInspectorOpen}
+                      onSelect={handleSelectTender}
                       onToggleSave={handleToggleSave}
                       onAskAI={handleAskAI}
                     />
@@ -639,6 +689,53 @@ export default function Home() {
           </footer>
 
         </main>
+
+          {/* Desktop Right Live Dossier Inspector */}
+          {isInspectorOpen && (
+            <div className="hidden lg:flex lg:w-[390px] xl:w-[430px] shrink-0 border-l border-slate-200 dark:border-[#23252f] bg-white dark:bg-[#0f1015] h-full overflow-hidden">
+              <TenderInspectorPane
+                tender={selectedTender}
+                locale={locale}
+                isSaved={Boolean(
+                  selectedTender &&
+                    (savedIds.has(selectedTender.invitationId) ||
+                      savedIds.has(String(selectedTender.invitationId)))
+                )}
+                onToggleSave={handleToggleSave}
+                onAskAI={handleAskAI}
+                onClose={() => setIsInspectorOpen(false)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Mobile / Tablet Slide-Over Dossier Inspector */}
+        {isMobileInspectorOpen && selectedTender && (
+          <div
+            className="fixed inset-0 z-50 lg:hidden flex justify-end bg-black/60 backdrop-blur-xs"
+            onClick={() => setIsMobileInspectorOpen(false)}
+          >
+            <div
+              className="w-full max-w-md h-full bg-white dark:bg-[#0f1015] border-l border-slate-200 dark:border-[#23252f] shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <TenderInspectorPane
+                tender={selectedTender}
+                locale={locale}
+                isSaved={Boolean(
+                  savedIds.has(selectedTender.invitationId) ||
+                    savedIds.has(String(selectedTender.invitationId))
+                )}
+                onToggleSave={handleToggleSave}
+                onAskAI={(t, prompt) => {
+                  setIsMobileInspectorOpen(false);
+                  handleAskAI(t, prompt);
+                }}
+                onClose={() => setIsMobileInspectorOpen(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Slide-over Full Detail View */}

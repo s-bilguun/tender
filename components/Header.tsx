@@ -61,21 +61,21 @@ export const Header: React.FC<HeaderProps> = ({
   const showSuggestions = isSearchFocused && searchValue.trim() === '' && Boolean(onSelectSuggestion);
 
   return (
-    <header className="sticky top-0 z-30 h-14 border-b border-slate-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xs px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 transition-colors">
+    <header className="sticky top-0 z-30 h-14 border-b border-[#222530] bg-[#11131a]/95 dark:bg-[#08090d]/95 backdrop-blur-xs px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 text-white transition-colors">
       {/* Left Section: Mobile Menu Trigger & Breadcrumb */}
       <div className="flex items-center gap-2.5 shrink-0">
         <button
           onClick={onToggleMobileSidebar}
-          className="lg:hidden p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-zinc-900 border border-slate-200 dark:border-zinc-800 transition-colors"
+          className="lg:hidden p-1.5 rounded-md text-zinc-300 hover:text-white hover:bg-white/[0.06] border border-[#2a2e3c] transition-colors cursor-pointer"
           aria-label="Open sidebar navigation"
         >
           <Menu className="h-4 w-4" />
         </button>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-zinc-400">
-          <span className="font-medium text-slate-600 dark:text-zinc-300">TenderHub</span>
-          <span className="text-slate-300 dark:text-zinc-700">/</span>
-          <span className="text-slate-900 dark:text-white font-semibold">
+        <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-400">
+          <span className="font-medium text-zinc-300">TenderHub</span>
+          <span className="text-zinc-600">/</span>
+          <span className="text-white font-semibold">
             {activeSectionTitle ||
               (locale === 'mn' ? 'Тендерийн сан' : locale === 'zh' ? '招标库' : 'Tenders')}
           </span>
@@ -85,14 +85,14 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Center Section: Command Search Bar with Inline Quick Suggestions */}
       <div className="relative flex-1 max-w-xl mx-1 sm:mx-4">
         <div
-          className={`relative flex items-center h-9 w-full rounded-md bg-slate-100/80 dark:bg-zinc-900 border transition-colors ${
+          className={`relative flex items-center h-9 w-full rounded-lg bg-[#181b24] border transition-colors ${
             isSearchFocused
-              ? 'border-slate-400 dark:border-zinc-600 bg-white dark:bg-zinc-900'
-              : 'border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
+              ? 'border-[#5e6ad2] bg-[#1b1f2b]'
+              : 'border-[#282c3a] hover:border-[#373d52]'
           }`}
         >
-          <div className="pl-2.5 pr-2 flex items-center pointer-events-none text-slate-400">
-            <Search className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
+          <div className="pl-2.5 pr-2 flex items-center pointer-events-none text-zinc-500">
+            <Search className="h-3.5 w-3.5 text-zinc-400" />
           </div>
 
           <input
@@ -110,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
                 ? '搜索标讯名称、编号、采购单位...'
                 : 'Search tender title, code, buyer...'
             }
-            className="w-full text-xs sm:text-sm text-slate-900 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-500 bg-transparent focus:outline-hidden"
+            className="w-full text-xs sm:text-sm text-zinc-100 placeholder-zinc-500 bg-transparent focus:outline-hidden"
           />
 
           <div className="flex items-center gap-1 pr-1.5 shrink-0">
@@ -122,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
                   onSearchSubmit?.();
                   searchInputRef.current?.focus();
                 }}
-                className="p-1 rounded text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="p-1 rounded text-zinc-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
                 title="Clear"
               >
                 <X className="h-3.5 w-3.5" />
@@ -133,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenCommandPalette}
-                className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-white dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-zinc-700 transition-colors cursor-pointer"
+                className="hidden sm:flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-[#222634] text-zinc-400 hover:text-white border border-[#32374a] transition-colors cursor-pointer"
                 title="Command Palette (⌘K)"
               >
                 <span>⌘K</span>
@@ -142,10 +142,10 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Inline Quick Keyword Suggestions Popover (replaces permanent GlobalSearchBar strip) */}
+        {/* Inline Quick Keyword Suggestions Popover */}
         {showSuggestions && (
-          <div className="absolute left-0 right-0 top-11 z-40 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg p-2.5">
-            <div className="px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-zinc-500">
+          <div className="absolute left-0 right-0 top-11 z-40 rounded-lg border border-[#2a2e3c] bg-[#161922] shadow-2xl p-2.5 text-zinc-200">
+            <div className="px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
               {locale === 'zh' ? '常用搜索关键词' : locale === 'en' ? 'Quick keywords' : 'Түгээмэл хайлт'}
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -160,7 +160,7 @@ export const Header: React.FC<HeaderProps> = ({
                     setIsSearchFocused(false);
                     searchInputRef.current?.blur();
                   }}
-                  className="h-7 px-2.5 rounded-md text-xs font-medium bg-slate-50 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 hover:bg-slate-900 hover:text-white hover:border-slate-900 dark:hover:bg-white dark:hover:text-zinc-900 transition-colors cursor-pointer"
+                  className="h-7 px-2.5 rounded-md text-xs font-medium bg-[#1f2330] text-zinc-200 border border-[#2f3548] hover:bg-[#5266eb] hover:text-white hover:border-[#5266eb] transition-colors cursor-pointer"
                 >
                   {locale === 'zh' ? item.zh : locale === 'en' ? item.en : item.mn}
                 </button>
@@ -170,11 +170,19 @@ export const Header: React.FC<HeaderProps> = ({
         )}
       </div>
 
-      {/* Right Section: Theme Toggle, Language Switcher, Plans & Ask AI */}
+      {/* Right Section: FX Ticker, Theme Toggle, Language Switcher, Plans & Ask AI */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div
+          className="hidden lg:inline-flex items-center gap-1.5 h-8 px-2.5 rounded-md bg-[#181b24] border border-[#282c3a] text-[11px] font-mono tabular-nums text-zinc-300"
+          title={locale === 'zh' ? '参考折算汇率' : locale === 'en' ? 'Reference exchange rate' : 'Тооцооллын жишиг ханш'}
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+          <span>1 RMB ≈ 470 MNT</span>
+        </div>
+
         <button
           onClick={toggleTheme}
-          className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer shrink-0"
+          className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-zinc-300 hover:text-white bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] transition-colors cursor-pointer shrink-0"
           aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           title={
             theme === 'dark'
@@ -194,15 +202,15 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         {/* 3-Way Language Toggle (MN / EN / ZH) */}
-        <div className="flex items-center bg-slate-100 dark:bg-zinc-900 rounded-md p-0.5 border border-slate-200 dark:border-zinc-800 shrink-0">
+        <div className="flex items-center bg-[#181b24] rounded-md p-0.5 border border-[#282c3a] shrink-0">
           {(['mn', 'en', 'zh'] as Locale[]).map((loc) => (
             <button
               key={loc}
               onClick={() => setLocale(loc)}
-              className={`h-7 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer ${
+              className={`h-7 px-2 rounded text-[11px] transition-colors cursor-pointer ${
                 locale === loc
-                  ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs'
-                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[#5266eb] text-white font-semibold shadow-2xs'
+                  : 'text-zinc-400 hover:text-white font-medium'
               }`}
               title={loc === 'mn' ? 'Монгол' : loc === 'en' ? 'English' : '中文'}
             >
@@ -214,9 +222,9 @@ export const Header: React.FC<HeaderProps> = ({
         {onOpenPricing && (
           <button
             onClick={onOpenPricing}
-            className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-800 items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+            className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium bg-[#181b24] hover:bg-[#222634] text-zinc-200 border border-[#282c3a] items-center gap-1.5 transition-colors cursor-pointer shrink-0"
           >
-            <Crown className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400 shrink-0" />
+            <Crown className="h-3.5 w-3.5 text-amber-400 shrink-0" />
             <span className="hidden md:inline whitespace-nowrap">
               {locale === 'zh' ? '会员' : locale === 'mn' ? 'Багцууд' : 'Plans'}
             </span>
@@ -225,7 +233,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         <button
           onClick={onOpenAI}
-          className="h-8 px-2.5 sm:px-3 rounded-md text-xs font-medium bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 text-white dark:text-zinc-900 flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+          className="h-8 px-2.5 sm:px-3 rounded-md text-xs font-semibold bg-[#5266eb] hover:bg-[#4356d6] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
         >
           <Sparkles className="h-3.5 w-3.5 shrink-0" />
           <span className="hidden sm:inline whitespace-nowrap">

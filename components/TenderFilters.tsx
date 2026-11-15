@@ -191,10 +191,21 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     activeAdvancedCount > 0;
 
   const chipClass =
-    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700';
+    'inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#171a24] text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-[#252936]';
 
-  const selectBoxClass =
-    'relative flex items-center bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-md px-2.5 h-8 text-xs text-slate-700 dark:text-zinc-200 hover:border-slate-300 dark:hover:border-zinc-700 transition-colors';
+  const getSelectBoxClass = (isActive: boolean) =>
+    `relative flex items-center border rounded-md px-2.5 h-8 text-xs transition-colors ${
+      isActive
+        ? 'border-[#5266eb]/40 bg-[#5266eb]/[0.06] text-[#5266eb] dark:border-[#5e6ad2]/50 dark:bg-[#5e6ad2]/15 dark:text-[#9ea8ff]'
+        : 'bg-white dark:bg-[#151822] border-slate-200 dark:border-[#252936] text-slate-700 dark:text-zinc-200 hover:border-slate-300 dark:hover:border-[#34394c]'
+    }`;
+
+  const tabClass = (isActive: boolean) =>
+    `h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
+      isActive
+        ? 'border-[#5266eb] dark:border-[#5e6ad2] text-[#5266eb] dark:text-[#828fff]'
+        : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
+    }`;
 
   const getSectorLabel = (id: string) => {
     const info = INDUSTRIES.find((i) => i.id === id);
@@ -202,40 +213,40 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
     return locale === 'zh' ? (info.labelZh || info.labelEn) : locale === 'en' ? info.labelEn : info.labelMn;
   };
 
+  const defaultSort = currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc';
+  const currentSort = filters.sortBy || defaultSort;
+  const isIndustryActive = currentIndustry !== 'all';
+  const isEligibilityActive = currentEligibility !== 'all';
+  const isBudgetActive = activeBudgetTier !== 'all';
+  const isYearActive = Boolean(filters.year && filters.year !== 'all');
+  const isSortActive = currentSort !== defaultSort;
+
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
+    <div className="bg-white dark:bg-[#111318] rounded-xl border border-slate-200/90 dark:border-[#23252f] overflow-hidden shadow-xs">
       {/* Row 1: Primary Status Tabs (Left) & Category Switcher + Export CSV (Right) */}
-      <div className="px-3 sm:px-4 flex flex-col xl:flex-row xl:items-center justify-between gap-2 border-b border-slate-200 dark:border-zinc-800">
+      <div className="px-3 sm:px-4 flex flex-col xl:flex-row xl:items-center justify-between gap-2 border-b border-slate-200/90 dark:border-[#23252f]">
         <div className="flex items-center gap-5 overflow-x-auto no-scrollbar -mx-1 px-1 min-w-0">
           <button
             type="button"
             onClick={() => handleTabSelect('active')}
-            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'active'
-                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={tabClass(currentTab === 'active')}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
             <span>{tr('Санал авч буй', 'Live Bids', '正在招投标')}</span>
             {tabMetrics.active != null && (
-              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.active.toLocaleString('en-US')}</span>
+              <span className="text-[11px] tabular-nums opacity-70">{tabMetrics.active.toLocaleString('en-US')}</span>
             )}
           </button>
 
           <button
             type="button"
             onClick={() => handleTabSelect('closing_soon')}
-            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'closing_soon'
-                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={tabClass(currentTab === 'closing_soon')}
           >
             <Flame className="h-3.5 w-3.5" />
             <span>{tr('Хаагдах дөхсөн', 'Closing Soon', '即将截标')}</span>
             {tabMetrics.closing != null && (
-              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.closing.toLocaleString('en-US')}</span>
+              <span className="text-[11px] tabular-nums opacity-70">{tabMetrics.closing.toLocaleString('en-US')}</span>
             )}
           </button>
 
@@ -243,11 +254,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <button
               type="button"
               onClick={() => handleTabSelect('no_guarantee')}
-              className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-                currentTab === 'no_guarantee'
-                  ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                  : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
+              className={tabClass(currentTab === 'no_guarantee')}
             >
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>{tr('Баталгаагүй', 'No Bid Bond', '免保函')}</span>
@@ -257,55 +264,43 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           <button
             type="button"
             onClick={() => handleTabSelect('result')}
-            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'result'
-                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={tabClass(currentTab === 'result')}
           >
             <Trophy className="h-3.5 w-3.5" />
             <span>{tr('Үр дүн', 'Awarded', '中标结果')}</span>
             {tabMetrics.result != null && (
-              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.result.toLocaleString('en-US')}</span>
+              <span className="text-[11px] tabular-nums opacity-70">{tabMetrics.result.toLocaleString('en-US')}</span>
             )}
           </button>
 
           <button
             type="button"
             onClick={() => handleTabSelect('all')}
-            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'all'
-                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={tabClass(currentTab === 'all')}
           >
             <Database className="h-3.5 w-3.5" />
             <span>{tr('Бүх сан', 'All Tenders', '全部标段')}</span>
             {tabMetrics.all != null && (
-              <span className="text-[11px] tabular-nums opacity-60">{tabMetrics.all.toLocaleString('en-US')}</span>
+              <span className="text-[11px] tabular-nums opacity-70">{tabMetrics.all.toLocaleString('en-US')}</span>
             )}
           </button>
 
           <button
             type="button"
             onClick={() => handleTabSelect('watchlist')}
-            className={`h-11 -mb-px border-b-2 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-colors shrink-0 whitespace-nowrap cursor-pointer ${
-              currentTab === 'watchlist'
-                ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white'
-                : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
+            className={tabClass(currentTab === 'watchlist')}
           >
             <Star className="h-3.5 w-3.5" />
             <span>{tr('Хянаж буй', 'Watchlist', '关注')}</span>
             {watchlistCount > 0 && (
-              <span className="text-[11px] tabular-nums opacity-60">{watchlistCount}</span>
+              <span className="text-[11px] tabular-nums opacity-70">{watchlistCount}</span>
             )}
           </button>
         </div>
 
         {/* Right Utility Controls: Category Segmented Control + Export CSV */}
         <div className="flex items-center justify-between xl:justify-end gap-2 py-2 shrink-0">
-          <div className="flex items-center bg-slate-100/90 dark:bg-zinc-800 p-0.5 rounded-md border border-slate-200 dark:border-zinc-700 h-8 overflow-x-auto no-scrollbar">
+          <div className="flex items-center bg-slate-100/90 dark:bg-[#171a24] p-0.5 rounded-md border border-slate-200 dark:border-[#252936] h-8 overflow-x-auto no-scrollbar">
             {categories.map((cat) => (
               <button
                 key={cat.id}
@@ -313,7 +308,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
                 onClick={() => onFilterChange({ category: cat.id, page: 1 })}
                 className={`h-7 px-2.5 rounded text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
                   currentCategory === cat.id
-                    ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs font-semibold'
+                    ? 'bg-[#5266eb] text-white shadow-2xs font-semibold'
                     : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -326,7 +321,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
             <button
               type="button"
               onClick={onExportCSV}
-              className="h-8 px-2.5 rounded-md bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-700 dark:text-zinc-200 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+              className="h-8 px-2.5 rounded-md bg-white dark:bg-[#151822] hover:bg-slate-50 dark:hover:bg-[#1c202e] border border-slate-200 dark:border-[#252936] text-slate-700 dark:text-zinc-200 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
               title={tr('Excel / CSV файлаар татах', 'Export to CSV / Excel', '导出 Excel / CSV 表格')}
             >
               <FileSpreadsheet className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" />
@@ -337,15 +332,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
       </div>
 
       {/* Row 2: Compact Inline Filter Strip */}
-      <div className="px-3 sm:px-4 py-2 bg-slate-50/70 dark:bg-zinc-900/50 flex flex-wrap items-center gap-2">
+      <div className="px-3 sm:px-4 py-2 bg-slate-50/60 dark:bg-[#0d0f14]/60 flex flex-wrap items-center gap-2">
         {/* Sector Select */}
-        <div className={selectBoxClass}>
-          <Layers className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+        <div className={getSelectBoxClass(isIndustryActive)}>
+          <Layers className={`h-3.5 w-3.5 mr-1.5 shrink-0 ${isIndustryActive ? 'text-[#5266eb] dark:text-[#9ea8ff]' : 'text-slate-400 dark:text-zinc-500'}`} />
           <select
             value={currentIndustry}
             onChange={(e) => onFilterChange({ industry: e.target.value as any, page: 1 })}
             aria-label={tr('Салбар', 'Sector', '行业')}
-            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none max-w-[165px]"
+            className="bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-4 appearance-none max-w-[165px]"
           >
             <option value="all" className="dark:bg-zinc-900 dark:text-white">
               {tr('Бүх салбар', 'All Sectors', '全部行业')}
@@ -356,17 +351,17 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               </option>
             ))}
           </select>
-          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+          <ChevronDown className="h-3 w-3 opacity-60 absolute right-2 pointer-events-none" />
         </div>
 
         {/* Foreign Eligibility Select */}
-        <div className={selectBoxClass}>
-          <Globe2 className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+        <div className={getSelectBoxClass(isEligibilityActive)}>
+          <Globe2 className={`h-3.5 w-3.5 mr-1.5 shrink-0 ${isEligibilityActive ? 'text-[#5266eb] dark:text-[#9ea8ff]' : 'text-slate-400 dark:text-zinc-500'}`} />
           <select
             value={currentEligibility}
             onChange={(e) => onFilterChange({ chinaEligibility: e.target.value as any, page: 1 })}
             aria-label={tr('Гадаад оролцогч', 'Foreign Eligibility', '外企准入')}
-            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+            className="bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
           >
             {chinaEligibilityOptions.map((opt) => (
               <option key={opt.id} value={opt.id} className="dark:bg-zinc-900 dark:text-white">
@@ -374,12 +369,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               </option>
             ))}
           </select>
-          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+          <ChevronDown className="h-3 w-3 opacity-60 absolute right-2 pointer-events-none" />
         </div>
 
         {/* Budget Tier Select */}
-        <div className={selectBoxClass}>
-          <span className="text-[11px] text-slate-400 dark:text-zinc-500 mr-1 shrink-0">
+        <div className={getSelectBoxClass(isBudgetActive)}>
+          <span className={`text-[11px] mr-1 shrink-0 ${isBudgetActive ? 'text-[#5266eb] dark:text-[#9ea8ff]' : 'text-slate-400 dark:text-zinc-500'}`}>
             {tr('Төсөв:', 'Budget:', '预算:')}
           </span>
           <select
@@ -389,7 +384,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               onFilterChange({ minBudget: selected?.min, maxBudget: selected?.max, page: 1 });
             }}
             aria-label={tr('Төсөв', 'Budget', '预算')}
-            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+            className="bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
           >
             {budgetTiers.map((b) => (
               <option key={b.id} value={b.id} className="dark:bg-zinc-900 dark:text-white">
@@ -397,12 +392,12 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               </option>
             ))}
           </select>
-          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+          <ChevronDown className="h-3 w-3 opacity-60 absolute right-2 pointer-events-none" />
         </div>
 
         {/* Year Select */}
-        <div className={selectBoxClass}>
-          <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+        <div className={getSelectBoxClass(isYearActive)}>
+          <Calendar className={`h-3.5 w-3.5 mr-1.5 shrink-0 ${isYearActive ? 'text-[#5266eb] dark:text-[#9ea8ff]' : 'text-slate-400 dark:text-zinc-500'}`} />
           <select
             value={filters.year || 'all'}
             onChange={(e) => {
@@ -416,7 +411,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               });
             }}
             aria-label={tr('Он', 'Year', '年份')}
-            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+            className="bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
           >
             <option value="all" className="dark:bg-zinc-900 dark:text-white">
               {tr('Бүх он', 'All years', '全部年份')}
@@ -427,17 +422,17 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               </option>
             ))}
           </select>
-          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+          <ChevronDown className="h-3 w-3 opacity-60 absolute right-2 pointer-events-none" />
         </div>
 
         {/* Sort Select */}
-        <div className={selectBoxClass}>
-          <ArrowUpDown className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500 mr-1.5 shrink-0" />
+        <div className={getSelectBoxClass(isSortActive)}>
+          <ArrowUpDown className={`h-3.5 w-3.5 mr-1.5 shrink-0 ${isSortActive ? 'text-[#5266eb] dark:text-[#9ea8ff]' : 'text-slate-400 dark:text-zinc-500'}`} />
           <select
-            value={filters.sortBy || (currentTab === 'closing_soon' ? 'deadline_asc' : 'date_desc')}
+            value={currentSort}
             onChange={(e) => onFilterChange({ sortBy: e.target.value as any, page: 1 })}
             aria-label={tr('Эрэмбэ', 'Sort', '排序')}
-            className="bg-transparent text-xs text-slate-800 dark:text-zinc-200 font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
+            className="bg-transparent text-xs font-medium focus:outline-none cursor-pointer pr-4 appearance-none"
           >
             <option value="date_desc" className="dark:bg-zinc-900 dark:text-white">
               {tr('Шинээр зарлагдсан', 'Newest', '最新发布')}
@@ -452,7 +447,7 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
               {t.sortOptions.budget_asc}
             </option>
           </select>
-          <ChevronDown className="h-3 w-3 text-slate-400 absolute right-2 pointer-events-none" />
+          <ChevronDown className="h-3 w-3 opacity-60 absolute right-2 pointer-events-none" />
         </div>
 
         {/* With PDF / Specs Toggle Pill */}
@@ -462,8 +457,8 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           onClick={() => onFilterChange({ hasDocs: filters.hasDocs ? undefined : true, page: 1 })}
           className={`h-8 px-2.5 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer ${
             filters.hasDocs
-              ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-900 dark:border-white'
-              : 'bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-200 border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
+              ? 'bg-[#5266eb] text-white border-[#5266eb] shadow-2xs'
+              : 'bg-white dark:bg-[#151822] text-slate-700 dark:text-zinc-200 border-slate-200 dark:border-[#252936] hover:border-slate-300 dark:hover:border-[#34394c]'
           }`}
         >
           <FileText className="h-3.5 w-3.5 shrink-0" />
@@ -476,15 +471,15 @@ export const TenderFilters: React.FC<TenderFiltersProps> = ({
           onClick={() => setIsAdvancedModalOpen(true)}
           className={`h-8 px-2.5 rounded-md text-xs font-medium border flex items-center gap-1.5 transition-colors cursor-pointer ml-auto ${
             activeAdvancedCount > 0
-              ? 'bg-slate-900 text-white border-slate-900 dark:bg-white dark:text-zinc-900 dark:border-white'
-              : 'bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border-slate-200 dark:border-zinc-800'
+              ? 'bg-[#5266eb] text-white border-[#5266eb] shadow-2xs'
+              : 'bg-white dark:bg-[#151822] hover:bg-slate-50 dark:hover:bg-[#1c202e] text-slate-700 dark:text-zinc-200 border-slate-200 dark:border-[#252936]'
           }`}
           title={tr('Нарийвчилсан шүүлтүүр', 'More Filters', '更多筛选')}
         >
           <SlidersHorizontal className="h-3.5 w-3.5 shrink-0" />
           <span>{tr('Нарийвчилсан', 'Filters', '更多筛选')}</span>
           {activeAdvancedCount > 0 && (
-            <span className="h-4 min-w-4 px-1 rounded-full bg-white/20 dark:bg-zinc-900/20 text-[10px] font-semibold tabular-nums flex items-center justify-center">
+            <span className="h-4 min-w-4 px-1 rounded-full bg-white/20 text-[10px] font-semibold tabular-nums flex items-center justify-center">
               {activeAdvancedCount}
             </span>
           )}

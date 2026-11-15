@@ -611,13 +611,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
     URL.revokeObjectURL(url);
   };
   return (
-    <div className="tender-detail-root min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 pb-20 transition-colors duration-150">
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-30 h-14 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xs border-b border-slate-200 dark:border-zinc-800 px-4 sm:px-8 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+    <div className="tender-detail-root min-h-screen bg-[#fbfcfd] dark:bg-[#0c0d10] text-slate-900 dark:text-zinc-100 pb-20 transition-colors duration-150">
+      {/* Committed Ink-Night Top Navbar */}
+      <header className="sticky top-0 z-30 h-14 bg-[#11131a]/95 dark:bg-[#08090d]/95 backdrop-blur-xs border-b border-[#222530] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 text-zinc-100">
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/"
-            className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 transition-colors flex items-center gap-1.5 text-xs font-medium"
+            className="h-8 px-2.5 rounded-md border border-[#282c3a] bg-[#181b24] hover:bg-[#222634] text-zinc-200 transition-colors flex items-center gap-1.5 text-xs font-medium shrink-0"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">
@@ -625,17 +625,17 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </span>
             <span className="sm:hidden">{locale === 'mn' ? 'Буцах' : locale === 'zh' ? '返回' : 'Back'}</span>
           </Link>
-          <div className="h-4 w-px bg-slate-200 dark:bg-zinc-800 hidden sm:block"></div>
-          <span className="text-xs text-slate-500 dark:text-zinc-400 hidden md:inline font-mono">
+          <div className="h-4 w-px bg-[#262936] hidden sm:block shrink-0" />
+          <span className="text-xs text-zinc-400 hidden md:inline font-mono tabular-nums truncate">
             {tender.tenderCode || tender.invitationNumber}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Global Dark / Light Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-slate-600 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white bg-slate-100 hover:bg-slate-200 dark:bg-zinc-900 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 transition-colors cursor-pointer shrink-0"
+            className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-zinc-300 hover:text-white bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] transition-colors cursor-pointer shrink-0"
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? (locale === 'mn' ? 'Гэгээлэг горим' : locale === 'zh' ? '浅色模式' : 'Light mode') : (locale === 'mn' ? 'Харанхуй горим' : locale === 'zh' ? '深色模式' : 'Dark mode')}
           >
@@ -647,14 +647,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           </button>
 
           {/* 3-Way Language Switcher */}
-          <div className="flex items-center bg-slate-100 dark:bg-zinc-900 rounded-md p-0.5 border border-slate-200 dark:border-zinc-800 shrink-0">
+          <div className="flex items-center bg-[#181b24] rounded-md p-0.5 border border-[#282c3a] shrink-0">
             <button
               onClick={() => setLocale('mn')}
               className={`h-7 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer ${
- locale === 'mn'
- ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
- }`}
+                locale === 'mn'
+                  ? 'bg-[#5266eb] text-white shadow-2xs'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
               title="Монгол хэл (Mongolian)"
             >
               MN
@@ -662,10 +662,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             <button
               onClick={() => setLocale('en')}
               className={`h-7 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer ${
- locale === 'en'
- ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
- }`}
+                locale === 'en'
+                  ? 'bg-[#5266eb] text-white shadow-2xs'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
               title="English"
             >
               EN
@@ -673,10 +673,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             <button
               onClick={() => setLocale('zh')}
               className={`h-7 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer flex items-center gap-1 ${
- locale === 'zh'
- ? 'bg-white dark:bg-zinc-700 text-slate-900 dark:text-white shadow-2xs'
- : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
- }`}
+                locale === 'zh'
+                  ? 'bg-[#5266eb] text-white shadow-2xs'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
               title="中文 (Chinese)"
             >
               <span>中文</span>
@@ -686,16 +686,16 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           <button
             onClick={() => handleRunAiAnalysis(undefined, 'nav', locale === 'zh' ? '综合ТШЗ招标文件分析' : 'Ерөнхий ТШББ дүгнэлт')}
             disabled={aiAnalyzing}
-            className="h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="h-8 px-2.5 rounded-md text-xs font-medium text-zinc-100 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] hover:border-[#5266eb]/60 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             {aiAnalyzingTarget === 'nav' ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#828fff]" />
                 <span>{locale === 'mn' ? 'Шинжилж байна...' : locale === 'zh' ? '分析中...' : 'Analyzing...'}</span>
               </>
             ) : (
               <>
-                <Sparkles className="h-3.5 w-3.5" />
+                <Sparkles className="h-3.5 w-3.5 text-[#828fff]" />
                 <span className="hidden sm:inline">{locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 分析' : 'AI Analysis'}</span>
               </>
             )}
@@ -710,10 +710,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   });
                   setIsPdfReaderOpen(true);
                 }}
-                className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 items-center gap-1.5 transition-colors cursor-pointer"
+                className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium text-zinc-200 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] items-center gap-1.5 transition-colors cursor-pointer"
                 title="ТШЗ PDF баримтыг вебсайт дээрээс шууд унших"
               >
-                <BookOpen className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" />
+                <BookOpen className="h-3.5 w-3.5 text-zinc-400" />
                 <span>{locale === 'zh' ? '阅读 PDF' : locale === 'en' ? 'Read PDF' : 'ТШЗ Унших'}</span>
               </button>
               <a
@@ -721,10 +721,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 target="_blank"
                 rel="noopener noreferrer"
                 download={storedPrimaryPdf.name || 'ТШББ.pdf'}
-                className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 items-center gap-1.5 transition-colors"
+                className="hidden md:flex h-8 px-2.5 rounded-md text-xs font-medium text-zinc-200 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] items-center gap-1.5 transition-colors"
                 title="Supabase CDN-ээс ТШЗ PDF-ийг шууд татах"
               >
-                <Download className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" />
+                <Download className="h-3.5 w-3.5 text-zinc-400" />
                 <span>{locale === 'zh' ? '下载 PDF' : locale === 'en' ? 'Download' : 'ТШЗ Татах'}</span>
               </a>
             </>
@@ -733,28 +733,31 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             href={publicLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 border border-slate-200 dark:border-zinc-800 items-center gap-1.5 transition-colors"
+            className="hidden lg:flex h-8 px-2.5 rounded-md text-xs font-medium text-zinc-200 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] items-center gap-1.5 transition-colors"
           >
             <span>tender.gov.mn</span>
-            <ExternalLink className="h-3 w-3 text-slate-400 dark:text-zinc-500" />
+            <ExternalLink className="h-3 w-3 text-zinc-400" />
           </a>
           <a
             href={supplierLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-8 px-3 rounded-md text-xs font-medium text-white bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 dark:text-zinc-900 flex items-center gap-1.5 transition-colors"
+            className="h-8 px-3 rounded-md text-xs font-medium text-white bg-[#5266eb] hover:bg-[#4356d6] flex items-center gap-1.5 transition-colors shadow-2xs"
           >
             <span>{locale === 'mn' ? 'Оролцох' : locale === 'zh' ? '参与投标' : 'Participate'}</span>
-            <ExternalLink className="h-3 w-3 opacity-70" />
+            <ExternalLink className="h-3 w-3 opacity-85" />
           </a>
         </div>
       </header>
 
-      {/* Main Container */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-5 space-y-5">
+      {/* Main 50/50 Asymmetric Dossier + Sticky Obsidian AI/PDF Copilot Container */}
+      <main className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-5">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_460px] gap-6 items-start">
+          {/* Left Executive Tender Dossier Column */}
+          <div className="min-w-0 space-y-5">
         
         {/* Unified Hero + Key Facts Card */}
-        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
+        <div className="bg-white dark:bg-[#111318] rounded-xl border border-slate-200/90 dark:border-[#23252f] overflow-hidden shadow-xs">
           <div className="p-5 sm:p-6 space-y-4">
           <div className="flex flex-wrap items-center gap-2 text-xs">
             {(tender.tenderCode || tender.invitationNumber) && (
@@ -1007,357 +1010,11 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           )}
         </div>
 
-        {/* AI Analysis & Multi-turn Conversation Section */}
-        <div ref={aiAnalysisRef} className="scroll-mt-24">
-          {(aiMessages.length > 0 || aiAnalyzing) ? (
-            <div className=" bg-slate-50/90 border-2 border-slate-300 rounded-lg shadow-md overflow-hidden transition-all animate-in fade-in duration-200">
-              {/* Header */}
-              <div className="p-4 sm:p-5 bg-white/70 border-b border-slate-200 flex items-center justify-between flex-wrap gap-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-md bg-slate-900 dark:bg-zinc-700 text-white flex items-center justify-center shrink-0 shadow-xs">
-                    <Sparkles className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-slate-900 text-sm sm:text-base">
-                        AI Шинжээчийн Харилцан Яриа
-                      </h3>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-900 border border-slate-300">
-                        {hasPdfTextEvidence ? 'PDF-ийн текст бэлэн' : 'PDF-ийн текст уншигдаагүй'}
-                      </span>
-                      {aiMessages.length > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-slate-100 text-slate-700">
-                          {aiMessages.length} мессеж
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      {hasPdfTextEvidence
-                        ? 'Уншсан эх баримтын эшлэлээр хариулна. Шаардлага бүрийг албан ёсны заалтаар нягтална уу.'
-                        : 'Одоогоор уншсан PDF текст алга. AI нөхцөл таамаглахгүй; албан эх баримтаас шалгах шаардлагатайг хэлнэ.'}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex items-center gap-1.5 ml-auto">
-                  {aiMessages.length > 0 && (
-                    <>
-                      <button
-                        onClick={handleCopyChatTranscript}
-                        className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
-                        title="Харилцан яриаг бүхлээр нь хуулах"
-                      >
-                        {copiedAnalysis ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5 text-slate-500" />}
-                        <span className="hidden sm:inline">{copiedAnalysis ? 'Хуулагдлаа' : 'Хуулах'}</span>
-                      </button>
-                      <button
-                        onClick={handleClearChat}
-                        className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 transition-colors flex items-center gap-1 shadow-2xs cursor-pointer"
-                        title="Чат цэвэрлэх"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Цэвэрлэх</span>
-                      </button>
-                    </>
-                  )}
-                  <button
-                    onClick={() => setIsAiCollapsed(!isAiCollapsed)}
-                    className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:bg-slate-100 transition-colors shadow-2xs cursor-pointer"
-                    title={isAiCollapsed ? 'Дэлгэх' : 'Хураах'}
-                  >
-                    {isAiCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Conversation Body */}
-              {!isAiCollapsed && (
-                <div className="p-4 sm:p-5 space-y-4">
-                  {/* Messages stream */}
-                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
-                    {aiMessages.map((msg) => {
-                      const isUser = msg.sender === 'user';
-                      return (
-                        <div
-                          key={msg.id}
-                          className={`flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`}
-                        >
-                          {!isUser && (
-                            <div className="h-8 w-8 rounded-lg bg-slate-900 dark:bg-zinc-700 text-white flex items-center justify-center shrink-0 shadow-2xs font-bold text-xs mt-1">
-                              <Bot className="h-4 w-4" />
-                            </div>
-                          )}
-                          <div
-                            className={`max-w-[88%] sm:max-w-[82%] rounded-lg p-4 shadow-2xs ${
- isUser
- ? 'bg-blue-600 text-white rounded-tr-none'
- : 'bg-white text-slate-900 border border-slate-200 rounded-tl-none'
- }`}
-                          >
-                            <div className="flex items-center justify-between gap-2 mb-1.5 border-b pb-1 border-current/15 text-[10px] opacity-80">
-                              <span className="font-bold flex items-center gap-1">
-                                {isUser ? <User className="h-3 w-3" /> : <Sparkles className="h-3 w-3" />}
-                                <span>{isUser ? 'Таны асуулт' : 'AI Шинжээчийн дүгнэлт'}</span>
-                                {msg.topic && (
-                                  <span className={`ml-1 px-1.5 py-0.2 rounded font-normal ${isUser ? 'bg-blue-700' : 'bg-slate-100 text-slate-900'}`}>
-                                    {msg.topic}
-                                  </span>
-                                )}
-                              </span>
-                              <span className="font-mono">{msg.timestamp}</span>
-                            </div>
-
-                            <div className="text-xs sm:text-sm select-text">
-                              <FormattedChatMessage text={msg.text} isUser={isUser} />
-                            </div>
-                          </div>
-                          {isUser && (
-                            <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs font-bold text-xs mt-1">
-                              <User className="h-4 w-4" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {/* Thinking indicator */}
-                    {aiAnalyzing && (
-                      <div className="flex gap-3 justify-start items-start animate-in fade-in">
-                        <div className="h-8 w-8 rounded-lg bg-slate-900 dark:bg-zinc-700 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        </div>
-                        <div className="bg-white border border-slate-200 rounded-lg rounded-tl-none p-4 shadow-2xs space-y-2 max-w-md">
-                          <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
-                            <span className="h-2 w-2 rounded-full bg-amber-600 animate-ping" />
-                            <span>AI Шинжээч хариултыг боловсруулж байна...</span>
-                          </div>
-                          <p className="text-[11px] text-slate-500">
-                            Уншигдсан баримтын эшлэл болон өмнөх асуултыг боловсруулж байна.
-                          </p>
-                          <div className="space-y-1.5 pt-1 animate-pulse">
-                            <div className="h-2.5 bg-slate-200/60 rounded w-11/12"></div>
-                            <div className="h-2.5 bg-slate-200/50 rounded w-4/5"></div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    <div ref={messagesEndRef} />
-                  </div>
-
-                  {/* Follow-up Question Input Form */}
-                  <div className="pt-2 border-t border-slate-200/80 space-y-2.5">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault();
-                        if (followupInput.trim() && !aiAnalyzing) {
-                          handleRunAiAnalysis(followupInput.trim(), 'followup', 'Тодруулга');
-                        }
-                      }}
-                      className="flex items-center gap-2"
-                    >
-                      <div className="relative flex-1">
-                        <input
-                          ref={chatInputRef}
-                          type="text"
-                          value={followupInput}
-                          onChange={(e) => setFollowupInput(e.target.value)}
-                          placeholder="Энэ тендерийн ТШББ, PDF заалт, төсвийн талаар тодруулж асуух... (Enter дарж илгээнэ)"
-                          className="w-full bg-white border border-slate-300/90 rounded-md pl-4 pr-10 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-500 shadow-2xs transition-all"
-                          disabled={aiAnalyzing}
-                        />
-                        {followupInput && (
-                          <button
-                            type="button"
-                            onClick={() => setFollowupInput('')}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={!followupInput.trim() || aiAnalyzing}
-                        className="px-4 py-2.5 rounded-md bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 disabled:opacity-50 text-white font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer shrink-0"
-                      >
-                        {aiAnalyzing ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4" />
-                        )}
-                        <span className="hidden sm:inline">Илгээх</span>
-                      </button>
-                    </form>
-
-                    {/* Context-aware Quick Follow-up Chips */}
-                    <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
-                      <span className="text-slate-400 font-medium">Шуурхай асуулт:</span>
-                      {technicalSpecs.deliverySchedule && technicalSpecs.deliverySchedule.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRunAiAnalysis('Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.', 'chip-delivery', 'Нийлүүлэлтийн хуваарь')}
-                          disabled={aiAnalyzing}
-                          className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
-                        >
-                          <Package className="h-3 w-3 text-blue-600" />
-                          <span>Нийлүүлэлтийн хуваарь?</span>
-                        </button>
-                      )}
-                      {technicalSpecs.specialConditions && technicalSpecs.specialConditions.length > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRunAiAnalysis('Гэрээний тусгай нөхцөл (ГТН)-д заасан алданги, төлбөрийн нөхцөл, хүлээлцэх нөхцөлүүд ямар байна вэ?', 'chip-scc', 'Гэрээний тусгай нөхцөл')}
-                          disabled={aiAnalyzing}
-                          className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
-                        >
-                          <FileText className="h-3 w-3 text-blue-600" />
-                          <span>Гэрээний тусгай нөхцөл & Алданги?</span>
-                        </button>
-                      )}
-                      {isFailed && (
-                        <button
-                          type="button"
-                          onClick={() => handleRunAiAnalysis('Энэхүү амжилтгүй болсон тендер яагаад цуцлагдсан бэ, дараа нь дахин зарлагдах уу, оролцоход юуг анхаарах вэ?', 'chip-failed', 'Амжилтгүй болсон шалтгаан')}
-                          disabled={aiAnalyzing}
-                          className="px-2.5 py-1 rounded-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-800 font-semibold transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
-                        >
-                          <AlertTriangle className="h-3 w-3 text-rose-600" />
-                          <span>Яагаад амжилтгүй болсон бэ?</span>
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleRunAiAnalysis('Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?', 'chip-guarantee', 'Тендерийн баталгаа')}
-                        disabled={aiAnalyzing}
-                        className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
-                      >
-                        <ShieldCheck className="h-3 w-3 text-teal-600" />
-                        <span>Тендерийн баталгааны шаардлага?</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleRunAiAnalysis('Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?', 'chip-risk', 'Эрсдэлийн шинжилгээ')}
-                        disabled={aiAnalyzing}
-                        className="px-2.5 py-1 rounded-full bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 transition-colors shadow-2xs cursor-pointer flex items-center gap-1"
-                      >
-                        <AlertCircle className="h-3 w-3 text-slate-600" />
-                        <span>Өрсөлдөхөд анхаарах гол эрсдэл?</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg p-4 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="h-8 w-8 rounded-md bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-200 shrink-0">
-                    <Sparkles className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
-                      {locale === 'zh' ? 'AI 智能投标顾问（基于招标 PDF 原文）' : locale === 'en' ? 'Ask AI about this tender' : 'Тендерийн AI Шинжээч'}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
-                      {locale === 'zh' ? '仅依据已读取的文件作答；无依据时不作猜测。' : locale === 'en' ? 'Answers cite read documents. Without a source it says so instead of guessing.' : 'Уншсан эх баримтын эшлэлээр хариулна; эшлэлгүй зүйлийг таамаглахгүй.'}
-                    </p>
-                  </div>
-                </div>
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (followupInput.trim()) {
-                      handleRunAiAnalysis(followupInput.trim(), 'initial-input', 'Тодруулга');
-                    }
-                  }}
-                  className="flex items-center gap-2 w-full sm:w-96 shrink-0"
-                >
-                  <input
-                    type="text"
-                    value={followupInput}
-                    onChange={(e) => setFollowupInput(e.target.value)}
-                    placeholder={locale === 'zh' ? '输入关于本标书 PDF 条款的问题…' : locale === 'en' ? 'Ask about PDF specs, licences, bonds…' : 'PDF шаардлага, баталгаа, барааны талаар асуух...'}
-                    className="flex-1 h-8 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-700 rounded-md px-3 text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 focus:outline-none focus:border-slate-400"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!followupInput.trim()}
-                    className="h-8 px-3 rounded-md bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-zinc-200 disabled:opacity-40 text-white dark:text-zinc-900 font-medium text-xs flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                    <span>{locale === 'zh' ? '提问' : locale === 'en' ? 'Ask' : 'Асуух'}</span>
-                  </button>
-                </form>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-1.5 pt-2.5 border-t border-slate-100 dark:border-zinc-800">
-                <button
-                  type="button"
-                  onClick={() => handleRunAiAnalysis(
-                    'Энэ тендерт шаардагдах тусгай зөвшөөрөл, түлхүүр боловсон хүчин, өмнөх туршлагын шалгуурыг нарийвчлан шинжилж, оролцогчдод анхаарах зүйлсийг нэгтгэнэ үү.',
-                    'quick-license',
-                    'Тусгай зөвшөөрөл & Шалгуур'
-                  )}
-                  disabled={aiAnalyzing}
-                  className="h-7 px-2.5 rounded-md text-[11px] font-medium bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <ShieldCheck className="h-3 w-3 text-slate-500 dark:text-zinc-400" />
-                  <span>{locale === 'zh' ? '许可与资格' : locale === 'en' ? 'Licences & criteria' : 'Тусгай зөвшөөрөл & Шалгуур'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRunAiAnalysis(
-                    'Энэ тендерийн борлуулалтын доод орлогын босго, түргэн хөрвөх чадвартай хөрөнгө, тендерийн баталгааны тооцоолол болон санхүүгийн эрсдэлийг тооцож өгнө үү.',
-                    'quick-finance',
-                    'Санхүүгийн босго & Баталгаа'
-                  )}
-                  disabled={aiAnalyzing}
-                  className="h-7 px-2.5 rounded-md text-[11px] font-medium bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Tag className="h-3 w-3 text-slate-500 dark:text-zinc-400" />
-                  <span>{locale === 'zh' ? '财务门槛与保函' : locale === 'en' ? 'Financial thresholds & bonds' : 'Санхүүгийн босго & Баталгаа'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRunAiAnalysis(
-                    'Техникийн тодорхойлолт, нийлүүлэлтийн хуваарь, чанарын стандартууд (MNS/ISO), алданги торгуулийн заалт дээр оролцогчдын зүгээс анхаарах гол эрсдэлүүд юу байна вэ?',
-                    'quick-tech',
-                    'Техникийн үзүүлэлтийн эрсдэл'
-                  )}
-                  disabled={aiAnalyzing}
-                  className="h-7 px-2.5 rounded-md text-[11px] font-medium bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <FileText className="h-3 w-3 text-slate-500 dark:text-zinc-400" />
-                  <span>{locale === 'zh' ? '技术规格风险' : locale === 'en' ? 'Technical spec risks' : 'Техникийн үзүүлэлтийн эрсдэл'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleRunAiAnalysis(
-                    'Тендерт оролцоход бүрдүүлэх баримт бичгийн хяналтын хуудас (Checklist) болон цахим системээр үнийн санал илгээх стратегийг зөвлөнө үү.',
-                    'quick-docs',
-                    'Баримт бичгийн хяналт'
-                  )}
-                  disabled={aiAnalyzing}
-                  className="h-7 px-2.5 rounded-md text-[11px] font-medium bg-slate-50 dark:bg-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 border border-slate-200 dark:border-zinc-700 flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <CheckSquare className="h-3 w-3 text-slate-500 dark:text-zinc-400" />
-                  <span>{locale === 'zh' ? '文件核查清单' : locale === 'en' ? 'Document checklist' : 'Баримт бичгийн хяналт'}</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-
-
         {/* Responsive Segmented Tab Controls (Zero horizontal scroll) */}
-        <div className="flex items-center gap-6 border-b border-slate-200 dark:border-zinc-800 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-6 border-b border-slate-200 dark:border-[#23252f] overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('bds')}
-            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'bds' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'bds' ? 'border-[#5266eb] dark:border-[#5e6ad2] text-[#5266eb] dark:text-[#828fff]' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <FileSpreadsheet className="h-4 w-4 shrink-0" />
             <span>{locale === 'zh' ? '准入与资质 (BDS)' : locale === 'mn' ? 'Шалгуур (ТШӨХ)' : 'BDS Criteria'}</span>
@@ -1365,7 +1022,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('tech')}
-            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'tech' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'tech' ? 'border-[#5266eb] dark:border-[#5e6ad2] text-[#5266eb] dark:text-[#828fff]' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Layers className="h-4 w-4 shrink-0" />
             <span>{locale === 'zh' ? '采购清单与规格' : locale === 'mn' ? 'Техникийн тодорхойлолт & Бараа' : 'Tech Specs & BoQ'}</span>
@@ -1378,7 +1035,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('results')}
-            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'results' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'results' ? 'border-[#5266eb] dark:border-[#5e6ad2] text-[#5266eb] dark:text-[#828fff]' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Trophy className="h-4 w-4 shrink-0" />
             <span>{locale === 'zh' ? '中标结果与投标商' : locale === 'mn' ? 'Үр дүн & Оролцогчид' : 'Results & Bidders'}</span>
@@ -1395,7 +1052,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'history' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-2 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'history' ? 'border-[#5266eb] dark:border-[#5e6ad2] text-[#5266eb] dark:text-[#828fff]' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <Briefcase className="h-4 w-4 shrink-0" />
             <span>{locale === 'zh' ? '历史同类项目' : locale === 'mn' ? 'Холбоотой' : 'Similar & Related'}</span>
@@ -1406,7 +1063,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
           <button
             onClick={() => setActiveTab('china')}
-            className={`h-11 -mb-px border-b-2 flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'china' ? 'border-slate-900 dark:border-white text-slate-900 dark:text-white' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
+            className={`h-11 -mb-px border-b-2 flex items-center gap-1.5 text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${activeTab === 'china' ? 'border-[#5266eb] dark:border-[#5e6ad2] text-[#5266eb] dark:text-[#828fff]' : 'border-transparent text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'}`}
           >
             <span>
               {locale === 'zh' ? '中企投标指南' : locale === 'mn' ? 'Гадаад ААН-ийн заавар' : 'Foreign Bidder Guide'}
@@ -1425,7 +1082,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         </div>
 
         {/* Tab Content Container */}
-        <div className="bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 p-5 sm:p-6 shadow-xs">
+        <div className="bg-white dark:bg-[#111318] rounded-xl border border-slate-200/90 dark:border-[#23252f] p-5 sm:p-6 shadow-xs">
           
           {/* TAB 1: I БҮЛЭГ: ӨГӨГДЛИЙН ХҮСНЭГТ (ТШӨХ) */}
           {activeTab === 'bds' && (
@@ -3625,6 +3282,385 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </div>
           )}
         </div>
+          </div>
+
+          {/* Right Pinned Obsidian AI & Verified PDF Evidence Copilot */}
+          <aside
+            ref={aiAnalysisRef}
+            aria-label={locale === 'zh' ? 'PDF 招标文件与 AI 分析台' : locale === 'en' ? 'PDF Evidence & AI Copilot' : 'ТШББ & AI Шинжээч'}
+            className="dark xl:sticky xl:top-20 rounded-xl border border-[#23252f] bg-[#0d0f14] text-zinc-100 overflow-hidden shadow-xl scroll-mt-20 flex flex-col xl:max-h-[calc(100vh-6rem)]"
+          >
+            {/* Obsidian Copilot Header */}
+            <div className="px-4 py-3.5 bg-[#11131a] border-b border-[#222530] flex items-center justify-between gap-2.5 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-[#5266eb] text-white flex items-center justify-center shrink-0 shadow-2xs">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h3 className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                      {locale === 'zh' ? 'PDF 招标文件与 AI 分析台' : locale === 'en' ? 'PDF Evidence & AI Copilot' : 'ТШББ & AI Шинжээч'}
+                    </h3>
+                    <span
+                      className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                        hasPdfTextEvidence
+                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+                          : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                      }`}
+                    >
+                      {hasPdfTextEvidence
+                        ? (locale === 'zh' ? 'PDF 已解析' : locale === 'en' ? 'PDF Ready' : 'PDF бэлэн')
+                        : (locale === 'zh' ? '未读取全文' : locale === 'en' ? 'Pending PDF' : 'PDF дутуу')}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                    {hasPdfTextEvidence
+                      ? (locale === 'zh' ? '所有回答严格引用已读取的招标原文件' : locale === 'en' ? 'Cites verified extracted clauses only' : 'Уншсан эх баримтын эшлэлд тулгуурлана')
+                      : (locale === 'zh' ? '仅基于结构化字段核查，绝不编造条款' : locale === 'en' ? 'Answers only from verified fields; zero guessing' : 'Баталгаажаагүй нөхцөл таамаглахгүй')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1 shrink-0">
+                {storedPrimaryPdf && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPdfReaderDoc({
+                          url: storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url,
+                          name: storedPrimaryPdf.name || 'ТШББ.pdf',
+                        });
+                        setIsPdfReaderOpen(true);
+                      }}
+                      className="h-7 px-2 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-[11px] font-medium text-zinc-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      title={locale === 'zh' ? '在线阅读 PDF 原件' : locale === 'en' ? 'Read PDF' : 'ТШЗ Унших'}
+                    >
+                      <BookOpen className="h-3 w-3 text-[#828fff]" />
+                      <span className="hidden sm:inline">PDF</span>
+                    </button>
+                    <a
+                      href={storedPrimaryPdf.downloadUrl || storedPrimaryPdf.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download={storedPrimaryPdf.name || 'ТШББ.pdf'}
+                      className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white inline-flex items-center justify-center transition-colors"
+                      title={locale === 'zh' ? '下载 PDF' : locale === 'en' ? 'Download PDF' : 'Татах'}
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </a>
+                  </>
+                )}
+                {aiMessages.length > 0 && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleCopyChatTranscript}
+                      className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white inline-flex items-center justify-center transition-colors cursor-pointer"
+                      title={locale === 'zh' ? '复制全部对话' : locale === 'en' ? 'Copy chat' : 'Хуулах'}
+                    >
+                      {copiedAnalysis ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearChat}
+                      className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-rose-500/20 border border-[#282c3a] hover:border-rose-500/40 text-zinc-400 hover:text-rose-300 inline-flex items-center justify-center transition-colors cursor-pointer"
+                      title={locale === 'zh' ? '清空对话' : locale === 'en' ? 'Clear chat' : 'Цэвэрлэх'}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
+                {(aiMessages.length > 0 || aiAnalyzing) && (
+                  <button
+                    type="button"
+                    onClick={() => setIsAiCollapsed(!isAiCollapsed)}
+                    className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white inline-flex items-center justify-center transition-colors cursor-pointer xl:hidden"
+                    title={isAiCollapsed ? 'Дэлгэх' : 'Хураах'}
+                  >
+                    {isAiCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Verified PDF Clause Evidence Cards */}
+            <div className="px-4 py-3 bg-[#101218] border-b border-[#222530] grid grid-cols-2 gap-2 shrink-0">
+              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
+                <div className="text-[11px] text-zinc-400 truncate">
+                  {locale === 'zh' ? '投标保证金条款' : locale === 'en' ? 'Bid Security Clause' : 'Тендерийн баталгаа'}
+                </div>
+                <div className="mt-1 text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">
+                  {(bds as any)?.bidSecurityReq || (locale === 'zh' ? '见 PDF 第 I 章规定' : locale === 'en' ? 'See BDS Ch. I' : 'ТШӨХ-өөс шалгана уу')}
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
+                <div className="text-[11px] text-zinc-400 truncate">
+                  {locale === 'zh' ? '年营业额门槛' : locale === 'en' ? 'Turnover Requirement' : 'Борлуулалтын орлого'}
+                </div>
+                <div className="mt-1 text-xs font-medium text-zinc-100 tabular-nums line-clamp-2 leading-snug">
+                  {(bds as any)?.turnoverReq || (bds as any)?.minAnnualTurnover || (locale === 'zh' ? '未明确提取' : locale === 'en' ? 'Verify in BDS' : 'Бүртгэгдээгүй')}
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
+                <div className="text-[11px] text-zinc-400 truncate">
+                  {locale === 'zh' ? '所需资质许可' : locale === 'en' ? 'Required Licenses' : 'Тусгай зөвшөөрөл'}
+                </div>
+                <div className="mt-1 text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">
+                  {bds?.requiredLicenses && bds.requiredLicenses.length > 0
+                    ? bds.requiredLicenses.slice(0, 2).join(', ')
+                    : (locale === 'zh' ? '无特定许可标注' : locale === 'en' ? 'None flagged' : 'Шардлага илрээгүй')}
+                </div>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
+                <div className="text-[11px] text-zinc-400 truncate">
+                  {locale === 'zh' ? '交付与供货周期' : locale === 'en' ? 'Delivery & Location' : 'Нийлүүлэх хугацаа'}
+                </div>
+                <div className="mt-1 text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">
+                  {(technicalSpecs as any)?.deliveryPeriodText || technicalSpecs?.deliveryLocation || (locale === 'zh' ? '按合同约定' : locale === 'en' ? 'Per contract' : 'Гэрээгээр')}
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Multi-Turn AI Body */}
+            {!isAiCollapsed && (
+              <div className="flex-1 min-h-0 flex flex-col">
+                {/* Scrollable Message Stream */}
+                <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-3 max-h-[420px] xl:max-h-[460px]">
+                  {aiMessages.length === 0 && !aiAnalyzing ? (
+                    <div className="rounded-lg border border-dashed border-[#282c3a] bg-[#131620] p-4 space-y-3">
+                      <div className="flex items-start gap-2.5">
+                        <Bot className="h-4 w-4 text-[#828fff] mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-300 leading-relaxed">
+                          {locale === 'zh'
+                            ? '选择下方预设分析任务，或直接针对蒙古语原版招标书、资质、保证金及技术参数提问：'
+                            : locale === 'en'
+                            ? 'Pick an instant dossier check below or ask any question grounded in the extracted PDF text:'
+                            : 'Доорх шуурхай шинжилгээнээс сонгох эсвэл PDF баримтын талаар хүссэн асуултаа бичнэ үү:'}
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleRunAiAnalysis(
+                            'Энэ тендерт шаардагдах тусгай зөвшөөрөл, түлхүүр боловсон хүчин, өмнөх туршлагын шалгуурыг нарийвчлан шинжилж, оролцогчдод анхаарах зүйлсийг нэгтгэнэ үү.',
+                            'quick-license',
+                            'Тусгай зөвшөөрөл & Шалгуур'
+                          )}
+                          disabled={aiAnalyzing}
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5 text-[#828fff] shrink-0" />
+                          <span>{locale === 'zh' ? '分析外企准入、特殊许可与资质要求' : locale === 'en' ? 'Foreign eligibility, licences & criteria' : 'Тусгай зөвшөөрөл & Шалгуур'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRunAiAnalysis(
+                            'Энэ тендерийн борлуулалтын доод орлогын босго, түргэн хөрвөх чадвартай хөрөнгө, тендерийн баталгааны тооцоолол болон санхүүгийн эрсдэлийг тооцож өгнө үү.',
+                            'quick-finance',
+                            'Санхүүгийн босго & Баталгаа'
+                          )}
+                          disabled={aiAnalyzing}
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <Tag className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          <span>{locale === 'zh' ? '核查营业额门槛、保证金与财务风险' : locale === 'en' ? 'Turnover thresholds, bonds & financial risks' : 'Санхүүгийн босго & Баталгаа'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRunAiAnalysis(
+                            'Техникийн тодорхойлолт, нийлүүлэлтийн хуваарь, чанарын стандартууд (MNS/ISO), алданги торгуулийн заалт дээр оролцогчдын зүгээс анхаарах гол эрсдэлүүд юу байна вэ?',
+                            'quick-tech',
+                            'Техникийн үзүүлэлтийн эрсдэл'
+                          )}
+                          disabled={aiAnalyzing}
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <FileText className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                          <span>{locale === 'zh' ? '拆解技术规格、交付工期及违约惩罚' : locale === 'en' ? 'Tech specs, delivery timeline & penalty risks' : 'Техникийн үзүүлэлтийн эрсдэл'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRunAiAnalysis(
+                            'Тендерт оролцоход бүрдүүлэх баримт бичгийн хяналтын хуудас (Checklist) болон цахим системээр үнийн санал илгээх стратегийг зөвлөнө үү.',
+                            'quick-docs',
+                            'Баримт бичгийн хяналт'
+                          )}
+                          disabled={aiAnalyzing}
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                        >
+                          <CheckSquare className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                          <span>{locale === 'zh' ? '生成投标文件核查清单与报价策略' : locale === 'en' ? 'Document submission checklist & strategy' : 'Баримт бичгийн хяналт & Стратеги'}</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {aiMessages.map((msg) => {
+                        const isUser = msg.sender === 'user';
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
+                          >
+                            {!isUser && (
+                              <div className="h-7 w-7 rounded-md bg-[#1c2030] border border-[#2e344b] text-[#828fff] flex items-center justify-center shrink-0 mt-0.5">
+                                <Bot className="h-3.5 w-3.5" />
+                              </div>
+                            )}
+                            <div
+                              className={`max-w-[90%] rounded-lg px-3.5 py-2.5 text-xs leading-relaxed ${
+                                isUser
+                                  ? 'bg-[#5266eb] text-white rounded-tr-xs'
+                                  : 'bg-[#151822] text-zinc-100 border border-[#252936] rounded-tl-xs'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-2 mb-1 pb-1 border-b border-white/10 text-[10px] text-zinc-300">
+                                <span className="font-semibold flex items-center gap-1">
+                                  {isUser ? <User className="h-2.5 w-2.5" /> : <Sparkles className="h-2.5 w-2.5 text-[#828fff]" />}
+                                  <span>{isUser ? (locale === 'zh' ? '您的问题' : locale === 'en' ? 'You' : 'Та') : (locale === 'zh' ? 'AI 分析' : locale === 'en' ? 'AI Analyst' : 'AI Шинжээч')}</span>
+                                  {msg.topic && (
+                                    <span className="ml-1 px-1.5 py-px rounded bg-black/25 text-zinc-200 font-normal truncate max-w-[140px]">
+                                      {msg.topic}
+                                    </span>
+                                  )}
+                                </span>
+                                <span className="font-mono tabular-nums opacity-75">{msg.timestamp}</span>
+                              </div>
+                              <div className="text-xs select-text">
+                                <FormattedChatMessage text={msg.text} isUser={isUser} />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {aiAnalyzing && (
+                        <div className="flex gap-2.5 justify-start items-start animate-in fade-in">
+                          <div className="h-7 w-7 rounded-md bg-[#1c2030] border border-[#2e344b] text-[#828fff] flex items-center justify-center shrink-0">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          </div>
+                          <div className="bg-[#151822] border border-[#252936] rounded-lg rounded-tl-xs p-3 space-y-2 flex-1">
+                            <div className="flex items-center gap-2 text-xs font-medium text-zinc-100">
+                              <span className="h-2 w-2 rounded-full bg-[#5266eb] animate-ping" />
+                              <span>{locale === 'zh' ? 'AI 正在核查 PDF 条款…' : locale === 'en' ? 'Analyzing PDF clauses…' : 'AI Шинжээч боловсруулж байна…'}</span>
+                            </div>
+                            <div className="space-y-1.5 animate-pulse">
+                              <div className="h-2 bg-[#232838] rounded w-11/12" />
+                              <div className="h-2 bg-[#232838] rounded w-4/5" />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Pinned Input + Contextual Follow-up Chips */}
+                <div className="p-3.5 border-t border-[#222530] bg-[#11131a] space-y-2.5 shrink-0">
+                  {aiMessages.length > 0 && (
+                    <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+                      {technicalSpecs.deliverySchedule && technicalSpecs.deliverySchedule.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRunAiAnalysis('Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.', 'chip-delivery', 'Нийлүүлэлтийн хуваарь')}
+                          disabled={aiAnalyzing}
+                          className="px-2 py-1 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                        >
+                          <Package className="h-3 w-3 text-[#828fff]" />
+                          <span>{locale === 'zh' ? '交货进度' : locale === 'en' ? 'Delivery' : 'Хуваарь'}</span>
+                        </button>
+                      )}
+                      {isFailed && (
+                        <button
+                          type="button"
+                          onClick={() => handleRunAiAnalysis('Энэхүү амжилтгүй болсон тендер яагаад цуцлагдсан бэ, дараа нь дахин зарлагдах уу, оролцоход юуг анхаарах вэ?', 'chip-failed', 'Амжилтгүй болсон шалтгаан')}
+                          disabled={aiAnalyzing}
+                          className="px-2 py-1 rounded-md bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 transition-colors cursor-pointer flex items-center gap-1"
+                        >
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>{locale === 'zh' ? '为何流标？' : locale === 'en' ? 'Why failed?' : 'Амжилтгүй шалтгаан'}</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRunAiAnalysis('Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?', 'chip-guarantee', 'Тендерийн баталгаа')}
+                        disabled={aiAnalyzing}
+                        className="px-2 py-1 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                      >
+                        <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                        <span>{locale === 'zh' ? '保函要求' : locale === 'en' ? 'Bid bond' : 'Баталгаа'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRunAiAnalysis('Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?', 'chip-risk', 'Эрсдэлийн шинжилгээ')}
+                        disabled={aiAnalyzing}
+                        className="px-2 py-1 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                      >
+                        <AlertCircle className="h-3 w-3 text-amber-400" />
+                        <span>{locale === 'zh' ? '风险排查' : locale === 'en' ? 'Disqualify risks' : 'Гол эрсдэл'}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (followupInput.trim() && !aiAnalyzing) {
+                        handleRunAiAnalysis(followupInput.trim(), 'followup', 'Тодруулга');
+                      }
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="relative flex-1 min-w-0">
+                      <input
+                        ref={chatInputRef}
+                        type="text"
+                        value={followupInput}
+                        onChange={(e) => setFollowupInput(e.target.value)}
+                        placeholder={
+                          locale === 'zh'
+                            ? '针对招标 PDF、资质或清单继续提问…'
+                            : locale === 'en'
+                            ? 'Ask about PDF clauses, licenses, BOQ…'
+                            : 'PDF заалт, баталгаа, шаардлагын талаар асуух...'
+                        }
+                        className="w-full h-9 bg-[#181b24] border border-[#282c3a] rounded-md pl-3 pr-8 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#5e6ad2] transition-colors"
+                        disabled={aiAnalyzing}
+                      />
+                      {followupInput && (
+                        <button
+                          type="button"
+                          onClick={() => setFollowupInput('')}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1 cursor-pointer"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={!followupInput.trim() || aiAnalyzing}
+                      className="h-9 px-3 rounded-md bg-[#5266eb] hover:bg-[#4356d6] disabled:opacity-45 text-white font-medium text-xs flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer shrink-0"
+                    >
+                      {aiAnalyzing ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Send className="h-3.5 w-3.5" />
+                      )}
+                      <span>{locale === 'zh' ? '发送' : locale === 'en' ? 'Send' : 'Илгээх'}</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+          </aside>
+        </div>
       </main>
 
       {/* DOCUMENT PREVIEW & EXTRACTION MODAL */}
@@ -3803,14 +3839,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         </div>
       )}
 
-      {/* Floating Action Button (FAB) to chat with AI from anywhere on the page */}
+      {/* Mobile Floating Action Button (FAB) to jump to AI Copilot */}
       <button
         onClick={() => {
           setIsAiCollapsed(false);
           aiAnalysisRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           setTimeout(() => chatInputRef.current?.focus(), 250);
         }}
-        className="fixed bottom-6 right-6 z-40 bg-slate-900 dark:bg-zinc-700 hover:bg-slate-800 dark:hover:bg-zinc-600 text-white px-4 py-3 rounded-full shadow-sm hover:shadow-xl transition-all flex items-center gap-2.5 text-xs sm:text-sm font-bold cursor-pointer ring-2 ring-white/80 active:scale-95 group"
+        className="xl:hidden fixed bottom-6 right-6 z-40 bg-[#5266eb] hover:bg-[#4356d6] text-white px-4 py-3 rounded-full shadow-lg transition-all flex items-center gap-2 text-xs sm:text-sm font-semibold cursor-pointer ring-2 ring-[#5266eb]/30 active:scale-95 group"
         title={locale === 'zh' ? '询问 AI' : locale === 'en' ? 'Ask AI' : 'AI-аас асуух'}
       >
         <Sparkles className="h-4 w-4 text-amber-200 group-hover:rotate-12 transition-transform" />
