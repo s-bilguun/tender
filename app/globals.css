@@ -89,25 +89,19 @@ table {
   color: #f7f8f8 !important;
 }
 
-/* Header preserves committed Ink-Night shell */
-.dark .tender-detail-root header {
-  background-color: #08090d !important;
-  border-color: #222530 !important;
-}
-
 .dark .tender-detail-root .bg-white {
-  background-color: #18181b !important;
-  color: #fafafa;
+  background-color: #111318 !important;
+  color: #f7f8f8;
 }
 
 .dark .tender-detail-root .bg-slate-50 {
-  background-color: #141416 !important;
+  background-color: #161922 !important;
 }
 
 .dark .tender-detail-root .bg-slate-100,
 .dark .tender-detail-root .bg-slate-100\/90,
 .dark .tender-detail-root .bg-slate-100\/80 {
-  background-color: #27272a !important;
+  background-color: #181b24 !important;
 }
 
 /* Borders */
@@ -118,19 +112,19 @@ table {
 .dark .tender-detail-root .border-slate-200\/60,
 .dark .tender-detail-root .border-slate-100,
 .dark .tender-detail-root .border-slate-300 {
-  border-color: #27272a !important;
+  border-color: #23252f !important;
 }
 
 .dark .tender-detail-root .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
 .dark .tender-detail-root .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
-  border-color: #27272a !important;
+  border-color: #23252f !important;
 }
 
 /* Typography Hierarchy */
 .dark .tender-detail-root .text-slate-950,
 .dark .tender-detail-root .text-slate-900,
 .dark .tender-detail-root .text-slate-800 {
-  color: #fafafa !important;
+  color: #f7f8f8 !important;
 }
 
 .dark .tender-detail-root .text-slate-700,
@@ -145,29 +139,29 @@ table {
 
 /* Tables & Hover states */
 .dark .tender-detail-root th {
-  background-color: #27272a !important;
+  background-color: #161922 !important;
   color: #d4d4d8 !important;
-  border-color: #3f3f46 !important;
+  border-color: #23252f !important;
 }
 
 .dark .tender-detail-root tr:hover,
 .dark .tender-detail-root .hover\:bg-slate-50:hover,
 .dark .tender-detail-root .hover\:bg-slate-50\/60:hover {
-  background-color: rgba(39, 39, 42, 0.6) !important;
+  background-color: rgba(24, 27, 36, 0.75) !important;
 }
 
 .dark .tender-detail-root .hover\:bg-slate-100:hover,
 .dark .tender-detail-root .hover\:bg-slate-200:hover {
-  background-color: #3f3f46 !important;
+  background-color: #222634 !important;
 }
 
 /* Inputs, Textareas, Details */
 .dark .tender-detail-root input,
 .dark .tender-detail-root textarea,
 .dark .tender-detail-root select {
-  background-color: #27272a !important;
-  border-color: #3f3f46 !important;
-  color: #fafafa !important;
+  background-color: #181b24 !important;
+  border-color: #282c3a !important;
+  color: #f7f8f8 !important;
 }
 
 .dark .tender-detail-root input::placeholder,
@@ -176,8 +170,8 @@ table {
 }
 
 .dark .tender-detail-root details {
-  background-color: #18181b !important;
-  border-color: #27272a !important;
+  background-color: #111318 !important;
+  border-color: #23252f !important;
 }
 
 /* Tinted panels become neutral surfaces in dark mode; meaning stays in the text colour. */
@@ -188,8 +182,8 @@ table {
 .dark .tender-detail-root [class*="bg-rose-50"],
 .dark .tender-detail-root [class*="bg-red-50"],
 .dark .tender-detail-root [class*="bg-indigo-50"] {
-  background-color: #18181b !important;
-  border-color: #27272a !important;
+  background-color: #161922 !important;
+  border-color: #23252f !important;
 }
 
 .dark .tender-detail-root .text-blue-950,
@@ -207,15 +201,15 @@ table {
 .dark .tender-detail-root .text-red-800 { color: #fb7185 !important; }
 
 .dark .tender-detail-root .bg-gradient-to-r {
-  background: #18181b !important;
-  border-color: #27272a !important;
+  background: #111318 !important;
+  border-color: #23252f !important;
 }
 
 /* Active tab highlight */
 .dark .tender-detail-root button.bg-white {
-  background-color: #27272a !important;
-  color: #fafafa !important;
-  border-color: #3f3f46 !important;
+  background-color: #1e2230 !important;
+  color: #f7f8f8 !important;
+  border-color: #2e3345 !important;
 }
 
 /* Shadow styling in dark mode */

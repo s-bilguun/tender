@@ -1,5 +1,5 @@
 import { Locale } from './types';
-import { MNT_TO_RMB_RATE } from './product-categories';
+import { getActiveMntPerRmb } from './fx-rate';
 
 export interface BilingualTenderInfo {
   titleZh: string;
@@ -316,10 +316,12 @@ export function getBilingualTenderInfo(
   tenderName: string,
   budgetEntityName?: string,
   totalBudget?: number,
-  tenderTypeCode?: string
+  tenderTypeCode?: string,
+  mntPerRmb?: number
 ): BilingualTenderInfo {
   const budget = Number(totalBudget) || 0;
-  const budgetRmb = Math.round(budget / MNT_TO_RMB_RATE);
+  const rate = mntPerRmb && mntPerRmb > 0 ? mntPerRmb : getActiveMntPerRmb();
+  const budgetRmb = Math.round(budget / rate);
   const guaranteeRmb = Math.round(budgetRmb * 0.01);
 
   const budgetRmbFormatted = budgetRmb >= 10000

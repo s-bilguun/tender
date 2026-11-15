@@ -2,6 +2,8 @@
 
 import React from 'react';
 import { TenderStats, TenderFilterParams, Locale } from '@/lib/types';
+import { DEFAULT_MNT_PER_RMB } from '@/lib/fx-rate';
+import { useExchangeRate } from '@/lib/use-fx-rate';
 import { ArrowUpRight } from 'lucide-react';
 
 interface DashboardKPICardsProps {
@@ -10,13 +12,15 @@ interface DashboardKPICardsProps {
   onApplyFilter?: (filters: Partial<TenderFilterParams>) => void;
 }
 
-const MNT_PER_RMB = 470;
-
-function formatMoney(amount: number | null | undefined, locale: Locale): string {
+function formatMoney(
+  amount: number | null | undefined,
+  locale: Locale,
+  mntPerRmb: number = DEFAULT_MNT_PER_RMB
+): string {
   const num = Number(amount);
   if (!num || Number.isNaN(num)) return '—';
   if (locale === 'zh') {
-    const rmb = num / MNT_PER_RMB;
+    const rmb = num / (mntPerRmb || DEFAULT_MNT_PER_RMB);
     return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString('en-US')} 万`;
   }
   if (num >= 1e12) return `₮${(num / 1e12).toFixed(2)}${locale === 'mn' ? ' их наяд' : 'T'}`;
@@ -31,6 +35,9 @@ const t = (locale: Locale, mn: string, en: string, zh: string) => (locale === 'z
  * when a number isn't available yet it shows a dash rather than a guess.
  */
 export const DashboardKPICards: React.FC<DashboardKPICardsProps> = ({ stats, locale, onApplyFilter }) => {
+  const { mntPerRmb } = useExchangeRate();
+  void formatMoney;
+  void mntPerRmb;
   const active = stats?.activeTendersCount;
   const cells: {
     label: string;

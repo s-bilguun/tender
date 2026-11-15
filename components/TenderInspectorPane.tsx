@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import { Locale, TenderItem, ChinaBidderAnalysis } from '@/lib/types';
 import { getBilingualTenderInfo } from '@/lib/bilingual-title';
+import { DEFAULT_MNT_PER_RMB } from '@/lib/fx-rate';
+import { useExchangeRate } from '@/lib/use-fx-rate';
 
 interface TenderInspectorPaneProps {
   tender: TenderItem | null;
@@ -63,13 +65,16 @@ interface DetailSnapshot {
   chinaBidderAnalysis?: ChinaBidderAnalysis;
 }
 
-const MNT_PER_RMB = 470;
 const L = (locale: Locale, mn: string, en: string, zh: string) =>
   locale === 'zh' ? zh : locale === 'en' ? en : mn;
 
-function formatDualMoney(amount: number, locale: Locale): { primary: string; secondary: string } {
+function formatDualMoney(
+  amount: number,
+  locale: Locale,
+  mntPerRmb: number = DEFAULT_MNT_PER_RMB
+): { primary: string; secondary: string } {
   if (!amount || Number.isNaN(amount)) return { primary: '—', secondary: '' };
-  const rmb = amount / MNT_PER_RMB;
+  const rmb = amount / (mntPerRmb || DEFAULT_MNT_PER_RMB);
   const rmbStr =
     rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(2)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString('en-US')} 万`;
   const mntStr =
@@ -136,6 +141,7 @@ export const TenderInspectorPane: React.FC<TenderInspectorPaneProps> = ({
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
   const [question, setQuestion] = useState('');
+  const { mntPerRmb } = useExchangeRate();
 
   const tenderId = tender?.invitationId;
 
@@ -197,7 +203,8 @@ export const TenderInspectorPane: React.FC<TenderInspectorPaneProps> = ({
     tender.tenderName,
     tender.budgetEntityName,
     tender.totalBudget || 0,
-    tender.tenderTypeCode || 'PRODUCT'
+    tender.tenderTypeCode || 'PRODUCT',
+    mntPerRmb
   );
 
   const primaryTitle = locale === 'zh' && info.titleZh ? info.titleZh : tender.tenderName;
@@ -207,7 +214,7 @@ export const TenderInspectorPane: React.FC<TenderInspectorPaneProps> = ({
 
   const daysLeft = getDaysLeft(tender.receiveDate);
   const closed = daysLeft !== null && daysLeft < 0;
-  const money = formatDualMoney(Number(tender.totalBudget) || 0, locale);
+  const money = formatDualMoney(Number(tender.totalBudget) || 0, locale, mntPerRmb);
 
   const chinaAnalysis = detail?.chinaBidderAnalysis || tender.chinaBidderAnalysis;
   const eligibility = getEligibilityBadge(chinaAnalysis, locale);
@@ -219,7 +226,7 @@ export const TenderInspectorPane: React.FC<TenderInspectorPaneProps> = ({
     (tender.liveBundleSummary?.isBidSecurityExempt
       ? L(locale, 'Баталгаа шаардахгүй', 'Exempt (No Bond)', '免投标保证金')
       : tender.bidRequirements?.estimatedGuaranteeMin
-      ? `~${formatDualMoney(tender.bidRequirements.estimatedGuaranteeMin, locale).primary}`
+      ? `~${formatDualMoney(tender.bidRequirements.estimatedGuaranteeMin, locale, mntPerRmb).primary}`
       : L(locale, 'ТШЗ-д заасан (1-2%)', 'Per BDS (1-2%)', '按招标书规定 (约1-2%)'));
 
   const deliveryValue =
@@ -559,15 +566,15 @@ export const TenderInspectorPane: React.FC<TenderInspectorPaneProps> = ({
       </div>
 
       {/* Pinned Bottom AI Quick-Prompt Copilot Bar */}
-      <div className="p-3.5 border-t border-slate-200 dark:border-[#23252f] bg-[#11131a] text-zinc-100 shrink-0 space-y-2.5">
+      <div className="p-3.5 border-t border-slate-200 dark:border-[#23252f] bg-slate-50/90 dark:bg-[#11131a] text-slate-900 dark:text-zinc-100 shrink-0 space-y-2.5">
         <div className="flex items-center justify-between text-xs">
-          <span className="inline-flex items-center gap-1.5 font-medium text-zinc-100">
-            <Sparkles className="h-3.5 w-3.5 text-[#7c8cff]" />
+          <span className="inline-flex items-center gap-1.5 font-medium text-slate-800 dark:text-zinc-100">
+            <Sparkles className="h-3.5 w-3.5 text-[#5266eb] dark:text-[#7c8cff]" />
             <span>{L(locale, 'AI PDF шинжээчээс шууд асуух', 'Ask AI Dossier Analyst', 'AI 标书助手快速提问')}</span>
           </span>
           <Link
             href={href}
-            className="text-[11px] text-[#828fff] hover:text-white transition-colors"
+            className="text-[11px] font-medium text-[#5266eb] hover:text-[#3e51d4] dark:text-[#828fff] dark:hover:text-white transition-colors"
           >
             {L(locale, 'Бүтэн PDF →', 'Full PDF →', '进入工作台 →')}
           </Link>
@@ -579,7 +586,7 @@ export const TenderInspectorPane: React.FC<TenderInspectorPaneProps> = ({
               key={prompt}
               type="button"
               onClick={() => onAskAI?.(tender, prompt)}
-              className="px-2 py-1 rounded-md bg-[#181b24] hover:bg-[#5266eb]/20 border border-[#282c3a] hover:border-[#5266eb]/50 text-[11px] text-zinc-300 hover:text-white transition-colors cursor-pointer text-left"
+              className="px-2 py-1 rounded-md bg-white dark:bg-[#181b24] hover:bg-indigo-50 dark:hover:bg-[#5266eb]/20 border border-slate-200 dark:border-[#282c3a] hover:border-[#5266eb]/40 dark:hover:border-[#5266eb]/50 text-[11px] text-slate-700 dark:text-zinc-300 hover:text-[#5266eb] dark:hover:text-white transition-colors cursor-pointer text-left"
             >
               {prompt}
             </button>
@@ -597,7 +604,7 @@ export const TenderInspectorPane: React.FC<TenderInspectorPaneProps> = ({
               'Ask anything about this tender PDF...',
               '输入问题分析 PDF 条款或清单...'
             )}
-            className="flex-1 min-w-0 h-8 px-2.5 rounded-md bg-[#181b24] border border-[#282c3a] text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#5e6ad2]"
+            className="flex-1 min-w-0 h-8 px-2.5 rounded-md bg-white dark:bg-[#181b24] border border-slate-200 dark:border-[#282c3a] text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-[#5266eb] dark:focus:border-[#5e6ad2]"
           />
           <button
             type="submit"

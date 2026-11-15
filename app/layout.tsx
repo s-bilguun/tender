@@ -40,20 +40,20 @@ export default function RootLayout({
               (function() {
                 try {
                   var saved = localStorage.getItem('tenderhub_theme');
-                  if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  if (saved === 'dark') {
                     document.documentElement.classList.add('dark');
                   } else {
                     document.documentElement.classList.remove('dark');
                   }
                 } catch (e) {
-                  document.documentElement.classList.add('dark');
+                  document.documentElement.classList.remove('dark');
                 }
               })();
             `,
           }}
         />
       </head>
-      <body className="min-h-screen bg-[#f5f6f8] dark:bg-[#0f0f11] text-slate-900 dark:text-zinc-100 antialiased selection:bg-blue-600 selection:text-white transition-colors duration-150">
+      <body className="min-h-screen bg-[#fbfcfd] dark:bg-[#0c0d10] text-slate-900 dark:text-zinc-100 antialiased selection:bg-[#5266eb] selection:text-white transition-colors duration-150">
         <ThemeProvider>
           <Suspense fallback={null}>
             <NavigationProgressBar />

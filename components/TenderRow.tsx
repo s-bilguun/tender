@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { IndustryIcon } from '@/components/IndustryIcon';
 import { getBilingualTenderInfo } from '@/lib/bilingual-title';
+import { DEFAULT_MNT_PER_RMB } from '@/lib/fx-rate';
+import { useExchangeRate } from '@/lib/use-fx-rate';
 import {
   ArrowUpRight, Building2, ExternalLink, FileText,
   Loader2, Package, ShieldCheck, Sparkles, Star,
@@ -44,9 +46,9 @@ function ubDate(value?: string | null): string | null {
   return new Date(t + 8 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
-function moneyPrimary(amount: number, locale: Locale): string {
+function moneyPrimary(amount: number, locale: Locale, mntPerRmb: number = DEFAULT_MNT_PER_RMB): string {
   if (locale === 'zh') {
-    const rmb = amount / 470;
+    const rmb = amount / (mntPerRmb || DEFAULT_MNT_PER_RMB);
     return rmb >= 1e4
       ? `¥${(rmb / 1e4).toFixed(1)} 万`
       : `¥${Math.round(rmb).toLocaleString('en-US')}`;
@@ -54,11 +56,11 @@ function moneyPrimary(amount: number, locale: Locale): string {
   return `₮${amount.toLocaleString('en-US')}`;
 }
 
-function moneySecondary(amount: number, locale: Locale): string {
+function moneySecondary(amount: number, locale: Locale, mntPerRmb: number = DEFAULT_MNT_PER_RMB): string {
   if (locale === 'zh') {
     return `₮${amount.toLocaleString('en-US')}`;
   }
-  const rmb = amount / 470;
+  const rmb = amount / (mntPerRmb || DEFAULT_MNT_PER_RMB);
   return rmb >= 1e4
     ? `≈ ¥${(rmb / 1e4).toFixed(1)} 万`
     : `≈ ¥${Math.round(rmb).toLocaleString('en-US')}`;
@@ -76,6 +78,7 @@ export const TenderRow: React.FC<TenderRowProps> = ({
 }) => {
   const router = useRouter();
   const [opening, setOpening] = useState(false);
+  const { mntPerRmb } = useExchangeRate();
   const href = `/tender/${tender.invitationId}`;
   const raw: any = (tender as any).raw_data || (tender as any).rawData || {};
   const budget = Number(tender.totalBudget) || 0;
@@ -143,7 +146,8 @@ export const TenderRow: React.FC<TenderRowProps> = ({
           tender.tenderName,
           tender.budgetEntityName,
           budget,
-          tender.tenderTypeCode
+          tender.tenderTypeCode,
+          mntPerRmb
         )
       : null;
   const title = bilingual?.titleZh || tender.tenderName;
@@ -316,10 +320,10 @@ export const TenderRow: React.FC<TenderRowProps> = ({
           {budget > 0 ? (
             <>
               <div className="text-sm font-semibold text-slate-900 dark:text-white whitespace-nowrap">
-                {moneyPrimary(budget, locale)}
+                {moneyPrimary(budget, locale, mntPerRmb)}
               </div>
               <div className="text-[11px] text-slate-400 dark:text-zinc-500 whitespace-nowrap">
-                {moneySecondary(budget, locale)}
+                {moneySecondary(budget, locale, mntPerRmb)}
               </div>
             </>
           ) : (

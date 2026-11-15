@@ -1,3 +1,5 @@
+import { DEFAULT_MNT_PER_RMB, DEFAULT_MNT_PER_USD, getActiveMntPerRmb } from './fx-rate';
+
 export interface ProductCategory {
   id: string;
   emoji: string;
@@ -137,14 +139,19 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
   },
 ];
 
-export const MNT_TO_RMB_RATE = 485;
-export const MNT_TO_USD_RATE = 3450;
+export const MNT_TO_RMB_RATE = DEFAULT_MNT_PER_RMB;
+export const MNT_TO_USD_RATE = DEFAULT_MNT_PER_USD;
 
-export function formatCurrencyMulti(amountMnt: number, currency: 'MNT' | 'CNY' | 'USD' = 'MNT') {
+export function formatCurrencyMulti(
+  amountMnt: number,
+  currency: 'MNT' | 'CNY' | 'USD' = 'MNT',
+  customRmbRate?: number
+) {
   if (!amountMnt) return currency === 'CNY' ? '¥ 0' : currency === 'USD' ? '$ 0' : '₮ 0';
-  
+
   if (currency === 'CNY') {
-    const rmb = amountMnt / MNT_TO_RMB_RATE;
+    const rate = customRmbRate && customRmbRate > 0 ? customRmbRate : getActiveMntPerRmb();
+    const rmb = amountMnt / rate;
     if (rmb >= 10000) {
       return `¥ ${(rmb / 10000).toFixed(1)}万 人民币`;
     }

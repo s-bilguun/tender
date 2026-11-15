@@ -11,26 +11,28 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: 'dark',
+  theme: 'light',
   toggleTheme: () => {},
   setTheme: () => {},
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     try {
       const savedTheme = localStorage.getItem('tenderhub_theme') as Theme | null;
-      const initialTheme = savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : 'dark';
+      const initialTheme: Theme = savedTheme === 'dark' ? 'dark' : 'light';
       setThemeState(initialTheme);
       if (initialTheme === 'dark') {
         document.documentElement.classList.add('dark');
       } else {
         document.documentElement.classList.remove('dark');
       }
-    } catch {}
+    } catch {
+      document.documentElement.classList.remove('dark');
+    }
     setMounted(true);
   }, []);
 

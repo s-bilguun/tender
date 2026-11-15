@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Locale, TenderFilterParams, IndustryVertical, TenderStats } from '@/lib/types';
 import { Building2, Layers, Globe2, ChevronRight, Check } from 'lucide-react';
 import { IndustryIcon } from '@/components/IndustryIcon';
+import { useExchangeRate } from '@/lib/use-fx-rate';
 
 export interface DiscoveryEntityCard {
   id: string;
@@ -283,6 +284,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 }) => {
   const [activeHubTab, setActiveHubTab] = useState<'buyers' | 'sectors' | 'foreign'>('buyers');
   const [live, setLive] = useState<LiveStats | null | 'error'>(null);
+  const { mntPerRmb } = useExchangeRate();
 
   useEffect(() => {
     let cancelled = false;
@@ -305,7 +307,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
     const n = Number(amount) || 0;
     if (n <= 0) return '—';
     if (locale === 'zh') {
-      const rmb = n / 470;
+      const rmb = n / (mntPerRmb || 540.2);
       return rmb >= 1e8 ? `¥${(rmb / 1e8).toFixed(1)} 亿` : `¥${Math.round(rmb / 1e4).toLocaleString('en-US')} 万`;
     }
     if (n >= 1e12) return `₮${(n / 1e12).toFixed(2)}${locale === 'en' ? 'T' : ' их наяд'}`;
@@ -370,8 +372,8 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
   const headCell = 'text-[11px] font-medium text-slate-500 dark:text-zinc-400';
 
   return (
-    <section className="bg-white dark:bg-zinc-900 rounded-lg border border-slate-200 dark:border-zinc-800 overflow-hidden">
-      <div className="px-4 sm:px-5 pt-4 pb-3 flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-slate-200 dark:border-zinc-800">
+    <section className="bg-white dark:bg-[#111318] rounded-xl border border-slate-200/90 dark:border-[#23252f] overflow-hidden shadow-xs">
+      <div className="px-4 sm:px-5 pt-4 pb-3 flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-slate-200/90 dark:border-[#23252f]">
         <div className="min-w-0">
           <h2 className="text-base font-semibold text-slate-900 dark:text-white">
             {t('Захиалагч ба салбар', 'Buyers and sectors', '采购单位与行业')}
@@ -394,8 +396,8 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
               onClick={() => setActiveHubTab(id)}
               className={`h-8 px-3 rounded-md text-xs font-medium flex items-center gap-1.5 whitespace-nowrap transition-colors cursor-pointer ${
                 activeHubTab === id
-                  ? 'bg-slate-900 text-white dark:bg-white dark:text-zinc-900'
-                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-[#5266eb] text-white shadow-2xs'
+                  : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-[#191d27] hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -407,14 +409,14 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
       {activeHubTab === 'buyers' && (
         <div>
-          <div className={`hidden md:grid grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_9rem_11rem_1rem] gap-x-4 px-5 py-2 bg-slate-50 dark:bg-zinc-950/40 border-b border-slate-200 dark:border-zinc-800 ${headCell}`}>
+          <div className={`hidden md:grid grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_9rem_11rem_1rem] gap-x-4 px-5 py-2 bg-slate-50 dark:bg-[#0e1015] border-b border-slate-200/90 dark:border-[#23252f] ${headCell}`}>
             <span>{t('Захиалагч', 'Buyer', '采购单位')}</span>
             <span>{t('Гол худалдан авалт', 'Main purchases', '主要采购')}</span>
             <span className="text-right">{t('Сүүлийн 12 сар', 'Last 12 months', '近 12 个月')}</span>
             <span>{t('Гадаадын компани', 'Foreign companies', '外国企业')}</span>
             <span />
           </div>
-          <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
+          <ul className="divide-y divide-slate-100 dark:divide-[#1e212b]">
             {DISCOVERY_BUYER_CARDS.map((buyer) => {
               const selected =
                 currentSearch === buyer.query.toLowerCase() || currentSearch === buyer.shortName.toLowerCase();
@@ -470,7 +472,7 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
               );
             })}
           </ul>
-          <p className="px-5 py-2.5 text-[11px] text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-zinc-800">
+          <p className="px-5 py-2.5 text-[11px] text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-[#1e212b]">
             {t(
               'Сүүлийн 12 сард нийтлэгдсэн тендерүүдээс тооцов; төсөв нь зарласан төсөвтэй тендерүүдийн нийлбэр.',
               'Computed from tenders published in the last 12 months; budget sums tenders with a published budget.',
@@ -482,13 +484,13 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
 
       {activeHubTab === 'sectors' && (
         <div>
-          <div className={`hidden md:grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_9rem_1rem] gap-x-4 px-5 py-2 bg-slate-50 dark:bg-zinc-950/40 border-b border-slate-200 dark:border-zinc-800 ${headCell}`}>
+          <div className={`hidden md:grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_9rem_1rem] gap-x-4 px-5 py-2 bg-slate-50 dark:bg-[#0e1015] border-b border-slate-200/90 dark:border-[#23252f] ${headCell}`}>
             <span>{t('Салбар', 'Sector', '行业')}</span>
             <span>{t('Эрэлттэй бараа, ажил', 'In demand', '需求品类')}</span>
             <span className="text-right">{t('Нээлттэй', 'Open now', '在招')}</span>
             <span />
           </div>
-          <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
+          <ul className="divide-y divide-slate-100 dark:divide-[#1e212b]">
             {DISCOVERY_SECTOR_CARDS.map((sector) => {
               const selected = filters.industry === sector.id;
               const items = locale === 'zh' ? sector.topItemsZh : locale === 'en' ? sector.topItemsEn : sector.topItemsMn;
@@ -529,14 +531,14 @@ export const DiscoveryCardsHub: React.FC<DiscoveryCardsHubProps> = ({
               );
             })}
           </ul>
-          <p className="px-5 py-2.5 text-[11px] text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-zinc-800">
+          <p className="px-5 py-2.5 text-[11px] text-slate-500 dark:text-zinc-400 border-t border-slate-100 dark:border-[#1e212b]">
             {t('Одоо санал хүлээн авч буй тендерийн тоо.', 'Tenders accepting bids right now.', '当前正在接受投标的招标数量。')}
           </p>
         </div>
       )}
 
       {activeHubTab === 'foreign' && (
-        <ul className="divide-y divide-slate-100 dark:divide-zinc-800">
+        <ul className="divide-y divide-slate-100 dark:divide-[#1e212b]">
           {[
             {
               key: 'direct',

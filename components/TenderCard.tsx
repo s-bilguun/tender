@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { TenderItem, Locale } from '@/lib/types';
 import { getTranslation } from '@/lib/translations';
 import { IndustryIcon } from '@/components/IndustryIcon';
-import { formatCurrencyMulti, MNT_TO_RMB_RATE, MNT_TO_USD_RATE } from '@/lib/product-categories';
+import { formatCurrencyMulti, MNT_TO_USD_RATE } from '@/lib/product-categories';
 import { getBilingualTenderInfo, translateExtractedHighlightZh } from '@/lib/bilingual-title';
+import { useExchangeRate } from '@/lib/use-fx-rate';
 import { 
   Building2, Sparkles, ExternalLink, Star, Clock, 
   Loader2, FileText, ArrowUpRight, ShieldCheck, AlertCircle, 
@@ -35,16 +36,18 @@ export const TenderCard: React.FC<TenderCardProps> = ({
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
   const t = getTranslation(locale);
+  const { mntPerRmb } = useExchangeRate();
 
   const budgetMnt = Number(tender.totalBudget) || 0;
-  const budgetRmb = Math.round(budgetMnt / MNT_TO_RMB_RATE);
+  const budgetRmb = Math.round(budgetMnt / mntPerRmb);
   const budgetUsd = Math.round(budgetMnt / MNT_TO_USD_RATE);
 
   const bilingual = getBilingualTenderInfo(
     tender.tenderName,
     tender.budgetEntityName,
     budgetMnt,
-    tender.tenderTypeCode
+    tender.tenderTypeCode,
+    mntPerRmb
   );
 
   const getIndustryDetails = (industryId?: string, typeCode?: string) => {

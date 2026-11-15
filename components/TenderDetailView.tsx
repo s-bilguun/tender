@@ -18,6 +18,7 @@ import { FormattedChatMessage } from './AIChatDrawer';
 import { TenderPdfReaderModal } from '@/components/TenderPdfReaderModal';
 import { ChinaSupplierModal } from '@/components/ChinaSupplierModal';
 import { getBilingualTenderInfo } from '@/lib/bilingual-title';
+import { useExchangeRate } from '@/lib/use-fx-rate';
 import { Handshake, DollarSign } from 'lucide-react';
 
 interface TenderDetailViewProps {
@@ -37,6 +38,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   const [data, setData] = useState(initialData);
   const [locale, setLocaleState] = useState<Locale>(initialLocale || 'mn');
   const { theme, toggleTheme } = useTheme();
+  const { mntPerRmb } = useExchangeRate();
 
   const [isChinaSupplierOpen, setIsChinaSupplierOpen] = useState(false);
 
@@ -335,7 +337,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
     tender.tenderName,
     tender.budgetEntityName,
     Number(tender.totalBudget) || 0,
-    tender.tenderTypeCode
+    tender.tenderTypeCode,
+    mntPerRmb
   );
   const bds = {
     ...data?.bds,
@@ -612,12 +615,12 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
   };
   return (
     <div className="tender-detail-root min-h-screen bg-[#fbfcfd] dark:bg-[#0c0d10] text-slate-900 dark:text-zinc-100 pb-20 transition-colors duration-150">
-      {/* Committed Ink-Night Top Navbar */}
-      <header className="sticky top-0 z-30 h-14 bg-[#11131a]/95 dark:bg-[#08090d]/95 backdrop-blur-xs border-b border-[#222530] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 text-zinc-100">
+      {/* Sticky Top Navbar (Theme-Aware Light & Dark) */}
+      <header className="sticky top-0 z-30 h-14 bg-white/95 dark:bg-[#11131a]/95 backdrop-blur-xs border-b border-slate-200 dark:border-[#222530] px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3 text-slate-900 dark:text-zinc-100">
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/"
-            className="h-8 px-2.5 rounded-md border border-[#282c3a] bg-[#181b24] hover:bg-[#222634] text-zinc-200 transition-colors flex items-center gap-1.5 text-xs font-medium shrink-0"
+            className="h-8 px-2.5 rounded-md border border-slate-200 dark:border-[#282c3a] bg-slate-100/90 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] text-slate-700 dark:text-zinc-200 transition-colors flex items-center gap-1.5 text-xs font-medium shrink-0"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">
@@ -625,8 +628,8 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </span>
             <span className="sm:hidden">{locale === 'mn' ? 'Буцах' : locale === 'zh' ? '返回' : 'Back'}</span>
           </Link>
-          <div className="h-4 w-px bg-[#262936] hidden sm:block shrink-0" />
-          <span className="text-xs text-zinc-400 hidden md:inline font-mono tabular-nums truncate">
+          <div className="h-4 w-px bg-slate-200 dark:bg-[#262936] hidden sm:block shrink-0" />
+          <span className="text-xs text-slate-500 dark:text-zinc-400 hidden md:inline font-mono tabular-nums truncate">
             {tender.tenderCode || tender.invitationNumber}
           </span>
         </div>
@@ -635,7 +638,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           {/* Global Dark / Light Mode Toggle */}
           <button
             onClick={toggleTheme}
-            className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-zinc-300 hover:text-white bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] transition-colors cursor-pointer shrink-0"
+            className="hidden sm:flex h-8 w-8 rounded-md items-center justify-center text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white bg-slate-100/90 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] transition-colors cursor-pointer shrink-0"
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? (locale === 'mn' ? 'Гэгээлэг горим' : locale === 'zh' ? '浅色模式' : 'Light mode') : (locale === 'mn' ? 'Харанхуй горим' : locale === 'zh' ? '深色模式' : 'Dark mode')}
           >
@@ -647,13 +650,13 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           </button>
 
           {/* 3-Way Language Switcher */}
-          <div className="flex items-center bg-[#181b24] rounded-md p-0.5 border border-[#282c3a] shrink-0">
+          <div className="flex items-center bg-slate-100/90 dark:bg-[#181b24] rounded-md p-0.5 border border-slate-200 dark:border-[#282c3a] shrink-0">
             <button
               onClick={() => setLocale('mn')}
               className={`h-7 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer ${
                 locale === 'mn'
                   ? 'bg-[#5266eb] text-white shadow-2xs'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="Монгол хэл (Mongolian)"
             >
@@ -664,7 +667,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               className={`h-7 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer ${
                 locale === 'en'
                   ? 'bg-[#5266eb] text-white shadow-2xs'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="English"
             >
@@ -675,7 +678,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
               className={`h-7 px-2 rounded text-[11px] font-medium transition-colors cursor-pointer flex items-center gap-1 ${
                 locale === 'zh'
                   ? 'bg-[#5266eb] text-white shadow-2xs'
-                  : 'text-zinc-400 hover:text-white'
+                  : 'text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white'
               }`}
               title="中文 (Chinese)"
             >
@@ -686,16 +689,16 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
           <button
             onClick={() => handleRunAiAnalysis(undefined, 'nav', locale === 'zh' ? '综合ТШЗ招标文件分析' : 'Ерөнхий ТШББ дүгнэлт')}
             disabled={aiAnalyzing}
-            className="h-8 px-2.5 rounded-md text-xs font-medium text-zinc-100 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] hover:border-[#5266eb]/60 flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-100 bg-slate-100/90 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] hover:border-[#5266eb]/60 flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             {aiAnalyzingTarget === 'nav' ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#828fff]" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[#5266eb] dark:text-[#828fff]" />
                 <span>{locale === 'mn' ? 'Шинжилж байна...' : locale === 'zh' ? '分析中...' : 'Analyzing...'}</span>
               </>
             ) : (
               <>
-                <Sparkles className="h-3.5 w-3.5 text-[#828fff]" />
+                <Sparkles className="h-3.5 w-3.5 text-[#5266eb] dark:text-[#828fff]" />
                 <span className="hidden sm:inline">{locale === 'mn' ? 'AI Шинжээч' : locale === 'zh' ? 'AI 分析' : 'AI Analysis'}</span>
               </>
             )}
@@ -710,10 +713,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   });
                   setIsPdfReaderOpen(true);
                 }}
-                className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium text-zinc-200 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] items-center gap-1.5 transition-colors cursor-pointer"
+                className="hidden sm:flex h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-slate-100/90 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] items-center gap-1.5 transition-colors cursor-pointer"
                 title="ТШЗ PDF баримтыг вебсайт дээрээс шууд унших"
               >
-                <BookOpen className="h-3.5 w-3.5 text-zinc-400" />
+                <BookOpen className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" />
                 <span>{locale === 'zh' ? '阅读 PDF' : locale === 'en' ? 'Read PDF' : 'ТШЗ Унших'}</span>
               </button>
               <a
@@ -721,10 +724,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 target="_blank"
                 rel="noopener noreferrer"
                 download={storedPrimaryPdf.name || 'ТШББ.pdf'}
-                className="hidden md:flex h-8 px-2.5 rounded-md text-xs font-medium text-zinc-200 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] items-center gap-1.5 transition-colors"
+                className="hidden md:flex h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-slate-100/90 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] items-center gap-1.5 transition-colors"
                 title="Supabase CDN-ээс ТШЗ PDF-ийг шууд татах"
               >
-                <Download className="h-3.5 w-3.5 text-zinc-400" />
+                <Download className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400" />
                 <span>{locale === 'zh' ? '下载 PDF' : locale === 'en' ? 'Download' : 'ТШЗ Татах'}</span>
               </a>
             </>
@@ -733,10 +736,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             href={publicLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden lg:flex h-8 px-2.5 rounded-md text-xs font-medium text-zinc-200 bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] items-center gap-1.5 transition-colors"
+            className="hidden lg:flex h-8 px-2.5 rounded-md text-xs font-medium text-slate-700 dark:text-zinc-200 bg-slate-100/90 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] items-center gap-1.5 transition-colors"
           >
             <span>tender.gov.mn</span>
-            <ExternalLink className="h-3 w-3 text-zinc-400" />
+            <ExternalLink className="h-3 w-3 text-slate-500 dark:text-zinc-400" />
           </a>
           <a
             href={supplierLink}
@@ -2752,19 +2755,25 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         </div>
                       )}
                     </div>
-                    {locale === 'zh' && Boolean((chinaAnalysis.estimatedBudgetRMB ?? 0) > 0) && (
-                      <div className="bg-white/90 dark:bg-zinc-900/90 p-3.5 rounded-md border border-slate-200/80 dark:border-zinc-700 shadow-2xs shrink-0 sm:text-right min-w-[170px]">
-                        <span className="text-[10px] font-bold text-slate-400 block">折合人民币预算</span>
-                        <span className="text-lg sm:text-xl font-bold font-mono text-slate-900 dark:text-white block text-red-600 dark:text-red-400">
-                          ~¥{chinaAnalysis.estimatedBudgetRMB! >= 10000 
-                            ? (chinaAnalysis.estimatedBudgetRMB! / 10000).toFixed(1) + ' 万元' 
-                            : chinaAnalysis.estimatedBudgetRMB!.toLocaleString('en-US') + ' 元'}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
-                          汇率参考 1 CNY ≈ 485 MNT
-                        </span>
-                      </div>
-                    )}
+                    {locale === 'zh' && Boolean((tender.totalBudget || chinaAnalysis.estimatedBudgetRMB || 0) > 0) && (() => {
+                      const liveRmb =
+                        Number(tender.totalBudget) > 0
+                          ? Math.round(Number(tender.totalBudget) / mntPerRmb)
+                          : (chinaAnalysis.estimatedBudgetRMB ?? 0);
+                      return (
+                        <div className="bg-white/90 dark:bg-[#141720] p-3.5 rounded-md border border-slate-200/80 dark:border-[#252936] shadow-2xs shrink-0 sm:text-right min-w-[170px]">
+                          <span className="text-[10px] font-bold text-slate-400 block">折合人民币预算</span>
+                          <span className="text-lg sm:text-xl font-bold font-mono block text-red-600 dark:text-red-400">
+                            ~¥{liveRmb >= 10000
+                              ? (liveRmb / 10000).toFixed(1) + ' 万元'
+                              : liveRmb.toLocaleString('en-US') + ' 元'}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono mt-0.5 block">
+                            央行汇率 1 CNY ≈ {mntPerRmb.toFixed(1)} MNT
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {(chinaAnalysis.recommendedActionZh || chinaAnalysis.recommendedActionMn) && (
@@ -3284,28 +3293,28 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
         </div>
           </div>
 
-          {/* Right Pinned Obsidian AI & Verified PDF Evidence Copilot */}
+          {/* Right Pinned AI & Verified PDF Evidence Copilot (Theme-Aware Light & Dark) */}
           <aside
             ref={aiAnalysisRef}
             aria-label={locale === 'zh' ? 'PDF 招标文件与 AI 分析台' : locale === 'en' ? 'PDF Evidence & AI Copilot' : 'ТШББ & AI Шинжээч'}
-            className="dark xl:sticky xl:top-20 rounded-xl border border-[#23252f] bg-[#0d0f14] text-zinc-100 overflow-hidden shadow-xl scroll-mt-20 flex flex-col xl:max-h-[calc(100vh-6rem)]"
+            className="xl:sticky xl:top-20 rounded-xl border border-slate-200/90 dark:border-[#23252f] bg-white dark:bg-[#111318] text-slate-900 dark:text-zinc-100 overflow-hidden shadow-sm dark:shadow-xl scroll-mt-20 flex flex-col xl:max-h-[calc(100vh-6rem)]"
           >
-            {/* Obsidian Copilot Header */}
-            <div className="px-4 py-3.5 bg-[#11131a] border-b border-[#222530] flex items-center justify-between gap-2.5 shrink-0">
+            {/* Copilot Header */}
+            <div className="px-4 py-3.5 bg-slate-50/90 dark:bg-[#141720] border-b border-slate-200 dark:border-[#222530] flex items-center justify-between gap-2.5 shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="h-8 w-8 rounded-lg bg-[#5266eb] text-white flex items-center justify-center shrink-0 shadow-2xs">
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <h3 className="text-xs sm:text-sm font-semibold text-zinc-100 truncate">
+                    <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-zinc-100 truncate">
                       {locale === 'zh' ? 'PDF 招标文件与 AI 分析台' : locale === 'en' ? 'PDF Evidence & AI Copilot' : 'ТШББ & AI Шинжээч'}
                     </h3>
                     <span
                       className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
                         hasPdfTextEvidence
-                          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                          : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/30'
+                          : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30'
                       }`}
                     >
                       {hasPdfTextEvidence
@@ -3313,7 +3322,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         : (locale === 'zh' ? '未读取全文' : locale === 'en' ? 'Pending PDF' : 'PDF дутуу')}
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-400 truncate mt-0.5">
+                  <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate mt-0.5">
                     {hasPdfTextEvidence
                       ? (locale === 'zh' ? '所有回答严格引用已读取的招标原文件' : locale === 'en' ? 'Cites verified extracted clauses only' : 'Уншсан эх баримтын эшлэлд тулгуурлана')
                       : (locale === 'zh' ? '仅基于结构化字段核查，绝不编造条款' : locale === 'en' ? 'Answers only from verified fields; zero guessing' : 'Баталгаажаагүй нөхцөл таамаглахгүй')}
@@ -3333,10 +3342,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         });
                         setIsPdfReaderOpen(true);
                       }}
-                      className="h-7 px-2 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-[11px] font-medium text-zinc-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
+                      className="h-7 px-2 rounded-md bg-white dark:bg-[#181b24] hover:bg-slate-100 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] text-[11px] font-medium text-slate-700 dark:text-zinc-200 inline-flex items-center gap-1 transition-colors cursor-pointer"
                       title={locale === 'zh' ? '在线阅读 PDF 原件' : locale === 'en' ? 'Read PDF' : 'ТШЗ Унших'}
                     >
-                      <BookOpen className="h-3 w-3 text-[#828fff]" />
+                      <BookOpen className="h-3 w-3 text-[#5266eb] dark:text-[#828fff]" />
                       <span className="hidden sm:inline">PDF</span>
                     </button>
                     <a
@@ -3344,7 +3353,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                       target="_blank"
                       rel="noopener noreferrer"
                       download={storedPrimaryPdf.name || 'ТШББ.pdf'}
-                      className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white inline-flex items-center justify-center transition-colors"
+                      className="h-7 w-7 rounded-md bg-white dark:bg-[#181b24] hover:bg-slate-100 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center justify-center transition-colors"
                       title={locale === 'zh' ? '下载 PDF' : locale === 'en' ? 'Download PDF' : 'Татах'}
                     >
                       <Download className="h-3.5 w-3.5" />
@@ -3356,15 +3365,15 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                     <button
                       type="button"
                       onClick={handleCopyChatTranscript}
-                      className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white inline-flex items-center justify-center transition-colors cursor-pointer"
+                      className="h-7 w-7 rounded-md bg-white dark:bg-[#181b24] hover:bg-slate-100 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center justify-center transition-colors cursor-pointer"
                       title={locale === 'zh' ? '复制全部对话' : locale === 'en' ? 'Copy chat' : 'Хуулах'}
                     >
-                      {copiedAnalysis ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copiedAnalysis ? <Check className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                     </button>
                     <button
                       type="button"
                       onClick={handleClearChat}
-                      className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-rose-500/20 border border-[#282c3a] hover:border-rose-500/40 text-zinc-400 hover:text-rose-300 inline-flex items-center justify-center transition-colors cursor-pointer"
+                      className="h-7 w-7 rounded-md bg-white dark:bg-[#181b24] hover:bg-rose-50 dark:hover:bg-rose-500/20 border border-slate-200 dark:border-[#282c3a] hover:border-rose-300 dark:hover:border-rose-500/40 text-slate-500 dark:text-zinc-400 hover:text-rose-600 dark:hover:text-rose-300 inline-flex items-center justify-center transition-colors cursor-pointer"
                       title={locale === 'zh' ? '清空对话' : locale === 'en' ? 'Clear chat' : 'Цэвэрлэх'}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -3375,7 +3384,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                   <button
                     type="button"
                     onClick={() => setIsAiCollapsed(!isAiCollapsed)}
-                    className="h-7 w-7 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white inline-flex items-center justify-center transition-colors cursor-pointer xl:hidden"
+                    className="h-7 w-7 rounded-md bg-white dark:bg-[#181b24] hover:bg-slate-100 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] text-slate-600 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white inline-flex items-center justify-center transition-colors cursor-pointer xl:hidden"
                     title={isAiCollapsed ? 'Дэлгэх' : 'Хураах'}
                   >
                     {isAiCollapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
@@ -3385,41 +3394,41 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
             </div>
 
             {/* Verified PDF Clause Evidence Cards */}
-            <div className="px-4 py-3 bg-[#101218] border-b border-[#222530] grid grid-cols-2 gap-2 shrink-0">
-              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
-                <div className="text-[11px] text-zinc-400 truncate">
+            <div className="px-4 py-3 bg-slate-50/60 dark:bg-[#0e1015] border-b border-slate-200 dark:border-[#222530] grid grid-cols-2 gap-2 shrink-0">
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#141720] border border-slate-200/80 dark:border-[#252936] min-w-0">
+                <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                   {locale === 'zh' ? '投标保证金条款' : locale === 'en' ? 'Bid Security Clause' : 'Тендерийн баталгаа'}
                 </div>
-                <div className="mt-1 text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">
+                <div className="mt-1 text-xs font-medium text-slate-900 dark:text-zinc-100 line-clamp-2 leading-snug">
                   {(bds as any)?.bidSecurityReq || (locale === 'zh' ? '见 PDF 第 I 章规定' : locale === 'en' ? 'See BDS Ch. I' : 'ТШӨХ-өөс шалгана уу')}
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
-                <div className="text-[11px] text-zinc-400 truncate">
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#141720] border border-slate-200/80 dark:border-[#252936] min-w-0">
+                <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                   {locale === 'zh' ? '年营业额门槛' : locale === 'en' ? 'Turnover Requirement' : 'Борлуулалтын орлого'}
                 </div>
-                <div className="mt-1 text-xs font-medium text-zinc-100 tabular-nums line-clamp-2 leading-snug">
+                <div className="mt-1 text-xs font-medium text-slate-900 dark:text-zinc-100 tabular-nums line-clamp-2 leading-snug">
                   {(bds as any)?.turnoverReq || (bds as any)?.minAnnualTurnover || (locale === 'zh' ? '未明确提取' : locale === 'en' ? 'Verify in BDS' : 'Бүртгэгдээгүй')}
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
-                <div className="text-[11px] text-zinc-400 truncate">
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#141720] border border-slate-200/80 dark:border-[#252936] min-w-0">
+                <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                   {locale === 'zh' ? '所需资质许可' : locale === 'en' ? 'Required Licenses' : 'Тусгай зөвшөөрөл'}
                 </div>
-                <div className="mt-1 text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">
+                <div className="mt-1 text-xs font-medium text-slate-900 dark:text-zinc-100 line-clamp-2 leading-snug">
                   {bds?.requiredLicenses && bds.requiredLicenses.length > 0
                     ? bds.requiredLicenses.slice(0, 2).join(', ')
                     : (locale === 'zh' ? '无特定许可标注' : locale === 'en' ? 'None flagged' : 'Шардлага илрээгүй')}
                 </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-[#141720] border border-[#252936] min-w-0">
-                <div className="text-[11px] text-zinc-400 truncate">
+              <div className="p-2.5 rounded-lg bg-slate-50 dark:bg-[#141720] border border-slate-200/80 dark:border-[#252936] min-w-0">
+                <div className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
                   {locale === 'zh' ? '交付与供货周期' : locale === 'en' ? 'Delivery & Location' : 'Нийлүүлэх хугацаа'}
                 </div>
-                <div className="mt-1 text-xs font-medium text-zinc-100 line-clamp-2 leading-snug">
+                <div className="mt-1 text-xs font-medium text-slate-900 dark:text-zinc-100 line-clamp-2 leading-snug">
                   {(technicalSpecs as any)?.deliveryPeriodText || technicalSpecs?.deliveryLocation || (locale === 'zh' ? '按合同约定' : locale === 'en' ? 'Per contract' : 'Гэрээгээр')}
                 </div>
               </div>
@@ -3431,10 +3440,10 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 {/* Scrollable Message Stream */}
                 <div className="flex-1 overflow-y-auto px-4 py-3.5 space-y-3 max-h-[420px] xl:max-h-[460px]">
                   {aiMessages.length === 0 && !aiAnalyzing ? (
-                    <div className="rounded-lg border border-dashed border-[#282c3a] bg-[#131620] p-4 space-y-3">
+                    <div className="rounded-lg border border-dashed border-slate-200 dark:border-[#282c3a] bg-slate-50/70 dark:bg-[#131620] p-4 space-y-3">
                       <div className="flex items-start gap-2.5">
-                        <Bot className="h-4 w-4 text-[#828fff] mt-0.5 shrink-0" />
-                        <p className="text-xs text-zinc-300 leading-relaxed">
+                        <Bot className="h-4 w-4 text-[#5266eb] dark:text-[#828fff] mt-0.5 shrink-0" />
+                        <p className="text-xs text-slate-600 dark:text-zinc-300 leading-relaxed">
                           {locale === 'zh'
                             ? '选择下方预设分析任务，或直接针对蒙古语原版招标书、资质、保证金及技术参数提问：'
                             : locale === 'en'
@@ -3452,9 +3461,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             'Тусгай зөвшөөрөл & Шалгуур'
                           )}
                           disabled={aiAnalyzing}
-                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-slate-50 dark:bg-[#181b24] hover:bg-indigo-50 dark:hover:bg-[#5266eb]/20 text-slate-700 dark:text-zinc-200 hover:text-[#5266eb] dark:hover:text-white border border-slate-200 dark:border-[#282c3a] hover:border-[#5266eb]/40 dark:hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
                         >
-                          <ShieldCheck className="h-3.5 w-3.5 text-[#828fff] shrink-0" />
+                          <ShieldCheck className="h-3.5 w-3.5 text-[#5266eb] dark:text-[#828fff] shrink-0" />
                           <span>{locale === 'zh' ? '分析外企准入、特殊许可与资质要求' : locale === 'en' ? 'Foreign eligibility, licences & criteria' : 'Тусгай зөвшөөрөл & Шалгуур'}</span>
                         </button>
                         <button
@@ -3465,9 +3474,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             'Санхүүгийн босго & Баталгаа'
                           )}
                           disabled={aiAnalyzing}
-                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-slate-50 dark:bg-[#181b24] hover:bg-indigo-50 dark:hover:bg-[#5266eb]/20 text-slate-700 dark:text-zinc-200 hover:text-[#5266eb] dark:hover:text-white border border-slate-200 dark:border-[#282c3a] hover:border-[#5266eb]/40 dark:hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
                         >
-                          <Tag className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          <Tag className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                           <span>{locale === 'zh' ? '核查营业额门槛、保证金与财务风险' : locale === 'en' ? 'Turnover thresholds, bonds & financial risks' : 'Санхүүгийн босго & Баталгаа'}</span>
                         </button>
                         <button
@@ -3478,9 +3487,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             'Техникийн үзүүлэлтийн эрсдэл'
                           )}
                           disabled={aiAnalyzing}
-                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-slate-50 dark:bg-[#181b24] hover:bg-indigo-50 dark:hover:bg-[#5266eb]/20 text-slate-700 dark:text-zinc-200 hover:text-[#5266eb] dark:hover:text-white border border-slate-200 dark:border-[#282c3a] hover:border-[#5266eb]/40 dark:hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
                         >
-                          <FileText className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                          <FileText className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                           <span>{locale === 'zh' ? '拆解技术规格、交付工期及违约惩罚' : locale === 'en' ? 'Tech specs, delivery timeline & penalty risks' : 'Техникийн үзүүлэлтийн эрсдэл'}</span>
                         </button>
                         <button
@@ -3491,9 +3500,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             'Баримт бичгийн хяналт'
                           )}
                           disabled={aiAnalyzing}
-                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-[#181b24] hover:bg-[#5266eb]/20 text-zinc-200 hover:text-white border border-[#282c3a] hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
+                          className="w-full px-3 py-2 rounded-md text-left text-xs font-medium bg-slate-50 dark:bg-[#181b24] hover:bg-indigo-50 dark:hover:bg-[#5266eb]/20 text-slate-700 dark:text-zinc-200 hover:text-[#5266eb] dark:hover:text-white border border-slate-200 dark:border-[#282c3a] hover:border-[#5266eb]/40 dark:hover:border-[#5266eb]/50 flex items-center gap-2 transition-colors cursor-pointer"
                         >
-                          <CheckSquare className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
+                          <CheckSquare className="h-3.5 w-3.5 text-slate-500 dark:text-zinc-400 shrink-0" />
                           <span>{locale === 'zh' ? '生成投标文件核查清单与报价策略' : locale === 'en' ? 'Document submission checklist & strategy' : 'Баримт бичгийн хяналт & Стратеги'}</span>
                         </button>
                       </div>
@@ -3508,7 +3517,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             className={`flex gap-2.5 ${isUser ? 'justify-end' : 'justify-start'}`}
                           >
                             {!isUser && (
-                              <div className="h-7 w-7 rounded-md bg-[#1c2030] border border-[#2e344b] text-[#828fff] flex items-center justify-center shrink-0 mt-0.5">
+                              <div className="h-7 w-7 rounded-md bg-indigo-50 dark:bg-[#1c2030] border border-indigo-200/70 dark:border-[#2e344b] text-[#5266eb] dark:text-[#828fff] flex items-center justify-center shrink-0 mt-0.5">
                                 <Bot className="h-3.5 w-3.5" />
                               </div>
                             )}
@@ -3516,15 +3525,27 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                               className={`max-w-[90%] rounded-lg px-3.5 py-2.5 text-xs leading-relaxed ${
                                 isUser
                                   ? 'bg-[#5266eb] text-white rounded-tr-xs'
-                                  : 'bg-[#151822] text-zinc-100 border border-[#252936] rounded-tl-xs'
+                                  : 'bg-slate-50 dark:bg-[#151822] text-slate-800 dark:text-zinc-100 border border-slate-200 dark:border-[#252936] rounded-tl-xs'
                               }`}
                             >
-                              <div className="flex items-center justify-between gap-2 mb-1 pb-1 border-b border-white/10 text-[10px] text-zinc-300">
+                              <div
+                                className={`flex items-center justify-between gap-2 mb-1 pb-1 border-b text-[10px] ${
+                                  isUser
+                                    ? 'border-white/20 text-white/90'
+                                    : 'border-slate-200 dark:border-white/10 text-slate-500 dark:text-zinc-300'
+                                }`}
+                              >
                                 <span className="font-semibold flex items-center gap-1">
-                                  {isUser ? <User className="h-2.5 w-2.5" /> : <Sparkles className="h-2.5 w-2.5 text-[#828fff]" />}
+                                  {isUser ? <User className="h-2.5 w-2.5" /> : <Sparkles className="h-2.5 w-2.5 text-[#5266eb] dark:text-[#828fff]" />}
                                   <span>{isUser ? (locale === 'zh' ? '您的问题' : locale === 'en' ? 'You' : 'Та') : (locale === 'zh' ? 'AI 分析' : locale === 'en' ? 'AI Analyst' : 'AI Шинжээч')}</span>
                                   {msg.topic && (
-                                    <span className="ml-1 px-1.5 py-px rounded bg-black/25 text-zinc-200 font-normal truncate max-w-[140px]">
+                                    <span
+                                      className={`ml-1 px-1.5 py-px rounded font-normal truncate max-w-[140px] ${
+                                        isUser
+                                          ? 'bg-black/20 text-white'
+                                          : 'bg-slate-200/70 dark:bg-black/25 text-slate-700 dark:text-zinc-200'
+                                      }`}
+                                    >
                                       {msg.topic}
                                     </span>
                                   )}
@@ -3541,17 +3562,17 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
 
                       {aiAnalyzing && (
                         <div className="flex gap-2.5 justify-start items-start animate-in fade-in">
-                          <div className="h-7 w-7 rounded-md bg-[#1c2030] border border-[#2e344b] text-[#828fff] flex items-center justify-center shrink-0">
+                          <div className="h-7 w-7 rounded-md bg-indigo-50 dark:bg-[#1c2030] border border-indigo-200/70 dark:border-[#2e344b] text-[#5266eb] dark:text-[#828fff] flex items-center justify-center shrink-0">
                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           </div>
-                          <div className="bg-[#151822] border border-[#252936] rounded-lg rounded-tl-xs p-3 space-y-2 flex-1">
-                            <div className="flex items-center gap-2 text-xs font-medium text-zinc-100">
+                          <div className="bg-slate-50 dark:bg-[#151822] border border-slate-200 dark:border-[#252936] rounded-lg rounded-tl-xs p-3 space-y-2 flex-1">
+                            <div className="flex items-center gap-2 text-xs font-medium text-slate-800 dark:text-zinc-100">
                               <span className="h-2 w-2 rounded-full bg-[#5266eb] animate-ping" />
                               <span>{locale === 'zh' ? 'AI 正在核查 PDF 条款…' : locale === 'en' ? 'Analyzing PDF clauses…' : 'AI Шинжээч боловсруулж байна…'}</span>
                             </div>
                             <div className="space-y-1.5 animate-pulse">
-                              <div className="h-2 bg-[#232838] rounded w-11/12" />
-                              <div className="h-2 bg-[#232838] rounded w-4/5" />
+                              <div className="h-2 bg-slate-200 dark:bg-[#232838] rounded w-11/12" />
+                              <div className="h-2 bg-slate-200 dark:bg-[#232838] rounded w-4/5" />
                             </div>
                           </div>
                         </div>
@@ -3562,7 +3583,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                 </div>
 
                 {/* Pinned Input + Contextual Follow-up Chips */}
-                <div className="p-3.5 border-t border-[#222530] bg-[#11131a] space-y-2.5 shrink-0">
+                <div className="p-3.5 border-t border-slate-200 dark:border-[#222530] bg-slate-50/90 dark:bg-[#141720] space-y-2.5 shrink-0">
                   {aiMessages.length > 0 && (
                     <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
                       {technicalSpecs.deliverySchedule && technicalSpecs.deliverySchedule.length > 0 && (
@@ -3570,9 +3591,9 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           type="button"
                           onClick={() => handleRunAiAnalysis('Энэ тендерийн бараа нийлүүлэлтийн хуваарь, эцсийн хугацаа, хүргэх цэгийн талаар дэлгэрэнгүй тайлбарлана уу.', 'chip-delivery', 'Нийлүүлэлтийн хуваарь')}
                           disabled={aiAnalyzing}
-                          className="px-2 py-1 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                          className="px-2 py-1 rounded-md bg-slate-100 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
                         >
-                          <Package className="h-3 w-3 text-[#828fff]" />
+                          <Package className="h-3 w-3 text-[#5266eb] dark:text-[#828fff]" />
                           <span>{locale === 'zh' ? '交货进度' : locale === 'en' ? 'Delivery' : 'Хуваарь'}</span>
                         </button>
                       )}
@@ -3581,7 +3602,7 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                           type="button"
                           onClick={() => handleRunAiAnalysis('Энэхүү амжилтгүй болсон тендер яагаад цуцлагдсан бэ, дараа нь дахин зарлагдах уу, оролцоход юуг анхаарах вэ?', 'chip-failed', 'Амжилтгүй болсон шалтгаан')}
                           disabled={aiAnalyzing}
-                          className="px-2 py-1 rounded-md bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 transition-colors cursor-pointer flex items-center gap-1"
+                          className="px-2 py-1 rounded-md bg-rose-50 dark:bg-rose-500/15 hover:bg-rose-100 dark:hover:bg-rose-500/25 border border-rose-200 dark:border-rose-500/30 text-rose-700 dark:text-rose-300 transition-colors cursor-pointer flex items-center gap-1"
                         >
                           <AlertTriangle className="h-3 w-3" />
                           <span>{locale === 'zh' ? '为何流标？' : locale === 'en' ? 'Why failed?' : 'Амжилтгүй шалтгаан'}</span>
@@ -3591,18 +3612,18 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                         type="button"
                         onClick={() => handleRunAiAnalysis('Энэ тендерт шаардагдах тендерийн баталгаа болон банкны тодорхойлолтыг хэрхэн бэлтгэх вэ?', 'chip-guarantee', 'Тендерийн баталгаа')}
                         disabled={aiAnalyzing}
-                        className="px-2 py-1 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                        className="px-2 py-1 rounded-md bg-slate-100 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
                       >
-                        <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                        <ShieldCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
                         <span>{locale === 'zh' ? '保函要求' : locale === 'en' ? 'Bid bond' : 'Баталгаа'}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => handleRunAiAnalysis('Энэ тендерт өрсөлдөхөд оролцогчийн хувьд ямар гол эрсдэл, хасагдах шалтгаан үүсч болох вэ?', 'chip-risk', 'Эрсдэлийн шинжилгээ')}
                         disabled={aiAnalyzing}
-                        className="px-2 py-1 rounded-md bg-[#181b24] hover:bg-[#222634] border border-[#282c3a] text-zinc-300 hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                        className="px-2 py-1 rounded-md bg-slate-100 dark:bg-[#181b24] hover:bg-slate-200/80 dark:hover:bg-[#222634] border border-slate-200 dark:border-[#282c3a] text-slate-700 dark:text-zinc-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center gap-1"
                       >
-                        <AlertCircle className="h-3 w-3 text-amber-400" />
+                        <AlertCircle className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                         <span>{locale === 'zh' ? '风险排查' : locale === 'en' ? 'Disqualify risks' : 'Гол эрсдэл'}</span>
                       </button>
                     </div>
@@ -3630,14 +3651,14 @@ export const TenderDetailView: React.FC<TenderDetailViewProps> = ({ initialData,
                             ? 'Ask about PDF clauses, licenses, BOQ…'
                             : 'PDF заалт, баталгаа, шаардлагын талаар асуух...'
                         }
-                        className="w-full h-9 bg-[#181b24] border border-[#282c3a] rounded-md pl-3 pr-8 text-xs text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-[#5e6ad2] transition-colors"
+                        className="w-full h-9 bg-white dark:bg-[#181b24] border border-slate-200 dark:border-[#282c3a] rounded-md pl-3 pr-8 text-xs text-slate-900 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 focus:outline-none focus:border-[#5266eb] dark:focus:border-[#5e6ad2] transition-colors"
                         disabled={aiAnalyzing}
                       />
                       {followupInput && (
                         <button
                           type="button"
                           onClick={() => setFollowupInput('')}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200 p-1 cursor-pointer"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 p-1 cursor-pointer"
                         >
                           <X className="h-3 w-3" />
                         </button>

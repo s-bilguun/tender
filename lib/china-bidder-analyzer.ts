@@ -1,14 +1,13 @@
 import { TenderItem, ChinaBidderAnalysis, ForeignBidderStatus } from './types';
-
-// Approximate MNT to RMB exchange rate (~485 MNT per 1 CNY)
-const MNT_TO_RMB_RATE = 485;
+import { getActiveMntPerRmb } from './fx-rate';
 
 export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): ChinaBidderAnalysis {
   const typeCode = (tender.tenderTypeCode || '').toUpperCase();
   const ruleName = (tender.ruleName || '').toLowerCase();
   const title = (tender.tenderName || '').toLowerCase();
   const budget = tender.totalBudget || 0;
-  const budgetRMB = Math.round(budget / MNT_TO_RMB_RATE);
+  const mntPerRmb = getActiveMntPerRmb();
+  const budgetRMB = Math.round(budget / mntPerRmb);
 
   // Check specs / BDS / live bundle
   const bds = (tender as any).bds || {};
@@ -117,7 +116,7 @@ export function analyzeChinaBidderEligibility(tender: Partial<TenderItem>): Chin
 
   // Bank guarantee explanation
   const guaranteeAmount = tender.bidRequirements?.estimatedGuaranteeMin || (budget * 0.01);
-  const guaranteeRMB = Math.round(guaranteeAmount / MNT_TO_RMB_RATE);
+  const guaranteeRMB = Math.round(guaranteeAmount / mntPerRmb);
   // Only state an exemption when the tender documents say so; otherwise describe the usual range.
   const isExempt = Boolean(tender.liveBundleSummary?.isBidSecurityExempt);
   const hasBudget = budget > 0;
